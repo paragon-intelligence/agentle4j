@@ -987,43 +987,46 @@ func main() {
 
 	fmt.Println()
 
-	// Main action menu
-	var mainAction string
-	mainMenuOptions := []huh.Option[string]{
-		huh.NewOption("🚀 Create new release", "new"),
-		huh.NewOption("🔄 Republish existing release (failed workflow)", "republish"),
-		huh.NewOption("📊 Check workflow status", "status"),
-	}
-
-	mainForm := huh.NewForm(
-		huh.NewGroup(
-			huh.NewSelect[string]().
-				Title("What would you like to do?").
-				Options(mainMenuOptions...).
-				Value(&mainAction),
-		),
-	).WithTheme(huh.ThemeCatppuccin())
-
-	err = mainForm.Run()
-	if err != nil {
-		fmt.Println(warningStyle.Render("Cancelled."))
-		os.Exit(130)
-	}
-
-	// Handle republish action
-	if mainAction == "republish" {
-		handleRepublish()
-		return
-	}
-
-	// Handle status check action
-	if mainAction == "status" {
-		handleStatusCheck()
-		return
-	}
-
-	// Continue with new release flow
+	// Determine if this is a first release
 	isFirstRelease := latestRelease.IsZero()
+
+	// Only show main menu if there are existing releases
+	// For first release, go straight to the release flow
+	if !isFirstRelease {
+		var mainAction string
+		mainMenuOptions := []huh.Option[string]{
+			huh.NewOption("🚀 Create new release", "new"),
+			huh.NewOption("🔄 Republish existing release (failed workflow)", "republish"),
+			huh.NewOption("📊 Check workflow status", "status"),
+		}
+
+		mainForm := huh.NewForm(
+			huh.NewGroup(
+				huh.NewSelect[string]().
+					Title("What would you like to do?").
+					Options(mainMenuOptions...).
+					Value(&mainAction),
+			),
+		).WithTheme(huh.ThemeCatppuccin())
+
+		err = mainForm.Run()
+		if err != nil {
+			fmt.Println(warningStyle.Render("Cancelled."))
+			os.Exit(130)
+		}
+
+		// Handle republish action
+		if mainAction == "republish" {
+			handleRepublish()
+			return
+		}
+
+		// Handle status check action
+		if mainAction == "status" {
+			handleStatusCheck()
+			return
+		}
+	}
 	var newVersion Version
 
 	if isFirstRelease {
