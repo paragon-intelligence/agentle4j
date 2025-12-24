@@ -1,42 +1,42 @@
+# Build artifacts
 target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-.kotlin
+*.jar
+*.war
+*.ear
+*.class
 
-### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
-*.iws
+# IDE
+.idea/
 *.iml
-*.ipr
-
-### Eclipse ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
 .vscode/
+*.swp
+*.swo
+*~
 
-### Mac OS ###
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Test
+.jqwik-database
+
+# OS
 .DS_Store
-.idea
+Thumbs.db
+
+# Environment
 .env
+.env.local
+
+# Logs
+*.log
+
+# JaCoCo
+jacoco.exec
+
+# Other
+compile_output.txt
+.classpath.txt
+google-java-format.jar
 .agent

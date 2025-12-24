@@ -4,14 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.github.arthurbrenno</groupId>
+    <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
     <version>0.1.0</version>
     <packaging>jar</packaging>
 
     <name>Agentle4j</name>
     <description>A modern Java client library for interacting with the Anthropic Claude API with support for streaming, tool calling, and observability</description>
-    <url>https://github.com/arthurbrenno/agentle-java</url>
+    <url>https://github.com/paragon-intelligence/agentle4j</url>
 
     <licenses>
         <license>
@@ -29,10 +29,15 @@
         </developer>
     </developers>
 
+    <organization>
+        <name>Paragon Intelligence</name>
+        <url>https://github.com/paragon-intelligence</url>
+    </organization>
+
     <scm>
-        <connection>scm:git:git://github.com/arthurbrenno/agentle-java.git</connection>
-        <developerConnection>scm:git:ssh://github.com:arthurbrenno/agentle-java.git</developerConnection>
-        <url>https://github.com/arthurbrenno/agentle-java/tree/main</url>
+        <connection>scm:git:git://github.com/paragon-intelligence/agentle4j.git</connection>
+        <developerConnection>scm:git:ssh://github.com:paragon-intelligence/agentle4j.git</developerConnection>
+        <url>https://github.com/paragon-intelligence/agentle4j/tree/master</url>
     </scm>
 
     <properties>
