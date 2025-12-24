@@ -200,10 +200,9 @@ info: ## Show project information
 	@echo "$(BLUE)║                  Project Information                       ║$(NC)"
 	@echo "$(BLUE)╚════════════════════════════════════════════════════════════╝$(NC)"
 	@echo ""
-	@echo "$(GREEN)Project:$(NC)      Agentle Java"
-	@echo "$(GREEN)Group ID:$(NC)     com.paragon"
-	@echo "$(GREEN)Artifact:$(NC)     agentle"
-	@echo "$(GREEN)Version:$(NC)      1.0-SNAPSHOT"
+	@echo "$(GREEN)Project:$(NC)      Agentle4j"
+	@echo "$(GREEN)Group ID:$(NC)     io.github.paragon-intelligence"
+	@echo "$(GREEN)Artifact:$(NC)     agentle4j"
 	@echo "$(GREEN)Java:$(NC)         25 (with preview features)"
 	@echo "$(GREEN)Build Tool:$(NC)   Maven"
 	@echo ""
@@ -231,6 +230,11 @@ ci-test: ## CI test (with coverage)
 	@echo "$(BLUE)🧪 Running CI tests...$(NC)"
 	@mvn clean test
 	@echo "$(GREEN)✅ CI tests complete!$(NC)"
+
+##@ Release
+
+release: ## 🚀 Interactive release manager (bumps version, creates GitHub release)
+	@cd tools/releaser && go run .
 
 ##@ Aliases (shortcuts)
 

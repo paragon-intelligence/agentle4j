@@ -1,0 +1,1248 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"os/exec"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/charmbracelet/bubbles/spinner"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/common-nighthawk/go-figure"
+)
+
+// ============================================================================
+// Styles
+// ============================================================================
+
+var (
+	// Colors
+	primaryColor   = lipgloss.Color("#7C3AED") // Purple
+	secondaryColor = lipgloss.Color("#06B6D4") // Cyan
+	successColor   = lipgloss.Color("#10B981") // Green
+	warningColor   = lipgloss.Color("#F59E0B") // Amber
+	errorColor     = lipgloss.Color("#EF4444") // Red
+	mutedColor     = lipgloss.Color("#6B7280") // Gray
+
+	// Styles
+	titleStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(primaryColor).
+			MarginBottom(1)
+
+	subtitleStyle = lipgloss.NewStyle().
+			Foreground(secondaryColor).
+			Italic(true)
+
+	successStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(successColor)
+
+	errorStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(errorColor)
+
+	warningStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(warningColor)
+
+	infoStyle = lipgloss.NewStyle().
+			Foreground(secondaryColor)
+
+	mutedStyle = lipgloss.NewStyle().
+			Foreground(mutedColor)
+
+	boxStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(primaryColor).
+			Padding(1, 2).
+			MarginTop(1).
+			MarginBottom(1)
+
+	stepStyle = lipgloss.NewStyle().
+			Foreground(primaryColor).
+			Bold(true)
+
+	checkmarkStyle = lipgloss.NewStyle().
+			Foreground(successColor).
+			Bold(true)
+
+	crossStyle = lipgloss.NewStyle().
+			Foreground(errorColor).
+			Bold(true)
+)
+
+// ============================================================================
+// Types
+// ============================================================================
+
+type ReleaseType int
+
+const (
+	Patch ReleaseType = iota
+	Feature
+	Major
+)
+
+func (r ReleaseType) String() string {
+	switch r {
+	case Major:
+		return "Major"
+	case Feature:
+		return "Feature"
+	case Patch:
+		return "Patch"
+	default:
+		return "Unknown"
+	}
+}
+
+func (r ReleaseType) Emoji() string {
+	switch r {
+	case Major:
+		return "🚀"
+	case Feature:
+		return "✨"
+	case Patch:
+		return "🐛"
+	default:
+		return "?"
+	}
+}
+
+type Version struct {
+	Major int
+	Minor int
+	Patch int
+}
+
+func (v Version) String() string {
+	return fmt.Sprintf("v%d.%d.%d", v.Major, v.Minor, v.Patch)
+}
+
+func (v Version) PomString() string {
+	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
+}
+
+func (v Version) IsZero() bool {
+	return v.Major == 0 && v.Minor == 0 && v.Patch == 0
+}
+
+func ParseVersion(s string) (Version, error) {
+	s = strings.TrimPrefix(s, "v")
+	parts := strings.Split(s, ".")
+	if len(parts) != 3 {
+		return Version{}, fmt.Errorf("invalid version format: %s", s)
+	}
+
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return Version{}, err
+	}
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return Version{}, err
+	}
+	patch, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return Version{}, err
+	}
+
+	return Version{Major: major, Minor: minor, Patch: patch}, nil
+}
+
+func (v Version) Bump(rt ReleaseType) Version {
+	switch rt {
+	case Major:
+		return Version{Major: v.Major + 1, Minor: 0, Patch: 0}
+	case Feature:
+		return Version{Major: v.Major, Minor: v.Minor + 1, Patch: 0}
+	case Patch:
+		return Version{Major: v.Major, Minor: v.Minor, Patch: v.Patch + 1}
+	default:
+		return v
+	}
+}
+
+type GitHubRelease struct {
+	TagName string `json:"tagName"`
+}
+
+// ErrorAction represents what the user wants to do when an error occurs
+type ErrorAction int
+
+const (
+	ActionRetry ErrorAction = iota
+	ActionSkip
+	ActionRollback
+	ActionAbort
+)
+
+// ReleaseState tracks the current state of the release process
+type ReleaseState struct {
+	OriginalPomContent []byte
+	PomModified        bool
+	ChangesStaged      bool
+	ChangesCommitted   bool
+	ChangesPushed      bool
+	ReleaseCreated     bool
+	NewVersion         Version
+}
+
+// ============================================================================
+// Spinner Model for Running Commands
+// ============================================================================
+
+type spinnerModel struct {
+	spinner  spinner.Model
+	message  string
+	done     bool
+	success  bool
+	quitting bool
+}
+
+func newSpinnerModel(message string) spinnerModel {
+	s := spinner.New()
+	s.Spinner = spinner.Dot
+	s.Style = lipgloss.NewStyle().Foreground(primaryColor)
+	return spinnerModel{
+		spinner: s,
+		message: message,
+	}
+}
+
+func (m spinnerModel) Init() tea.Cmd {
+	return m.spinner.Tick
+}
+
+func (m spinnerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		if msg.String() == "ctrl+c" || msg.String() == "q" {
+			m.quitting = true
+			return m, tea.Quit
+		}
+	case spinner.TickMsg:
+		var cmd tea.Cmd
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
+	case commandDoneMsg:
+		m.done = true
+		m.success = msg.success
+		return m, tea.Quit
+	}
+	return m, nil
+}
+
+func (m spinnerModel) View() string {
+	if m.done {
+		if m.success {
+			return checkmarkStyle.Render("✓") + " " + m.message + "\n"
+		}
+		return crossStyle.Render("✗") + " " + m.message + "\n"
+	}
+	return m.spinner.View() + " " + m.message + "\n"
+}
+
+type commandDoneMsg struct {
+	success bool
+	output  string
+	err     error
+}
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
+func clearScreen() {
+	fmt.Print("\033[H\033[2J")
+}
+
+func displayBanner() {
+	myFigure := figure.NewFigure("Agentle4j", "big", true)
+	banner := myFigure.String()
+
+	lines := strings.Split(banner, "\n")
+	gradient := []lipgloss.Color{
+		lipgloss.Color("#7C3AED"),
+		lipgloss.Color("#8B5CF6"),
+		lipgloss.Color("#A78BFA"),
+		lipgloss.Color("#C4B5FD"),
+		lipgloss.Color("#06B6D4"),
+	}
+
+	for i, line := range lines {
+		colorIdx := i % len(gradient)
+		style := lipgloss.NewStyle().Foreground(gradient[colorIdx]).Bold(true)
+		fmt.Println(style.Render(line))
+	}
+
+	fmt.Println(subtitleStyle.Render("  Release Manager"))
+	fmt.Println()
+}
+
+// askErrorAction prompts the user what to do when an error occurs
+func askErrorAction(stepName string, errMsg string, canSkip bool, canRollback bool) ErrorAction {
+	fmt.Println()
+	fmt.Println(errorStyle.Render("✗ Error in: " + stepName))
+	fmt.Println(mutedStyle.Render("  " + errMsg))
+	fmt.Println()
+
+	options := []huh.Option[string]{
+		huh.NewOption("🔄 Retry this step", "retry"),
+	}
+
+	if canSkip {
+		options = append(options, huh.NewOption("⏭️  Skip and continue", "skip"))
+	}
+	if canRollback {
+		options = append(options, huh.NewOption("↩️  Rollback changes and abort", "rollback"))
+	}
+	options = append(options, huh.NewOption("🛑 Abort without rollback", "abort"))
+
+	var choice string
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("What would you like to do?").
+				Options(options...).
+				Value(&choice),
+		),
+	).WithTheme(huh.ThemeCatppuccin())
+
+	err := form.Run()
+	if err != nil {
+		return ActionAbort
+	}
+
+	switch choice {
+	case "retry":
+		return ActionRetry
+	case "skip":
+		return ActionSkip
+	case "rollback":
+		return ActionRollback
+	default:
+		return ActionAbort
+	}
+}
+
+// runCommandWithResult runs a command and returns output and error
+func runCommandWithResult(cmd *exec.Cmd) (string, error) {
+	output, err := cmd.CombinedOutput()
+	return string(output), err
+}
+
+func runCommandWithSpinner(description string, cmd *exec.Cmd) (string, error) {
+	m := newSpinnerModel(description)
+
+	var cmdOutput string
+	var cmdErr error
+
+	p := tea.NewProgram(m)
+
+	go func() {
+		output, err := cmd.CombinedOutput()
+		cmdOutput = string(output)
+		cmdErr = err
+		success := err == nil
+
+		// Handle specific cases
+		if err != nil {
+			// Git commit with nothing to commit is okay
+			if strings.Contains(cmdOutput, "nothing to commit") {
+				success = true
+				cmdErr = nil
+			}
+		}
+
+		p.Send(commandDoneMsg{
+			success: success,
+			output:  cmdOutput,
+			err:     cmdErr,
+		})
+	}()
+
+	finalModel, err := p.Run()
+	if err != nil {
+		return cmdOutput, err
+	}
+
+	if fm, ok := finalModel.(spinnerModel); ok {
+		if fm.quitting {
+			os.Exit(130)
+		}
+	}
+
+	return cmdOutput, cmdErr
+}
+
+func getLatestRelease() (Version, error) {
+	cmd := exec.Command("gh", "release", "list", "--json", "tagName", "--limit", "1")
+	output, err := cmd.Output()
+	if err != nil {
+		return Version{}, err
+	}
+
+	var releases []GitHubRelease
+	if err := json.Unmarshal(output, &releases); err != nil {
+		return Version{}, err
+	}
+
+	if len(releases) == 0 {
+		return Version{Major: 0, Minor: 0, Patch: 0}, nil
+	}
+
+	return ParseVersion(releases[0].TagName)
+}
+
+func releaseExists(version Version) bool {
+	cmd := exec.Command("gh", "release", "view", version.String())
+	err := cmd.Run()
+	return err == nil
+}
+
+// WorkflowRun represents a GitHub Actions workflow run
+type WorkflowRun struct {
+	HeadBranch  string `json:"headBranch"`
+	Status      string `json:"status"`
+	Conclusion  string `json:"conclusion"`
+	DisplayTitle string `json:"displayTitle"`
+	CreatedAt   string `json:"createdAt"`
+	URL         string `json:"url"`
+}
+
+// getLatestWorkflowForRelease checks if the latest publish workflow for a release succeeded
+func getLatestWorkflowForRelease(version Version) (bool, string, error) {
+	// Get workflow runs for the publish workflow
+	cmd := exec.Command("gh", "run", "list", 
+		"--workflow", "publish-to-maven-central.yml",
+		"--json", "headBranch,status,conclusion,displayTitle,url",
+		"--limit", "10",
+	)
+	output, err := cmd.Output()
+	if err != nil {
+		return false, "", err
+	}
+
+	var runs []WorkflowRun
+	if err := json.Unmarshal(output, &runs); err != nil {
+		return false, "", err
+	}
+
+	// Find the run for this version
+	for _, run := range runs {
+		if strings.Contains(run.HeadBranch, version.String()) || 
+		   strings.Contains(run.DisplayTitle, version.String()) {
+			if run.Conclusion == "success" {
+				return true, run.URL, nil
+			} else if run.Conclusion == "failure" {
+				return false, run.URL, nil
+			}
+			// Still running
+			return false, run.URL, fmt.Errorf("workflow still running")
+		}
+	}
+
+	return false, "", fmt.Errorf("no workflow found for %s", version.String())
+}
+
+// getFailedReleases returns releases that exist in GitHub but may have failed workflows
+func getAllReleases() ([]Version, error) {
+	cmd := exec.Command("gh", "release", "list", "--json", "tagName", "--limit", "10")
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	var releases []GitHubRelease
+	if err := json.Unmarshal(output, &releases); err != nil {
+		return nil, err
+	}
+
+	var versions []Version
+	for _, r := range releases {
+		v, err := ParseVersion(r.TagName)
+		if err == nil {
+			versions = append(versions, v)
+		}
+	}
+	return versions, nil
+}
+
+// retriggerWorkflow manually triggers the publish workflow for a tag
+func retriggerWorkflow(version Version) error {
+	// First, we need to re-run the failed workflow or trigger a new one
+	// The simplest way is to use gh workflow run with the tag
+	cmd := exec.Command("gh", "workflow", "run", "publish-to-maven-central.yml", "--ref", version.String())
+	return cmd.Run()
+}
+
+func getPomVersion() (Version, error) {
+	content, err := os.ReadFile("pom.xml")
+	if err != nil {
+		return Version{}, err
+	}
+
+	re := regexp.MustCompile(`<version>([0-9]+\.[0-9]+\.[0-9]+)</version>`)
+	matches := re.FindSubmatch(content)
+	if len(matches) < 2 {
+		return Version{}, fmt.Errorf("could not find version in pom.xml")
+	}
+
+	return ParseVersion(string(matches[1]))
+}
+
+func getPomContent() ([]byte, error) {
+	return os.ReadFile("pom.xml")
+}
+
+func updatePomVersion(newVersion Version) error {
+	content, err := os.ReadFile("pom.xml")
+	if err != nil {
+		return err
+	}
+
+	re := regexp.MustCompile(`(<version>)([0-9]+\.[0-9]+\.[0-9]+)(</version>)`)
+	updated := replaceFirst(re, content, []byte("${1}"+newVersion.PomString()+"${3}"))
+
+	return os.WriteFile("pom.xml", updated, 0644)
+}
+
+func restorePom(content []byte) error {
+	return os.WriteFile("pom.xml", content, 0644)
+}
+
+// replaceFirst replaces only the first occurrence of the regex match
+func replaceFirst(re *regexp.Regexp, src, repl []byte) []byte {
+	loc := re.FindIndex(src)
+	if loc == nil {
+		return src
+	}
+
+	match := src[loc[0]:loc[1]]
+	replacement := re.Expand(nil, repl, match, re.FindSubmatchIndex(match))
+
+	result := make([]byte, 0, len(src)-len(match)+len(replacement))
+	result = append(result, src[:loc[0]]...)
+	result = append(result, replacement...)
+	result = append(result, src[loc[1]:]...)
+	return result
+}
+
+func checkGitHubCLI() bool {
+	_, err := exec.LookPath("gh")
+	return err == nil
+}
+
+func checkGit() bool {
+	_, err := exec.LookPath("git")
+	return err == nil
+}
+
+// rollback attempts to restore the original state
+func rollback(state *ReleaseState) {
+	fmt.Println()
+	fmt.Println(boxStyle.Render(warningStyle.Render("↩️  Rolling back changes...")))
+
+	if state.ChangesCommitted && !state.ChangesPushed {
+		// Reset the last commit
+		cmd := exec.Command("git", "reset", "--soft", "HEAD~1")
+		if err := cmd.Run(); err != nil {
+			fmt.Println(errorStyle.Render("  ✗ Could not reset commit"))
+		} else {
+			fmt.Println(checkmarkStyle.Render("  ✓ Reset last commit"))
+		}
+	}
+
+	if state.ChangesStaged {
+		// Unstage changes
+		cmd := exec.Command("git", "reset", "HEAD")
+		if err := cmd.Run(); err != nil {
+			fmt.Println(errorStyle.Render("  ✗ Could not unstage changes"))
+		} else {
+			fmt.Println(checkmarkStyle.Render("  ✓ Unstaged changes"))
+		}
+	}
+
+	if state.PomModified && len(state.OriginalPomContent) > 0 {
+		// Restore original pom.xml
+		if err := restorePom(state.OriginalPomContent); err != nil {
+			fmt.Println(errorStyle.Render("  ✗ Could not restore pom.xml"))
+		} else {
+			fmt.Println(checkmarkStyle.Render("  ✓ Restored pom.xml to original version"))
+		}
+	}
+
+	fmt.Println()
+	fmt.Println(infoStyle.Render("Rollback complete. You can safely try again."))
+}
+
+// ============================================================================
+// Release Steps
+// ============================================================================
+
+func stepUpdatePom(state *ReleaseState) bool {
+	fmt.Println(stepStyle.Render("Step 1/5: ") + "Updating pom.xml version")
+
+	for {
+		err := updatePomVersion(state.NewVersion)
+		if err == nil {
+			state.PomModified = true
+			fmt.Println(checkmarkStyle.Render("✓") + " Updated pom.xml to " + state.NewVersion.PomString())
+			return true
+		}
+
+		action := askErrorAction("Update pom.xml", err.Error(), false, false)
+		switch action {
+		case ActionRetry:
+			continue
+		case ActionAbort:
+			return false
+		default:
+			return false
+		}
+	}
+}
+
+func stepStageChanges(state *ReleaseState) bool {
+	fmt.Println()
+	fmt.Println(stepStyle.Render("Step 2/5: ") + "Staging changes")
+
+	for {
+		cmd := exec.Command("git", "add", ".")
+		output, err := runCommandWithSpinner("Staging all changes", cmd)
+		if err == nil {
+			state.ChangesStaged = true
+			return true
+		}
+
+		action := askErrorAction("Stage changes", output, false, true)
+		switch action {
+		case ActionRetry:
+			continue
+		case ActionRollback:
+			rollback(state)
+			return false
+		case ActionAbort:
+			return false
+		default:
+			return false
+		}
+	}
+}
+
+func stepCommit(state *ReleaseState) bool {
+	fmt.Println()
+	fmt.Println(stepStyle.Render("Step 3/5: ") + "Creating commit")
+
+	for {
+		cmd := exec.Command("git", "commit", "-m", fmt.Sprintf("Release %s", state.NewVersion.String()))
+		output, err := runCommandWithSpinner("Committing changes", cmd)
+
+		// Check for "nothing to commit" which is acceptable
+		if err != nil && strings.Contains(output, "nothing to commit") {
+			fmt.Println(infoStyle.Render("ℹ Nothing new to commit (this is okay)"))
+			return true
+		}
+
+		if err == nil {
+			state.ChangesCommitted = true
+			return true
+		}
+
+		action := askErrorAction("Create commit", output, true, true)
+		switch action {
+		case ActionRetry:
+			continue
+		case ActionSkip:
+			fmt.Println(warningStyle.Render("  ⚠ Skipping commit step"))
+			return true
+		case ActionRollback:
+			rollback(state)
+			return false
+		case ActionAbort:
+			return false
+		default:
+			return false
+		}
+	}
+}
+
+func stepPush(state *ReleaseState) bool {
+	fmt.Println()
+	fmt.Println(stepStyle.Render("Step 4/5: ") + "Pushing to remote")
+
+	for {
+		cmd := exec.Command("git", "push")
+		output, err := runCommandWithSpinner("Pushing to GitHub", cmd)
+		if err == nil {
+			state.ChangesPushed = true
+			return true
+		}
+
+		action := askErrorAction("Push to GitHub", output, false, true)
+		switch action {
+		case ActionRetry:
+			continue
+		case ActionRollback:
+			rollback(state)
+			return false
+		case ActionAbort:
+			fmt.Println()
+			fmt.Println(warningStyle.Render("⚠ Changes are committed locally but not pushed."))
+			fmt.Println(mutedStyle.Render("  To push manually: git push"))
+			fmt.Println(mutedStyle.Render("  To undo commit: git reset --soft HEAD~1"))
+			return false
+		default:
+			return false
+		}
+	}
+}
+
+func stepCreateRelease(state *ReleaseState) bool {
+	fmt.Println()
+	fmt.Println(stepStyle.Render("Step 5/5: ") + "Creating GitHub release")
+
+	// Get release title
+	var releaseTitle string
+	titleForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title("Release title").
+				Description("Leave empty to use version as title").
+				Placeholder(state.NewVersion.String()).
+				Value(&releaseTitle),
+		),
+	).WithTheme(huh.ThemeCatppuccin())
+
+	err := titleForm.Run()
+	if err != nil {
+		releaseTitle = state.NewVersion.String()
+	}
+	if releaseTitle == "" {
+		releaseTitle = state.NewVersion.String()
+	}
+
+	for {
+		cmd := exec.Command("gh", "release", "create",
+			state.NewVersion.String(),
+			"--title", releaseTitle,
+			"--generate-notes",
+		)
+		output, err := runCommandWithSpinner("Creating GitHub release", cmd)
+		if err == nil {
+			state.ReleaseCreated = true
+			return true
+		}
+
+		action := askErrorAction("Create GitHub release", output, true, false)
+		switch action {
+		case ActionRetry:
+			continue
+		case ActionSkip:
+			fmt.Println()
+			fmt.Println(warningStyle.Render("⚠ Release not created. You can create it manually:"))
+			fmt.Println(mutedStyle.Render("  gh release create " + state.NewVersion.String() + " --title \"" + releaseTitle + "\" --generate-notes"))
+			fmt.Println(mutedStyle.Render("  Or via GitHub UI: https://github.com/paragon-intelligence/agentle4j/releases/new"))
+			return true // Continue to success (push was done)
+		case ActionAbort:
+			fmt.Println()
+			fmt.Println(warningStyle.Render("⚠ Code is pushed but release not created."))
+			fmt.Println(mutedStyle.Render("  Create release manually: gh release create " + state.NewVersion.String()))
+			return false
+		default:
+			return false
+		}
+	}
+}
+
+// ============================================================================
+// Republish & Status Check Handlers
+// ============================================================================
+
+func handleRepublish() {
+	fmt.Println()
+	fmt.Println(boxStyle.Render(titleStyle.Render("🔄 Republish Existing Release")))
+	fmt.Println()
+
+	// Get all releases
+	releases, err := getAllReleases()
+	if err != nil || len(releases) == 0 {
+		fmt.Println(errorStyle.Render("✗ No releases found to republish"))
+		fmt.Println(mutedStyle.Render("  Create a new release first with 'make release'"))
+		os.Exit(1)
+	}
+
+	// Build options with workflow status
+	var options []huh.Option[string]
+	for _, v := range releases {
+		success, url, err := getLatestWorkflowForRelease(v)
+		var status string
+		if err != nil {
+			if strings.Contains(err.Error(), "still running") {
+				status = "⏳ Running"
+			} else {
+				status = "❓ Unknown"
+			}
+		} else if success {
+			status = "✅ Success"
+		} else {
+			status = "❌ Failed"
+		}
+		_ = url // We'll show URL later if needed
+		options = append(options, huh.NewOption(
+			fmt.Sprintf("%s - %s", v.String(), status),
+			v.String(),
+		))
+	}
+
+	var selectedVersion string
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Select release to republish:").
+				Description("Releases with ❌ Failed status can be republished").
+				Options(options...).
+				Value(&selectedVersion),
+		),
+	).WithTheme(huh.ThemeCatppuccin())
+
+	err = form.Run()
+	if err != nil {
+		fmt.Println(warningStyle.Render("Cancelled."))
+		os.Exit(130)
+	}
+
+	version, _ := ParseVersion(selectedVersion)
+
+	// Check current workflow status
+	success, url, _ := getLatestWorkflowForRelease(version)
+	if success {
+		fmt.Println()
+		fmt.Println(successStyle.Render("✓ This release already has a successful workflow!"))
+		fmt.Println(mutedStyle.Render("  The artifact should already be on Maven Central."))
+		fmt.Println(mutedStyle.Render("  Check: https://central.sonatype.com/search?q=agentle4j"))
+		return
+	}
+
+	// Confirm republish
+	fmt.Println()
+	fmt.Println(warningStyle.Render("⚠ This will trigger a new workflow run for " + version.String()))
+	if url != "" {
+		fmt.Println(mutedStyle.Render("  Previous run: " + url))
+	}
+	fmt.Println()
+
+	var confirmed bool
+	confirmForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewConfirm().
+				Title("Trigger new workflow for " + version.String() + "?").
+				Description("This will attempt to publish to Maven Central again").
+				Affirmative("Yes, republish").
+				Negative("Cancel").
+				Value(&confirmed),
+		),
+	).WithTheme(huh.ThemeCatppuccin())
+
+	err = confirmForm.Run()
+	if err != nil || !confirmed {
+		fmt.Println(warningStyle.Render("Cancelled."))
+		return
+	}
+
+	// Trigger the workflow
+	fmt.Println()
+	fmt.Println(stepStyle.Render("Triggering workflow..."))
+
+	err = retriggerWorkflow(version)
+	if err != nil {
+		fmt.Println(errorStyle.Render("✗ Could not trigger workflow automatically"))
+		fmt.Println()
+		fmt.Println(infoStyle.Render("You can manually trigger it:"))
+		fmt.Println(mutedStyle.Render("  1. Go to: https://github.com/paragon-intelligence/agentle4j/actions"))
+		fmt.Println(mutedStyle.Render("  2. Click 'Publish to Maven Central' workflow"))
+		fmt.Println(mutedStyle.Render("  3. Click 'Run workflow' dropdown"))
+		fmt.Println(mutedStyle.Render("  4. Select tag: " + version.String()))
+		fmt.Println(mutedStyle.Render("  5. Click 'Run workflow'"))
+		return
+	}
+
+	fmt.Println(successStyle.Render("✓ Workflow triggered successfully!"))
+	fmt.Println()
+	fmt.Println(infoStyle.Render("Monitor progress at:"))
+	fmt.Println(mutedStyle.Render("  https://github.com/paragon-intelligence/agentle4j/actions"))
+}
+
+func handleStatusCheck() {
+	fmt.Println()
+	fmt.Println(boxStyle.Render(titleStyle.Render("📊 Workflow Status Check")))
+	fmt.Println()
+
+	// Get all releases
+	releases, err := getAllReleases()
+	if err != nil || len(releases) == 0 {
+		fmt.Println(infoStyle.Render("ℹ No releases found"))
+		return
+	}
+
+	fmt.Println(mutedStyle.Render("Checking workflow status for recent releases...\n"))
+
+	for _, v := range releases {
+		success, url, err := getLatestWorkflowForRelease(v)
+		
+		var statusIcon string
+		var statusText string
+		
+		if err != nil {
+			if strings.Contains(err.Error(), "still running") {
+				statusIcon = "⏳"
+				statusText = "Running"
+			} else {
+				statusIcon = "❓"
+				statusText = "No workflow found"
+			}
+		} else if success {
+			statusIcon = "✅"
+			statusText = "Published to Maven Central"
+		} else {
+			statusIcon = "❌"
+			statusText = "FAILED - needs republish!"
+		}
+
+		fmt.Printf("  %s %s - %s\n", statusIcon, v.String(), statusText)
+		if url != "" && !success {
+			fmt.Println(mutedStyle.Render("     " + url))
+		}
+	}
+
+	fmt.Println()
+	fmt.Println(infoStyle.Render("Use 'Republish existing release' to retry failed workflows."))
+}
+
+// ============================================================================
+// Main Flow
+// ============================================================================
+
+func main() {
+	// Change to project root directory (two levels up from tools/releaser)
+	if err := os.Chdir("../.."); err != nil {
+		fmt.Println("Error: Could not change to project root directory")
+		os.Exit(1)
+	}
+
+	clearScreen()
+	displayBanner()
+
+	// Initialize release state
+	state := &ReleaseState{}
+
+	// Check prerequisites
+	fmt.Println(boxStyle.Render(titleStyle.Render("📋 Checking Prerequisites")))
+
+	if !checkGit() {
+		fmt.Println(errorStyle.Render("✗ Git is not installed"))
+		os.Exit(1)
+	}
+	fmt.Println(checkmarkStyle.Render("✓") + " Git found")
+
+	if !checkGitHubCLI() {
+		fmt.Println(errorStyle.Render("✗ GitHub CLI (gh) is not installed"))
+		os.Exit(1)
+	}
+	fmt.Println(checkmarkStyle.Render("✓") + " GitHub CLI found")
+
+	// Backup original pom.xml content
+	originalPom, err := getPomContent()
+	if err != nil {
+		fmt.Println(errorStyle.Render("✗ Could not read pom.xml: " + err.Error()))
+		os.Exit(1)
+	}
+	state.OriginalPomContent = originalPom
+
+	// Get current versions
+	pomVersion, err := getPomVersion()
+	if err != nil {
+		fmt.Println(errorStyle.Render("✗ Could not parse pom.xml version: " + err.Error()))
+		os.Exit(1)
+	}
+	fmt.Println(checkmarkStyle.Render("✓") + " pom.xml version: " + infoStyle.Render(pomVersion.PomString()))
+
+	latestRelease, err := getLatestRelease()
+	if err != nil {
+		fmt.Println(warningStyle.Render("⚠ Could not fetch GitHub releases (this is okay for first release)"))
+		latestRelease = Version{Major: 0, Minor: 0, Patch: 0}
+	} else if latestRelease.IsZero() {
+		fmt.Println(infoStyle.Render("ℹ No existing releases found (first release!)"))
+	} else {
+		fmt.Println(checkmarkStyle.Render("✓") + " Latest release: " + infoStyle.Render(latestRelease.String()))
+	}
+
+	fmt.Println()
+
+	// Main action menu
+	var mainAction string
+	mainMenuOptions := []huh.Option[string]{
+		huh.NewOption("🚀 Create new release", "new"),
+		huh.NewOption("🔄 Republish existing release (failed workflow)", "republish"),
+		huh.NewOption("📊 Check workflow status", "status"),
+	}
+
+	mainForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("What would you like to do?").
+				Options(mainMenuOptions...).
+				Value(&mainAction),
+		),
+	).WithTheme(huh.ThemeCatppuccin())
+
+	err = mainForm.Run()
+	if err != nil {
+		fmt.Println(warningStyle.Render("Cancelled."))
+		os.Exit(130)
+	}
+
+	// Handle republish action
+	if mainAction == "republish" {
+		handleRepublish()
+		return
+	}
+
+	// Handle status check action
+	if mainAction == "status" {
+		handleStatusCheck()
+		return
+	}
+
+	// Continue with new release flow
+	isFirstRelease := latestRelease.IsZero()
+	var newVersion Version
+
+	if isFirstRelease {
+		// First release - offer to use current pom.xml version or customize
+		fmt.Println(boxStyle.Render(titleStyle.Render("🎉 First Release Detected!")))
+		fmt.Println(infoStyle.Render("No existing releases found. Your pom.xml version is: ") + successStyle.Render(pomVersion.PomString()))
+		fmt.Println()
+
+		var versionChoice string
+		form := huh.NewForm(
+			huh.NewGroup(
+				huh.NewSelect[string]().
+					Title("What version do you want to release?").
+					Options(
+						huh.NewOption(fmt.Sprintf("📦 Use current version (%s)", pomVersion.PomString()), "current"),
+						huh.NewOption("✏️  Enter a custom version", "custom"),
+					).
+					Value(&versionChoice),
+			),
+		).WithTheme(huh.ThemeCatppuccin())
+
+		err = form.Run()
+		if err != nil {
+			fmt.Println(warningStyle.Render("Cancelled."))
+			os.Exit(130)
+		}
+
+		if versionChoice == "custom" {
+			var customVersion string
+			customForm := huh.NewForm(
+				huh.NewGroup(
+					huh.NewInput().
+						Title("Enter version").
+						Description("Format: X.Y.Z (e.g., 0.1.0, 1.0.0)").
+						Placeholder("0.1.0").
+						Value(&customVersion).
+						Validate(func(s string) error {
+							_, err := ParseVersion(s)
+							return err
+						}),
+				),
+			).WithTheme(huh.ThemeCatppuccin())
+
+			err = customForm.Run()
+			if err != nil {
+				fmt.Println(warningStyle.Render("Cancelled."))
+				os.Exit(130)
+			}
+
+			newVersion, _ = ParseVersion(customVersion)
+		} else {
+			newVersion = pomVersion
+		}
+	} else {
+		// Not first release - offer bump options
+		var releaseType string
+		form := huh.NewForm(
+			huh.NewGroup(
+				huh.NewSelect[string]().
+					Title("What kind of release are you doing?").
+					Description(fmt.Sprintf("Current: %s", latestRelease.String())).
+					Options(
+						huh.NewOption(fmt.Sprintf("🐛 Patch  (%s → %s)", latestRelease.String(), latestRelease.Bump(Patch).String()), "patch"),
+						huh.NewOption(fmt.Sprintf("✨ Feature (%s → %s)", latestRelease.String(), latestRelease.Bump(Feature).String()), "feature"),
+						huh.NewOption(fmt.Sprintf("🚀 Major  (%s → %s)", latestRelease.String(), latestRelease.Bump(Major).String()), "major"),
+					).
+					Value(&releaseType),
+			),
+		).WithTheme(huh.ThemeCatppuccin())
+
+		err = form.Run()
+		if err != nil {
+			fmt.Println(warningStyle.Render("Cancelled."))
+			os.Exit(130)
+		}
+
+		var rt ReleaseType
+		switch releaseType {
+		case "major":
+			rt = Major
+		case "feature":
+			rt = Feature
+		default:
+			rt = Patch
+		}
+
+		newVersion = latestRelease.Bump(rt)
+
+		// Confirmation for major/feature releases
+		if rt == Major || rt == Feature {
+			var confirmed bool
+			confirmForm := huh.NewForm(
+				huh.NewGroup(
+					huh.NewConfirm().
+						Title(fmt.Sprintf("Are you sure you want to create a %s release?", rt.String())).
+						Description("This will create " + newVersion.String()).
+						Affirmative("Yes, proceed").
+						Negative("Cancel").
+						Value(&confirmed),
+				),
+			).WithTheme(huh.ThemeCatppuccin())
+
+			err = confirmForm.Run()
+			if err != nil || !confirmed {
+				fmt.Println(warningStyle.Render("\n⚠ Release cancelled."))
+				os.Exit(0)
+			}
+		}
+	}
+
+	state.NewVersion = newVersion
+
+	// Check if release already exists
+	if releaseExists(newVersion) {
+		fmt.Println()
+		fmt.Println(errorStyle.Render("✗ Release " + newVersion.String() + " already exists!"))
+		fmt.Println(mutedStyle.Render("  Choose a different version or delete the existing release first."))
+		os.Exit(1)
+	}
+
+	// Show preview
+	fmt.Println()
+	previewBox := boxStyle.Copy().BorderForeground(secondaryColor)
+	
+	var previewContent string
+	if isFirstRelease {
+		previewContent = fmt.Sprintf(
+			"%s\n\n"+
+				"  %s %s\n"+
+				"  %s %s\n"+
+				"  %s %s",
+			titleStyle.Render("📦 First Release!"),
+			mutedStyle.Render("Version:"),
+			successStyle.Render(newVersion.String()),
+			mutedStyle.Render("Type:"),
+			infoStyle.Render("🎉 Initial Release"),
+			mutedStyle.Render("Tag:"),
+			infoStyle.Render(newVersion.String()),
+		)
+	} else {
+		previewContent = fmt.Sprintf(
+			"%s\n\n"+
+				"  %s %s → %s\n"+
+				"  %s %s\n"+
+				"  %s %s",
+			titleStyle.Render("📦 Release Preview"),
+			mutedStyle.Render("Version:"),
+			warningStyle.Render(latestRelease.String()),
+			successStyle.Render(newVersion.String()),
+			mutedStyle.Render("Type:"),
+			infoStyle.Render("Version Bump"),
+			mutedStyle.Render("Tag:"),
+			infoStyle.Render(newVersion.String()),
+		)
+	}
+	fmt.Println(previewBox.Render(previewContent))
+
+	// Final confirmation for first release
+	if isFirstRelease {
+		var confirmed bool
+		confirmForm := huh.NewForm(
+			huh.NewGroup(
+				huh.NewConfirm().
+					Title("Ready to publish your first release?").
+					Description("This will create " + newVersion.String() + " and publish to Maven Central").
+					Affirmative("🚀 Let's go!").
+					Negative("Cancel").
+					Value(&confirmed),
+			),
+		).WithTheme(huh.ThemeCatppuccin())
+
+		err = confirmForm.Run()
+		if err != nil || !confirmed {
+			fmt.Println(warningStyle.Render("\n⚠ Release cancelled."))
+			os.Exit(0)
+		}
+	}
+
+	fmt.Println()
+	fmt.Println(boxStyle.Render(titleStyle.Render("🚀 Executing Release")))
+
+	// Execute release steps with error handling
+	if !stepUpdatePom(state) {
+		os.Exit(1)
+	}
+
+	if !stepStageChanges(state) {
+		os.Exit(1)
+	}
+
+	if !stepCommit(state) {
+		os.Exit(1)
+	}
+
+	if !stepPush(state) {
+		os.Exit(1)
+	}
+
+	if !stepCreateRelease(state) {
+		os.Exit(1)
+	}
+
+	// Success!
+	fmt.Println()
+	successBox := boxStyle.Copy().BorderForeground(successColor)
+	successMsg := fmt.Sprintf(
+		"%s\n\n"+
+			"  %s Published to GitHub\n"+
+			"  %s Maven Central workflow triggered\n\n"+
+			"  %s\n"+
+			"  %s",
+		titleStyle.Render("🎉 Release Successful!"),
+		checkmarkStyle.Render("✓"),
+		checkmarkStyle.Render("✓"),
+		mutedStyle.Render("Monitor the publish workflow at:"),
+		infoStyle.Render("https://github.com/paragon-intelligence/agentle4j/actions"),
+	)
+	fmt.Println(successBox.Render(successMsg))
+
+	// Sleep briefly so the user sees the success message
+	time.Sleep(500 * time.Millisecond)
+}
