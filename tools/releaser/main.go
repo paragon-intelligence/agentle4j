@@ -78,6 +78,40 @@ var (
 			Bold(true)
 )
 
+// Custom form theme with better button visibility
+func getFormTheme() *huh.Theme {
+	t := huh.ThemeBase()
+	
+	// Make the focused/selected button bright green
+	t.Focused.FocusedButton = t.Focused.FocusedButton.
+		Background(lipgloss.Color("#10B981")).
+		Foreground(lipgloss.Color("#FFFFFF")).
+		Bold(true)
+	
+	// Make the blurred/unselected button dim gray
+	t.Focused.BlurredButton = t.Focused.BlurredButton.
+		Background(lipgloss.Color("#374151")).
+		Foreground(lipgloss.Color("#9CA3AF"))
+	
+	// Style the title and description
+	t.Focused.Title = t.Focused.Title.
+		Foreground(primaryColor).
+		Bold(true)
+	
+	t.Focused.Description = t.Focused.Description.
+		Foreground(mutedColor)
+	
+	// Selected option styling
+	t.Focused.SelectedOption = t.Focused.SelectedOption.
+		Foreground(successColor).
+		Bold(true)
+	
+	t.Focused.UnselectedOption = t.Focused.UnselectedOption.
+		Foreground(lipgloss.Color("#D1D5DB"))
+	
+	return t
+}
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -314,7 +348,7 @@ func askErrorAction(stepName string, errMsg string, canSkip bool, canRollback bo
 				Options(options...).
 				Value(&choice),
 		),
-	).WithTheme(huh.ThemeCatppuccin())
+	).WithTheme(getFormTheme())
 
 	err := form.Run()
 	if err != nil {
@@ -720,7 +754,7 @@ func stepCreateRelease(state *ReleaseState) bool {
 				Placeholder(state.NewVersion.String()).
 				Value(&releaseTitle),
 		),
-	).WithTheme(huh.ThemeCatppuccin())
+	).WithTheme(getFormTheme())
 
 	err := titleForm.Run()
 	if err != nil {
@@ -812,7 +846,7 @@ func handleRepublish() {
 				Options(options...).
 				Value(&selectedVersion),
 		),
-	).WithTheme(huh.ThemeCatppuccin())
+	).WithTheme(getFormTheme())
 
 	err = form.Run()
 	if err != nil {
@@ -850,7 +884,7 @@ func handleRepublish() {
 				Negative("Cancel").
 				Value(&confirmed),
 		),
-	).WithTheme(huh.ThemeCatppuccin())
+	).WithTheme(getFormTheme())
 
 	err = confirmForm.Run()
 	if err != nil || !confirmed {
@@ -1020,7 +1054,7 @@ func main() {
 						).
 						Value(&failedAction),
 				),
-			).WithTheme(huh.ThemeCatppuccin())
+			).WithTheme(getFormTheme())
 
 			err = failedForm.Run()
 			if err != nil {
@@ -1080,7 +1114,7 @@ func main() {
 						).
 						Value(&waitAction),
 				),
-			).WithTheme(huh.ThemeCatppuccin())
+			).WithTheme(getFormTheme())
 
 			err = waitForm.Run()
 			if err != nil || waitAction == "exit" {
@@ -1103,7 +1137,7 @@ func main() {
 						Options(mainMenuOptions...).
 						Value(&mainAction),
 				),
-			).WithTheme(huh.ThemeCatppuccin())
+			).WithTheme(getFormTheme())
 
 			err = mainForm.Run()
 			if err != nil {
@@ -1141,7 +1175,7 @@ func main() {
 					).
 					Value(&versionChoice),
 			),
-		).WithTheme(huh.ThemeCatppuccin())
+		).WithTheme(getFormTheme())
 
 		err = form.Run()
 		if err != nil {
@@ -1163,7 +1197,7 @@ func main() {
 							return err
 						}),
 				),
-			).WithTheme(huh.ThemeCatppuccin())
+			).WithTheme(getFormTheme())
 
 			err = customForm.Run()
 			if err != nil {
@@ -1190,7 +1224,7 @@ func main() {
 					).
 					Value(&releaseType),
 			),
-		).WithTheme(huh.ThemeCatppuccin())
+		).WithTheme(getFormTheme())
 
 		err = form.Run()
 		if err != nil {
@@ -1222,7 +1256,7 @@ func main() {
 						Negative("Cancel").
 						Value(&confirmed),
 				),
-			).WithTheme(huh.ThemeCatppuccin())
+			).WithTheme(getFormTheme())
 
 			err = confirmForm.Run()
 			if err != nil || !confirmed {
@@ -1291,7 +1325,7 @@ func main() {
 					Negative("Cancel").
 					Value(&confirmed),
 			),
-		).WithTheme(huh.ThemeCatppuccin())
+		).WithTheme(getFormTheme())
 
 		err = confirmForm.Run()
 		if err != nil || !confirmed {
