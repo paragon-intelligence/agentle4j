@@ -1,0 +1,309 @@
+package com.paragon.agents;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+import com.paragon.responses.Responder;
+
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+
+/**
+ * Tests for Agent multi-turn conversation behavior.
+ *
+ * <p>Tests cover:
+ * - Context reuse across multiple interact() calls
+ * - History accumulation verification
+ * - Turn count tracking
+ * - State preservation
+ */
+@DisplayName("Agent Multi-Turn Tests")
+class AgentMultiTurnTest {
+
+  private MockWebServer mockWebServer;
+  private Responder responder;
+
+  @BeforeEach
+  void setUp() throws IOException {
+    mockWebServer = new MockWebServer();
+    mockWebServer.start();
+
+    responder = Responder.builder()
+        .openRouter()
+        .apiKey("test-key")
+        .baseUrl(mockWebServer.url("/"))
+        .build();
+  }
+
+  @AfterEach
+  void tearDown() throws IOException {
+    mockWebServer.shutdown();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONTEXT REUSE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("Context Reuse")
+  class ContextReuse {
+
+    @Test
+    @DisplayName("same context accumulates history across calls")
+    void sameContext_accumulatesHistory() {
+      Agent agent = createTestAgent("TestAgent");
+      AgentContext context = AgentContext.create();
+
+      // Enqueue responses for two turns
+      enqueueSuccessResponse("Response 1");
+      enqueueSuccessResponse("Response 2");
+
+      // First call
+      assertEquals(0, context.historySize());
+      agent.interact("First message", context).join();
+      int historyAfterFirst = context.historySize();
+      assertTrue(historyAfterFirst > 0);
+
+      // Second call with same context
+      agent.interact("Second message", context).join();
+      int historyAfterSecond = context.historySize();
+      assertTrue(historyAfterSecond > historyAfterFirst);
+    }
+
+    @Test
+    @DisplayName("new context starts fresh")
+    void newContext_startsFresh() {
+      Agent agent = createTestAgent("TestAgent");
+
+      enqueueSuccessResponse("Response 1");
+      enqueueSuccessResponse("Response 2");
+
+      AgentContext context1 = AgentContext.create();
+      agent.interact("Message 1", context1).join();
+
+      AgentContext context2 = AgentContext.create();
+      assertEquals(0, context2.historySize());
+      agent.interact("Message 2", context2).join();
+
+      // context1 and context2 should have independent histories
+      assertTrue(context1.historySize() > 0);
+      assertTrue(context2.historySize() > 0);
+    }
+
+    @Test
+    @DisplayName("context state persists across calls")
+    void contextState_persistsAcrossCalls() {
+      Agent agent = createTestAgent("TestAgent");
+      AgentContext context = AgentContext.create();
+
+      enqueueSuccessResponse("Response 1");
+      enqueueSuccessResponse("Response 2");
+
+      context.setState("userId", "user-123");
+      agent.interact("First", context).join();
+
+      // State should still be there
+      assertEquals("user-123", context.getState("userId"));
+
+      agent.interact("Second", context).join();
+      assertEquals("user-123", context.getState("userId"));
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TURN COUNTING
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("Turn Counting")
+  class TurnCounting {
+
+    @Test
+    @DisplayName("turnsUsed reflects LLM calls in single interaction")
+    void turnsUsed_reflectsLLMCalls() {
+      Agent agent = createTestAgent("TestAgent");
+
+      enqueueSuccessResponse("Simple response");
+
+      AgentResult result = agent.interact("Hello").join();
+
+      assertEquals(1, result.turnsUsed());
+    }
+
+    @Test
+    @DisplayName("turnsUsed reflects LLM calls in interaction")
+    void turnsUsed_reflectsLLMCallsInInteraction() {
+      Agent agent = createTestAgent("TestAgent");
+      AgentContext context = AgentContext.create();
+
+      enqueueSuccessResponse("Response 1");
+      enqueueSuccessResponse("Response 2");
+
+      AgentResult result1 = agent.interact("First", context).join();
+      assertTrue(result1.turnsUsed() >= 1);
+
+      AgentResult result2 = agent.interact("Second", context).join();
+      assertTrue(result2.turnsUsed() >= 1);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HISTORY VERIFICATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("History Verification")
+  class HistoryVerification {
+
+    @Test
+    @DisplayName("history contains user messages")
+    void history_containsUserMessages() {
+      Agent agent = createTestAgent("TestAgent");
+      AgentContext context = AgentContext.create();
+
+      enqueueSuccessResponse("Response");
+
+      agent.interact("User said this", context).join();
+
+      // History should have at least the user message
+      assertTrue(context.historySize() > 0);
+    }
+
+    @Test
+    @DisplayName("history is accessible from result")
+    void history_accessibleFromResult() {
+      Agent agent = createTestAgent("TestAgent");
+
+      enqueueSuccessResponse("Response text");
+
+      AgentResult result = agent.interact("Hello").join();
+
+      assertNotNull(result.history());
+      assertFalse(result.history().isEmpty());
+    }
+
+    @Test
+    @DisplayName("context copy creates independent history")
+    void contextCopy_createsIndependentHistory() {
+      Agent agent = createTestAgent("TestAgent");
+      AgentContext original = AgentContext.create();
+
+      enqueueSuccessResponse("Response 1");
+      agent.interact("Original message", original).join();
+
+      AgentContext copy = original.copy();
+      assertEquals(original.historySize(), copy.historySize());
+
+      enqueueSuccessResponse("Response 2");
+      agent.interact("New message", original).join();
+
+      // Copy should not have the new message
+      assertTrue(original.historySize() > copy.historySize());
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONVERSATION FLOW
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("Conversation Flow")
+  class ConversationFlow {
+
+    @Test
+    @DisplayName("multiple interactions with same context succeed")
+    void multipleInteractions_succeed() {
+      Agent agent = createTestAgent("TestAgent");
+      AgentContext context = AgentContext.create();
+
+      for (int i = 0; i < 5; i++) {
+        enqueueSuccessResponse("Response " + i);
+      }
+
+      for (int i = 0; i < 5; i++) {
+        AgentResult result = agent.interact("Message " + i, context).join();
+        assertNotNull(result.output());
+        assertFalse(result.isError());
+      }
+
+      assertTrue(context.historySize() >= 5);
+    }
+
+    @Test
+    @DisplayName("cleared context starts fresh conversation")
+    void clearedContext_startsFresh() {
+      Agent agent = createTestAgent("TestAgent");
+      AgentContext context = AgentContext.create();
+
+      enqueueSuccessResponse("First response");
+      agent.interact("First message", context).join();
+      int historyBefore = context.historySize();
+      assertTrue(historyBefore > 0);
+
+      context.clear();
+      assertEquals(0, context.historySize());
+
+      enqueueSuccessResponse("After clear");
+      agent.interact("After clear", context).join();
+      // History started fresh
+      assertTrue(context.historySize() < historyBefore * 2);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HELPERS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  private Agent createTestAgent(String name) {
+    return Agent.builder()
+        .name(name)
+        .instructions("You are a helpful assistant.")
+        .model("test-model")
+        .responder(responder)
+        .build();
+  }
+
+  private void enqueueSuccessResponse(String text) {
+    String responseJson = """
+        {
+          "id": "resp_%d",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_1",
+              "status": "completed",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "model": "test-model",
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 20,
+            "total_tokens": 30
+          }
+        }
+        """.formatted(System.nanoTime(), text);
+
+    mockWebServer.enqueue(new MockResponse()
+        .setBody(responseJson)
+        .setHeader("Content-Type", "application/json")
+        .setResponseCode(200));
+  }
+}

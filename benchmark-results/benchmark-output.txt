@@ -1,0 +1,46 @@
+================================================================
+           AGENTLE PERFORMANCE BENCHMARK                        
+                                                                
+  Comparison with: AGNO, LangGraph, PydanticAI, CrewAI          
+================================================================
+
+Running 1000 iterations...
+
+INSTANTIATION TIME BENCHMARK
+------------------------------------------------
+  Total time for 1000 iterations: 0,000451 seconds
+  Average time per agent: 0,000000 seconds
+  Average time per agent: 0,45 microseconds
+  Average time per agent: 451 nanoseconds
+
+MEMORY USAGE BENCHMARK
+------------------------------------------------
+  Total memory: 390,63 KiB
+  Average per agent: 400,00 bytes
+  Average per agent: 0,3906 KiB
+  (Hash: -273785009)
+
+================================================================
+COMPARISON WITH OTHER FRAMEWORKS
+================================================================
+
+Framework        |       Time (us) |    Memory (KiB) |         vs AGNO
+----------------------------------------------------------------
+AGNO             |            3,00 |          6,6000 |   1x (baseline)
+AGENTLE          |            0,45 |          0,3906 |     6,6x FASTER
+LangGraph        |         1587,00 |        161,4000 |     529x slower
+PydanticAI       |          170,00 |         28,7000 |      57x slower
+CrewAI           |          210,00 |         65,7000 |      70x slower
+----------------------------------------------------------------
+
+AGENTLE PERFORMANCE SUMMARY:
+  [OK] Agentle is 6,6x FASTER than AGNO!
+  [OK] Agentle is 3517x faster than LangGraph
+  [OK] Agentle is 377x faster than PydanticAI
+  [OK] Agentle is 465x faster than CrewAI
+
+================================================================
+Note: AGNO numbers from their official documentation (Oct 2025)
+Run on: Windows 11 amd64
+Java:   25
+================================================================
