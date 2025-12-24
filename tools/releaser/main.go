@@ -993,38 +993,133 @@ func main() {
 	// Only show main menu if there are existing releases
 	// For first release, go straight to the release flow
 	if !isFirstRelease {
-		var mainAction string
-		mainMenuOptions := []huh.Option[string]{
-			huh.NewOption("🚀 Create new release", "new"),
-			huh.NewOption("🔄 Republish existing release (failed workflow)", "republish"),
-			huh.NewOption("📊 Check workflow status", "status"),
-		}
+		// Check if the latest release workflow failed
+		workflowSuccess, workflowURL, workflowErr := getLatestWorkflowForRelease(latestRelease)
+		
+		if workflowErr == nil && !workflowSuccess {
+			// Latest workflow FAILED - show warning and ask what to do
+			fmt.Println(boxStyle.Copy().BorderForeground(errorColor).Render(
+				errorStyle.Render("⚠️  Warning: Previous Release Failed!") + "\n\n" +
+				"  The workflow for " + warningStyle.Render(latestRelease.String()) + " failed to publish.\n" +
+				"  " + mutedStyle.Render("This means "+latestRelease.String()+" is NOT on Maven Central!"),
+			))
+			if workflowURL != "" {
+				fmt.Println(mutedStyle.Render("  Failed run: " + workflowURL))
+			}
+			fmt.Println()
 
-		mainForm := huh.NewForm(
-			huh.NewGroup(
-				huh.NewSelect[string]().
-					Title("What would you like to do?").
-					Options(mainMenuOptions...).
-					Value(&mainAction),
-			),
-		).WithTheme(huh.ThemeCatppuccin())
+			var failedAction string
+			failedForm := huh.NewForm(
+				huh.NewGroup(
+					huh.NewSelect[string]().
+						Title("What would you like to do?").
+						Options(
+							huh.NewOption("🔄 Republish "+latestRelease.String()+" (fix the failed release)", "republish"),
+							huh.NewOption("🚀 Skip and create a NEW release (leave gap in versions)", "new"),
+							huh.NewOption("📊 Check all workflow statuses", "status"),
+						).
+						Value(&failedAction),
+				),
+			).WithTheme(huh.ThemeCatppuccin())
 
-		err = mainForm.Run()
-		if err != nil {
-			fmt.Println(warningStyle.Render("Cancelled."))
-			os.Exit(130)
-		}
+			err = failedForm.Run()
+			if err != nil {
+				fmt.Println(warningStyle.Render("Cancelled."))
+				os.Exit(130)
+			}
 
-		// Handle republish action
-		if mainAction == "republish" {
-			handleRepublish()
-			return
-		}
+			if failedAction == "republish" {
+				// Directly republish the failed release
+				fmt.Println()
+				fmt.Println(stepStyle.Render("Triggering workflow for " + latestRelease.String() + "..."))
 
-		// Handle status check action
-		if mainAction == "status" {
-			handleStatusCheck()
-			return
+				err = retriggerWorkflow(latestRelease)
+				if err != nil {
+					fmt.Println(errorStyle.Render("✗ Could not trigger workflow automatically"))
+					fmt.Println()
+					fmt.Println(infoStyle.Render("You can manually trigger it:"))
+					fmt.Println(mutedStyle.Render("  1. Go to: https://github.com/paragon-intelligence/agentle4j/actions"))
+					fmt.Println(mutedStyle.Render("  2. Click 'Publish to Maven Central' workflow"))
+					fmt.Println(mutedStyle.Render("  3. Click 'Run workflow' dropdown"))
+					fmt.Println(mutedStyle.Render("  4. Select tag: " + latestRelease.String()))
+					fmt.Println(mutedStyle.Render("  5. Click 'Run workflow'"))
+				} else {
+					fmt.Println(successStyle.Render("✓ Workflow triggered successfully!"))
+					fmt.Println()
+					fmt.Println(infoStyle.Render("Monitor progress at:"))
+					fmt.Println(mutedStyle.Render("  https://github.com/paragon-intelligence/agentle4j/actions"))
+				}
+				return
+			}
+
+			if failedAction == "status" {
+				handleStatusCheck()
+				return
+			}
+			// Continue with new release if "new" was chosen
+		} else if workflowErr != nil && strings.Contains(workflowErr.Error(), "still running") {
+			// Workflow is currently running
+			fmt.Println(boxStyle.Copy().BorderForeground(warningColor).Render(
+				warningStyle.Render("⏳ Workflow In Progress") + "\n\n" +
+				"  The publish workflow for " + infoStyle.Render(latestRelease.String()) + " is still running.\n" +
+				"  " + mutedStyle.Render("Wait for it to complete before creating a new release."),
+			))
+			if workflowURL != "" {
+				fmt.Println(mutedStyle.Render("  Watch progress: " + workflowURL))
+			}
+			fmt.Println()
+
+			var waitAction string
+			waitForm := huh.NewForm(
+				huh.NewGroup(
+					huh.NewSelect[string]().
+						Title("What would you like to do?").
+						Options(
+							huh.NewOption("🚀 Create new release anyway", "new"),
+							huh.NewOption("❌ Exit and wait for workflow", "exit"),
+						).
+						Value(&waitAction),
+				),
+			).WithTheme(huh.ThemeCatppuccin())
+
+			err = waitForm.Run()
+			if err != nil || waitAction == "exit" {
+				fmt.Println(infoStyle.Render("\nExiting. Run 'make release' again after workflow completes."))
+				return
+			}
+		} else {
+			// No issues detected - show normal menu
+			var mainAction string
+			mainMenuOptions := []huh.Option[string]{
+				huh.NewOption("🚀 Create new release", "new"),
+				huh.NewOption("🔄 Republish existing release", "republish"),
+				huh.NewOption("📊 Check workflow status", "status"),
+			}
+
+			mainForm := huh.NewForm(
+				huh.NewGroup(
+					huh.NewSelect[string]().
+						Title("What would you like to do?").
+						Options(mainMenuOptions...).
+						Value(&mainAction),
+				),
+			).WithTheme(huh.ThemeCatppuccin())
+
+			err = mainForm.Run()
+			if err != nil {
+				fmt.Println(warningStyle.Render("Cancelled."))
+				os.Exit(130)
+			}
+
+			if mainAction == "republish" {
+				handleRepublish()
+				return
+			}
+
+			if mainAction == "status" {
+				handleStatusCheck()
+				return
+			}
 		}
 	}
 	var newVersion Version
