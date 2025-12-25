@@ -70,7 +70,7 @@ LangGraph        │         1587.00 │        161.4350 │     529× slower
 implementation 'io.github.paragon-intelligence:agentle4j:0.1.0'
 ```
 
-> **Requirements:** Java 21+ (Java 25 recommended for preview features)
+> **Requirements:** Java 21+
 
 ---
 
