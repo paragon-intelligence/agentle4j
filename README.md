@@ -9,7 +9,7 @@
 [![Build](https://img.shields.io/badge/Build-Maven-purple?logo=apachemaven)](https://maven.apache.org/)
 [![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-Ready-blue?logo=opentelemetry)](https://opentelemetry.io/)
 
-*Type-safe, streaming-enabled, production-ready AI integration for Java 25+*
+*Type-safe, streaming-enabled, production-ready AI integration for Java 21+*
 
 </div>
 
@@ -1244,7 +1244,7 @@ String response = chatClient.prompt()
 | **Native RAG infrastructure** | LangChain4J, Spring AI | ⚠️ Achievable via tool calling |
 | **Spring Boot Starter** | LangChain4J, Spring AI, OpenAI SDK | — |
 | **Quarkus Extension** | LangChain4J, JLama | — |
-| **Java 17/21 support** | All others | Java 25+ required |
+| **Java 17/21 support** | All others | Java 21+ required |
 | **Vector store integrations** | LangChain4J (30+), Spring AI (20+) | Use via tools |
 | **Document loaders** | LangChain4J, Spring AI | — |
 
@@ -1256,7 +1256,7 @@ String response = chatClient.prompt()
 
 | Aspect | Agentle Advantage | Agentle Disadvantage |
 |--------|-------------------|----------------------|
-| **Java Version** | Modern features (records, virtual threads) | Java 25+ limits enterprise adoption |
+| **Java Version** | Modern features (records, virtual threads) | Java 21+ with modern features |
 | **API Focus** | Optimized for Responses API | No Chat Completions fallback |
 | **Multi-provider** | 300+ models via OpenRouter + native Groq/Ollama | Depends on Responses API adoption |
 | **RAG** | Flexible via tool calling | No built-in vector stores/loaders |
@@ -1270,7 +1270,7 @@ String response = chatClient.prompt()
 
 | Choose... | When you need... |
 |-----------|------------------|
-| **Agentle** | OpenAI Responses API, streaming structured output, Java 25+, virtual threads, OpenTelemetry built-in |
+| **Agentle** | OpenAI Responses API, streaming structured output, Java 21+, virtual threads, OpenTelemetry built-in |
 | **LangChain4J** | Multi-provider, RAG, Quarkus, declarative AI Services, production-proven |
 | **Spring AI** | Spring ecosystem, Reactor/WebFlux, Micrometer, Spring Boot auto-config |
 | **OpenAI SDK** | Official client, thin abstraction, both APIs support |
@@ -1281,14 +1281,14 @@ String response = chatClient.prompt()
 
 ## 🏁 Conclusion
 
-Agentle occupies a **forward-looking niche**: Java developers adopting OpenAI's Responses API with modern Java 25+ features. Its strengths in **structured streaming**, **streaming tool calls**, and **virtual thread-based async** are genuinely unique among Java GenAI libraries.
+Agentle occupies a **forward-looking niche**: Java developers adopting OpenAI's Responses API with modern Java 21+ features. Its strengths in **structured streaming**, **streaming tool calls**, and **virtual thread-based async** are genuinely unique among Java GenAI libraries.
 
 **Key differentiator**: While LangChain4J and Spring AI require native integrations per provider, Agentle's Responses API focus provides access to **300+ models via OpenRouter** plus growing native support (Groq, Ollama) through a single, consistent API.
 
 **RAG without the bloat**: Instead of built-in vector stores, Agentle enables RAG via tool calling—a more flexible, LLM-orchestrated approach.
 
 **Agentle's success factors:**
-1. Java 25+ enterprise adoption (likely 2026+)
+1. Java 21+ LTS enterprise adoption
 2. Responses API becoming the industry standard
 3. More providers adopting Responses API natively
 4. Building community and documentation
