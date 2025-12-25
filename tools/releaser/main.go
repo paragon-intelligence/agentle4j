@@ -518,6 +518,151 @@ func retriggerWorkflow(version Version) error {
 	return cmd.Run()
 }
 
+// WorkflowStep represents a step in a GitHub Actions job
+type WorkflowStep struct {
+	Name       string `json:"name"`
+	Conclusion string `json:"conclusion"`
+	Status     string `json:"status"`
+}
+
+// WorkflowJob represents a job in a GitHub Actions workflow run
+type WorkflowJob struct {
+	Name       string         `json:"name"`
+	Conclusion string         `json:"conclusion"`
+	Status     string         `json:"status"`
+	Steps      []WorkflowStep `json:"steps"`
+}
+
+// WorkflowDetails contains detailed information about a workflow run
+type WorkflowDetails struct {
+	RunID          int64
+	URL            string
+	Conclusion     string
+	FailedSteps    []string
+	SucceededSteps []string
+	MavenPublished bool // True if Maven Central publish succeeded
+}
+
+// getWorkflowRunID gets the run ID for a version's workflow
+func getWorkflowRunID(version Version) (int64, string, error) {
+	cmd := exec.Command("gh", "run", "list",
+		"--workflow", "publish-to-maven-central.yml",
+		"--json", "headBranch,displayTitle,databaseId,url,conclusion",
+		"--limit", "10",
+	)
+	output, err := cmd.Output()
+	if err != nil {
+		return 0, "", err
+	}
+
+	var runs []struct {
+		HeadBranch   string `json:"headBranch"`
+		DisplayTitle string `json:"displayTitle"`
+		DatabaseId   int64  `json:"databaseId"`
+		URL          string `json:"url"`
+		Conclusion   string `json:"conclusion"`
+	}
+	if err := json.Unmarshal(output, &runs); err != nil {
+		return 0, "", err
+	}
+
+	for _, run := range runs {
+		if strings.Contains(run.HeadBranch, version.String()) ||
+			strings.Contains(run.DisplayTitle, version.String()) {
+			return run.DatabaseId, run.URL, nil
+		}
+	}
+	return 0, "", fmt.Errorf("no workflow found for %s", version.String())
+}
+
+// getWorkflowDetails fetches detailed information about a workflow run
+func getWorkflowDetails(version Version) (*WorkflowDetails, error) {
+	runID, url, err := getWorkflowRunID(version)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd := exec.Command("gh", "run", "view", fmt.Sprintf("%d", runID), "--json", "jobs,conclusion")
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	var result struct {
+		Conclusion string        `json:"conclusion"`
+		Jobs       []WorkflowJob `json:"jobs"`
+	}
+	if err := json.Unmarshal(output, &result); err != nil {
+		return nil, err
+	}
+
+	details := &WorkflowDetails{
+		RunID:      runID,
+		URL:        url,
+		Conclusion: result.Conclusion,
+	}
+
+	// Analyze steps
+	for _, job := range result.Jobs {
+		for _, step := range job.Steps {
+			if step.Conclusion == "failure" {
+				details.FailedSteps = append(details.FailedSteps, step.Name)
+			} else if step.Conclusion == "success" {
+				details.SucceededSteps = append(details.SucceededSteps, step.Name)
+				// Check if Maven publish succeeded
+				if strings.Contains(step.Name, "Publish to Maven") ||
+					strings.Contains(step.Name, "deploy") {
+					details.MavenPublished = true
+				}
+			}
+		}
+	}
+
+	// Also check if "Build and verify" succeeded (means code compiled)
+	for _, step := range details.SucceededSteps {
+		if strings.Contains(step, "Build and verify") {
+			// Build succeeded, likely Maven operations worked
+		}
+	}
+
+	return details, nil
+}
+
+// formatWorkflowStatus returns a detailed status message for a workflow
+func formatWorkflowStatus(details *WorkflowDetails) string {
+	if details == nil {
+		return "Could not fetch workflow details"
+	}
+
+	var sb strings.Builder
+
+	if details.Conclusion == "success" {
+		sb.WriteString("✅ All steps completed successfully")
+		return sb.String()
+	}
+
+	if len(details.FailedSteps) > 0 {
+		sb.WriteString("❌ Failed step(s): ")
+		sb.WriteString(strings.Join(details.FailedSteps, ", "))
+	}
+
+	// Check if Maven published even though workflow failed
+	mavenPublishSucceeded := false
+	for _, step := range details.SucceededSteps {
+		if strings.Contains(step, "Publish to Maven Central") {
+			mavenPublishSucceeded = true
+			break
+		}
+	}
+
+	if mavenPublishSucceeded {
+		sb.WriteString("\n   ✅ Maven Central publish SUCCEEDED!")
+		sb.WriteString("\n   ℹ️  Your library IS published, the failure was in a later step.")
+	}
+
+	return sb.String()
+}
+
 func getPomVersion() (Version, error) {
 	content, err := os.ReadFile("pom.xml")
 	if err != nil {
@@ -1212,14 +1357,23 @@ func main() {
 		workflowSuccess, workflowURL, workflowErr := getLatestWorkflowForRelease(latestRelease)
 		
 		if workflowErr == nil && !workflowSuccess {
-			// Latest workflow FAILED - show warning and ask what to do
-			fmt.Println(boxStyle.Copy().BorderForeground(errorColor).Render(
-				errorStyle.Render("⚠️  Warning: Previous Release Failed!") + "\n\n" +
-				"  The workflow for " + warningStyle.Render(latestRelease.String()) + " failed to publish.\n" +
-				"  " + mutedStyle.Render("This means "+latestRelease.String()+" is NOT on Maven Central!"),
-			))
+			// Latest workflow FAILED - get detailed information
+			details, detailsErr := getWorkflowDetails(latestRelease)
+			
+			// Build the warning message
+			warningMsg := errorStyle.Render("⚠️  Warning: Previous Release Workflow Failed!") + "\n\n" +
+				"  The workflow for " + warningStyle.Render(latestRelease.String()) + " did not fully complete."
+			
+			if detailsErr == nil && details != nil {
+				warningMsg += "\n\n  " + formatWorkflowStatus(details)
+			} else {
+				warningMsg += "\n  " + mutedStyle.Render("Could not determine which step failed.")
+			}
+			
+			fmt.Println(boxStyle.Copy().BorderForeground(errorColor).Render(warningMsg))
+			
 			if workflowURL != "" {
-				fmt.Println(mutedStyle.Render("  Failed run: " + workflowURL))
+				fmt.Println(mutedStyle.Render("  Workflow run: " + workflowURL))
 			}
 			fmt.Println()
 
