@@ -1,0 +1,9 @@
+# Linguist overrides for GitHub language statistics
+# https://github.com/github/linguist/blob/master/docs/overrides.md
+
+# Mark generated documentation as generated (excluded from stats)
+docs/api/** linguist-generated
+site/** linguist-generated
+
+# Ensure Java is recognized as the main language
+*.java linguist-detectable=true
