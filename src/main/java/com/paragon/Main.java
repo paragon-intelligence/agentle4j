@@ -39,7 +39,7 @@ public class Main {
     String apiKey = dotenv.get("OPENROUTER_API_KEY");
 
     if (apiKey == null || apiKey.isBlank()) {
-      IO.println("❌ Error: OPENROUTER_API_KEY not found in .env file");
+      System.out.println("❌ Error: OPENROUTER_API_KEY not found in .env file");
       return;
     }
 
@@ -48,40 +48,40 @@ public class Main {
   }
 
   private static void printMenu() {
-    IO.println("\n" + "═".repeat(70));
-    IO.println("              🚀 AGENTLE USAGE EXAMPLES                ");
-    IO.println("═".repeat(70));
-    IO.println("\n📋 RESPONDER API EXAMPLES:");
-    IO.println("   1.  Simple Text Generation");
-    IO.println("   2.  Structured Output Generation");
-    IO.println("   3.  Function Calling");
-    IO.println("   4.  Temperature & Sampling Control");
-    IO.println("   5.  Multi-turn Conversation");
-    IO.println("   6.  Vision (Image Input)");
-    IO.println("   7.  Tool Choice Control");
-    IO.println("   8.  Max Tokens & Truncation");
-    IO.println("   9.  Streaming Response");
-    IO.println("   10. Structured Streaming Output");
-    IO.println("\n🤖 AGENT API EXAMPLES:");
-    IO.println("   11. Basic Agent Interaction");
-    IO.println("   12. Agent with Guardrails");
-    IO.println("   13. Agent with Handoffs");
-    IO.println("   14. Parallel Agents (Fan-out/Fan-in)");
-    IO.println("   15. Router Agent (Classification)");
-    IO.println("   16. Agent with Memory");
-    IO.println("\n   0.  Exit");
-    IO.println("\n" + "─".repeat(70));
+    System.out.println("\n" + "═".repeat(70));
+    System.out.println("              🚀 AGENTLE USAGE EXAMPLES                ");
+    System.out.println("═".repeat(70));
+    System.out.println("\n📋 RESPONDER API EXAMPLES:");
+    System.out.println("   1.  Simple Text Generation");
+    System.out.println("   2.  Structured Output Generation");
+    System.out.println("   3.  Function Calling");
+    System.out.println("   4.  Temperature & Sampling Control");
+    System.out.println("   5.  Multi-turn Conversation");
+    System.out.println("   6.  Vision (Image Input)");
+    System.out.println("   7.  Tool Choice Control");
+    System.out.println("   8.  Max Tokens & Truncation");
+    System.out.println("   9.  Streaming Response");
+    System.out.println("   10. Structured Streaming Output");
+    System.out.println("\n🤖 AGENT API EXAMPLES:");
+    System.out.println("   11. Basic Agent Interaction");
+    System.out.println("   12. Agent with Guardrails");
+    System.out.println("   13. Agent with Handoffs");
+    System.out.println("   14. Parallel Agents (Fan-out/Fan-in)");
+    System.out.println("   15. Router Agent (Classification)");
+    System.out.println("   16. Agent with Memory");
+    System.out.println("\n   0.  Exit");
+    System.out.println("\n" + "─".repeat(70));
   }
 
   private static void runCLI(String apiKey) {
     Scanner scanner = new Scanner(System.in);
 
     while (true) {
-      IO.print("\n👉 Enter example number (0 to exit): ");
+      System.out.print("\n👉 Enter example number (0 to exit): ");
       String input = scanner.nextLine().trim();
 
       if (input.equals("0") || input.equalsIgnoreCase("exit")) {
-        IO.println("\n👋 Goodbye!");
+        System.out.println("\n👋 Goodbye!");
         break;
       }
 
@@ -89,14 +89,14 @@ public class Main {
         int choice = Integer.parseInt(input);
         runExample(choice, apiKey);
       } catch (NumberFormatException e) {
-        IO.println("❌ Invalid input. Please enter a number.");
+        System.out.println("❌ Invalid input. Please enter a number.");
       } catch (Exception e) {
-        IO.println("❌ Error running example: " + e.getMessage());
+        System.out.println("❌ Error running example: " + e.getMessage());
         e.printStackTrace();
       }
 
-      IO.println("\n" + "─".repeat(70));
-      IO.println("Press Enter to see the menu again...");
+      System.out.println("\n" + "─".repeat(70));
+      System.out.println("Press Enter to see the menu again...");
       scanner.nextLine();
       printMenu();
     }
@@ -122,7 +122,7 @@ public class Main {
       case 14 -> parallelAgentsExample(apiKey);
       case 15 -> routerAgentExample(apiKey);
       case 16 -> agentWithMemoryExample(apiKey);
-      default -> IO.println("❌ Unknown example number: " + choice);
+      default -> System.out.println("❌ Unknown example number: " + choice);
     }
   }
 
@@ -134,8 +134,8 @@ public class Main {
    * Example 1: Basic text generation with the Responses API.
    */
   private static void simpleTextGeneration(String apiKey) {
-    IO.println("\n📝 Example 1: Simple Text Generation");
-    IO.println("─".repeat(40));
+    System.out.println("\n📝 Example 1: Simple Text Generation");
+    System.out.println("─".repeat(40));
 
     var langfuseProcessor = LangfuseProcessor.fromEnv();
     Responder responder =
@@ -153,15 +153,15 @@ public class Main {
                     .build();
 
     Response response = responder.respond(payload).join();
-    IO.println("🤖 Response: " + response.outputText());
+    System.out.println("🤖 Response: " + response.outputText());
   }
 
   /**
    * Example 2: Generate structured JSON output matching a specific schema.
    */
   private static void structuredOutputGeneration(String apiKey) {
-    IO.println("\n📝 Example 2: Structured Output Generation");
-    IO.println("─".repeat(40));
+    System.out.println("\n📝 Example 2: Structured Output Generation");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -174,15 +174,15 @@ public class Main {
                     .build();
 
     Response response = responder.respond(payload).join();
-    IO.println("🌤️ Structured Response: " + response.outputText());
+    System.out.println("🌤️ Structured Response: " + response.outputText());
   }
 
   /**
    * Example 3: Function calling allows the model to invoke custom tools.
    */
   private static void functionCallingExample(String apiKey) throws JsonProcessingException {
-    IO.println("\n📝 Example 3: Function Calling");
-    IO.println("─".repeat(40));
+    System.out.println("\n📝 Example 3: Function Calling");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -207,7 +207,7 @@ public class Main {
     var calledFunctions = response.functionToolCalls(toolStore);
     for (BoundedFunctionCall calledFunction : calledFunctions) {
       var output = calledFunction.call();
-      IO.println("🔧 Tool Result: " + output);
+      System.out.println("🔧 Tool Result: " + output);
     }
   }
 
@@ -215,8 +215,8 @@ public class Main {
    * Example 4: Control randomness using temperature and topP.
    */
   private static void temperatureControlExample(String apiKey) {
-    IO.println("\n📝 Example 4: Temperature & Sampling Control");
-    IO.println("─".repeat(40));
+    System.out.println("\n📝 Example 4: Temperature & Sampling Control");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -242,19 +242,19 @@ public class Main {
                     .topP(0.9)
                     .build();
 
-    IO.println("🎯 Low Temperature (0.2) - Focused:");
-    IO.println("   " + responder.respond(focusedPayload).join().outputText());
+    System.out.println("🎯 Low Temperature (0.2) - Focused:");
+    System.out.println("   " + responder.respond(focusedPayload).join().outputText());
 
-    IO.println("\n🎨 High Temperature (1.5) - Creative:");
-    IO.println("   " + responder.respond(creativePayload).join().outputText());
+    System.out.println("\n🎨 High Temperature (1.5) - Creative:");
+    System.out.println("   " + responder.respond(creativePayload).join().outputText());
   }
 
   /**
    * Example 5: Multi-turn conversation with context.
    */
   private static void multiTurnConversationExample(String apiKey) {
-    IO.println("\n📝 Example 5: Multi-turn Conversation");
-    IO.println("─".repeat(40));
+    System.out.println("\n📝 Example 5: Multi-turn Conversation");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -268,7 +268,7 @@ public class Main {
 
     Response response1 = responder.respond(turn1).join();
     String reply1 = response1.outputText();
-    IO.println("📚 Turn 1: " + reply1);
+    System.out.println("📚 Turn 1: " + reply1);
 
     // Turn 2 (includes context)
     CreateResponsePayload turn2 =
@@ -281,15 +281,15 @@ public class Main {
                     .build();
 
     Response response2 = responder.respond(turn2).join();
-    IO.println("\n📚 Turn 2: " + response2.outputText());
+    System.out.println("\n📚 Turn 2: " + response2.outputText());
   }
 
   /**
    * Example 6: Vision - send images to vision-capable models.
    */
   private static void visionExample(String apiKey) {
-    IO.println("\n📝 Example 6: Vision (Image Analysis)");
-    IO.println("─".repeat(40));
+    System.out.println("\n📝 Example 6: Vision (Image Analysis)");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -311,15 +311,15 @@ public class Main {
                     .build();
 
     var response = responder.respond(payload).join();
-    IO.println("🖼️ Vision Response: " + response.outputText());
+    System.out.println("🖼️ Vision Response: " + response.outputText());
   }
 
   /**
    * Example 7: Tool choice control - AUTO, REQUIRED, or NONE.
    */
   private static void toolChoiceExample(String apiKey) {
-    IO.println("\n📝 Example 7: Tool Choice Control");
-    IO.println("─".repeat(40));
+    System.out.println("\n📝 Example 7: Tool Choice Control");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -343,7 +343,7 @@ public class Main {
                     .build();
 
     Response required = responder.respond(requiredPayload).join();
-    IO.println("🔧 ToolChoice=REQUIRED - Tool called: " + !required.functionToolCalls().isEmpty());
+    System.out.println("🔧 ToolChoice=REQUIRED - Tool called: " + !required.functionToolCalls().isEmpty());
 
     // NONE: Prevent tool calling
     CreateResponsePayload nonePayload =
@@ -355,15 +355,15 @@ public class Main {
                     .build();
 
     Response none = responder.respond(nonePayload).join();
-    IO.println("🚫 ToolChoice=NONE - Response: " + none.outputText());
+    System.out.println("🚫 ToolChoice=NONE - Response: " + none.outputText());
   }
 
   /**
    * Example 8: Control response length with max tokens.
    */
   private static void maxTokensExample(String apiKey) {
-    IO.println("\n📝 Example 8: Max Tokens & Truncation");
-    IO.println("─".repeat(40));
+    System.out.println("\n📝 Example 8: Max Tokens & Truncation");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -376,15 +376,15 @@ public class Main {
                     .build();
 
     Response response = responder.respond(shortPayload).join();
-    IO.println("📏 Response (max 50 tokens): " + response.outputText());
+    System.out.println("📏 Response (max 50 tokens): " + response.outputText());
   }
 
   /**
    * Example 9: Stream responses in real-time using virtual threads.
    */
   private static void streamingExample(String apiKey) {
-    IO.println("\n📝 Example 9: Streaming Response");
-    IO.println("─".repeat(40));
+    System.out.println("\n📝 Example 9: Streaming Response");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -396,15 +396,15 @@ public class Main {
                     .streaming()
                     .build();
 
-    IO.println("🎬 Streaming:");
+    System.out.println("🎬 Streaming:");
     responder
             .respond(payload)
             .onTextDelta(delta -> {
               System.out.print(delta);
               System.out.flush();
             })
-            .onComplete(response -> IO.println("\n✅ Stream completed!"))
-            .onError(error -> IO.println("\n❌ Error: " + error.getMessage()))
+            .onComplete(response -> System.out.println("\n✅ Stream completed!"))
+            .onError(error -> System.out.println("\n❌ Error: " + error.getMessage()))
             .start();
 
     try {
@@ -418,8 +418,8 @@ public class Main {
    * Example 10: Stream structured output and parse to typed object.
    */
   private static void structuredStreamingExample(String apiKey) {
-    IO.println("\n📝 Example 10: Structured Streaming Output");
-    IO.println("─".repeat(40));
+    System.out.println("\n📝 Example 10: Structured Streaming Output");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -432,7 +432,7 @@ public class Main {
                     .streaming()
                     .build();
 
-    IO.println("🎬 Streaming JSON:");
+    System.out.println("🎬 Streaming JSON:");
     responder
             .respond(payload)
             .onTextDelta(delta -> {
@@ -441,9 +441,9 @@ public class Main {
             })
             .onParsedComplete(parsed -> {
               StreamedPerson person = parsed.outputParsed();
-              IO.println("\n✅ Parsed: " + person.name() + ", " + person.age() + " yo, " + person.occupation());
+              System.out.println("\n✅ Parsed: " + person.name() + ", " + person.age() + " yo, " + person.occupation());
             })
-            .onError(error -> IO.println("\n❌ Error: " + error.getMessage()))
+            .onError(error -> System.out.println("\n❌ Error: " + error.getMessage()))
             .start();
 
     try {
@@ -463,8 +463,8 @@ public class Main {
    * Shows how to maintain conversation history by reusing AgentContext.
    */
   private static void basicAgentExample(String apiKey) {
-    IO.println("\n🤖 Example 11: Basic Agent Interaction");
-    IO.println("─".repeat(40));
+    System.out.println("\n🤖 Example 11: Basic Agent Interaction");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -479,16 +479,16 @@ public class Main {
     // ⚠️ KEY: Create ONE context and REUSE it for multi-turn conversation
     AgentContext context = AgentContext.create();
 
-    IO.println("📤 Sending: 'What is the capital of France?'");
+    System.out.println("📤 Sending: 'What is the capital of France?'");
     AgentResult result1 = agent.interact("What is the capital of France?", context).join();
-    IO.println("📥 Response: " + result1.output());
-    IO.println("📊 Turns used: " + result1.turnsUsed());
+    System.out.println("📥 Response: " + result1.output());
+    System.out.println("📊 Turns used: " + result1.turnsUsed());
 
     // The context now contains the previous exchange in its history
-    IO.println("\n📤 Sending: 'And what about Germany?' (using same context)");
+    System.out.println("\n📤 Sending: 'And what about Germany?' (using same context)");
     AgentResult result2 = agent.interact("And what about Germany?", context).join();
-    IO.println("📥 Response: " + result2.output());
-    IO.println("📊 Context history size: " + context.historySize());
+    System.out.println("📥 Response: " + result2.output());
+    System.out.println("📊 Context history size: " + context.historySize());
   }
 
   /**
@@ -496,8 +496,8 @@ public class Main {
    * Demonstrates input/output validation using guardrails.
    */
   private static void agentWithGuardrailsExample(String apiKey) {
-    IO.println("\n🤖 Example 12: Agent with Guardrails");
-    IO.println("─".repeat(40));
+    System.out.println("\n🤖 Example 12: Agent with Guardrails");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -524,17 +524,17 @@ public class Main {
             .build();
 
     // Test 1: Valid input
-    IO.println("📤 Sending: 'Tell me a joke.'");
+    System.out.println("📤 Sending: 'Tell me a joke.'");
     AgentResult result1 = agent.interact("Tell me a joke.").join();
-    IO.println("📥 Response: " + result1.output());
+    System.out.println("📥 Response: " + result1.output());
 
     // Test 2: Blocked by input guardrail
-    IO.println("\n📤 Sending: 'What is my password?'");
+    System.out.println("\n📤 Sending: 'What is my password?'");
     AgentResult result2 = agent.interact("What is my password?").join();
     if (result2.isError()) {
-      IO.println("🚫 Blocked: " + result2.error().getMessage());
+      System.out.println("🚫 Blocked: " + result2.error().getMessage());
     } else {
-      IO.println("📥 Response: " + result2.output());
+      System.out.println("📥 Response: " + result2.output());
     }
   }
 
@@ -543,8 +543,8 @@ public class Main {
    * Demonstrates agent-to-agent transfer when conditions are met.
    */
   private static void agentWithHandoffsExample(String apiKey) {
-    IO.println("\n🤖 Example 13: Agent with Handoffs");
-    IO.println("─".repeat(40));
+    System.out.println("\n🤖 Example 13: Agent with Handoffs");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -568,13 +568,13 @@ public class Main {
                     .build())
             .build();
 
-    IO.println("📤 Sending: 'I have a question about my invoice from last month.'");
+    System.out.println("📤 Sending: 'I have a question about my invoice from last month.'");
 
     AgentResult result = triageAgent.interact("I have a question about my invoice from last month.").join();
-    IO.println("📥 Response: " + result.output());
+    System.out.println("📥 Response: " + result.output());
 
     if (result.handoffAgent() != null) {
-      IO.println("🔄 Handed off to: " + result.handoffAgent().name());
+      System.out.println("🔄 Handed off to: " + result.handoffAgent().name());
     }
   }
 
@@ -583,8 +583,8 @@ public class Main {
    * Demonstrates running multiple agents concurrently and synthesizing results.
    */
   private static void parallelAgentsExample(String apiKey) {
-    IO.println("\n🤖 Example 14: Parallel Agents (Fan-out/Fan-in)");
-    IO.println("─".repeat(40));
+    System.out.println("\n🤖 Example 14: Parallel Agents (Fan-out/Fan-in)");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -614,12 +614,12 @@ public class Main {
     ParallelAgents team = ParallelAgents.of(optimistAgent, pessimistAgent);
 
     String question = "Should I start a business during a recession?";
-    IO.println("📤 Query: '" + question + "'");
-    IO.println("🔄 Running agents in parallel...\n");
+    System.out.println("📤 Query: '" + question + "'");
+    System.out.println("🔄 Running agents in parallel...\n");
 
     // Run all agents and synthesize
     AgentResult synthesized = team.runAndSynthesize(question, synthesizerAgent).join();
-    IO.println("📥 Synthesized Response:\n" + synthesized.output());
+    System.out.println("📥 Synthesized Response:\n" + synthesized.output());
   }
 
   /**
@@ -627,8 +627,8 @@ public class Main {
    * Demonstrates intelligent routing of inputs to appropriate agents.
    */
   private static void routerAgentExample(String apiKey) {
-    IO.println("\n🤖 Example 15: Router Agent (Classification)");
-    IO.println("─".repeat(40));
+    System.out.println("\n🤖 Example 15: Router Agent (Classification)");
+    System.out.println("─".repeat(40));
 
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
@@ -665,15 +665,15 @@ public class Main {
 
     // Test routing
     String techQuery = "My application keeps crashing when I try to save files.";
-    IO.println("📤 Query: '" + techQuery + "'");
+    System.out.println("📤 Query: '" + techQuery + "'");
 
     // Classify without executing
     Agent classified = router.classify(techQuery).join();
-    IO.println("📍 Would route to: " + (classified != null ? classified.name() : "fallback"));
+    System.out.println("📍 Would route to: " + (classified != null ? classified.name() : "fallback"));
 
     // Route and execute
     AgentResult result = router.route(techQuery).join();
-    IO.println("📥 Response: " + result.output());
+    System.out.println("📥 Response: " + result.output());
   }
 
   /**
@@ -681,8 +681,8 @@ public class Main {
    * Demonstrates using InMemoryMemory for conversation context.
    */
   private static void agentWithMemoryExample(String apiKey) {
-    IO.println("\n🤖 Example 16: Agent with Memory");
-    IO.println("─".repeat(40));
+    System.out.println("\n🤖 Example 16: Agent with Memory");
+    System.out.println("─".repeat(40));
 
     // Create an in-memory store
     InMemoryMemory memory = InMemoryMemory.create();
@@ -693,23 +693,23 @@ public class Main {
     memory.add(userId, MemoryEntry.of("User's name is Carlos."));
     memory.add(userId, MemoryEntry.of("User is interested in machine learning."));
 
-    IO.println("📝 Stored memories for user '" + userId + "':");
+    System.out.println("📝 Stored memories for user '" + userId + "':");
     memory.all(userId).forEach(entry ->
-            IO.println("   • " + entry.content())
+            System.out.println("   • " + entry.content())
     );
 
     // Retrieve relevant memories based on query
-    IO.println("\n🔍 Querying for 'name':");
+    System.out.println("\n🔍 Querying for 'name':");
     List<MemoryEntry> relevant = memory.retrieve(userId, "name", 2);
-    relevant.forEach(entry -> IO.println("   • " + entry.content()));
+    relevant.forEach(entry -> System.out.println("   • " + entry.content()));
 
     // You can use these memories to enrich agent context
-    IO.println("\n💡 These memories can be injected into agent instructions or context.");
+    System.out.println("\n💡 These memories can be injected into agent instructions or context.");
 
     // Demonstrate memory operations
-    IO.println("\n🗑️ Clearing all memories for user...");
+    System.out.println("\n🗑️ Clearing all memories for user...");
     memory.clear(userId);
-    IO.println("   Memory size after clear: " + memory.size(userId));
+    System.out.println("   Memory size after clear: " + memory.size(userId));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -717,16 +717,16 @@ public class Main {
   // ═══════════════════════════════════════════════════════════════════════════
 
   private static void printResponse(String exampleName, Response response) {
-    IO.println("\n" + "═".repeat(60));
-    IO.println("📋 " + exampleName + " - Response");
-    IO.println("═".repeat(60));
+    System.out.println("\n" + "═".repeat(60));
+    System.out.println("📋 " + exampleName + " - Response");
+    System.out.println("═".repeat(60));
     try {
-      IO.println(
+      System.out.println(
               ResponsesApiObjectMapper.create()
                       .writerWithDefaultPrettyPrinter()
                       .writeValueAsString(response));
     } catch (JsonProcessingException e) {
-      IO.println("Error serializing response: " + e.getMessage());
+      System.out.println("Error serializing response: " + e.getMessage());
     }
   }
 

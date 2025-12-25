@@ -389,7 +389,7 @@ public final class ResponseStream<T> {
     StringBuilder textBuilder = new StringBuilder();
 
     this.onTextDelta(textBuilder::append);
-    this.onComplete(_ -> future.complete(textBuilder.toString()));
+    this.onComplete(ignored -> future.complete(textBuilder.toString()));
     this.onError(future::completeExceptionally);
 
     if (started.compareAndSet(false, true)) {
