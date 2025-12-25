@@ -54,15 +54,23 @@ LangGraph        │         1587.00 │        161.4350 │     529× slower
 
 ## 📥 Installation
 
+### Maven
+
 ```xml
 <dependency>
-    <groupId>com.paragon</groupId>
-    <artifactId>agentle</artifactId>
-    <version>1.0.0</version>
+    <groupId>io.github.paragon-intelligence</groupId>
+    <artifactId>agentle4j</artifactId>
+    <version>0.1.0</version>
 </dependency>
 ```
 
-> **Requirements:** Java 25+ with preview features enabled
+### Gradle
+
+```groovy
+implementation 'io.github.paragon-intelligence:agentle4j:0.1.0'
+```
+
+> **Requirements:** Java 21+ (Java 25 recommended for preview features)
 
 ---
 
