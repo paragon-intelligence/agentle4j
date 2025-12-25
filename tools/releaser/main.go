@@ -961,6 +961,187 @@ func handleStatusCheck() {
 	fmt.Println(infoStyle.Render("Use 'Republish existing release' to retry failed workflows."))
 }
 
+// deleteTagAndRelease deletes both the GitHub release and the git tag (local and remote)
+func deleteTagAndRelease(version Version) error {
+	// Delete GitHub release first
+	cmd := exec.Command("gh", "release", "delete", version.String(), "--yes")
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("could not delete release: %s", string(output))
+	}
+
+	// Delete remote tag
+	cmd = exec.Command("git", "push", "--delete", "origin", version.String())
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("could not delete remote tag: %s", string(output))
+	}
+
+	// Delete local tag
+	cmd = exec.Command("git", "tag", "-d", version.String())
+	cmd.Run() // Ignore error if local tag doesn't exist
+
+	return nil
+}
+
+func handleRecreateRelease() {
+	fmt.Println()
+	fmt.Println(boxStyle.Render(titleStyle.Render("🔄 Recreate Release (Delete & Republish)")))
+	fmt.Println()
+	fmt.Println(warningStyle.Render("⚠️  This will:"))
+	fmt.Println(mutedStyle.Render("   1. Delete the existing GitHub release and tag"))
+	fmt.Println(mutedStyle.Render("   2. Create a new tag from the CURRENT code"))
+	fmt.Println(mutedStyle.Render("   3. Create a new release and trigger the publish workflow"))
+	fmt.Println()
+	fmt.Println(infoStyle.Render("Use this when your release was created from old/broken code."))
+	fmt.Println()
+
+	// Get all releases
+	releases, err := getAllReleases()
+	if err != nil || len(releases) == 0 {
+		fmt.Println(errorStyle.Render("✗ No releases found to recreate"))
+		return
+	}
+
+	// Build options with workflow status
+	var options []huh.Option[string]
+	for _, v := range releases {
+		success, _, err := getLatestWorkflowForRelease(v)
+		var status string
+		if err != nil {
+			if strings.Contains(err.Error(), "still running") {
+				status = "⏳ Running"
+			} else {
+				status = "❓ Unknown"
+			}
+		} else if success {
+			status = "✅ Success"
+		} else {
+			status = "❌ Failed"
+		}
+		options = append(options, huh.NewOption(
+			fmt.Sprintf("%s - %s", v.String(), status),
+			v.String(),
+		))
+	}
+
+	var selectedVersion string
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Select release to recreate:").
+				Description("⚠️ The release will be deleted and recreated from current code").
+				Options(options...).
+				Value(&selectedVersion),
+		),
+	).WithTheme(getFormTheme())
+
+	err = form.Run()
+	if err != nil {
+		fmt.Println(warningStyle.Render("Cancelled."))
+		return
+	}
+
+	version, _ := ParseVersion(selectedVersion)
+
+	// Double confirmation
+	fmt.Println()
+	fmt.Println(boxStyle.Copy().BorderForeground(errorColor).Render(
+		errorStyle.Render("⚠️  DANGER ZONE") + "\n\n" +
+			"  This will PERMANENTLY DELETE " + warningStyle.Render(version.String()) + " and recreate it.\n" +
+			"  " + mutedStyle.Render("The new release will use the current code on your branch."),
+	))
+	fmt.Println()
+
+	var confirmed bool
+	confirmForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewConfirm().
+				Title("Are you absolutely sure?").
+				Description("Type 'Yes' to delete " + version.String() + " and recreate it").
+				Affirmative("Yes, delete and recreate").
+				Negative("Cancel").
+				Value(&confirmed),
+		),
+	).WithTheme(getFormTheme())
+
+	err = confirmForm.Run()
+	if err != nil || !confirmed {
+		fmt.Println(warningStyle.Render("Cancelled."))
+		return
+	}
+
+	// Step 1: Delete the release and tag
+	fmt.Println()
+	fmt.Println(stepStyle.Render("Step 1/3: ") + "Deleting release and tag...")
+
+	deleteCmd := exec.Command("gh", "release", "delete", version.String(), "--yes")
+	output, err := runCommandWithSpinner("Deleting GitHub release", deleteCmd)
+	if err != nil && !strings.Contains(output, "not found") {
+		fmt.Println(errorStyle.Render("✗ Could not delete release: " + output))
+		return
+	}
+
+	deleteTagRemoteCmd := exec.Command("git", "push", "--delete", "origin", version.String())
+	output, err = runCommandWithSpinner("Deleting remote tag", deleteTagRemoteCmd)
+	if err != nil && !strings.Contains(output, "not found") && !strings.Contains(output, "remote ref does not exist") {
+		fmt.Println(errorStyle.Render("✗ Could not delete remote tag: " + output))
+		return
+	}
+
+	deleteTagLocalCmd := exec.Command("git", "tag", "-d", version.String())
+	deleteTagLocalCmd.Run() // Ignore error
+
+	fmt.Println(checkmarkStyle.Render("✓") + " Deleted release and tag")
+
+	// Step 2: Create new tag
+	fmt.Println()
+	fmt.Println(stepStyle.Render("Step 2/3: ") + "Creating new tag from current code...")
+
+	createTagCmd := exec.Command("git", "tag", version.String())
+	output, err = runCommandWithSpinner("Creating local tag", createTagCmd)
+	if err != nil {
+		fmt.Println(errorStyle.Render("✗ Could not create tag: " + output))
+		return
+	}
+
+	pushTagCmd := exec.Command("git", "push", "origin", version.String())
+	output, err = runCommandWithSpinner("Pushing tag to GitHub", pushTagCmd)
+	if err != nil {
+		fmt.Println(errorStyle.Render("✗ Could not push tag: " + output))
+		return
+	}
+
+	fmt.Println(checkmarkStyle.Render("✓") + " Created new tag from current code")
+
+	// Step 3: Create new release
+	fmt.Println()
+	fmt.Println(stepStyle.Render("Step 3/3: ") + "Creating new GitHub release...")
+
+	createReleaseCmd := exec.Command("gh", "release", "create",
+		version.String(),
+		"--title", version.String(),
+		"--generate-notes",
+	)
+	output, err = runCommandWithSpinner("Creating GitHub release", createReleaseCmd)
+	if err != nil {
+		fmt.Println(errorStyle.Render("✗ Could not create release: " + output))
+		fmt.Println()
+		fmt.Println(infoStyle.Render("The tag was pushed. You can create the release manually:"))
+		fmt.Println(mutedStyle.Render("  gh release create " + version.String() + " --generate-notes"))
+		return
+	}
+
+	fmt.Println(checkmarkStyle.Render("✓") + " Created new release")
+
+	// Success!
+	fmt.Println()
+	fmt.Println(boxStyle.Copy().BorderForeground(successColor).Render(
+		successStyle.Render("🎉 Release Recreated Successfully!") + "\n\n" +
+			"  " + infoStyle.Render(version.String()) + " has been recreated from the current code.\n" +
+			"  The publish workflow should start automatically.\n\n" +
+			"  " + mutedStyle.Render("Monitor: https://github.com/paragon-intelligence/agentle4j/actions"),
+	))
+}
+
 // ============================================================================
 // Main Flow
 // ============================================================================
@@ -1048,7 +1229,8 @@ func main() {
 					huh.NewSelect[string]().
 						Title("What would you like to do?").
 						Options(
-							huh.NewOption("🔄 Republish "+latestRelease.String()+" (fix the failed release)", "republish"),
+							huh.NewOption("🔄 Republish "+latestRelease.String()+" (retry with same code)", "republish"),
+							huh.NewOption("🗑️  Recreate "+latestRelease.String()+" (delete & rebuild from CURRENT code)", "recreate"),
 							huh.NewOption("🚀 Skip and create a NEW release (leave gap in versions)", "new"),
 							huh.NewOption("📊 Check all workflow statuses", "status"),
 						).
@@ -1060,6 +1242,11 @@ func main() {
 			if err != nil {
 				fmt.Println(warningStyle.Render("Cancelled."))
 				os.Exit(130)
+			}
+
+			if failedAction == "recreate" {
+				handleRecreateRelease()
+				return
 			}
 
 			if failedAction == "republish" {
@@ -1127,7 +1314,8 @@ func main() {
 			mainMenuOptions := []huh.Option[string]{
 				huh.NewOption("🚀 Create new release", "new"),
 				huh.NewOption("🔄 Republish existing release", "republish"),
-				huh.NewOption("📊 Check workflow status", "status"),
+				huh.NewOption("�️  Recreate release (delete & rebuild)", "recreate"),
+				huh.NewOption("�📊 Check workflow status", "status"),
 			}
 
 			mainForm := huh.NewForm(
@@ -1143,6 +1331,11 @@ func main() {
 			if err != nil {
 				fmt.Println(warningStyle.Render("Cancelled."))
 				os.Exit(130)
+			}
+
+			if mainAction == "recreate" {
+				handleRecreateRelease()
+				return
 			}
 
 			if mainAction == "republish" {
