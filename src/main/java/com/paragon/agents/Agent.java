@@ -906,6 +906,7 @@ public final class Agent implements Serializable {
     private @Nullable Integer maxOutputTokens;
     private @Nullable Map<String, String> metadata;
     private @Nullable TelemetryContext telemetryContext;
+    private com.paragon.responses.RetryPolicy retryPolicy;  // nullable by default
     private int maxTurns = 10;
     private final List<FunctionTool<?>> tools = new ArrayList<>();
     private final List<Handoff> handoffs = new ArrayList<>();
@@ -1138,6 +1139,48 @@ public final class Agent implements Serializable {
     }
 
     /**
+     * Sets the retry policy for handling transient API failures.
+     *
+     * <p>This configures automatic retry with exponential backoff for:
+     * <ul>
+     *   <li>429 - Rate limiting</li>
+     *   <li>500, 502, 503, 504 - Server errors</li>
+     *   <li>Network failures (connection timeout, etc.)</li>
+     * </ul>
+     *
+     * <p>Note: If you provide a custom Responder via {@link #responder(Responder)},
+     * configure retry on the Responder instead. This setting is used when no
+     * Responder is provided and one is created internally.
+     *
+     * @param retryPolicy the retry policy to use
+     * @return this builder
+     * @see com.paragon.responses.RetryPolicy
+     */
+    public @NonNull Builder retryPolicy(com.paragon.responses.RetryPolicy retryPolicy) {
+      this.retryPolicy = Objects.requireNonNull(retryPolicy);
+      return this;
+    }
+
+    /**
+     * Sets the maximum number of retry attempts with default backoff settings.
+     *
+     * <p>Convenience method equivalent to:
+     * <pre>{@code
+     * .retryPolicy(RetryPolicy.builder().maxRetries(n).build())
+     * }</pre>
+     *
+     * <p>Note: If you provide a custom Responder via {@link #responder(Responder)},
+     * configure retry on the Responder instead.
+     *
+     * @param maxRetries maximum retry attempts (0 = no retries)
+     * @return this builder
+     */
+    public @NonNull Builder maxRetries(int maxRetries) {
+      this.retryPolicy = com.paragon.responses.RetryPolicy.builder().maxRetries(maxRetries).build();
+      return this;
+    }
+
+    /**
      * Configures the agent to produce structured output of the specified type.
      *
      * <p>Returns a {@link StructuredBuilder} that will build an {@link Agent.Structured}
@@ -1275,6 +1318,16 @@ public final class Agent implements Serializable {
 
     public @NonNull StructuredBuilder<T> addTelemetryProcessor(@NonNull TelemetryProcessor processor) {
       parentBuilder.addTelemetryProcessor(processor);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> retryPolicy(com.paragon.responses.RetryPolicy retryPolicy) {
+      parentBuilder.retryPolicy(retryPolicy);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> maxRetries(int maxRetries) {
+      parentBuilder.maxRetries(maxRetries);
       return this;
     }
 
