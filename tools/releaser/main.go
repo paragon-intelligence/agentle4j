@@ -663,6 +663,324 @@ func formatWorkflowStatus(details *WorkflowDetails) string {
 	return sb.String()
 }
 
+// ============================================================================
+// Changelog Management
+// ============================================================================
+
+const changelogFile = "CHANGELOG.md"
+
+const changelogHeader = `# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+`
+
+// ChangeType represents the type of change in a release
+type ChangeType struct {
+	Key         string
+	Label       string
+	Emoji       string
+	Description string
+}
+
+var changeTypes = []ChangeType{
+	{Key: "added", Label: "Added", Emoji: "✨", Description: "New features"},
+	{Key: "changed", Label: "Changed", Emoji: "💥", Description: "Breaking changes or modifications"},
+	{Key: "fixed", Label: "Fixed", Emoji: "🐛", Description: "Bug fixes"},
+	{Key: "deprecated", Label: "Deprecated", Emoji: "⚠️", Description: "Features that will be removed"},
+	{Key: "removed", Label: "Removed", Emoji: "🗑️", Description: "Removed features"},
+	{Key: "security", Label: "Security", Emoji: "🔒", Description: "Security fixes"},
+}
+
+// ChangelogEntry represents a version's changelog entry
+type ChangelogEntry struct {
+	Version Version
+	Date    string
+	Changes map[string][]string // key is change type, value is list of changes
+}
+
+// changelogExists checks if CHANGELOG.md exists
+func changelogExists() bool {
+	_, err := os.Stat(changelogFile)
+	return err == nil
+}
+
+// readChangelog reads the changelog file content
+func readChangelog() (string, error) {
+	content, err := os.ReadFile(changelogFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return string(content), nil
+}
+
+// hasVersionInChangelog checks if a version is already documented
+func hasVersionInChangelog(version Version) bool {
+	content, err := readChangelog()
+	if err != nil || content == "" {
+		return false
+	}
+
+	// Look for ## [X.Y.Z] pattern
+	pattern := fmt.Sprintf(`## \[%s\]`, regexp.QuoteMeta(version.PomString()))
+	matched, _ := regexp.MatchString(pattern, content)
+	return matched
+}
+
+// formatChangelogEntry formats an entry in Keep a Changelog format
+func formatChangelogEntry(entry ChangelogEntry) string {
+	var sb strings.Builder
+
+	sb.WriteString(fmt.Sprintf("## [%s] - %s\n", entry.Version.PomString(), entry.Date))
+
+	// Order: Added, Changed, Deprecated, Removed, Fixed, Security
+	order := []string{"added", "changed", "deprecated", "removed", "fixed", "security"}
+
+	for _, key := range order {
+		if changes, ok := entry.Changes[key]; ok && len(changes) > 0 {
+			// Find the label for this key
+			label := strings.Title(key)
+			for _, ct := range changeTypes {
+				if ct.Key == key {
+					label = ct.Label
+					break
+				}
+			}
+
+			sb.WriteString(fmt.Sprintf("### %s\n", label))
+			for _, change := range changes {
+				sb.WriteString(fmt.Sprintf("- %s\n", change))
+			}
+			sb.WriteString("\n")
+		}
+	}
+
+	return sb.String()
+}
+
+// prependToChangelog adds a new entry at the top of the changelog
+func prependToChangelog(entry ChangelogEntry) error {
+	content, err := readChangelog()
+	if err != nil {
+		return err
+	}
+
+	formattedEntry := formatChangelogEntry(entry)
+
+	var newContent string
+	if content == "" || !strings.Contains(content, "# Changelog") {
+		// Initialize changelog with header
+		newContent = changelogHeader + formattedEntry
+	} else {
+		// Find where to insert (after the header section)
+		// Look for the first "## [" which marks the start of version entries
+		insertIdx := strings.Index(content, "## [")
+		if insertIdx == -1 {
+			// No versions yet, append after header
+			newContent = content + "\n" + formattedEntry
+		} else {
+			// Insert before the first version
+			newContent = content[:insertIdx] + formattedEntry + content[insertIdx:]
+		}
+	}
+
+	return os.WriteFile(changelogFile, []byte(newContent), 0644)
+}
+
+// promptForChangelog shows an interactive prompt for entering changelog
+func promptForChangelog(version Version) (*ChangelogEntry, error) {
+	fmt.Println()
+	fmt.Println(boxStyle.Render(titleStyle.Render("📝 Changelog Update Required")))
+	fmt.Println()
+	fmt.Println(infoStyle.Render("Version " + warningStyle.Render(version.String()) + " is not documented in CHANGELOG.md"))
+	fmt.Println(mutedStyle.Render("Let's document what changed in this release."))
+	fmt.Println()
+
+	entry := &ChangelogEntry{
+		Version: version,
+		Date:    time.Now().Format("2006-01-02"),
+		Changes: make(map[string][]string),
+	}
+
+	// Build options for change type multi-select
+	var options []huh.Option[string]
+	for _, ct := range changeTypes {
+		options = append(options, huh.NewOption(
+			fmt.Sprintf("%s %s (%s)", ct.Emoji, ct.Label, ct.Description),
+			ct.Key,
+		))
+	}
+
+	var selectedTypes []string
+	selectForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewMultiSelect[string]().
+				Title("What types of changes are in this release?").
+				Description("Space to select, Enter to confirm").
+				Options(options...).
+				Value(&selectedTypes),
+		),
+	).WithTheme(getFormTheme())
+
+	if err := selectForm.Run(); err != nil {
+		return nil, err
+	}
+
+	if len(selectedTypes) == 0 {
+		fmt.Println(warningStyle.Render("⚠ No change types selected. Skipping changelog."))
+		return nil, nil
+	}
+
+	// For each selected type, prompt for changes
+	for _, typeKey := range selectedTypes {
+		var typeInfo ChangeType
+		for _, ct := range changeTypes {
+			if ct.Key == typeKey {
+				typeInfo = ct
+				break
+			}
+		}
+
+		fmt.Println()
+		fmt.Println(stepStyle.Render(typeInfo.Emoji+" "+typeInfo.Label+":"))
+
+		var changesText string
+		inputForm := huh.NewForm(
+			huh.NewGroup(
+				huh.NewText().
+					Title("Enter changes (one per line)").
+					Description("Describe what was " + strings.ToLower(typeInfo.Label)).
+					Placeholder("- Feature 1\n- Feature 2").
+					CharLimit(2000).
+					Value(&changesText),
+			),
+		).WithTheme(getFormTheme())
+
+		if err := inputForm.Run(); err != nil {
+			return nil, err
+		}
+
+		// Parse the text into individual changes
+		if changesText != "" {
+			lines := strings.Split(changesText, "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				line = strings.TrimPrefix(line, "-")
+				line = strings.TrimPrefix(line, "*")
+				line = strings.TrimSpace(line)
+				if line != "" {
+					entry.Changes[typeKey] = append(entry.Changes[typeKey], line)
+				}
+			}
+		}
+	}
+
+	// Check if any changes were actually entered
+	hasChanges := false
+	for _, changes := range entry.Changes {
+		if len(changes) > 0 {
+			hasChanges = true
+			break
+		}
+	}
+
+	if !hasChanges {
+		fmt.Println(warningStyle.Render("⚠ No changes entered. Skipping changelog."))
+		return nil, nil
+	}
+
+	// Show preview
+	fmt.Println()
+	previewBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(secondaryColor).
+		Padding(1, 2).
+		MarginTop(1)
+
+	preview := formatChangelogEntry(*entry)
+	fmt.Println(previewBox.Render(
+		infoStyle.Render("📋 Changelog Preview") + "\n\n" + preview,
+	))
+
+	// Confirm
+	var confirmed bool
+	confirmForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewConfirm().
+				Title("Add this to CHANGELOG.md?").
+				Affirmative("Yes, add it").
+				Negative("No, skip").
+				Value(&confirmed),
+		),
+	).WithTheme(getFormTheme())
+
+	if err := confirmForm.Run(); err != nil {
+		return nil, err
+	}
+
+	if !confirmed {
+		fmt.Println(warningStyle.Render("⚠ Changelog update skipped."))
+		return nil, nil
+	}
+
+	return entry, nil
+}
+
+// stepUpdateChangelog ensures changelog is updated for the new version
+func stepUpdateChangelog(state *ReleaseState) bool {
+	fmt.Println(stepStyle.Render("Step 1/6: ") + "Checking changelog")
+
+	// Check if version is already documented
+	if hasVersionInChangelog(state.NewVersion) {
+		fmt.Println(checkmarkStyle.Render("✓") + " Changelog already has entry for " + state.NewVersion.PomString())
+		return true
+	}
+
+	// Prompt for changelog entry
+	entry, err := promptForChangelog(state.NewVersion)
+	if err != nil {
+		fmt.Println(errorStyle.Render("✗ Error during changelog prompt: " + err.Error()))
+		return false
+	}
+
+	if entry == nil {
+		// User chose to skip - ask if they want to continue without changelog
+		var continueWithout bool
+		form := huh.NewForm(
+			huh.NewGroup(
+				huh.NewConfirm().
+					Title("Continue release without changelog entry?").
+					Description("This is not recommended for public releases").
+					Affirmative("Yes, continue").
+					Negative("No, abort").
+					Value(&continueWithout),
+			),
+		).WithTheme(getFormTheme())
+
+		if err := form.Run(); err != nil || !continueWithout {
+			fmt.Println(warningStyle.Render("Release aborted."))
+			return false
+		}
+		fmt.Println(warningStyle.Render("⚠") + " Continuing without changelog entry")
+		return true
+	}
+
+	// Write changelog entry
+	if err := prependToChangelog(*entry); err != nil {
+		fmt.Println(errorStyle.Render("✗ Could not update CHANGELOG.md: " + err.Error()))
+		return false
+	}
+
+	fmt.Println(checkmarkStyle.Render("✓") + " Updated CHANGELOG.md with " + state.NewVersion.PomString() + " entry")
+	return true
+}
+
 func getPomVersion() (Version, error) {
 	content, err := os.ReadFile("pom.xml")
 	if err != nil {
@@ -768,7 +1086,7 @@ func rollback(state *ReleaseState) {
 // ============================================================================
 
 func stepUpdatePom(state *ReleaseState) bool {
-	fmt.Println(stepStyle.Render("Step 1/5: ") + "Updating pom.xml version")
+	fmt.Println(stepStyle.Render("Step 2/6: ") + "Updating pom.xml version")
 
 	for {
 		err := updatePomVersion(state.NewVersion)
@@ -792,7 +1110,7 @@ func stepUpdatePom(state *ReleaseState) bool {
 
 func stepStageChanges(state *ReleaseState) bool {
 	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 2/5: ") + "Staging changes")
+	fmt.Println(stepStyle.Render("Step 3/6: ") + "Staging changes")
 
 	for {
 		cmd := exec.Command("git", "add", ".")
@@ -819,7 +1137,7 @@ func stepStageChanges(state *ReleaseState) bool {
 
 func stepCommit(state *ReleaseState) bool {
 	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 3/5: ") + "Creating commit")
+	fmt.Println(stepStyle.Render("Step 4/6: ") + "Creating commit")
 
 	for {
 		cmd := exec.Command("git", "commit", "-m", fmt.Sprintf("Release %s", state.NewVersion.String()))
@@ -856,7 +1174,7 @@ func stepCommit(state *ReleaseState) bool {
 
 func stepPush(state *ReleaseState) bool {
 	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 4/5: ") + "Pushing to remote")
+	fmt.Println(stepStyle.Render("Step 5/6: ") + "Pushing to remote")
 
 	for {
 		cmd := exec.Command("git", "push")
@@ -887,7 +1205,7 @@ func stepPush(state *ReleaseState) bool {
 
 func stepCreateRelease(state *ReleaseState) bool {
 	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 5/5: ") + "Creating GitHub release")
+	fmt.Println(stepStyle.Render("Step 6/6: ") + "Creating GitHub release")
 
 	// Get release title
 	var releaseTitle string
@@ -1685,6 +2003,10 @@ func main() {
 	fmt.Println(boxStyle.Render(titleStyle.Render("🚀 Executing Release")))
 
 	// Execute release steps with error handling
+	if !stepUpdateChangelog(state) {
+		os.Exit(1)
+	}
+
 	if !stepUpdatePom(state) {
 		os.Exit(1)
 	}
