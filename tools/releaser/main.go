@@ -1329,6 +1329,35 @@ func handleRepublish() {
 		return
 	}
 
+	// Check if Maven Central publish succeeded even though workflow failed
+	details, detailsErr := getWorkflowDetails(version)
+	if detailsErr == nil && details != nil {
+		// Check if Maven publish step succeeded
+		mavenPublishSucceeded := false
+		for _, step := range details.SucceededSteps {
+			if strings.Contains(step, "Publish to Maven Central") {
+				mavenPublishSucceeded = true
+				break
+			}
+		}
+
+		if mavenPublishSucceeded {
+			fmt.Println()
+			fmt.Println(boxStyle.Copy().BorderForeground(errorColor).Render(
+				errorStyle.Render("🚫 Cannot Republish to Maven Central") + "\n\n" +
+					"  Version " + warningStyle.Render(version.String()) + " was already published to Maven Central.\n\n" +
+					"  " + mutedStyle.Render("Maven Central does not allow overwriting existing versions.") + "\n" +
+					"  " + mutedStyle.Render("The workflow failed in a LATER step (e.g., GitHub Release).") + "\n\n" +
+					"  " + infoStyle.Render("Options:") + "\n" +
+					"  • Create a new patch version (e.g., " + version.Bump(Patch).String() + ")\n" +
+					"  • Fix the failed step manually if needed",
+			))
+			fmt.Println()
+			fmt.Println(mutedStyle.Render("  Check Maven Central: https://central.sonatype.com/search?q=agentle4j"))
+			return
+		}
+	}
+
 	// Confirm republish
 	fmt.Println()
 	fmt.Println(warningStyle.Render("⚠ This will trigger a new workflow run for " + version.String()))
