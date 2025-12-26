@@ -1,262 +1,670 @@
-# Code Samples
+# Code Examples
 
-Practical examples for common use cases with Agentle4j.
+Practical, copy-paste ready examples for common Agentle4j use cases.
 
-## Basic Chat
+---
+
+## Basic Examples
+
+### Simple Chat Completion
 
 ```java
-Responder responder = Responder.builder()
-    .openRouter()
-    .apiKey(System.getenv("OPENROUTER_API_KEY"))
-    .build();
+import com.paragon.responses.Responder;
+import com.paragon.responses.payload.CreateResponsePayload;
+import com.paragon.responses.Response;
 
-var payload = CreateResponsePayload.builder()
-    .model("openai/gpt-4o-mini")
-    .addDeveloperMessage("You are a helpful assistant.")
-    .addUserMessage("Hello! How are you?")
-    .build();
+public class SimpleChatExample {
+    public static void main(String[] args) {
+        Responder responder = Responder.builder()
+            .openRouter()
+            .apiKey(System.getenv("OPENROUTER_API_KEY"))
+            .build();
 
-Response response = responder.respond(payload).join();
-System.out.println(response.outputText());
+        var payload = CreateResponsePayload.builder()
+            .model("openai/gpt-4o-mini")
+            .addDeveloperMessage("You are a helpful assistant.")
+            .addUserMessage("Explain Java streams in 3 sentences.")
+            .build();
+
+        Response response = responder.respond(payload).join();
+        System.out.println(response.outputText());
+    }
+}
 ```
 
-## Multi-Turn Conversation
+### With Temperature Control
 
 ```java
-List<Message> conversation = new ArrayList<>();
-
-// First turn
-conversation.add(Message.user("My name is Alice"));
-var payload1 = CreateResponsePayload.builder()
+// Creative writing (high temperature)
+var creativePayload = CreateResponsePayload.builder()
     .model("openai/gpt-4o")
-    .messages(conversation)
+    .addUserMessage("Write a creative story opening about a space explorer")
+    .temperature(1.2)  // More creative/random
     .build();
 
-Response response1 = responder.respond(payload1).join();
-conversation.add(Message.assistant(response1.outputText()));
-
-// Second turn
-conversation.add(Message.user("What's my name?"));
-var payload2 = CreateResponsePayload.builder()
+// Factual response (low temperature)  
+var factualPayload = CreateResponsePayload.builder()
     .model("openai/gpt-4o")
-    .messages(conversation)
+    .addUserMessage("What is the formula for calculating compound interest?")
+    .temperature(0.1)  // More deterministic
     .build();
-
-Response response2 = responder.respond(payload2).join();
-System.out.println(response2.outputText());  // "Your name is Alice"
 ```
 
-## Streaming with Progress
+### Limiting Response Length
 
 ```java
 var payload = CreateResponsePayload.builder()
     .model("openai/gpt-4o")
-    .addUserMessage("Explain quantum computing in detail")
+    .addUserMessage("Explain quantum computing")
+    .maxTokens(150)  // Limit response to ~150 tokens
+    .build();
+```
+
+---
+
+## Streaming Examples
+
+### Basic Streaming with Progress
+
+```java
+import java.util.concurrent.atomic.AtomicInteger;
+
+var payload = CreateResponsePayload.builder()
+    .model("openai/gpt-4o")
+    .addUserMessage("Write a detailed explanation of microservices architecture")
     .streaming()
     .build();
 
 AtomicInteger charCount = new AtomicInteger(0);
+long startTime = System.currentTimeMillis();
 
 responder.respond(payload)
     .onTextDelta(delta -> {
         System.out.print(delta);
+        System.out.flush();
         charCount.addAndGet(delta.length());
     })
     .onComplete(response -> {
-        System.out.println("\n\n📊 Total characters: " + charCount.get());
-        System.out.println("📝 Tokens used: " + response.usage().totalTokens());
+        long elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("\n\n--- Stats ---");
+        System.out.println("Characters: " + charCount.get());
+        System.out.println("Tokens: " + response.usage().totalTokens());
+        System.out.println("Time: " + elapsed + "ms");
+        System.out.println("Speed: " + (charCount.get() * 1000 / elapsed) + " chars/sec");
+    })
+    .onError(e -> System.err.println("Error: " + e.getMessage()))
+    .start();
+```
+
+### Streaming to a File
+
+```java
+import java.io.FileWriter;
+import java.io.PrintWriter;
+
+var payload = CreateResponsePayload.builder()
+    .model("openai/gpt-4o")
+    .addUserMessage("Write a comprehensive guide to REST API design")
+    .streaming()
+    .build();
+
+try (PrintWriter writer = new PrintWriter(new FileWriter("output.md"))) {
+    responder.respond(payload)
+        .onTextDelta(delta -> {
+            writer.print(delta);
+            writer.flush();
+            System.out.print(delta);  // Also show in console
+            System.out.flush();
+        })
+        .onComplete(r -> {
+            System.out.println("\n\n✅ Saved to output.md");
+        })
+        .start();
+}
+```
+
+### Streaming with Abort Capability
+
+```java
+import java.util.concurrent.atomic.AtomicBoolean;
+
+AtomicBoolean shouldStop = new AtomicBoolean(false);
+StringBuilder buffer = new StringBuilder();
+
+var payload = CreateResponsePayload.builder()
+    .model("openai/gpt-4o")
+    .addUserMessage("Write a very long story")
+    .streaming()
+    .build();
+
+var stream = responder.respond(payload)
+    .onTextDelta(delta -> {
+        if (shouldStop.get()) {
+            return;  // Stop processing
+        }
+        buffer.append(delta);
+        System.out.print(delta);
+        
+        // Auto-stop after 500 characters
+        if (buffer.length() > 500) {
+            shouldStop.set(true);
+            System.out.println("\n\n[Stopped after 500 chars]");
+        }
     })
     .start();
 ```
 
-## Structured Output: Extract Data
+---
+
+## Structured Output Examples
+
+### Simple Data Extraction
 
 ```java
-public record ContactInfo(
+public record ProductInfo(
     String name,
-    String email,
-    String phone,
-    String company
+    double price,
+    String currency,
+    boolean inStock
+) {}
+
+String productDescription = """
+    The Sony WH-1000XM5 wireless headphones are available for $399.99.
+    These premium noise-cancelling headphones are currently in stock.
+    """;
+
+var payload = CreateResponsePayload.builder()
+    .model("openai/gpt-4o")
+    .addUserMessage("Extract product info: " + productDescription)
+    .withStructuredOutput(ProductInfo.class)
+    .build();
+
+ProductInfo product = responder.respond(payload).join().parsed();
+System.out.println("Product: " + product.name());
+System.out.println("Price: " + product.currency() + product.price());
+System.out.println("In Stock: " + product.inStock());
+```
+
+### Sentiment Analysis
+
+```java
+public record SentimentAnalysis(
+    String sentiment,        // "positive", "negative", "neutral"
+    double confidence,       // 0.0 to 1.0
+    List<String> keywords,   // Key emotional words
+    String summary           // Brief explanation
+) {}
+
+String review = """
+    I absolutely love this product! It exceeded all my expectations.
+    The build quality is fantastic and customer service was helpful.
+    Only minor issue is the slightly high price, but worth it!
+    """;
+
+var payload = CreateResponsePayload.builder()
+    .model("openai/gpt-4o")
+    .addDeveloperMessage("Analyze the sentiment of customer reviews.")
+    .addUserMessage(review)
+    .withStructuredOutput(SentimentAnalysis.class)
+    .build();
+
+SentimentAnalysis analysis = responder.respond(payload).join().parsed();
+System.out.println("Sentiment: " + analysis.sentiment());
+System.out.println("Confidence: " + (analysis.confidence() * 100) + "%");
+System.out.println("Keywords: " + String.join(", ", analysis.keywords()));
+```
+
+### Code Review Analysis
+
+```java
+public record CodeIssue(
+    String type,           // "bug", "style", "performance", "security"
+    String severity,       // "low", "medium", "high", "critical"
+    int lineNumber,
+    String description,
+    String suggestion
+) {}
+
+public record CodeReview(
+    int overallScore,      // 1-10
+    List<CodeIssue> issues,
+    List<String> positives,
+    String summary
+) {}
+
+String code = """
+    public class UserService {
+        private String password = "admin123";  // Hardcoded password
+        
+        public void deleteUser(int id) {
+            String sql = "DELETE FROM users WHERE id = " + id;  // SQL injection
+            // execute sql...
+        }
+    }
+    """;
+
+var payload = CreateResponsePayload.builder()
+    .model("openai/gpt-4o")
+    .addDeveloperMessage("You are a senior code reviewer. Analyze code for issues.")
+    .addUserMessage("Review this code:\n```java\n" + code + "\n```")
+    .withStructuredOutput(CodeReview.class)
+    .build();
+
+CodeReview review = responder.respond(payload).join().parsed();
+System.out.println("Score: " + review.overallScore() + "/10");
+System.out.println("\nIssues found:");
+for (CodeIssue issue : review.issues()) {
+    System.out.println("  [" + issue.severity().toUpperCase() + "] " + issue.type());
+    System.out.println("  Line " + issue.lineNumber() + ": " + issue.description());
+    System.out.println("  Fix: " + issue.suggestion());
+    System.out.println();
+}
+```
+
+### JSON Schema Generation
+
+```java
+// Complex nested structures
+public record Address(
+    String street,
+    String city,
+    String state,
+    String zipCode,
+    String country
+) {}
+
+public record Company(
+    String name,
+    String industry,
+    int employeeCount,
+    Address headquarters,
+    List<String> products
+) {}
+
+public record MarketAnalysis(
+    Company company,
+    List<Company> competitors,
+    double marketShare,
+    List<String> strengths,
+    List<String> weaknesses,
+    String recommendation
 ) {}
 
 var payload = CreateResponsePayload.builder()
     .model("openai/gpt-4o")
-    .addUserMessage("""
-        Extract contact info from this text:
-        
-        Hi, I'm John Smith from Acme Corp. 
-        You can reach me at john.smith@acme.com or call 555-1234.
-        """)
-    .withStructuredOutput(ContactInfo.class)
+    .addUserMessage("Provide a market analysis for Apple Inc.")
+    .withStructuredOutput(MarketAnalysis.class)
     .build();
 
-ParsedResponse<ContactInfo> response = responder.respond(payload).join();
-ContactInfo contact = response.parsed();
-
-System.out.println("Name: " + contact.name());
-System.out.println("Email: " + contact.email());
-System.out.println("Phone: " + contact.phone());
-System.out.println("Company: " + contact.company());
+MarketAnalysis analysis = responder.respond(payload).join().parsed();
 ```
 
-## Function Tool: Calculator
+---
+
+## Multi-Turn Conversation Examples
+
+### Stateful Conversation Manager
 
 ```java
-public record CalcParams(double a, double b, String operation) {}
+import java.util.ArrayList;
+import java.util.List;
 
-@FunctionMetadata(
-    name = "calculate",
-    description = "Performs basic math operations: add, subtract, multiply, divide"
-)
-public class CalculatorTool extends FunctionTool<CalcParams> {
-    @Override
-    public FunctionToolCallOutput call(@Nullable CalcParams params) {
-        if (params == null) return FunctionToolCallOutput.error("Parameters required");
+public class ConversationManager {
+    private final Responder responder;
+    private final String model;
+    private final String systemPrompt;
+    private final List<ResponseInputItem> history = new ArrayList<>();
+    
+    public ConversationManager(Responder responder, String model, String systemPrompt) {
+        this.responder = responder;
+        this.model = model;
+        this.systemPrompt = systemPrompt;
+    }
+    
+    public String chat(String userMessage) {
+        // Add user message to history
+        history.add(new UserMessage(userMessage));
         
-        double result = switch (params.operation()) {
-            case "add" -> params.a() + params.b();
-            case "subtract" -> params.a() - params.b();
-            case "multiply" -> params.a() * params.b();
-            case "divide" -> params.a() / params.b();
-            default -> throw new IllegalArgumentException("Unknown operation");
-        };
+        // Build payload with full history
+        var payload = CreateResponsePayload.builder()
+            .model(model)
+            .addDeveloperMessage(systemPrompt)
+            .inputItems(history)
+            .build();
         
-        return FunctionToolCallOutput.success(String.valueOf(result));
+        // Get response
+        Response response = responder.respond(payload).join();
+        String assistantMessage = response.outputText();
+        
+        // Add assistant response to history
+        history.add(new AssistantMessage(assistantMessage));
+        
+        return assistantMessage;
+    }
+    
+    public void clearHistory() {
+        history.clear();
+    }
+    
+    public int getTurnCount() {
+        return history.size() / 2;
     }
 }
 
 // Usage
-Agent mathBot = Agent.builder()
-    .name("MathBot")
-    .model("openai/gpt-4o")
-    .instructions("You help with math calculations.")
-    .responder(responder)
-    .addTool(new CalculatorTool())
-    .build();
-
-AgentResult result = mathBot.interact("What is 15 * 7?").join();
-System.out.println(result.output());  // "15 * 7 = 105"
-```
-
-## Agent with Memory
-
-```java
-Memory memory = InMemoryMemory.create();
-
-Agent assistant = Agent.builder()
-    .name("PersonalAssistant")
-    .model("openai/gpt-4o")
-    .instructions("You remember user preferences and provide personalized help.")
-    .responder(responder)
-    .addMemoryTools(memory)
-    .build();
-
-AgentContext context = AgentContext.create();
-context.setState("userId", "user-123");
-
-// Store preference
-assistant.interact("Remember that my favorite color is blue", context).join();
-
-// Later session
-assistant.interact("What's my favorite color?", context).join();
-// → "Your favorite color is blue!"
-```
-
-## Multi-Agent: Customer Support
-
-```java
-Agent billingAgent = Agent.builder()
-    .name("BillingSpecialist")
-    .model("openai/gpt-4o")
-    .instructions("You handle billing and payment questions.")
-    .responder(responder)
-    .build();
-
-Agent techAgent = Agent.builder()
-    .name("TechSupport")
-    .model("openai/gpt-4o")
-    .instructions("You handle technical issues and troubleshooting.")
-    .responder(responder)
-    .build();
-
-RouterAgent router = RouterAgent.builder()
-    .model("openai/gpt-4o-mini")
-    .responder(responder)
-    .addRoute(billingAgent, "billing, payments, invoices, subscriptions")
-    .addRoute(techAgent, "bugs, errors, crashes, technical problems")
-    .fallback(techAgent)
-    .build();
-
-// Automatically routes to appropriate agent
-AgentResult result = router.route("I can't log into my account").join();
-System.out.println("Handled by: " + result.handoffTarget().name());
-```
-
-## Image Analysis
-
-```java
-Image image = new Image(ImageDetail.AUTO, null, "https://example.com/chart.png");
-
-UserMessage message = Message.builder()
-    .addText("Analyze this chart and summarize the key trends")
-    .addContent(image)
-    .asUser();
-
-var payload = CreateResponsePayload.builder()
-    .model("openai/gpt-4o")
-    .addMessage(message)
-    .build();
-
-Response response = responder.respond(payload).join();
-System.out.println(response.outputText());
-```
-
-## Error Handling
-
-```java
-responder.respond(payload)
-    .handle((response, error) -> {
-        if (error != null) {
-            if (error.getCause() instanceof RateLimitException) {
-                System.err.println("Rate limited! Waiting before retry...");
-                // Implement retry logic
-            } else if (error.getCause() instanceof AuthenticationException) {
-                System.err.println("Invalid API key!");
-            } else {
-                System.err.println("Unexpected error: " + error.getMessage());
-            }
-            return null;
-        }
-        return response;
-    });
-```
-
-## Batch Processing
-
-```java
-List<String> prompts = List.of(
-    "Summarize: AI in healthcare",
-    "Summarize: AI in finance", 
-    "Summarize: AI in education"
+ConversationManager chat = new ConversationManager(
+    responder, 
+    "openai/gpt-4o-mini",
+    "You are a helpful coding tutor."
 );
 
-List<CompletableFuture<Response>> futures = prompts.stream()
-    .map(prompt -> {
+System.out.println(chat.chat("What is a Java interface?"));
+System.out.println(chat.chat("Can you show me an example?"));
+System.out.println(chat.chat("How is it different from an abstract class?"));
+```
+
+### Context Window Management
+
+```java
+public class SmartConversation {
+    private final Responder responder;
+    private final List<ResponseInputItem> history = new ArrayList<>();
+    private static final int MAX_HISTORY = 20;  // Keep last 20 messages
+    
+    public String chat(String userMessage) {
+        history.add(new UserMessage(userMessage));
+        
+        // Trim history if too long (keep most recent)
+        if (history.size() > MAX_HISTORY) {
+            history.subList(0, history.size() - MAX_HISTORY).clear();
+        }
+        
         var payload = CreateResponsePayload.builder()
             .model("openai/gpt-4o-mini")
-            .addUserMessage(prompt)
+            .inputItems(history)
+            .build();
+        
+        Response response = responder.respond(payload).join();
+        history.add(new AssistantMessage(response.outputText()));
+        
+        return response.outputText();
+    }
+}
+```
+
+---
+
+## Batch Processing Examples
+
+### Parallel API Calls
+
+```java
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+List<String> topics = List.of(
+    "Machine Learning",
+    "Blockchain",
+    "Quantum Computing",
+    "Edge Computing",
+    "5G Networks"
+);
+
+// Create all requests in parallel
+List<CompletableFuture<Response>> futures = topics.stream()
+    .map(topic -> {
+        var payload = CreateResponsePayload.builder()
+            .model("openai/gpt-4o-mini")
+            .addUserMessage("Explain " + topic + " in 2 sentences.")
             .build();
         return responder.respond(payload);
     })
-    .toList();
+    .collect(Collectors.toList());
 
 // Wait for all to complete
 CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
 // Process results
-for (int i = 0; i < futures.size(); i++) {
-    Response response = futures.get(i).join();
-    System.out.println("=== " + prompts.get(i) + " ===");
-    System.out.println(response.outputText());
+for (int i = 0; i < topics.size(); i++) {
+    System.out.println("## " + topics.get(i));
+    System.out.println(futures.get(i).join().outputText());
+    System.out.println();
+}
+```
+
+### Rate-Limited Batch Processing
+
+```java
+import java.util.concurrent.Semaphore;
+
+// Limit to 5 concurrent requests
+Semaphore rateLimiter = new Semaphore(5);
+
+List<String> prompts = List.of(/* many prompts */);
+
+List<CompletableFuture<String>> results = prompts.stream()
+    .map(prompt -> CompletableFuture.supplyAsync(() -> {
+        try {
+            rateLimiter.acquire();
+            var payload = CreateResponsePayload.builder()
+                .model("openai/gpt-4o-mini")
+                .addUserMessage(prompt)
+                .build();
+            return responder.respond(payload).join().outputText();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            rateLimiter.release();
+        }
+    }))
+    .collect(Collectors.toList());
+```
+
+---
+
+## Error Handling Examples
+
+### Comprehensive Error Handling
+
+```java
+responder.respond(payload)
+    .handle((response, error) -> {
+        if (error != null) {
+            Throwable cause = error.getCause();
+            
+            if (cause instanceof java.net.SocketTimeoutException) {
+                System.err.println("Request timed out. Please try again.");
+            } else if (cause instanceof java.net.UnknownHostException) {
+                System.err.println("Network error. Check your internet connection.");
+            } else if (cause.getMessage().contains("401")) {
+                System.err.println("Invalid API key. Please check your credentials.");
+            } else if (cause.getMessage().contains("429")) {
+                System.err.println("Rate limited. Please wait and try again.");
+            } else if (cause.getMessage().contains("500")) {
+                System.err.println("Server error. The API is temporarily unavailable.");
+            } else {
+                System.err.println("Unexpected error: " + cause.getMessage());
+            }
+            return null;
+        }
+        
+        return response.outputText();
+    });
+```
+
+### Retry with Exponential Backoff
+
+```java
+import java.util.concurrent.TimeUnit;
+
+public Response callWithRetry(Responder responder, CreateResponsePayload payload, int maxRetries) {
+    int retries = 0;
+    long delay = 1000;  // Start with 1 second
+    
+    while (retries < maxRetries) {
+        try {
+            return responder.respond(payload).join();
+        } catch (Exception e) {
+            retries++;
+            if (retries >= maxRetries) {
+                throw e;
+            }
+            
+            System.out.println("Retry " + retries + " after " + delay + "ms");
+            try {
+                TimeUnit.MILLISECONDS.sleep(delay);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(ie);
+            }
+            
+            delay *= 2;  // Exponential backoff
+        }
+    }
+    
+    throw new RuntimeException("Max retries exceeded");
+}
+```
+
+---
+
+## Real-World Application Examples
+
+### AI-Powered REST API Endpoint (Spring Boot)
+
+```java
+@RestController
+@RequestMapping("/api/ai")
+public class AIController {
+    
+    private final Responder responder;
+    
+    public AIController() {
+        this.responder = Responder.builder()
+            .openRouter()
+            .apiKey(System.getenv("OPENROUTER_API_KEY"))
+            .build();
+    }
+    
+    @PostMapping("/chat")
+    public CompletableFuture<Map<String, String>> chat(@RequestBody ChatRequest request) {
+        var payload = CreateResponsePayload.builder()
+            .model("openai/gpt-4o-mini")
+            .addUserMessage(request.message())
+            .build();
+        
+        return responder.respond(payload)
+            .thenApply(response -> Map.of(
+                "response", response.outputText(),
+                "tokens", String.valueOf(response.usage().totalTokens())
+            ));
+    }
+    
+    @PostMapping("/analyze")
+    public CompletableFuture<SentimentAnalysis> analyzeSentiment(@RequestBody TextRequest request) {
+        var payload = CreateResponsePayload.builder()
+            .model("openai/gpt-4o")
+            .addUserMessage("Analyze sentiment: " + request.text())
+            .withStructuredOutput(SentimentAnalysis.class)
+            .build();
+        
+        return responder.respond(payload)
+            .thenApply(ParsedResponse::parsed);
+    }
+}
+
+record ChatRequest(String message) {}
+record TextRequest(String text) {}
+```
+
+### CLI Tool with Streaming
+
+```java
+public class AICli {
+    public static void main(String[] args) {
+        if (args.length == 0) {
+            System.out.println("Usage: ai-cli <prompt>");
+            return;
+        }
+        
+        String prompt = String.join(" ", args);
+        
+        Responder responder = Responder.builder()
+            .openRouter()
+            .apiKey(System.getenv("OPENROUTER_API_KEY"))
+            .build();
+        
+        var payload = CreateResponsePayload.builder()
+            .model("openai/gpt-4o-mini")
+            .addUserMessage(prompt)
+            .streaming()
+            .build();
+        
+        responder.respond(payload)
+            .onTextDelta(delta -> {
+                System.out.print(delta);
+                System.out.flush();
+            })
+            .onComplete(r -> System.out.println())
+            .onError(e -> {
+                System.err.println("\nError: " + e.getMessage());
+                System.exit(1);
+            })
+            .start();
+    }
+}
+```
+
+### Document Summarizer
+
+```java
+public class DocumentSummarizer {
+    private final Responder responder;
+    
+    public DocumentSummarizer(Responder responder) {
+        this.responder = responder;
+    }
+    
+    public record Summary(
+        String title,
+        String oneSentence,
+        List<String> keyPoints,
+        List<String> actionItems,
+        String targetAudience
+    ) {}
+    
+    public Summary summarize(String document) {
+        var payload = CreateResponsePayload.builder()
+            .model("openai/gpt-4o")
+            .addDeveloperMessage("""
+                You are a document analysis expert. Summarize documents
+                by extracting the most important information.
+                """)
+            .addUserMessage("Summarize this document:\n\n" + document)
+            .withStructuredOutput(Summary.class)
+            .build();
+        
+        return responder.respond(payload).join().parsed();
+    }
+    
+    public static void main(String[] args) throws Exception {
+        Responder responder = Responder.builder()
+            .openRouter()
+            .apiKey(System.getenv("OPENROUTER_API_KEY"))
+            .build();
+        
+        DocumentSummarizer summarizer = new DocumentSummarizer(responder);
+        
+        String document = Files.readString(Path.of("document.txt"));
+        Summary summary = summarizer.summarize(document);
+        
+        System.out.println("# " + summary.title());
+        System.out.println("\n" + summary.oneSentence());
+        System.out.println("\n## Key Points");
+        summary.keyPoints().forEach(p -> System.out.println("- " + p));
+        System.out.println("\n## Action Items");
+        summary.actionItems().forEach(a -> System.out.println("- [ ] " + a));
+    }
 }
 ```
