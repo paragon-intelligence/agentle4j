@@ -12,7 +12,7 @@ hide:
 
 <div align="center" markdown>
 
-![Agentle4j Logo](logo.png){ width="200" }
+![Agentle4j Logo](assets/logo.png){ width="200" }
 
 # Agentle4j
 
