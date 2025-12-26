@@ -160,6 +160,16 @@ public final class FunctionToolStore {
   }
 
   /**
+   * Gets a tool by name.
+   *
+   * @param name the function name
+   * @return the tool, or null if not found
+   */
+  public FunctionTool<?> get(@NonNull String name) {
+    return tools.get(name);
+  }
+
+  /**
    * Returns the ObjectMapper used by this store.
    *
    * @return the ObjectMapper

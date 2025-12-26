@@ -153,7 +153,6 @@ public final class AgentStream {
    */
   public @NonNull AgentStream onToolCallPending(@NonNull ToolConfirmationHandler handler) {
     this.onToolCallPending = Objects.requireNonNull(handler);
-    this.autoExecuteTools = false;
     return this;
   }
 
@@ -177,7 +176,6 @@ public final class AgentStream {
    */
   public @NonNull AgentStream onPause(@NonNull PauseHandler handler) {
     this.onPause = Objects.requireNonNull(handler);
-    this.autoExecuteTools = false;
     return this;
   }
 
@@ -315,27 +313,34 @@ public final class AgentStream {
           break; // No tool calls, loop complete
         }
 
-        // 3e. Execute tools (with optional human-in-the-loop)
+        // 3e. Execute tools (with optional per-tool human-in-the-loop)
         for (FunctionToolCall call : toolCalls) {
           if (call == null) continue;
 
-          boolean shouldExecute = autoExecuteTools;
+          // Check if this specific tool requires confirmation
+          FunctionTool<?> tool = agent.toolStore().get(call.name());
+          boolean toolRequiresConfirmation = tool != null && tool.requiresConfirmation();
           
-          // Handle synchronous approval callback
-          if (onToolCallPending != null) {
-            AtomicBoolean approved = new AtomicBoolean(false);
-            onToolCallPending.handle(call, approved::set);
-            shouldExecute = approved.get();
-          }
+          boolean shouldExecute = true;
           
-          // Handle async pause for long-running approvals
-          if (onPause != null && !autoExecuteTools) {
-            AgentRunState pauseState = AgentRunState.pendingApproval(
-                agent.name(), context, call, lastResponse, 
-                allToolExecutions, context.getTurnCount());
-            onPause.onPause(pauseState);
-            // Return paused result - caller must resume later
-            return AgentResult.paused(pauseState, context);
+          // Only trigger HITL callbacks for tools that require confirmation
+          if (toolRequiresConfirmation) {
+            // Handle synchronous approval callback
+            if (onToolCallPending != null) {
+              AtomicBoolean approved = new AtomicBoolean(false);
+              onToolCallPending.handle(call, approved::set);
+              shouldExecute = approved.get();
+            }
+            
+            // Handle async pause for long-running approvals
+            if (onPause != null) {
+              AgentRunState pauseState = AgentRunState.pendingApproval(
+                  agent.name(), context, call, lastResponse, 
+                  allToolExecutions, context.getTurnCount());
+              onPause.onPause(pauseState);
+              // Return paused result - caller must resume later
+              return AgentResult.paused(pauseState, context);
+            }
           }
 
           if (shouldExecute) {

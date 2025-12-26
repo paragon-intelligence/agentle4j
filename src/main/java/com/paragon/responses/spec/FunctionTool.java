@@ -24,6 +24,7 @@ public abstract non-sealed class FunctionTool<P extends Record> implements Tool 
   private final @NonNull Boolean strict;
   private final @Nullable String description;
   private final @NonNull Class<P> paramClass;
+  private final boolean requiresConfirmation;
 
   public FunctionTool() {
     this(new JacksonJsonSchemaProducer(new ObjectMapper()));
@@ -40,10 +41,12 @@ public abstract non-sealed class FunctionTool<P extends Record> implements Tool 
     if (metadata != null) {
       this.name = metadata.name();
       this.description = metadata.description().isEmpty() ? null : metadata.description();
+      this.requiresConfirmation = metadata.requiresConfirmation();
     } else {
       // Derive name from class simple name converted to snake_case
       this.name = toSnakeCase(this.getClass().getSimpleName());
       this.description = null;
+      this.requiresConfirmation = false;
     }
     this.strict = true;
 
@@ -77,9 +80,11 @@ public abstract non-sealed class FunctionTool<P extends Record> implements Tool 
     if (metadata != null) {
       this.name = metadata.name();
       this.description = metadata.description().isEmpty() ? null : metadata.description();
+      this.requiresConfirmation = metadata.requiresConfirmation();
     } else {
       this.name = toSnakeCase(this.getClass().getSimpleName());
       this.description = null;
+      this.requiresConfirmation = false;
     }
     this.parameters = Map.copyOf(parameters);
     this.strict = strict;
@@ -162,5 +167,17 @@ public abstract non-sealed class FunctionTool<P extends Record> implements Tool 
    */
   public @NonNull Class<P> getParamClass() {
     return paramClass;
+  }
+
+  /**
+   * Returns whether this tool requires human confirmation before execution.
+   *
+   * <p>When true, the tool will trigger the {@code onToolCallPending} or {@code onPause}
+   * callback in AgentStream, allowing human-in-the-loop approval workflows.
+   *
+   * @return true if confirmation is required, false otherwise
+   */
+  public boolean requiresConfirmation() {
+    return requiresConfirmation;
   }
 }
