@@ -75,22 +75,38 @@ hide:
 
 ## ⚡ Performance
 
-Agentle4j is designed for extreme efficiency — **6x faster than AGNO**, the fastest Python alternative:
+### Agent Instantiation Benchmark
+
+Measures **time to create an agent instance** (not API calls). Lower is better.
 
 ```
 ╔═══════════════════════════════════════════════════════════════════╗
-║                 AGENTLE PERFORMANCE BENCHMARK                     ║
+║           AGENT INSTANTIATION BENCHMARK (lower = better)          ║
 ╚═══════════════════════════════════════════════════════════════════╝
 
-Framework        │       Time (μs) │    Memory (KiB) │   Speed vs AGNO
-──────────────────────────────────────────────────────────────────────
-🚀 AGENTLE       │            0.50 │          0.3906 │            6.0×
-AGNO             │            3.00 │          6.6000 │   1× (baseline)
-PydanticAI       │          170.00 │         28.7120 │      57× slower
-CrewAI           │          210.00 │         65.6520 │      70× slower
-LangGraph        │         1587.00 │        161.4350 │     529× slower
+Framework        │  Time (μs) │  Memory (KiB) │ Language
+─────────────────┼────────────┼───────────────┼─────────────────────
+🚀 Agentle4j     │       0.50 │         0.39  │ Java 21+ (this lib)
+AGNO             │       3.00 │         6.60  │ Python
+PydanticAI       │     170.00 │        28.71  │ Python
+CrewAI           │     210.00 │        65.65  │ Python
+LangGraph        │   1,587.00 │       161.43  │ Python
 ──────────────────────────────────────────────────────────────────────
 ```
+
+!!! warning "Important Caveats"
+    - **Cross-language comparisons are inherently unfair.** Java's JVM provides different performance characteristics than Python's interpreter.
+    - This benchmark only measures **agent instantiation time**, not actual LLM inference or end-to-end latency.
+    - We haven't benchmarked against **LangChain4J** or **Spring AI** yet—contributions welcome!
+    - Real-world performance depends heavily on network latency, model choice, and payload size.
+
+### Java Alternatives
+
+| Library | Focus | Notes |
+|---------|-------|-------|
+| **Agentle4j** | Agents-first, OpenAI Responses API | This library |
+| **LangChain4J** | General-purpose, many integrations | Mature ecosystem |
+| **Spring AI** | Spring ecosystem integration | Production-ready |
 
 ---
 
