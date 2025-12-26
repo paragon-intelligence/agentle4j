@@ -40,6 +40,7 @@ compile_output.txt
 .classpath.txt
 google-java-format.jar
 .agent
+.kiro
 
 # Go binaries
 tools/releaser/releaser
