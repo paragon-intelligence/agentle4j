@@ -69,6 +69,70 @@ Responder responder = Responder.builder()
 |--------|---------|-------------|
 | `.apiKey(String)` | Required | Your API key |
 | `.addTelemetryProcessor(TelemetryProcessor)` | None | Observability integration |
+| `.maxRetries(int)` | 3 | Max retry attempts for transient failures |
+| `.retryPolicy(RetryPolicy)` | defaults() | Full retry configuration |
+
+---
+
+## Retry Configuration
+
+Responder automatically retries on transient failures with exponential backoff:
+
+### Default Behavior
+
+By default, Responder retries **3 times** on:
+- **429** - Rate limiting
+- **500, 502, 503, 504** - Server errors
+- Network failures (connection timeout, etc.)
+
+### Simple Configuration
+
+```java
+// Set max retries (uses default backoff settings)
+Responder responder = Responder.builder()
+    .openRouter()
+    .apiKey(apiKey)
+    .maxRetries(5)  // Retry up to 5 times
+    .build();
+
+// Disable retries
+Responder responder = Responder.builder()
+    .openRouter()
+    .apiKey(apiKey)
+    .maxRetries(0)  // No retries
+    .build();
+```
+
+### Advanced Configuration
+
+```java
+import com.paragon.responses.RetryPolicy;
+
+RetryPolicy policy = RetryPolicy.builder()
+    .maxRetries(5)
+    .initialDelay(Duration.ofMillis(500))  // Start with 500ms delay
+    .maxDelay(Duration.ofSeconds(30))      // Cap at 30 seconds
+    .multiplier(2.0)                       // Double delay each retry
+    .retryableStatusCodes(Set.of(429, 503)) // Only retry these codes
+    .build();
+
+Responder responder = Responder.builder()
+    .openRouter()
+    .apiKey(apiKey)
+    .retryPolicy(policy)
+    .build();
+```
+
+### Backoff Calculation
+
+Retry delays follow exponential backoff:
+
+| Attempt | Delay (default) |
+|---------|----------------|
+| 1 | 1 second |
+| 2 | 2 seconds |
+| 3 | 4 seconds |
+| 4+ | Up to 30 seconds (max) |
 
 ---
 

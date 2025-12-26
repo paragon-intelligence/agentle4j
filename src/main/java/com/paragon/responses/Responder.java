@@ -54,6 +54,7 @@ public class Responder {
   private final @NonNull Headers headers;
   private final @NonNull ProcessorRegistry telemetryProcessors;
   private final @Nullable OpenRouterModelRegistry modelRegistry;
+  private final @NonNull RetryPolicy retryPolicy;
 
   private Responder(
           @Nullable ResponsesAPIProvider provider,
@@ -63,7 +64,8 @@ public class Responder {
           @NonNull String apiKey,
           @NonNull ObjectMapper objectMapper,
           @NonNull ProcessorRegistry telemetryProcessors,
-          @Nullable OpenRouterModelRegistry modelRegistry) {
+          @Nullable OpenRouterModelRegistry modelRegistry,
+          @NonNull RetryPolicy retryPolicy) {
     this.provider = provider;
     this.baseUrl = Objects.requireNonNull(baseUrl);
     this.jsonSchemaProducer = Objects.requireNonNull(jsonSchemaProducer);
@@ -71,6 +73,7 @@ public class Responder {
     this.objectMapper = objectMapper;
     this.telemetryProcessors = telemetryProcessors;
     this.modelRegistry = modelRegistry;
+    this.retryPolicy = Objects.requireNonNull(retryPolicy);
     this.headers =
             Headers.of(
                     "Authorization",
@@ -140,6 +143,17 @@ public class Responder {
 
     Request request = payload.toRequest(responsesApiObjectMapper, JSON, baseUrl, headers);
 
+    return executeWithRetry(request, startedEvent, 0);
+  }
+
+  /**
+   * Executes an HTTP request with retry logic and exponential backoff.
+   */
+  private @NonNull CompletableFuture<Response> executeWithRetry(
+          @NonNull Request request,
+          @NonNull ResponseStartedEvent startedEvent,
+          int attempt) {
+
     CompletableFuture<Response> future = new CompletableFuture<>();
 
     httpClient
@@ -148,9 +162,14 @@ public class Responder {
                     new Callback() {
                       @Override
                       public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                        // Emit failed event
-                        telemetryProcessors.broadcast(ResponseFailedEvent.from(startedEvent, e));
-                        future.completeExceptionally(e);
+                        // Network errors are retryable
+                        if (attempt < retryPolicy.maxRetries()) {
+                          logger.warn("Request failed (attempt {}), retrying: {}", attempt + 1, e.getMessage());
+                          scheduleRetry(request, startedEvent, attempt, future);
+                        } else {
+                          telemetryProcessors.broadcast(ResponseFailedEvent.from(startedEvent, e));
+                          future.completeExceptionally(e);
+                        }
                       }
 
                       @Override
@@ -160,13 +179,19 @@ public class Responder {
                           logger.debug("Raw API Response:\n{}", json);
 
                           if (!response.isSuccessful()) {
+                            // Check if we should retry this status code
+                            if (retryPolicy.isRetryable(response.code()) && attempt < retryPolicy.maxRetries()) {
+                              logger.warn("Received {} (attempt {}), retrying", response.code(), attempt + 1);
+                              scheduleRetry(request, startedEvent, attempt, future);
+                              return;
+                            }
+
                             String errorMessage =
                                     String.format(
                                             "API Error: %s %d - %s%nResponse Body: %s",
                                             response.protocol(), response.code(), response.message(), json);
                             logger.error(errorMessage);
 
-                            // Emit failed event for HTTP error
                             telemetryProcessors.broadcast(
                                     ResponseFailedEvent.fromHttpError(
                                             startedEvent, response.code(), errorMessage));
@@ -177,14 +202,11 @@ public class Responder {
 
                           Response mapped = responsesApiObjectMapper.readValue(json, Response.class);
 
-                          // Emit completed event
-                          // Token usage would be extracted here if Response had a usage() method
                           telemetryProcessors.broadcast(
                                   ResponseCompletedEvent.from(startedEvent, null, null, null, null));
 
                           future.complete(mapped);
                         } catch (Exception e) {
-                          // Emit failed event for parsing errors
                           telemetryProcessors.broadcast(ResponseFailedEvent.from(startedEvent, e));
                           future.completeExceptionally(e);
                         }
@@ -192,6 +214,31 @@ public class Responder {
                     });
 
     return future;
+  }
+
+  /**
+   * Schedules a retry with exponential backoff delay.
+   */
+  private void scheduleRetry(
+          @NonNull Request request,
+          @NonNull ResponseStartedEvent startedEvent,
+          int attempt,
+          @NonNull CompletableFuture<Response> originalFuture) {
+
+    java.time.Duration delay = retryPolicy.getDelayForAttempt(attempt + 1);
+    logger.debug("Scheduling retry {} after {}ms", attempt + 2, delay.toMillis());
+
+    CompletableFuture.delayedExecutor(delay.toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
+            .execute(() -> {
+              executeWithRetry(request, startedEvent, attempt + 1)
+                      .whenComplete((result, error) -> {
+                        if (error != null) {
+                          originalFuture.completeExceptionally(error);
+                        } else {
+                          originalFuture.complete(result);
+                        }
+                      });
+            });
   }
 
   /**
@@ -409,6 +456,8 @@ public class Responder {
     private String apiKey = null;
     @NonNull
     private ObjectMapper objectMapper = ResponsesApiObjectMapper.create();
+    @NonNull
+    private RetryPolicy retryPolicy = RetryPolicy.defaults();
 
     public Builder openRouter() {
       provider = ResponsesAPIProvider.OPEN_ROUTER;
@@ -465,6 +514,36 @@ public class Responder {
       return this;
     }
 
+    /**
+     * Sets the retry policy for handling transient failures.
+     *
+     * <p>By default, retries are enabled with 3 attempts and exponential backoff.
+     * Use {@link RetryPolicy#disabled()} to disable retries.
+     *
+     * @param retryPolicy the retry policy to use
+     * @return this builder
+     */
+    public Builder retryPolicy(@NonNull RetryPolicy retryPolicy) {
+      this.retryPolicy = Objects.requireNonNull(retryPolicy);
+      return this;
+    }
+
+    /**
+     * Sets the maximum number of retry attempts with default backoff settings.
+     *
+     * <p>This is a convenience method equivalent to:
+     * <pre>{@code
+     * .retryPolicy(RetryPolicy.builder().maxRetries(n).build())
+     * }</pre>
+     *
+     * @param maxRetries maximum retry attempts (0 = no retries)
+     * @return this builder
+     */
+    public Builder maxRetries(int maxRetries) {
+      this.retryPolicy = RetryPolicy.builder().maxRetries(maxRetries).build();
+      return this;
+    }
+
     public @NonNull Responder build() {
       HttpUrl resolvedBaseUrl;
       if (baseUrl != null) {
@@ -507,7 +586,8 @@ public class Responder {
               resolvedApiKey,
               objectMapper,
               ProcessorRegistry.of(telemetryProcessors),
-              resolvedModelRegistry);
+              resolvedModelRegistry,
+              retryPolicy);
     }
   }
 }

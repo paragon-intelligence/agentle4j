@@ -886,10 +886,34 @@ var payload = CreateResponsePayload.builder()
 | `model()` | Model identifier | `"openai/gpt-4o"` |
 | `temperature()` | Creativity (0.0–2.0) | `.temperature(0.7)` |
 | `maxOutputTokens()` | Limit response length | `.maxOutputTokens(1000)` |
+| `maxRetries()` | Retry attempts for transient failures | `.maxRetries(3)` |
+| `retryPolicy()` | Advanced retry configuration | `.retryPolicy(RetryPolicy.builder()...)` |
 | `toolChoice()` | Control tool usage | `.toolChoice(ToolChoiceMode.REQUIRED)` |
 | `reasoning()` | Enable chain-of-thought | `.reasoning(new ReasoningConfig(...))` |
 
----
+### Retry Configuration
+
+Built-in retry with exponential backoff for 429 rate limits and 5xx errors:
+
+```java
+// Simple: set max retries
+Responder.builder()
+    .openRouter()
+    .apiKey(key)
+    .maxRetries(5)  // Retry up to 5 times
+    .build();
+
+// Advanced: full control
+Responder.builder()
+    .openRouter()
+    .apiKey(key)
+    .retryPolicy(RetryPolicy.builder()
+        .maxRetries(5)
+        .initialDelay(Duration.ofMillis(500))
+        .maxDelay(Duration.ofSeconds(30))
+        .build())
+    .build();
+```
 
 ## 🔌 Providers
 
