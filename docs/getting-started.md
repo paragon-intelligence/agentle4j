@@ -302,7 +302,7 @@ Agentle4j supports multiple AI providers through a unified API:
     
     ```java
     Responder responder = Responder.builder()
-        .openai()
+        .openAi()
         .apiKey(System.getenv("OPENAI_API_KEY"))
         .build();
     
@@ -318,7 +318,7 @@ Agentle4j supports multiple AI providers through a unified API:
     
     ```java
     Responder responder = Responder.builder()
-        .groq()
+        .baseUrl(HttpUrl.parse("https://api.groq.com/openai/v1"))
         .apiKey(System.getenv("GROQ_API_KEY"))
         .build();
     
@@ -334,7 +334,7 @@ Agentle4j supports multiple AI providers through a unified API:
     
     ```java
     Responder responder = Responder.builder()
-        .custom("https://your-api.example.com/v1")
+        .baseUrl(HttpUrl.parse("https://your-api.example.com/v1"))
         .apiKey("your-api-key")
         .build();
     ```

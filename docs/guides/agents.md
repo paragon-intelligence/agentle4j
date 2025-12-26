@@ -160,18 +160,18 @@ Agent agent = Agent.builder()
         List<String> blocked = List.of("password", "secret", "api key", "credit card");
         for (String word : blocked) {
             if (input.toLowerCase().contains(word)) {
-                return GuardrailResult.reject("Cannot discuss: " + word);
+                return GuardrailResult.failed("Cannot discuss: " + word);
             }
         }
-        return GuardrailResult.pass();
+        return GuardrailResult.passed();
     })
     
     // Limit input length
     .addInputGuardrail((input, ctx) -> {
         if (input.length() > 10000) {
-            return GuardrailResult.reject("Input too long. Max 10000 characters.");
+            return GuardrailResult.failed("Input too long. Max 10000 characters.");
         }
-        return GuardrailResult.pass();
+        return GuardrailResult.passed();
     })
     
     .build();
@@ -191,9 +191,9 @@ Agent agent = Agent.builder()
     // Limit response length
     .addOutputGuardrail((output, ctx) -> {
         if (output.length() > 5000) {
-            return GuardrailResult.reject("Response too long");
+            return GuardrailResult.failed("Response too long");
         }
-        return GuardrailResult.pass();
+        return GuardrailResult.passed();
     })
     
     // Check for unwanted content
@@ -202,7 +202,7 @@ Agent agent = Agent.builder()
             // Log but allow
             logger.warn("Agent expressed inability");
         }
-        return GuardrailResult.pass();
+        return GuardrailResult.passed();
     })
     
     .build();
@@ -260,8 +260,8 @@ Agent frontDesk = Agent.builder()
         - Technical issues → TechSupport
         """)
     .responder(responder)
-    .addHandoff(Handoff.to(billingAgent, "billing, invoices, payments, subscriptions"))
-    .addHandoff(Handoff.to(techSupportAgent, "bugs, errors, crashes, technical problems"))
+    .addHandoff(Handoff.to(billingAgent).description("billing, invoices, payments, subscriptions").build())
+    .addHandoff(Handoff.to(techSupportAgent).description("bugs, errors, crashes, technical problems").build())
     .build();
 
 // User interaction

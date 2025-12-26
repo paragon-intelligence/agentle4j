@@ -579,16 +579,16 @@ Agent agent = Agent.builder()
     // Input validation
     .addInputGuardrail((input, ctx) -> {
         if (input.contains("password")) {
-            return GuardrailResult.reject("Cannot discuss passwords");
+            return GuardrailResult.failed("Cannot discuss passwords");
         }
-        return GuardrailResult.pass();
+        return GuardrailResult.passed();
     })
     // Output validation  
     .addOutputGuardrail((output, ctx) -> {
         if (output.length() > 5000) {
-            return GuardrailResult.reject("Response too long");
+            return GuardrailResult.failed("Response too long");
         }
-        return GuardrailResult.pass();
+        return GuardrailResult.passed();
     })
     .build();
 ```
@@ -614,7 +614,7 @@ Agent frontDesk = Agent.builder()
     .model("openai/gpt-4o")
     .instructions("Route to specialists as needed.")
     .responder(responder)
-    .addHandoff(Handoff.to(billingAgent, "billing issues"))
+    .addHandoff(Handoff.to(billingAgent).description("billing issues").build())
     .build();
 
 // Automatically routes to BillingSpecialist when needed
@@ -840,7 +840,7 @@ Built-in tracing and metrics:
 Responder responder = Responder.builder()
     .openRouter()
     .apiKey(apiKey)
-    .telemetry(new OtelProcessor(tracer, meter))  // Add observability
+    .addTelemetryProcessor(LangfuseProcessor.fromEnv())  // Add observability
     .build();
 ```
 
@@ -903,6 +903,12 @@ Responder.builder().openRouter().apiKey(key).build();
 Responder.builder().openAi().apiKey(key).build();
 
 // Any Responses API-compatible provider via baseUrl()
+Responder.builder()
+    .baseUrl(HttpUrl.parse("https://api.groq.com/openai/v1"))
+    .apiKey(key)
+    .build();
+
+// Groq (fast inference)
 Responder.builder()
     .baseUrl(HttpUrl.parse("https://api.groq.com/openai/v1"))
     .apiKey(key)

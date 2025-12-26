@@ -16,20 +16,20 @@ flowchart LR
 
 ## Quick Setup
 
-### OpenTelemetry
+### Langfuse Integration
 
 ```java
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.api.metrics.Meter;
+import com.paragon.telemetry.langfuse.LangfuseProcessor;
 
-Tracer tracer = GlobalOpenTelemetry.getTracer("agentle4j");
-Meter meter = GlobalOpenTelemetry.getMeter("agentle4j");
+LangfuseProcessor langfuse = LangfuseProcessor.builder()
+    .publicKey("pk-xxx")
+    .secretKey("sk-xxx")
+    .build();
 
 Responder responder = Responder.builder()
     .openRouter()
     .apiKey(apiKey)
-    .telemetry(new OtelProcessor(tracer, meter))
+    .addTelemetryProcessor(langfuse)
     .build();
 ```
 
@@ -69,7 +69,7 @@ When using OpenRouter, Agentle4j automatically tracks costs:
 Responder responder = Responder.builder()
     .openRouter()
     .apiKey(apiKey)
-    .telemetry(telemetryProcessor)
+    .addTelemetryProcessor(langfuse)  // Optional: add for observability
     .build();
 
 // Response includes cost information
@@ -114,7 +114,7 @@ LangfuseProcessor langfuse = LangfuseProcessor.builder()
 Responder responder = Responder.builder()
     .openRouter()
     .apiKey(apiKey)
-    .telemetry(langfuse)
+    .addTelemetryProcessor(langfuse)
     .build();
 ```
 
@@ -132,19 +132,19 @@ Add custom metadata to traces:
 ```java
 TelemetryContext telemetryContext = TelemetryContext.builder()
     .userId("user-123")
-    .sessionId("session-456")
     .traceName("customer-support-chat")
-    .addTag("environment", "production")
-    .addTag("feature", "billing")
-    .addAttribute("customer_tier", "premium")
+    .addTag("production")
+    .addTag("billing")
+    .addMetadata("customer_tier", "premium")
     .build();
 
 var payload = CreateResponsePayload.builder()
     .model("openai/gpt-4o")
     .addUserMessage("Help with my invoice")
-    .telemetryContext(telemetryContext)
     .build();
-```
+
+// Use with TelemetryContext
+responder.respond(payload, telemetryContext);
 
 ## Grafana Dashboard
 

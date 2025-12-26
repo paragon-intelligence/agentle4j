@@ -57,13 +57,8 @@ Responder responder = Responder.builder()
     .openRouter()
     .apiKey(System.getenv("OPENROUTER_API_KEY"))
     
-    // Timeouts
-    .connectTimeout(Duration.ofSeconds(10))
-    .readTimeout(Duration.ofSeconds(60))
-    .writeTimeout(Duration.ofSeconds(30))
-    
     // Telemetry (optional)
-    .telemetry(new OtelProcessor(tracer, meter))
+    .addTelemetryProcessor(LangfuseProcessor.fromEnv())
     
     .build();
 ```
@@ -73,10 +68,7 @@ Responder responder = Responder.builder()
 | Option | Default | Description |
 |--------|---------|-------------|
 | `.apiKey(String)` | Required | Your API key |
-| `.connectTimeout(Duration)` | 10s | Connection establishment timeout |
-| `.readTimeout(Duration)` | 30s | Response read timeout |
-| `.writeTimeout(Duration)` | 30s | Request write timeout |
-| `.telemetry(TelemetryProcessor)` | None | Observability integration |
+| `.addTelemetryProcessor(TelemetryProcessor)` | None | Observability integration |
 
 ---
 
@@ -104,7 +96,7 @@ Responder responder = Responder.builder()
 
     ```java
     Responder responder = Responder.builder()
-        .openai()
+        .openAi()
         .apiKey(System.getenv("OPENAI_API_KEY"))
         .build();
     ```
@@ -120,7 +112,7 @@ Responder responder = Responder.builder()
     
     ```java
     Responder responder = Responder.builder()
-        .groq()
+        .baseUrl(HttpUrl.parse("https://api.groq.com/openai/v1"))
         .apiKey(System.getenv("GROQ_API_KEY"))
         .build();
     ```
@@ -136,7 +128,7 @@ Responder responder = Responder.builder()
     
     ```java
     Responder responder = Responder.builder()
-        .custom("https://api.your-company.com/v1")
+        .baseUrl(HttpUrl.parse("https://api.your-company.com/v1"))
         .apiKey("your-key")
         .build();
     ```
