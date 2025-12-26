@@ -10,7 +10,7 @@ Practical, copy-paste ready examples for common Agentle4j use cases.
 
 ```java
 import com.paragon.responses.Responder;
-import com.paragon.responses.payload.CreateResponsePayload;
+import com.paragon.responses.spec.CreateResponsePayload;
 import com.paragon.responses.Response;
 
 public class SimpleChatExample {

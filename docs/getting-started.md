@@ -16,7 +16,7 @@ Let's create a simple chatbot that responds to a message:
 
 ```java
 import com.paragon.responses.Responder;
-import com.paragon.responses.payload.CreateResponsePayload;
+import com.paragon.responses.spec.CreateResponsePayload;
 import com.paragon.responses.Response;
 
 public class HelloAgentle {
@@ -347,7 +347,7 @@ Here's a complete, runnable example of an AI assistant:
 
 ```java
 import com.paragon.responses.Responder;
-import com.paragon.responses.payload.CreateResponsePayload;
+import com.paragon.responses.spec.CreateResponsePayload;
 import java.util.Scanner;
 
 public class ChatBot {

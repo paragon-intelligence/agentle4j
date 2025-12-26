@@ -29,8 +29,8 @@ The complete API documentation is generated from Javadoc.
 ```
 com.paragon
 ├── responses          # Core Responder and Response classes
-├── responses.payload  # Request payload builders
-├── responses.dto      # Data transfer objects
+├── responses.spec     # Request payload builders and DTOs
+├── responses.dto      # Additional data transfer objects
 ├── agents             # Agent framework
 ├── tools              # Function calling tools
 └── telemetry          # Observability integration

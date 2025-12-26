@@ -54,9 +54,9 @@ public record DateRange(LocalDate start, LocalDate end) {}
 Extend `FunctionTool<T>` and implement the `call` method:
 
 ```java
-import com.paragon.tools.FunctionTool;
-import com.paragon.tools.FunctionMetadata;
-import com.paragon.tools.FunctionToolCallOutput;
+import com.paragon.responses.spec.FunctionTool;
+import com.paragon.responses.annotations.FunctionMetadata;
+import com.paragon.responses.spec.FunctionToolCallOutput;
 import org.jspecify.annotations.Nullable;
 
 @FunctionMetadata(
@@ -193,7 +193,8 @@ public class DatabaseQueryTool extends FunctionTool<QueryParams> {
         try {
             List<Map<String, Object>> results = executeQuery(params);
             QueryResult result = new QueryResult(results, results.size());
-            return FunctionToolCallOutput.json(result);  // Return as JSON
+            // Serialize to JSON string for structured data
+            return FunctionToolCallOutput.success(objectMapper.writeValueAsString(result));
         } catch (SQLException e) {
             return FunctionToolCallOutput.error("Database error: " + e.getMessage());
         }
@@ -319,9 +320,10 @@ return FunctionToolCallOutput.success("Operation completed");
 // Error with message
 return FunctionToolCallOutput.error("Invalid parameters");
 
-// Structured JSON response
+// Structured JSON response (serialize to string)
 record SearchResult(List<Product> products, int total) {}
-return FunctionToolCallOutput.json(new SearchResult(products, total));
+ObjectMapper mapper = new ObjectMapper();
+return FunctionToolCallOutput.success(mapper.writeValueAsString(new SearchResult(products, total)));
 ```
 
 ---
@@ -342,7 +344,11 @@ public class ReportGeneratorTool extends FunctionTool<ReportParams> {
         return CompletableFuture.supplyAsync(() -> {
             // Long-running operation
             Report report = generateDetailedReport(params);
-            return FunctionToolCallOutput.json(report);
+            try {
+                return FunctionToolCallOutput.success(new ObjectMapper().writeValueAsString(report));
+            } catch (Exception e) {
+                return FunctionToolCallOutput.error("Failed to serialize report");
+            }
         });
     }
     

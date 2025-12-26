@@ -116,7 +116,7 @@ LangGraph        │   1,587.00 │       161.43  │ Python
 
 ```java
 import com.paragon.responses.Responder;
-import com.paragon.responses.payload.CreateResponsePayload;
+import com.paragon.responses.spec.CreateResponsePayload;
 
 // Create a responder
 Responder responder = Responder.builder()
