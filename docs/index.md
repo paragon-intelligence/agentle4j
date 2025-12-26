@@ -12,7 +12,9 @@ hide:
 
 <div align="center" markdown>
 
-# 🤖 Agentle4j
+![Agentle4j Logo](logo.png){ width="200" }
+
+# Agentle4j
 
 **The Modern Java Library for OpenAI Responses API**
 
