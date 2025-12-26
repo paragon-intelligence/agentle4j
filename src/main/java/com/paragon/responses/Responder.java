@@ -40,7 +40,7 @@ import java.util.concurrent.CompletableFuture;
  * calculate request costs based on token usage.
  */
 @SuppressWarnings("ClassCanBeRecord")
-public final class Responder {
+public class Responder {
   private static final @NonNull ObjectMapper responsesApiObjectMapper =
           ResponsesApiObjectMapper.create();
   private static final @NonNull Logger logger = LoggerFactory.getLogger(Responder.class);

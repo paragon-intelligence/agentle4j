@@ -672,36 +672,90 @@ agent.interact("What's my favorite color?", context);
 
 ### 🧑‍💻 Human-in-the-Loop
 
-Control tool execution with approval workflows:
+Control tool execution with **per-tool** approval workflows:
 
 ![Human-in-the-Loop](docs/media/hitl.png)
 
+#### Per-Tool Confirmation
+
+Mark sensitive tools that require human approval:
+
 ```java
-// Streaming with approval callbacks
-agent.interactStream("Send an email to John")
+@FunctionMetadata(
+    name = "send_email",
+    description = "Sends an email to the specified recipient",
+    requiresConfirmation = true  // ⬅️ Requires human approval
+)
+public class SendEmailTool extends FunctionTool<EmailParams> {
+    @Override
+    public FunctionToolCallOutput call(EmailParams params) {
+        // Only executed after human approval
+        return FunctionToolCallOutput.success(callId, "Email sent!");
+    }
+}
+
+@FunctionMetadata(name = "get_weather", description = "Gets current weather")
+public class GetWeatherTool extends FunctionTool<WeatherParams> {
+    // requiresConfirmation defaults to false - auto-executes
+}
+```
+
+#### Synchronous Approval (Short-Running)
+
+For immediate user confirmation (CLI, UI dialog):
+
+```java
+agent.interactStream("Send an email to John and check the weather")
     .onToolCallPending((toolCall, approve) -> {
-        // Synchronous approval
-        boolean userApproved = askUser("Execute " + toolCall.name() + "?");
-        approve.accept(userApproved);
+        // Only called for tools with requiresConfirmation=true
+        System.out.println("🔧 Approval needed: " + toolCall.name());
+        System.out.println("   Arguments: " + toolCall.arguments());
+        
+        boolean userApproved = askUser("Execute? (y/n)");
+        approve.accept(userApproved);  // true = execute, false = reject
     })
     .onToolExecuted(exec -> {
         System.out.println("✅ " + exec.toolName() + " completed");
     })
     .start();
+// get_weather auto-executes, send_email waits for approval
+```
 
-// Async pause/resume for long approvals
-agent.interactStream("Delete all records")
+#### Async Pause/Resume (Long-Running)
+
+For approvals that take hours or days (manager approval, compliance review):
+
+```java
+// Step 1: Start and pause when confirmation needed
+agent.interactStream("Delete all customer records")
     .onPause(state -> {
-        // Serialize and save state
-        saveToDatabase(state);
-        notifyApprover(state.pendingToolCall());
+        // AgentRunState is Serializable - save to database
+        String json = objectMapper.writeValueAsString(state);
+        database.save("pending_approval:" + state.pendingToolCall().callId(), json);
+        
+        // Notify approver via email, Slack, etc.
+        slackClient.send("#approvals", 
+            "🔧 Tool approval needed: " + state.pendingToolCall().name());
     })
     .start();
 
-// Later, after approval:
-AgentRunState savedState = loadFromDatabase();
-savedState.approveToolCall();
-AgentResult result = agent.resume(savedState);
+// Step 2: Days later, when approval received
+@PostMapping("/approve/{callId}")
+public void handleApproval(@PathVariable String callId, @RequestBody ApprovalRequest req) {
+    // Load saved state
+    String json = database.get("pending_approval:" + callId);
+    AgentRunState state = objectMapper.readValue(json, AgentRunState.class);
+    
+    if (req.approved()) {
+        state.approveToolCall("Approved by manager");  // ✅ Execute with output
+    } else {
+        state.rejectToolCall("Denied: " + req.reason());  // ❌ Reject with reason
+    }
+    
+    // Resume agent execution
+    AgentResult result = agent.resume(state).join();
+    notifyUser(result.output());
+}
 ```
 
 ---

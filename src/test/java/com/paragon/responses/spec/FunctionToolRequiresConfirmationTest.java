@@ -112,4 +112,33 @@ class FunctionToolRequiresConfirmationTest {
       assertTrue(dangerous.requiresConfirmation());
     }
   }
+
+  @Nested
+  @DisplayName("Alternative constructor")
+  class AlternativeConstructorTests {
+
+    // Tool using alternative constructor (manual params) but with annotation
+    @FunctionMetadata(
+        name = "manual_dangerous_tool",
+        description = "A dangerous tool with manual params",
+        requiresConfirmation = true)
+    static class ManualDangerousTool extends FunctionTool<SimpleParams> {
+      public ManualDangerousTool() {
+        super(java.util.Map.of("type", "object"), true);
+      }
+
+      @Override
+      public FunctionToolCallOutput call(SimpleParams params) {
+        return FunctionToolCallOutput.success("manual_call", "Result");
+      }
+    }
+
+    @Test
+    @DisplayName("alternative constructor reads requiresConfirmation from annotation")
+    void alternativeConstructor_readsAnnotation() {
+      ManualDangerousTool tool = new ManualDangerousTool();
+      assertTrue(tool.requiresConfirmation());
+      assertEquals("manual_dangerous_tool", tool.getName());
+    }
+  }
 }

@@ -98,6 +98,7 @@ nav:
     - Agents: guides/agents.md
     - Streaming: guides/streaming.md
     - Function Tools: guides/tools.md
+    - Vision: guides/vision.md
     - Observability: guides/observability.md
   - API Reference: api.md
   - Examples: examples/code-samples.md
