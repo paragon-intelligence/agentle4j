@@ -425,30 +425,35 @@ When using Responder directly, you need to handle the tool loop manually:
 
 ```java
 Response response = responder.respond(payload).join();
+List<ResponseInputItem> conversationHistory = new ArrayList<>(response.output());
 
 // Keep executing tools until no more tool calls
 while (!response.functionToolCalls(store).isEmpty()) {
-    List<FunctionToolCallOutput> results = new ArrayList<>();
-    
+    // Execute each tool call
     for (var toolCall : response.functionToolCalls(store)) {
         System.out.println("Executing: " + toolCall.name());
         FunctionToolCallOutput result = toolCall.call();
-        results.add(result);
+        conversationHistory.add(result);
     }
     
-    // Send tool results back to the model
+    // Continue conversation with tool results in input
     var continuePayload = CreateResponsePayload.builder()
         .model("openai/gpt-4o")
-        .previousResponseId(response.id())
-        .toolResults(results)
+        .input(conversationHistory)
+        .addTools(store.getTools())
         .build();
     
     response = responder.respond(continuePayload).join();
+    conversationHistory.addAll(response.output());
 }
 
 // Final response
 System.out.println(response.outputText());
 ```
+
+!!! tip "Use Agents for Easier Tool Handling"
+    The `Agent` class handles the tool execution loop automatically.
+    Consider using an Agent instead of raw Responder when working with tools.
 
 ---
 
