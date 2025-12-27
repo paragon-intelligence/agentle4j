@@ -498,7 +498,7 @@ public FunctionToolCallOutput call(@Nullable Params params) {
     throw new RuntimeException("Something went wrong");  // Bad!
 }
 
-// Don't forget null checks
+// Missing null check
 String location = params.location();  // NPE if params is null!
 ```
 

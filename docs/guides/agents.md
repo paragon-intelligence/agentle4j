@@ -770,6 +770,8 @@ agent.interactStream("Research and summarize AI trends")
 
 Get type-safe responses from agents:
 
+> 💡 **Tip:** Use `var` when building agents, responders, and structured outputs. The return type may change depending on which builder methods you call.
+
 ```java
 // Define output schema
 record Analysis(
@@ -779,8 +781,8 @@ record Analysis(
     List<String> recommendations
 ) {}
 
-// Create structured agent
-Agent.Structured<Analysis> analyst = Agent.builder()
+// Create structured agent - use var for flexibility
+var analyst = Agent.builder()
     .name("Analyst")
     .model("openai/gpt-4o")
     .instructions("""
@@ -788,11 +790,12 @@ Agent.Structured<Analysis> analyst = Agent.builder()
         Sentiment score should be from -100 (very negative) to 100 (very positive).
         """)
     .responder(responder)
-    .structured(Analysis.class);  // Terminal method
+    .structured(Analysis.class)
+    .build();
 
-// Get typed result
-AgentResult result = analyst.interact("Analyze this quarterly report...").join();
-Analysis analysis = result.parsed(Analysis.class);
+// Get typed result - StructuredAgentResult<Analysis>
+var result = analyst.interact("Analyze this quarterly report...").join();
+Analysis analysis = result.output();
 
 System.out.println("Summary: " + analysis.summary());
 System.out.println("Sentiment: " + analysis.sentimentScore());
@@ -841,7 +844,7 @@ public String chat(String message) {
 // Don't use vague instructions
 .instructions("Be helpful")  // Too vague!
 
-// Don't forget to handle errors
+// Missing error handler
 agent.interact(input).join();  // Uncaught exceptions!
 ```
 

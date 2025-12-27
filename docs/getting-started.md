@@ -124,7 +124,7 @@ responder.respond(payload)
     .onError(error -> {
         System.err.println("Error: " + error.getMessage());
     })
-    .start();  // Don't forget to call start()!
+    .start();
 ```
 
 ### Streaming Callbacks Reference
@@ -156,7 +156,7 @@ public record Person(
 var payload = CreateResponsePayload.builder()
     .model("openai/gpt-4o")
     .addUserMessage("Create a fictional senior software engineer")
-    .withStructuredOutput(Person.class)  // Magic happens here!
+    .withStructuredOutput(Person.class)
     .build();
 
 // 3. Get the parsed response

@@ -40,7 +40,7 @@ responder.respond(payload)
     .onError(error -> {
         System.err.println("Error: " + error.getMessage());
     })
-    .start();  // Don't forget to call start()!
+    .start();
 ```
 
 ### Callback Reference
@@ -462,7 +462,7 @@ responder.respond(payload)
     showErrorToUser(error.getMessage());
 })
 
-// Don't forget to call start()
+// Always call start()
 responder.respond(payload)
     .onTextDelta(...)
     .start();  // Required!
@@ -477,7 +477,7 @@ responder.respond(payload)
     callExternalAPI(delta);  // Blocks streaming!
 })
 
-// Don't forget error handling
+// Missing .onError()!
 responder.respond(payload)
     .onTextDelta(System.out::print)
     // Missing .onError()!

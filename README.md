@@ -558,18 +558,22 @@ System.out.println(result.output());
 
 Type-safe agent responses:
 
+> 💡 **Tip:** Use `var` when building agents, responders, and structured outputs. The return type may change depending on which builder methods you call.
+
 ```java
 record Analysis(String summary, List<String> keyPoints, int sentiment) {}
 
-Agent.Structured<Analysis> analyst = Agent.builder()
+// Use var - the return type of .structured().build() is Agent.Structured<Analysis>
+var analyst = Agent.builder()
     .name("Analyst")
     .model("openai/gpt-4o")
     .instructions("Analyze text and provide structured insights.")
     .responder(responder)
-    .structured(Analysis.class);  // Terminal method
+    .structured(Analysis.class)
+    .build();
 
-AgentResult result = analyst.interact("Analyze this quarterly report...");
-Analysis analysis = result.parsed(Analysis.class);
+var result = analyst.interact("Analyze this quarterly report...").join();
+Analysis analysis = result.output();
 System.out.println("Sentiment: " + analysis.sentiment());
 ```
 
