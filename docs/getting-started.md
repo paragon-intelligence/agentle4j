@@ -161,7 +161,7 @@ var payload = CreateResponsePayload.builder()
 
 // 3. Get the parsed response
 ParsedResponse<Person> response = responder.respond(payload).join();
-Person person = response.parsed();
+Person person = response.outputParsed();
 
 // 4. Use the strongly-typed object
 System.out.println("Name: " + person.name());
@@ -194,7 +194,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(ContactInfo.class)
     .build();
 
-ContactInfo contact = responder.respond(payload).join().parsed();
+ContactInfo contact = responder.respond(payload).join().outputParsed();
 
 System.out.println("Name: " + contact.name());      // John Smith
 System.out.println("Email: " + contact.email());    // john.smith@acme.com
@@ -221,7 +221,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(Employee.class)
     .build();
 
-Employee emp = responder.respond(payload).join().parsed();
+Employee emp = responder.respond(payload).join().outputParsed();
 System.out.println(emp.name() + " works in " + emp.department());
 System.out.println("Located at: " + emp.address().city() + ", " + emp.address().country());
 ```

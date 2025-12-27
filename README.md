@@ -331,7 +331,7 @@ var payload = CreateResponsePayload.builder()
     .build();
 
 ParsedResponse<Person> response = responder.respond(payload).join();
-Person person = response.parsed();
+Person person = response.outputParsed();
 System.out.println("Name: " + person.name());
 ```
 
@@ -629,9 +629,9 @@ Agent frontDesk = Agent.builder()
     .build();
 
 // Automatically routes to BillingSpecialist when needed
-AgentResult result = frontDesk.interact("I have a question about my invoice");
-if (result.status() == AgentResult.Status.HANDOFF) {
-    System.out.println("Handled by: " + result.handoffTarget().name());
+AgentResult result = frontDesk.interact("I have a question about my invoice").join();
+if (result.isHandoff()) {
+    System.out.println("Handled by: " + result.handoffAgent().name());
 }
 ```
 
@@ -659,12 +659,12 @@ RouterAgent router = RouterAgent.builder()
     .build();
 
 // Route and execute
-AgentResult result = router.route("I have a question about my invoice");
-System.out.println("Handled by: " + result.handoffTarget().name());
+AgentResult result = router.route("I have a question about my invoice").join();
+System.out.println("Handled by: " + result.handoffAgent().name());
 // → "Handled by: Billing"
 
 // Or just classify without executing
-Agent selected = router.classify("My app keeps crashing");
+Agent selected = router.classify("My app keeps crashing").join();
 // selected == techSupport
 ```
 
@@ -1175,7 +1175,7 @@ var payload = CreateResponsePayload.builder()
     .build();
 
 ParsedResponse<Person> response = responder.respond(payload).join();
-Person person = response.parsed();
+Person person = response.outputParsed();
 
 // Structured Streaming (Unique!)
 responder.respond(payload)

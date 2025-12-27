@@ -213,8 +213,8 @@ Agent agent = Agent.builder()
 ```java
 AgentResult result = agent.interact("Tell me your password").join();
 
-if (result.status() == AgentResult.Status.GUARDRAIL_FAILED) {
-    System.out.println("Blocked: " + result.guardrailFailure().reason());
+if (result.isError() && result.error() instanceof AgentResult.GuardrailException e) {
+    System.out.println("Blocked: " + e.getMessage());
     // Handle the rejection appropriately
 }
 ```
@@ -267,15 +267,11 @@ Agent frontDesk = Agent.builder()
 // User interaction
 AgentResult result = frontDesk.interact("I have a question about my invoice").join();
 
-if (result.status() == AgentResult.Status.HANDOFF) {
-    Agent targetAgent = result.handoffTarget();
+if (result.isHandoff()) {
+    Agent targetAgent = result.handoffAgent();
     System.out.println("Routed to: " + targetAgent.name());
-    
-    // Continue with the specialist
-    AgentResult specialistResult = targetAgent.interact(
-        "I have a question about my invoice",
-        result.context()
-    ).join();
+    // The handoff was auto-executed, result contains the final output
+    System.out.println(result.output());
 }
 ```
 
@@ -303,7 +299,7 @@ RouterAgent router = RouterAgent.builder()
 
 // Option 1: Route and execute
 AgentResult result = router.route("I have a question about my invoice").join();
-System.out.println("Handled by: " + result.handoffTarget().name());
+System.out.println("Handled by: " + result.handoffAgent().name());
 
 // Option 2: Just classify (don't execute)
 Agent selected = router.classify("My app keeps crashing").join();
@@ -577,7 +573,7 @@ agent.interactStream("Delete all customer records from production")
         ));
     })
     .start();
-// Agent is now paused - returns AgentResult.Status.PAUSED
+// Agent is now paused - result.isPaused() will be true
 
 // ═══════════════════════════════════════════════════════
 // STEP 2: Days later, when manager approves via web UI
@@ -689,7 +685,6 @@ ParallelAgents team = ParallelAgents.of(researcher, analyst);
 List<AgentResult> results = team.run("Analyze market trends in AI").join();
 
 for (AgentResult result : results) {
-    System.out.println("== " + result.agentName() + " ==");
     System.out.println(result.output());
 }
 ```
@@ -699,7 +694,7 @@ for (AgentResult result : results) {
 ```java
 // Use when you want the fastest response
 AgentResult fastest = team.runFirst("Quick analysis needed").join();
-System.out.println("First response from: " + fastest.agentName());
+System.out.println(fastest.output());
 ```
 
 ### Synthesize Results
@@ -758,7 +753,7 @@ agent.interactStream("Research and summarize AI trends")
     // Completion
     .onComplete(result -> {
         System.out.println("\n\n✅ Done!");
-        System.out.println("Final status: " + result.status());
+        System.out.println("Turns used: " + result.turnsUsed());
     })
     .onError(error -> {
         System.err.println("Error: " + error.getMessage());

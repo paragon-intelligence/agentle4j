@@ -355,7 +355,7 @@ var payload = CreateResponsePayload.builder()
     .build();
 
 ParsedResponse<Person> response = responder.respond(payload).join();
-Person person = response.parsed();
+Person person = response.outputParsed();
 ```
 
 ---

@@ -142,7 +142,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(ReceiptData.class)
     .build();
 
-ReceiptData receipt = responder.respond(payload).join().parsed();
+ReceiptData receipt = responder.respond(payload).join().outputParsed();
 ```
 
 ### Image Classification
@@ -168,7 +168,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(Classification.class)
     .build();
 
-Classification result = responder.respond(payload).join().parsed();
+Classification result = responder.respond(payload).join().outputParsed();
 System.out.println("Category: " + result.category() + " (" + result.confidence() + ")");
 ```
 
@@ -223,9 +223,8 @@ UserMessage message = Message.builder()
     .asUser();
 
 AgentContext context = AgentContext.create();
-context.addMessage(message);
-
-AgentResult result = visionAssistant.interact(context).join();
+// The message is passed directly to interact()
+AgentResult result = visionAssistant.interact(message.content().toString(), context).join();
 ```
 
 ---

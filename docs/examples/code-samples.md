@@ -179,7 +179,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(ProductInfo.class)
     .build();
 
-ProductInfo product = responder.respond(payload).join().parsed();
+ProductInfo product = responder.respond(payload).join().outputParsed();
 System.out.println("Product: " + product.name());
 System.out.println("Price: " + product.currency() + product.price());
 System.out.println("In Stock: " + product.inStock());
@@ -208,7 +208,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(SentimentAnalysis.class)
     .build();
 
-SentimentAnalysis analysis = responder.respond(payload).join().parsed();
+SentimentAnalysis analysis = responder.respond(payload).join().outputParsed();
 System.out.println("Sentiment: " + analysis.sentiment());
 System.out.println("Confidence: " + (analysis.confidence() * 100) + "%");
 System.out.println("Keywords: " + String.join(", ", analysis.keywords()));
@@ -250,7 +250,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(CodeReview.class)
     .build();
 
-CodeReview review = responder.respond(payload).join().parsed();
+CodeReview review = responder.respond(payload).join().outputParsed();
 System.out.println("Score: " + review.overallScore() + "/10");
 System.out.println("\nIssues found:");
 for (CodeIssue issue : review.issues()) {
@@ -296,7 +296,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(MarketAnalysis.class)
     .build();
 
-MarketAnalysis analysis = responder.respond(payload).join().parsed();
+MarketAnalysis analysis = responder.respond(payload).join().outputParsed();
 ```
 
 ---
@@ -570,7 +570,7 @@ public class AIController {
             .build();
         
         return responder.respond(payload)
-            .thenApply(ParsedResponse::parsed);
+            .thenApply(ParsedResponse::outputParsed);
     }
 }
 
@@ -645,7 +645,7 @@ public class DocumentSummarizer {
             .withStructuredOutput(Summary.class)
             .build();
         
-        return responder.respond(payload).join().parsed();
+        return responder.respond(payload).join().outputParsed();
     }
     
     public static void main(String[] args) throws Exception {

@@ -299,7 +299,7 @@ agent.interactStream("Research and summarize AI trends, then email me the report
     // Completion
     .onComplete(result -> {
         System.out.println("\n\n✅ Finished!");
-        System.out.println("Total turns: " + result.turnCount());
+        System.out.println("Total turns: " + result.turnsUsed());
     })
     .onError(Throwable::printStackTrace)
     
@@ -375,7 +375,9 @@ public void handleApproval(@PathVariable String id, @RequestBody boolean approve
     AgentRunState state = loadState(id);
     
     if (approved) {
-        state.approveToolCall();
+        // Execute tool manually and pass output
+        String toolOutput = executeTool(state.pendingToolCall());
+        state.approveToolCall(toolOutput);
     } else {
         state.rejectToolCall("Manager denied");
     }
