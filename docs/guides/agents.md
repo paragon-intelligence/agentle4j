@@ -213,9 +213,11 @@ Agent agent = Agent.builder()
 ```java
 AgentResult result = agent.interact("Tell me your password").join();
 
-if (result.isError() && result.error() instanceof AgentResult.GuardrailException e) {
-    System.out.println("Blocked: " + e.getMessage());
-    // Handle the rejection appropriately
+if (result.isError() && result.error() instanceof GuardrailException e) {
+    System.out.println("Blocked by: " + e.guardrailName());
+    System.out.println("Violation: " + e.violationType()); // INPUT or OUTPUT
+    System.out.println("Reason: " + e.reason());
+    System.out.println("Suggestion: " + e.suggestion());
 }
 ```
 

@@ -191,7 +191,7 @@ The `onError` callback fires with the exception. The stream does not auto-retry.
 responder.respond(streamingPayload)
     .onTextDelta(System.out::print)
     .onError(error -> {
-        if (isRetryable(error)) {
+        if (error instanceof AgentleException e && e.isRetryable()) {
             // Implement retry with backoff
             scheduleRetry();
         } else {
@@ -199,18 +199,10 @@ responder.respond(streamingPayload)
         }
     })
     .start();
-
-// Helper to identify retryable errors
-boolean isRetryable(Throwable error) {
-    String msg = error.getMessage();
-    return msg != null && (
-        msg.contains("timeout") ||
-        msg.contains("rate limit") ||
-        msg.contains("503") ||
-        msg.contains("Connection reset")
-    );
-}
 ```
+
+> [!TIP]
+> All Agentle exceptions have `isRetryable()` built-in. No need to parse error messages!
 
 ---
 
@@ -233,23 +225,28 @@ Streaming: "Here is the answer: " → [ERROR: rate limit]
 
 ### Best Practices
 
-```java
-StringBuilder buffer = new StringBuilder();
+Use `StreamingException.partialOutput()` for automatic partial output capture:
 
+```java
 responder.respond(streamingPayload)
-    .onTextDelta(delta -> {
-        buffer.append(delta);  // Buffer all output
-        updateUI(buffer.toString());
-    })
+    .onTextDelta(System.out::print)  // Still useful for live updates
     .onError(error -> {
-        // Partial content is in buffer
-        if (buffer.length() > 0) {
-            showPartialResult(buffer.toString());
+        if (error instanceof StreamingException se) {
+            // Partial content is captured automatically
+            String partial = se.partialOutput();
+            if (partial != null && !partial.isEmpty()) {
+                showPartialResult(partial);
+            }
+            System.err.println("Failed after " + se.bytesReceived() + " bytes");
+        } else {
+            showError(error.getMessage());
         }
-        showError(error.getMessage());
     })
     .start();
 ```
+
+> [!TIP]
+> `StreamingException.partialOutput()` captures all text received before the failure—no manual buffering needed!
 
 ---
 

@@ -928,7 +928,6 @@ var payload = CreateResponsePayload.builder()
 
 Built-in retry with exponential backoff for 429 rate limits and 5xx errors:
 
-```java
 // Simple: set max retries
 Responder.builder()
     .openRouter()
@@ -947,6 +946,91 @@ Responder.builder()
         .build())
     .build();
 ```
+
+---
+
+## 🚨 Error Handling
+
+Agentle provides a **structured exception hierarchy** for type-safe error handling.
+
+### Exception Hierarchy
+
+| Exception | When Thrown | Retryable? |
+|-----------|-------------|------------|
+| `RateLimitException` | API rate limited (429) | ✅ Yes |
+| `AuthenticationException` | Invalid API key (401/403) | ❌ No |
+| `ServerException` | Server error (5xx) | ✅ Yes |
+| `InvalidRequestException` | Bad request (4xx) | ❌ No |
+| `StreamingException` | Connection dropped during streaming | ✅ Usually |
+| `GuardrailException` | Input/output guardrail blocked | ❌ No |
+| `ToolExecutionException` | Tool failed to execute | ❌ No |
+| `ConfigurationException` | Missing required config | ❌ No |
+
+### Type-Safe Error Handling
+
+```java
+responder.respond(payload)
+    .exceptionally(error -> {
+        Throwable cause = error.getCause();
+        
+        switch (cause) {
+            case RateLimitException e -> {
+                System.err.println("Rate limited. Retry after: " + e.retryAfter());
+            }
+            case AuthenticationException e -> {
+                System.err.println("Auth failed: " + e.suggestion());
+            }
+            case ServerException e -> {
+                System.err.println("Server error " + e.statusCode());
+            }
+            case ApiException e -> {
+                System.err.println("API error: " + e.getMessage());
+            }
+            default -> System.err.println("Unexpected: " + cause.getMessage());
+        }
+        return null;
+    });
+```
+
+### Checking if Retryable
+
+```java
+// All Agentle exceptions have isRetryable()
+if (error instanceof AgentleException e && e.isRetryable()) {
+    // Safe to retry
+}
+```
+
+### Streaming Error Recovery
+
+```java
+responder.respond(streamingPayload)
+    .onError(error -> {
+        if (error instanceof StreamingException se) {
+            // Recover partial output
+            String partial = se.partialOutput();
+            if (partial != null) {
+                savePartialOutput(partial);
+            }
+        }
+    })
+    .start();
+```
+
+### Agent Guardrail Errors
+
+```java
+AgentResult result = agent.interact("...").join();
+
+if (result.isError() && result.error() instanceof GuardrailException e) {
+    System.out.println("Blocked by: " + e.guardrailName());
+    System.out.println("Violation: " + e.violationType()); // INPUT or OUTPUT
+    System.out.println("Reason: " + e.reason());
+}
+```
+
+---
+
 
 ## 🔌 Providers
 

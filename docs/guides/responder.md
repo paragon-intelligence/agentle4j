@@ -389,43 +389,74 @@ List<ResponseOutputItem> items = response.output();
 
 ## Error Handling
 
-### Common Errors
+Agentle provides a **structured exception hierarchy** for type-safe error handling.
+
+### Exception Types
+
+| Exception | When Thrown | Retryable? |
+|-----------|-------------|------------|
+| `RateLimitException` | API rate limited (429) | ✅ Yes |
+| `AuthenticationException` | Invalid API key (401/403) | ❌ No |
+| `ServerException` | Server error (5xx) | ✅ Yes |
+| `InvalidRequestException` | Bad request (4xx) | ❌ No |
+| `StreamingException` | Connection dropped during streaming | ✅ Usually |
+| `ConfigurationException` | Missing required config | ❌ No |
+
+### Type-Safe Error Handling
 
 ```java
 responder.respond(payload)
     .exceptionally(error -> {
-        String message = error.getCause().getMessage();
+        Throwable cause = error.getCause();
         
-        if (message.contains("401")) {
-            System.err.println("Invalid API key");
-        } else if (message.contains("429")) {
-            System.err.println("Rate limit exceeded - wait and retry");
-        } else if (message.contains("500")) {
-            System.err.println("Server error - try again later");
-        } else if (message.contains("timeout")) {
-            System.err.println("Request timed out");
+        switch (cause) {
+            case RateLimitException e -> {
+                System.err.println("Rate limited. Retry after: " + e.retryAfter());
+            }
+            case AuthenticationException e -> {
+                System.err.println("Auth failed: " + e.suggestion());
+            }
+            case ServerException e -> {
+                System.err.println("Server error " + e.statusCode());
+            }
+            case ApiException e -> {
+                System.err.println("API error: " + e.getMessage());
+            }
+            default -> System.err.println("Unexpected: " + cause.getMessage());
         }
-        
         return null;
     });
 ```
 
-### Retry Pattern
+### Checking if Retryable
+
+All Agentle exceptions implement `isRetryable()`:
 
 ```java
-public Response respondWithRetry(CreateResponsePayload payload, int maxRetries) {
-    for (int i = 0; i < maxRetries; i++) {
-        try {
-            return responder.respond(payload).join();
-        } catch (Exception e) {
-            if (i == maxRetries - 1) throw e;
-            
-            long delay = (long) Math.pow(2, i) * 1000;  // Exponential backoff
-            Thread.sleep(delay);
-        }
-    }
-    throw new RuntimeException("Unreachable");
+if (error instanceof AgentleException e && e.isRetryable()) {
+    // Safe to retry - the built-in retry policy will have already tried
+    // This only fires after all retries are exhausted
 }
+```
+
+> [!TIP]
+> The built-in retry policy automatically retries rate limits (429) and server errors (5xx) with exponential backoff. You only need to handle errors that remain after all retries.
+
+### Streaming Error Recovery
+
+```java
+responder.respond(streamingPayload)
+    .onError(error -> {
+        if (error instanceof StreamingException se) {
+            // Recover partial output
+            String partial = se.partialOutput();
+            if (partial != null) {
+                savePartialOutput(partial);
+            }
+            System.err.println("Streaming failed after " + se.bytesReceived() + " bytes");
+        }
+    })
+    .start();
 ```
 
 ---
