@@ -19,6 +19,7 @@ import com.paragon.responses.streaming.ResponseStream;
 import com.paragon.telemetry.TelemetryContext;
 import com.paragon.telemetry.processors.ProcessorRegistry;
 import com.paragon.telemetry.processors.TelemetryProcessor;
+import com.paragon.telemetry.processors.TraceIdGenerator;
 
 /**
  * A stateful AI agent that can perceive, plan, and act using tools.
@@ -612,6 +613,13 @@ public final class Agent implements Serializable {
     Objects.requireNonNull(input, "input cannot be null");
     Objects.requireNonNull(context, "context cannot be null");
 
+    // Auto-initialize trace context if not set (enables automatic correlation)
+    if (!context.hasTraceContext()) {
+      String traceId = TraceIdGenerator.generateTraceId();
+      String spanId = TraceIdGenerator.generateSpanId();
+      context.withTraceContext(traceId, spanId);
+    }
+
     // Extract text from input for guardrail validation
     String inputText = extractTextFromInput(input);
 
@@ -651,9 +659,12 @@ public final class Agent implements Serializable {
         int turn = context.getTurnCount();
         if (callbacks != null) callbacks.onTurnStart(turn);
 
-        // Build payload and call LLM
+        // Build TelemetryContext from AgentContext for trace correlation
+        TelemetryContext telemetryCtx = buildTelemetryContext(context);
+
+        // Build payload and call LLM with trace context
         CreateResponsePayload payload = buildPayload(context);
-        lastResponse = responder.respond(payload).join();
+        lastResponse = responder.respond(payload, telemetryCtx).join();
         
         if (callbacks != null) callbacks.onTurnComplete(lastResponse);
 
@@ -677,9 +688,14 @@ public final class Agent implements Serializable {
         if (handoff != null) {
           if (callbacks != null) callbacks.onHandoff(handoff);
           String handoffMessage = extractHandoffMessage(toolCalls, handoff.name());
+          
+          // Fork context with new parent span for child agent
+          String childSpanId = TraceIdGenerator.generateSpanId();
+          AgentContext childContext = context.fork(childSpanId);
+          
           AgentResult innerResult = handoff.targetAgent().interact(
               handoffMessage != null ? handoffMessage : fallbackHandoffText,
-              context).join();
+              childContext).join();
           return AgentResult.handoff(handoff.targetAgent(), innerResult, context);
         }
 
@@ -780,6 +796,33 @@ public final class Agent implements Serializable {
     // Add temperature if set
     if (temperature != null) {
       builder.temperature(temperature);
+    }
+
+    return builder.build();
+  }
+
+  /**
+   * Builds a TelemetryContext from AgentContext for trace correlation.
+   */
+  private TelemetryContext buildTelemetryContext(AgentContext context) {
+    TelemetryContext.Builder builder = TelemetryContext.builder()
+        .traceName(name + ".turn-" + context.getTurnCount());
+
+    if (context.parentTraceId() != null) {
+      builder.parentTraceId(context.parentTraceId());
+    }
+    if (context.parentSpanId() != null) {
+      builder.parentSpanId(context.parentSpanId());
+    }
+    if (context.requestId() != null) {
+      builder.requestId(context.requestId());
+    }
+
+    // Merge with agent-level telemetry context
+    builder.metadata(telemetryContext.metadata());
+    builder.tags(telemetryContext.tags().stream().toList());
+    if (telemetryContext.userId() != null) {
+      builder.userId(telemetryContext.userId());
     }
 
     return builder.build();

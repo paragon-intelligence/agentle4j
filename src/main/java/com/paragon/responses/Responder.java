@@ -132,8 +132,10 @@ public class Responder {
           @NonNull String sessionId,
           @NonNull TelemetryContext context) {
 
-    // Generate OTEL IDs
-    String traceId = TraceIdGenerator.generateTraceId();
+    // Use parent trace context if provided, otherwise generate new IDs
+    String traceId = context.parentTraceId() != null
+            ? context.parentTraceId()
+            : TraceIdGenerator.generateTraceId();
     String spanId = TraceIdGenerator.generateSpanId();
 
     // Emit started event with context (async, non-blocking)

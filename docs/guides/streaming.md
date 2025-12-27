@@ -143,6 +143,55 @@ responder.respond(structuredPayload)
     .start();
 ```
 
+#### How It Works - Step by Step
+
+The parser auto-completes incomplete JSON by closing unclosed strings. **Long text fields stream progressively:**
+
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Step 1 - First token received                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Received:  {"name":"Mar                                                 │
+│ Completed: {"name":"Mar"}                                               │
+│ Map:       {name: "Mar"}                                                │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Step 2 - More characters arrive                                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Received:  {"name":"Marcus                                              │
+│ Completed: {"name":"Marcus"}                                            │
+│ Map:       {name: "Marcus"}                                             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Step 3 - First field complete, second starting                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Received:  {"name":"Marcus","bio":"Sof                                  │
+│ Completed: {"name":"Marcus","bio":"Sof"}                                │
+│ Map:       {name: "Marcus", bio: "Sof"}                                 │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Step 4 - Long text continues to stream                                  │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Received:  {"name":"Marcus","bio":"Software engineer with 10 years of   │
+│ Completed: {"name":"Marcus","bio":"Software engineer with 10 years of"} │
+│ Map:       {name: "Marcus", bio: "Software engineer with 10 years of"}  │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Step 5 - Final complete JSON                                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Received:  {"name":"Marcus","bio":"Software engineer","age":32}         │
+│ Completed: {"name":"Marcus","bio":"Software engineer","age":32}         │
+│ Map:       {name: "Marcus", bio: "Software engineer", age: 32}          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+> [!TIP]
+> **The `bio` field updates continuously** as text is generated - from `"Sof"` to `"Software"` to `"Software engineer with..."`. This enables real-time UI updates as long text fields are being written.
+
 ### onPartialParsed - Typed Partial Updates
 
 For type-safe partial updates, define a nullable mirror class:
@@ -435,7 +484,20 @@ responder.respond(payload)
 
 ---
 
+## Failure Modes
+
+> [!CAUTION]
+> Streaming with partial JSON parsing has edge cases that can cause issues in production.
+> See [Streaming Failure Modes](streaming_failure_modes.md) for guidance on:
+> - Invalid intermediate JSON handling
+> - Schema drift mid-stream
+> - Tool-call interrupts
+> - Connection drop recovery
+
+---
+
 ## Next Steps
 
 - [Agents Guide](agents.md) - Agent streaming with tools
 - [Function Tools Guide](tools.md) - Tools in streaming context
+- [Streaming Failure Modes](streaming_failure_modes.md) - Edge cases and best practices

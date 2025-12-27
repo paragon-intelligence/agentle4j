@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
+import com.paragon.telemetry.processors.TraceIdGenerator;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -17,6 +18,9 @@ import org.jspecify.annotations.Nullable;
  *
  * <p><b>All methods are async by default</b> - they return {@link CompletableFuture}.
  * For blocking calls, use {@code .join()}.
+ *
+ * <p><b>Trace Correlation:</b> All parallel agents share the same parent traceId,
+ * enabling end-to-end debugging of fan-out patterns.
  *
  * <h2>Usage Example</h2>
  *
@@ -101,6 +105,7 @@ public final class ParallelAgents {
    * Runs all agents concurrently with the same input and shared context.
    *
    * <p>Each agent receives a copy of the context to prevent interference.
+   * All parallel agents share the same parent traceId for trace correlation.
    *
    * @param input the input text for all agents
    * @param sharedContext optional shared context (each agent gets a copy)
@@ -110,10 +115,16 @@ public final class ParallelAgents {
       @NonNull String input, @Nullable AgentContext sharedContext) {
     Objects.requireNonNull(input, "input cannot be null");
 
+    // Generate a shared parent traceId for all parallel agents
+    String parentTraceId = TraceIdGenerator.generateTraceId();
+    String parentSpanId = TraceIdGenerator.generateSpanId();
+
     // Create futures for all agents
     List<CompletableFuture<AgentResult>> futures = new ArrayList<>();
     for (Agent agent : agents) {
       AgentContext ctx = sharedContext != null ? sharedContext.copy() : AgentContext.create();
+      // Each agent gets a forked context with shared parent trace
+      ctx.withTraceContext(parentTraceId, parentSpanId);
       futures.add(agent.interact(input, ctx));
     }
 

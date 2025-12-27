@@ -388,6 +388,17 @@ responder.respond(structuredPayload)
     .start();
 ```
 
+**How it works step-by-step:** The parser auto-completes incomplete JSON. Long text fields stream progressively:
+
+```text
+Step 1 → {"name":"Mar          → Map: {name: "Mar"}
+Step 2 → {"name":"Marcus       → Map: {name: "Marcus"}
+Step 3 → {"name":"Marcus","bio":"Sof → Map: {name: "Marcus", bio: "Sof"}
+Step 4 → {"name":"Marcus","bio":"Software engineer with 10 → Map: {name: "Marcus", bio: "Software engineer with 10"}
+```
+
+> Long text fields update continuously as they're generated - perfect for real-time UI updates!
+
 #### Typed Partial Parsing with `onPartialParsed`
 
 For type-safe partial updates, define a nullable mirror class:
@@ -849,6 +860,28 @@ Automatically tracks:
 - Token usage (input/output/total)
 - Cost tracking (for OpenRouter)
 - Error rates and latencies
+
+### Trace Correlation Across Multi-Agent Runs 🆕
+
+**Automatic end-to-end tracing** across agent handoffs and parallel executions:
+
+```java
+// All LLM calls share the same traceId automatically
+AgentResult result = triage.interact("Help with billing", ctx).join();
+
+// In Jaeger/Langfuse, see the full trace:
+// └─ Trace: abc123
+//    ├── triage.turn-1 (handoff to billing)
+//    ├── billing.turn-1 (tool call)
+//    └── billing.turn-2 (final answer)
+```
+
+For manual control:
+```java
+AgentContext ctx = AgentContext.create()
+    .withTraceContext(traceId, spanId)  // Explicit parent
+    .withRequestId("session-123");       // High-level correlation
+```
 
 ### Supported Backends
 

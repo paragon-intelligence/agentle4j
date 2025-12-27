@@ -53,6 +53,11 @@ public final class AgentContext {
   private final Map<String, Object> state;
   private int turnCount;
 
+  // Trace correlation fields
+  private @Nullable String parentTraceId;
+  private @Nullable String parentSpanId;
+  private @Nullable String requestId;
+
   private AgentContext() {
     this.history = new ArrayList<>();
     this.state = new HashMap<>();
@@ -252,6 +257,9 @@ public final class AgentContext {
     copy.history.addAll(this.history);
     copy.state.putAll(this.state);
     copy.turnCount = this.turnCount;
+    copy.parentTraceId = this.parentTraceId;
+    copy.parentSpanId = this.parentSpanId;
+    copy.requestId = this.requestId;
     return copy;
   }
 
@@ -262,5 +270,89 @@ public final class AgentContext {
    */
   public int historySize() {
     return history.size();
+  }
+
+  // ===== Trace Context Methods =====
+
+  /**
+   * Sets the parent trace context for distributed tracing.
+   *
+   * <p>When set, child spans will be linked to this parent, enabling
+   * end-to-end trace correlation across multi-agent runs.
+   *
+   * @param traceId the parent trace ID (32-char hex)
+   * @param spanId the parent span ID (16-char hex)
+   * @return this context for method chaining
+   */
+  public @NonNull AgentContext withTraceContext(@NonNull String traceId, @NonNull String spanId) {
+    this.parentTraceId = Objects.requireNonNull(traceId, "traceId cannot be null");
+    this.parentSpanId = Objects.requireNonNull(spanId, "spanId cannot be null");
+    return this;
+  }
+
+  /**
+   * Sets the request ID for high-level correlation.
+   *
+   * <p>The request ID is a user-defined identifier that groups all
+   * operations from a single user request, even across multiple traces.
+   *
+   * @param requestId the unique request identifier
+   * @return this context for method chaining
+   */
+  public @NonNull AgentContext withRequestId(@NonNull String requestId) {
+    this.requestId = Objects.requireNonNull(requestId, "requestId cannot be null");
+    return this;
+  }
+
+  /**
+   * Returns the parent trace ID, if set.
+   *
+   * @return the parent trace ID, or null if not set
+   */
+  public @Nullable String parentTraceId() {
+    return parentTraceId;
+  }
+
+  /**
+   * Returns the parent span ID, if set.
+   *
+   * @return the parent span ID, or null if not set
+   */
+  public @Nullable String parentSpanId() {
+    return parentSpanId;
+  }
+
+  /**
+   * Returns the request ID, if set.
+   *
+   * @return the request ID, or null if not set
+   */
+  public @Nullable String requestId() {
+    return requestId;
+  }
+
+  /**
+   * Checks if this context has trace context set.
+   *
+   * @return true if both parentTraceId and parentSpanId are set
+   */
+  public boolean hasTraceContext() {
+    return parentTraceId != null && parentSpanId != null;
+  }
+
+  /**
+   * Creates a forked copy for child agent execution with updated parent span.
+   *
+   * <p>Use this when handing off to a child agent. The child will have the
+   * same history but can generate its own child spans under the given parent.
+   *
+   * @param newParentSpanId the span ID to use as the parent for the child
+   * @return a new context with the updated parent span
+   */
+  public @NonNull AgentContext fork(@NonNull String newParentSpanId) {
+    AgentContext forked = copy();
+    forked.parentSpanId = Objects.requireNonNull(newParentSpanId, "newParentSpanId cannot be null");
+    forked.turnCount = 0; // Reset turn count for child agent
+    return forked;
   }
 }

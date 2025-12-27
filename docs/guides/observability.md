@@ -145,8 +145,60 @@ var payload = CreateResponsePayload.builder()
 
 // Use with TelemetryContext
 responder.respond(payload, telemetryContext);
+```
 
-## Grafana Dashboard
+## Trace Correlation Across Multi-Agent Runs
+
+Agentle4j **automatically propagates trace context** across agent handoffs and parallel executions. A single user request creates a correlated trace tree:
+
+```text
+User Request: "Help with my billing issue"
+│
+└─ Trace: 8a7b6c5d...
+   ├── Span: triage-agent.turn-1
+   │   └── (decides to handoff to billing)
+   │
+   ├── Span: billing-agent.turn-1
+   │   └── (calls lookup_invoice tool)
+   │
+   └── Span: billing-agent.turn-2
+       └── (responds with answer)
+```
+
+### How It Works
+
+Trace context is propagated automatically through:
+
+| Component | Behavior |
+|-----------|----------|
+| **AgentContext** | Stores `parentTraceId`, `parentSpanId`, `requestId` |
+| **Agent.interact()** | Auto-initializes trace if not set |
+| **Handoffs** | Forks context with new parent span for child agent |
+| **ParallelAgents** | All parallel agents share the same parent trace |
+| **Responder** | Uses parent trace context from TelemetryContext |
+
+### Manual Trace Context
+
+For advanced use cases, you can manually set trace context:
+
+```java
+// Create context with explicit trace
+AgentContext ctx = AgentContext.create()
+    .withTraceContext("8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d", "1a2b3c4d5e6f7a8b")
+    .withRequestId("user-session-12345");  // Optional high-level correlation
+
+// All subsequent LLM calls share this trace
+AgentResult result = agent.interact("Help me", ctx).join();
+```
+
+### Viewing Traces
+
+In your observability platform (Jaeger, Langfuse, Grafana Tempo):
+
+1. Search by `traceId` to see the entire request flow
+2. Filter by `request.id` for ultra-high-level correlation
+3. View parent-child relationships in the trace waterfall
+
 
 Example PromQL queries for a Grafana dashboard:
 

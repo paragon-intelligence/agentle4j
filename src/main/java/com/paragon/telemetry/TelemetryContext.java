@@ -26,17 +26,20 @@ import org.jspecify.annotations.Nullable;
 public record TelemetryContext(
     @Nullable String userId,
     @Nullable String traceName,
+    @Nullable String parentTraceId,
+    @Nullable String parentSpanId,
+    @Nullable String requestId,
     @NonNull Map<String, Object> metadata,
     @NonNull List<String> tags) {
 
   /** Creates an empty telemetry context. */
   public static @NonNull TelemetryContext empty() {
-    return new TelemetryContext(null, null, Map.of(), List.of());
+    return new TelemetryContext(null, null, null, null, null, Map.of(), List.of());
   }
 
   /** Creates a minimal context with just a user ID. */
   public static @NonNull TelemetryContext forUser(@NonNull String userId) {
-    return new TelemetryContext(userId, null, Map.of(), List.of());
+    return new TelemetryContext(userId, null, null, null, null, Map.of(), List.of());
   }
 
   /** Creates a new builder. */
@@ -55,6 +58,10 @@ public record TelemetryContext(
 
     if (traceName != null) {
       attrs.put("span.name", traceName);
+    }
+
+    if (requestId != null) {
+      attrs.put("request.id", requestId);
     }
 
     if (!tags.isEmpty()) {
@@ -80,6 +87,9 @@ public record TelemetryContext(
   public static class Builder {
     private String userId;
     private String traceName;
+    private String parentTraceId;
+    private String parentSpanId;
+    private String requestId;
     private final Map<String, Object> metadata = new HashMap<>();
     private final List<String> tags = new ArrayList<>();
 
@@ -92,6 +102,24 @@ public record TelemetryContext(
     /** Sets the trace/span name. */
     public @NonNull Builder traceName(@NonNull String traceName) {
       this.traceName = Objects.requireNonNull(traceName);
+      return this;
+    }
+
+    /** Sets the parent trace ID for distributed tracing. */
+    public @NonNull Builder parentTraceId(@NonNull String parentTraceId) {
+      this.parentTraceId = Objects.requireNonNull(parentTraceId);
+      return this;
+    }
+
+    /** Sets the parent span ID for distributed tracing. */
+    public @NonNull Builder parentSpanId(@NonNull String parentSpanId) {
+      this.parentSpanId = Objects.requireNonNull(parentSpanId);
+      return this;
+    }
+
+    /** Sets the request ID for high-level correlation. */
+    public @NonNull Builder requestId(@NonNull String requestId) {
+      this.requestId = Objects.requireNonNull(requestId);
       return this;
     }
 
@@ -121,7 +149,9 @@ public record TelemetryContext(
 
     /** Builds the TelemetryContext. */
     public @NonNull TelemetryContext build() {
-      return new TelemetryContext(userId, traceName, Map.copyOf(metadata), List.copyOf(tags));
+      return new TelemetryContext(
+          userId, traceName, parentTraceId, parentSpanId, requestId,
+          Map.copyOf(metadata), List.copyOf(tags));
     }
   }
 }
