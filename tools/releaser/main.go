@@ -667,7 +667,16 @@ func formatWorkflowStatus(details *WorkflowDetails) string {
 // Changelog Management
 // ============================================================================
 
-const changelogFile = "CHANGELOG.md"
+// changelogLocations lists possible locations for changelog files (in priority order)
+var changelogLocations = []string{
+	"CHANGELOG.md",
+	"docs/changelog.md",
+	"changelog.md",
+	"docs/CHANGELOG.md",
+}
+
+// activeChangelogFile stores the detected changelog path
+var activeChangelogFile string
 
 const changelogHeader = `# Changelog
 
@@ -702,15 +711,59 @@ type ChangelogEntry struct {
 	Changes map[string][]string // key is change type, value is list of changes
 }
 
-// changelogExists checks if CHANGELOG.md exists
+// findChangelogFile finds the changelog file that contains actual content
+// It checks multiple locations and returns the one with version entries
+func findChangelogFile() string {
+	if activeChangelogFile != "" {
+		return activeChangelogFile
+	}
+
+	// First pass: find a changelog with actual version entries (## [X.Y.Z])
+	versionPattern := regexp.MustCompile(`## \[\d+\.\d+\.\d+\]`)
+	for _, path := range changelogLocations {
+		content, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		if versionPattern.Match(content) {
+			activeChangelogFile = path
+			return path
+		}
+	}
+
+	// Second pass: find any changelog with content
+	for _, path := range changelogLocations {
+		info, err := os.Stat(path)
+		if err != nil {
+			continue
+		}
+		if info.Size() > 10 { // More than just a newline
+			activeChangelogFile = path
+			return path
+		}
+	}
+
+	// Default to CHANGELOG.md in root if nothing found
+	activeChangelogFile = "CHANGELOG.md"
+	return activeChangelogFile
+}
+
+// getChangelogFile returns the path to use for changelog operations
+func getChangelogFile() string {
+	return findChangelogFile()
+}
+
+// changelogExists checks if a changelog file exists with content
 func changelogExists() bool {
-	_, err := os.Stat(changelogFile)
-	return err == nil
+	path := getChangelogFile()
+	info, err := os.Stat(path)
+	return err == nil && info.Size() > 0
 }
 
 // readChangelog reads the changelog file content
 func readChangelog() (string, error) {
-	content, err := os.ReadFile(changelogFile)
+	path := getChangelogFile()
+	content, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return "", nil
@@ -790,7 +843,7 @@ func prependToChangelog(entry ChangelogEntry) error {
 		}
 	}
 
-	return os.WriteFile(changelogFile, []byte(newContent), 0644)
+	return os.WriteFile(getChangelogFile(), []byte(newContent), 0644)
 }
 
 // promptForChangelog shows an interactive prompt for entering changelog
@@ -798,7 +851,7 @@ func promptForChangelog(version Version) (*ChangelogEntry, error) {
 	fmt.Println()
 	fmt.Println(boxStyle.Render(titleStyle.Render("📝 Changelog Update Required")))
 	fmt.Println()
-	fmt.Println(infoStyle.Render("Version " + warningStyle.Render(version.String()) + " is not documented in CHANGELOG.md"))
+	fmt.Println(infoStyle.Render("Version " + warningStyle.Render(version.String()) + " is not documented in " + getChangelogFile()))
 	fmt.Println(mutedStyle.Render("Let's document what changed in this release."))
 	fmt.Println()
 
