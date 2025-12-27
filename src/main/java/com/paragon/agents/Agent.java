@@ -16,6 +16,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.*;
 import com.paragon.responses.streaming.ResponseStream;
+import com.paragon.agents.context.ContextManagementConfig;
+import com.paragon.agents.context.ContextWindowStrategy;
+import com.paragon.agents.context.SimpleTokenCounter;
+import com.paragon.agents.context.TokenCounter;
 import com.paragon.telemetry.TelemetryContext;
 import com.paragon.telemetry.processors.ProcessorRegistry;
 import com.paragon.telemetry.processors.TelemetryProcessor;
@@ -122,6 +126,9 @@ public final class Agent implements Serializable {
   private final @Nullable Double temperature;
   private final @NonNull TelemetryContext telemetryContext;
 
+  // ===== Context Management =====
+  private final @Nullable ContextManagementConfig contextManagementConfig;
+
   // ===== Runtime Dependencies =====
   private final transient @NonNull Responder responder;
   private final transient @NonNull FunctionToolStore toolStore;
@@ -142,6 +149,9 @@ public final class Agent implements Serializable {
     this.telemetryProcessors = builder.telemetryProcessors.isEmpty()
         ? ProcessorRegistry.empty()
         : ProcessorRegistry.of(builder.telemetryProcessors);
+
+    // Context management
+    this.contextManagementConfig = builder.contextManagementConfig;
 
     // Copy tools
     this.tools = List.copyOf(builder.tools);
@@ -778,6 +788,15 @@ public final class Agent implements Serializable {
   private CreateResponsePayload buildPayload(AgentContext context) {
     List<ResponseInputItem> input = context.getHistoryMutable();
 
+    // Apply context management if configured
+    if (contextManagementConfig != null) {
+      input = contextManagementConfig.strategy().manage(
+          input, 
+          contextManagementConfig.maxTokens(), 
+          contextManagementConfig.tokenCounter()
+      );
+    }
+
     CreateResponsePayload.Builder builder =
         CreateResponsePayload.builder()
             .model(model)
@@ -956,6 +975,9 @@ public final class Agent implements Serializable {
     private final List<InputGuardrail> inputGuardrails = new ArrayList<>();
     private final List<OutputGuardrail> outputGuardrails = new ArrayList<>();
     private final List<TelemetryProcessor> telemetryProcessors = new ArrayList<>();
+
+    // Context management
+    private @Nullable ContextManagementConfig contextManagementConfig;
 
     /**
      * Sets the agent's name (required).
@@ -1182,6 +1204,36 @@ public final class Agent implements Serializable {
     }
 
     /**
+     * Configures context management with a configuration object.
+     *
+     * <p>Context management controls how conversation history is handled when it
+     * exceeds the model's token limit.
+     *
+     * <p>Example:
+     * <pre>{@code
+     * Agent agent = Agent.builder()
+     *     .name("Assistant")
+     *     .model("openai/gpt-4o")
+     *     .responder(responder)
+     *     .contextManagement(ContextManagementConfig.builder()
+     *         .strategy(new SlidingWindowStrategy())
+     *         .maxTokens(4000)
+     *         .build())
+     *     .build();
+     * }</pre>
+     *
+     * @param config the context management configuration
+     * @return this builder
+     * @see ContextManagementConfig
+     * @see SlidingWindowStrategy
+     * @see SummarizationStrategy
+     */
+    public @NonNull Builder contextManagement(@NonNull ContextManagementConfig config) {
+      this.contextManagementConfig = Objects.requireNonNull(config);
+      return this;
+    }
+
+    /**
      * Sets the retry policy for handling transient API failures.
      *
      * <p>This configures automatic retry with exponential backoff for:
@@ -1371,6 +1423,11 @@ public final class Agent implements Serializable {
 
     public @NonNull StructuredBuilder<T> maxRetries(int maxRetries) {
       parentBuilder.maxRetries(maxRetries);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> contextManagement(@NonNull ContextManagementConfig config) {
+      parentBuilder.contextManagement(config);
       return this;
     }
 

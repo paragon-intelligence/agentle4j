@@ -98,6 +98,7 @@ nav:
     - Agents: guides/agents.md
     - Streaming: guides/streaming.md
     - Function Tools: guides/tools.md
+    - Context Management: guides/context-management.md
     - Vision: guides/vision.md
     - Spring Boot: guides/spring-boot.md
     - Observability: guides/observability.md

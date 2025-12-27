@@ -7,7 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2024-12-25
+## [0.2.0] - 2025-12-27
+
+### Added
+
+- **Context Management** - Pluggable strategies to manage conversation context length
+  - `ContextManagementConfig` - Configuration with builder pattern
+  - `SlidingWindowStrategy` - Removes oldest messages when context exceeds limit
+  - `SummarizationStrategy` - Summarizes older messages using an LLM
+  - `TokenCounter` interface with `SimpleTokenCounter` (chars/4 estimation)
+  
+- **Retry Policies** - Configurable retry with exponential backoff
+  - `RetryPolicy` class for customizing retry behavior
+  - `Agent.Builder.retryPolicy()` and `maxRetries()` methods
+  - Automatic retry for rate limits (429) and server errors (5xx)
+
+- **Exception Hierarchy** - Structured error handling
+  - `AgentleException` - Base exception for all library errors
+  - `ApiException` - HTTP/API errors with status codes
+  - `RateLimitException`, `AuthenticationException`, `ServerException`
+  - `StreamingException`, `GuardrailException`, `ToolExecutionException`
+
+- **Trace Correlation** - Automatic trace propagation across agents
+  - Parent trace/span IDs flow through handoffs
+  - `TelemetryContext` for custom metadata and tags
+  - Multi-agent trace correlation in observability
+
+### Changed
+
+- Renamed `parsed()` to `outputParsed()` for consistency
+- `FunctionToolCallOutput.json()` replaced with `FunctionToolCallOutput.success()` (explicit serialization)
+- Responder builder now uses `baseUrl()` instead of `apiBaseUrl()`
+
+### Documentation
+
+- Added Spring Boot integration guide
+- Enhanced observability guide with Langfuse examples
+- Improved tool execution and vision examples
+
+## [0.1.1] - 2025-12-26
+
+### Added
+
+- Per-tool confirmation for human-in-the-loop workflows
+- Enhanced streaming guide with partial JSON parsing
+- Vision documentation
+
+## [0.1.0] - 2025-12-25
 
 ### Added
 
@@ -37,5 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/paragon-intelligence/agentle4j/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/paragon-intelligence/agentle4j/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/paragon-intelligence/agentle4j/compare/v0.1.1...v0.2.0
+[0.1.1]: https://github.com/paragon-intelligence/agentle4j/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/paragon-intelligence/agentle4j/releases/tag/v0.1.0

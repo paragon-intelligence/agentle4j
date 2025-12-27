@@ -790,6 +790,52 @@ public void handleApproval(@PathVariable String callId, @RequestBody ApprovalReq
 
 ---
 
+### 📏 Context Window Management
+
+Control conversation context length with pluggable strategies:
+
+```java
+import com.paragon.agents.context.*;
+
+// Sliding window - removes oldest messages when limit exceeded
+Agent agent = Agent.builder()
+    .name("Assistant")
+    .model("openai/gpt-4o")
+    .instructions("You are a helpful assistant.")
+    .responder(responder)
+    .contextManagement(ContextManagementConfig.builder()
+        .strategy(new SlidingWindowStrategy())
+        .maxTokens(4000)
+        .build())
+    .build();
+
+// Preserve system message during truncation
+Agent withPreservation = Agent.builder()
+    .name("Assistant")
+    .model("openai/gpt-4o")
+    .instructions("You are a helpful assistant.")
+    .responder(responder)
+    .contextManagement(ContextManagementConfig.builder()
+        .strategy(SlidingWindowStrategy.preservingDeveloperMessage())
+        .maxTokens(4000)
+        .build())
+    .build();
+
+// Summarization - summarizes older messages using LLM
+Agent withSummarization = Agent.builder()
+    .name("Assistant") 
+    .model("openai/gpt-4o")
+    .instructions("You are a helpful assistant.")
+    .responder(responder)
+    .contextManagement(ContextManagementConfig.builder()
+        .strategy(SummarizationStrategy.withResponder(responder, "openai/gpt-4o-mini"))
+        .maxTokens(4000)
+        .build())
+    .build();
+```
+
+---
+
 ### ⚡ Parallel Agents
 
 Run multiple agents concurrently with the `ParallelAgents` orchestrator:
