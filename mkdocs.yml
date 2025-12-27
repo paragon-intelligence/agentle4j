@@ -99,6 +99,7 @@ nav:
     - Streaming: guides/streaming.md
     - Function Tools: guides/tools.md
     - Vision: guides/vision.md
+    - Spring Boot: guides/spring-boot.md
     - Observability: guides/observability.md
   - API Reference: api.md
   - Examples: examples/code-samples.md
