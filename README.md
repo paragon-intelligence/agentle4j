@@ -891,6 +891,55 @@ agent.interactStream("Research and summarize AI trends")
 
 ---
 
+### ⚠️ Error Handling
+
+Agents use typed exceptions for robust error handling:
+
+| Exception | When Thrown | Retryable |
+|-----------|-------------|-----------|
+| `AgentExecutionException` | Agent loop failures (LLM, parsing, handoff) | Depends on phase |
+| `GuardrailException` | Input/output guardrail failures | No |
+| `ToolExecutionException` | Tool execution failures | No |
+
+#### Handling Agent Errors
+
+```java
+AgentResult result = agent.interact("Hello").join();
+
+if (result.isError()) {
+    Throwable error = result.error();
+    
+    if (error instanceof AgentExecutionException e) {
+        System.err.println("Agent failed in phase: " + e.phase());
+        System.err.println("Turns completed: " + e.turnsCompleted());
+        System.err.println("Suggestion: " + e.suggestion());
+        
+        if (e.isRetryable()) {
+            // Retry logic for transient failures (LLM_CALL phase)
+        }
+    } else if (error instanceof GuardrailException e) {
+        System.err.println("Guardrail failed: " + e.reason());
+        System.err.println("Violation type: " + e.violationType()); // INPUT or OUTPUT
+    } else if (error instanceof ToolExecutionException e) {
+        System.err.println("Tool '" + e.toolName() + "' failed: " + e.getMessage());
+    }
+}
+```
+
+#### AgentExecutionException Phases
+
+| Phase | Description | Retryable |
+|-------|-------------|-----------|
+| `INPUT_GUARDRAIL` | Input validation failed | No |
+| `LLM_CALL` | LLM API call failed | Yes |
+| `TOOL_EXECUTION` | Tool failed during execution | No |
+| `OUTPUT_GUARDRAIL` | Output validation failed | No |
+| `HANDOFF` | Agent handoff failed | No |
+| `PARSING` | Response parsing failed | No |
+| `MAX_TURNS_EXCEEDED` | Turn limit exceeded | No |
+
+---
+
 ## 🔭 Observability
 
 ### OpenTelemetry Integration 🆕

@@ -21,9 +21,13 @@ import com.paragon.agents.context.ContextWindowStrategy;
 import com.paragon.agents.context.SimpleTokenCounter;
 import com.paragon.agents.context.TokenCounter;
 import com.paragon.telemetry.TelemetryContext;
+import com.paragon.telemetry.events.AgentFailedEvent;
 import com.paragon.telemetry.processors.ProcessorRegistry;
 import com.paragon.telemetry.processors.TelemetryProcessor;
 import com.paragon.telemetry.processors.TraceIdGenerator;
+import com.paragon.responses.exception.AgentExecutionException;
+import com.paragon.responses.exception.GuardrailException;
+import com.paragon.responses.exception.ToolExecutionException;
 
 /**
  * A stateful AI agent that can perceive, plan, and act using tools.
@@ -639,7 +643,11 @@ public final class Agent implements Serializable {
       if (result.isFailed()) {
         GuardrailResult.Failed failed = (GuardrailResult.Failed) result;
         if (callbacks != null) callbacks.onGuardrailFailed(failed);
-        return AgentResult.guardrailFailed(failed.reason(), context);
+        
+        // Create typed exception for input guardrail failure
+        GuardrailException guardEx = GuardrailException.inputViolation(failed.reason());
+        broadcastFailedEvent(guardEx, context);
+        return AgentResult.error(guardEx, context, context.getTurnCount());
       }
     }
 
@@ -663,6 +671,7 @@ public final class Agent implements Serializable {
 
     List<ToolExecution> allToolExecutions = new ArrayList<>(initialExecutions);
     Response lastResponse = null;
+    String lastResponseId = null;
 
     try {
       while (context.incrementTurn() <= maxTurns) {
@@ -674,7 +683,16 @@ public final class Agent implements Serializable {
 
         // Build payload and call LLM with trace context
         CreateResponsePayload payload = buildPayload(context);
-        lastResponse = responder.respond(payload, telemetryCtx).join();
+        try {
+          lastResponse = responder.respond(payload, telemetryCtx).join();
+          lastResponseId = lastResponse.id();
+        } catch (Exception e) {
+          // Wrap LLM call failures in AgentExecutionException
+          AgentExecutionException agentEx = AgentExecutionException.llmCallFailed(
+              name, context.getTurnCount(), e);
+          broadcastFailedEvent(agentEx, context);
+          return AgentResult.error(agentEx, context, context.getTurnCount());
+        }
         
         if (callbacks != null) callbacks.onTurnComplete(lastResponse);
 
@@ -703,10 +721,17 @@ public final class Agent implements Serializable {
           String childSpanId = TraceIdGenerator.generateSpanId();
           AgentContext childContext = context.fork(childSpanId);
           
-          AgentResult innerResult = handoff.targetAgent().interact(
-              handoffMessage != null ? handoffMessage : fallbackHandoffText,
-              childContext).join();
-          return AgentResult.handoff(handoff.targetAgent(), innerResult, context);
+          try {
+            AgentResult innerResult = handoff.targetAgent().interact(
+                handoffMessage != null ? handoffMessage : fallbackHandoffText,
+                childContext).join();
+            return AgentResult.handoff(handoff.targetAgent(), innerResult, context);
+          } catch (Exception e) {
+            AgentExecutionException agentEx = AgentExecutionException.handoffFailed(
+                name, handoff.targetAgent().name(), context.getTurnCount(), e);
+            broadcastFailedEvent(agentEx, context);
+            return AgentResult.error(agentEx, context, context.getTurnCount());
+          }
         }
 
         // Execute tools (with callback hooks)
@@ -726,7 +751,7 @@ public final class Agent implements Serializable {
           boolean shouldExecute = callbacks == null || callbacks.onToolCall(call);
           
           if (shouldExecute) {
-            ToolExecution exec = executeSingleTool(call);
+            ToolExecution exec = executeSingleToolWithErrorHandling(call, context);
             allToolExecutions.add(exec);
             if (callbacks != null) callbacks.onToolExecuted(exec);
             context.addToolResult(exec.output());
@@ -739,6 +764,14 @@ public final class Agent implements Serializable {
         }
       }
 
+      // Check if max turns exceeded
+      if (context.getTurnCount() > maxTurns) {
+        AgentExecutionException agentEx = AgentExecutionException.maxTurnsExceeded(
+            name, maxTurns, context.getTurnCount());
+        broadcastFailedEvent(agentEx, context);
+        return AgentResult.error(agentEx, context, context.getTurnCount());
+      }
+
       // Get final output
       String output = lastResponse != null ? lastResponse.outputText() : "";
 
@@ -748,7 +781,11 @@ public final class Agent implements Serializable {
         if (result.isFailed()) {
           GuardrailResult.Failed failed = (GuardrailResult.Failed) result;
           if (callbacks != null) callbacks.onGuardrailFailed(failed);
-          return AgentResult.guardrailFailed(failed.reason(), context);
+          
+          // Create typed exception for output guardrail failure
+          GuardrailException guardEx = GuardrailException.outputViolation(failed.reason());
+          broadcastFailedEvent(guardEx, context);
+          return AgentResult.error(guardEx, context, context.getTurnCount());
         }
       }
 
@@ -759,7 +796,10 @@ public final class Agent implements Serializable {
           return AgentResult.successWithParsed(
               output, parsed, lastResponse, context, allToolExecutions, context.getTurnCount());
         } catch (JsonProcessingException e) {
-          return AgentResult.error(e, context, context.getTurnCount());
+          AgentExecutionException agentEx = AgentExecutionException.parsingFailed(
+              name, context.getTurnCount(), e);
+          broadcastFailedEvent(agentEx, context);
+          return AgentResult.error(agentEx, context, context.getTurnCount());
         }
       }
 
@@ -767,7 +807,33 @@ public final class Agent implements Serializable {
           output, lastResponse, context, allToolExecutions, context.getTurnCount());
 
     } catch (Exception e) {
-      return AgentResult.error(e, context, context.getTurnCount());
+      // Wrap unexpected exceptions in AgentExecutionException
+      AgentExecutionException agentEx = new AgentExecutionException(
+          name,
+          AgentExecutionException.Phase.LLM_CALL,
+          context.getTurnCount(),
+          String.format("Agent '%s' failed unexpectedly: %s", name, e.getMessage()),
+          e);
+      broadcastFailedEvent(agentEx, context);
+      return AgentResult.error(agentEx, context, context.getTurnCount());
+    }
+  }
+
+  /**
+   * Broadcasts a failed event for telemetry.
+   */
+  private void broadcastFailedEvent(Exception exception, AgentContext context) {
+    if (telemetryProcessors != null) {
+      String sessionId = context.requestId() != null ? context.requestId() : java.util.UUID.randomUUID().toString();
+      AgentFailedEvent event = AgentFailedEvent.from(
+          name,
+          context.getTurnCount(),
+          exception,
+          sessionId,
+          context.parentTraceId(),
+          context.parentSpanId(),
+          null);
+      telemetryProcessors.broadcast(event);
     }
   }
 
@@ -937,6 +1003,62 @@ public final class Agent implements Serializable {
       Duration duration = Duration.between(start, Instant.now());
       FunctionToolCallOutput errorOutput = FunctionToolCallOutput.error(
           call.callId(), "Failed to parse arguments: " + e.getMessage());
+      return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
+    }
+  }
+
+  /**
+   * Executes a single tool with proper error handling and telemetry.
+   * Wraps errors in ToolExecutionException for better diagnostics.
+   */
+  private ToolExecution executeSingleToolWithErrorHandling(FunctionToolCall call, AgentContext context) {
+    // Skip handoff tools (handled separately)
+    for (Handoff handoff : handoffs) {
+      if (handoff.name().equals(call.name())) {
+        FunctionToolCallOutput output = FunctionToolCallOutput.error(
+            call.callId(), "Handoff tool should not be executed directly");
+        return new ToolExecution(call.name(), call.callId(), call.arguments(), output, Duration.ZERO);
+      }
+    }
+
+    Instant start = Instant.now();
+    try {
+      FunctionToolCallOutput output = toolStore.execute(call);
+      Duration duration = Duration.between(start, Instant.now());
+      return new ToolExecution(call.name(), call.callId(), call.arguments(), output, duration);
+    } catch (JsonProcessingException e) {
+      Duration duration = Duration.between(start, Instant.now());
+      
+      // Create typed exception for tool execution failure
+      ToolExecutionException toolEx = new ToolExecutionException(
+          call.name(),
+          call.callId(),
+          call.arguments(),
+          "Failed to parse tool arguments: " + e.getMessage(),
+          e);
+      
+      // Broadcast failure event for telemetry
+      broadcastFailedEvent(toolEx, context);
+      
+      FunctionToolCallOutput errorOutput = FunctionToolCallOutput.error(
+          call.callId(), "Tool execution failed: " + e.getMessage());
+      return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
+    } catch (Exception e) {
+      Duration duration = Duration.between(start, Instant.now());
+      
+      // Create typed exception for unexpected tool execution failure
+      ToolExecutionException toolEx = new ToolExecutionException(
+          call.name(),
+          call.callId(),
+          call.arguments(),
+          "Tool execution failed: " + e.getMessage(),
+          e);
+      
+      // Broadcast failure event for telemetry
+      broadcastFailedEvent(toolEx, context);
+      
+      FunctionToolCallOutput errorOutput = FunctionToolCallOutput.error(
+          call.callId(), "Tool execution failed: " + e.getMessage());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
     }
   }

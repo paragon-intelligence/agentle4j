@@ -206,6 +206,24 @@ public class GrafanaProcessor extends TelemetryProcessor {
                 failed.traceId(),
                 failed.spanId());
       }
+
+      case AgentFailedEvent agentFailed -> {
+        attributes.add(OtelAttribute.ofString("event.name", "agent.failed"));
+        attributes.add(OtelAttribute.ofString("agent.name", agentFailed.agentName()));
+        attributes.add(OtelAttribute.ofString("agent.phase", agentFailed.phase()));
+        attributes.add(OtelAttribute.ofString("error.code", agentFailed.errorCode()));
+        attributes.add(OtelAttribute.ofString("error.message", agentFailed.errorMessage()));
+        attributes.add(OtelAttribute.ofInt("agent.turns_completed", agentFailed.turnsCompleted()));
+        if (agentFailed.suggestion() != null) {
+          attributes.add(OtelAttribute.ofString("error.suggestion", agentFailed.suggestion()));
+        }
+        logRecord =
+            OtelLogRecord.error(
+                "Agent " + agentFailed.agentName() + " failed in " + agentFailed.phase() + ": " + agentFailed.errorMessage(),
+                attributes,
+                agentFailed.traceId(),
+                agentFailed.spanId());
+      }
     }
 
     // Export log
@@ -273,6 +291,23 @@ public class GrafanaProcessor extends TelemetryProcessor {
         attributes.add(OtelAttribute.ofString("exception.message", failed.errorMessage()));
         if (failed.httpStatusCode() != null) {
           attributes.add(OtelAttribute.ofInt("http.status_code", failed.httpStatusCode()));
+        }
+      }
+
+      case AgentFailedEvent agentFailed -> {
+        spanBuilder
+            .name("agentle.agent." + agentFailed.agentName())
+            .startTimeNanos(agentFailed.timestampNanos() - 1_000_000_000L)  // Estimate 1s earlier
+            .endTimeNanos(agentFailed.timestampNanos())
+            .status(OtelStatus.error(agentFailed.errorMessage()));
+
+        attributes.add(OtelAttribute.ofString("agent.name", agentFailed.agentName()));
+        attributes.add(OtelAttribute.ofString("agent.phase", agentFailed.phase()));
+        attributes.add(OtelAttribute.ofString("error.code", agentFailed.errorCode()));
+        attributes.add(OtelAttribute.ofString("error.message", agentFailed.errorMessage()));
+        attributes.add(OtelAttribute.ofInt("agent.turns_completed", agentFailed.turnsCompleted()));
+        if (agentFailed.suggestion() != null) {
+          attributes.add(OtelAttribute.ofString("error.suggestion", agentFailed.suggestion()));
         }
       }
     }

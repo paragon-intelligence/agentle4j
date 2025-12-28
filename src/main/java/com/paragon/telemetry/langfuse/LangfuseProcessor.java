@@ -156,6 +156,26 @@ public class LangfuseProcessor extends TelemetryProcessor {
         attributes.add(OtelAttribute.ofString("langfuse.observation.type", "generation"));
         attributes.add(OtelAttribute.ofString("langfuse.observation.level", "ERROR"));
       }
+
+      case AgentFailedEvent agentFailed -> {
+        spanBuilder
+            .name("agent." + agentFailed.agentName())
+            .startTimeNanos(agentFailed.timestampNanos() - 1_000_000_000L)  // Estimate 1s earlier
+            .endTimeNanos(agentFailed.timestampNanos())
+            .status(OtelStatus.error(agentFailed.errorMessage()));
+
+        attributes.add(OtelAttribute.ofString("agent.name", agentFailed.agentName()));
+        attributes.add(OtelAttribute.ofString("agent.phase", agentFailed.phase()));
+        attributes.add(OtelAttribute.ofString("error.code", agentFailed.errorCode()));
+        attributes.add(OtelAttribute.ofString("exception.type", agentFailed.errorCode()));
+        attributes.add(OtelAttribute.ofString("exception.message", agentFailed.errorMessage()));
+        attributes.add(OtelAttribute.ofInt("agent.turns_completed", agentFailed.turnsCompleted()));
+        if (agentFailed.suggestion() != null) {
+          attributes.add(OtelAttribute.ofString("error.suggestion", agentFailed.suggestion()));
+        }
+        attributes.add(OtelAttribute.ofString("langfuse.observation.type", "span"));
+        attributes.add(OtelAttribute.ofString("langfuse.observation.level", "ERROR"));
+      }
     }
 
     // Add custom attributes from event

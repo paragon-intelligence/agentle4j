@@ -806,6 +806,100 @@ for (String point : analysis.keyPoints()) {
 
 ---
 
+## Error Handling
+
+Agents use typed exceptions for robust error handling and recovery.
+
+### Exception Types
+
+| Exception | When Thrown | Retryable |
+|-----------|-------------|-----------|
+| `AgentExecutionException` | Agent loop failures (LLM calls, parsing, handoffs) | Depends on phase |
+| `GuardrailException` | Input/output guardrail validation failures | No |
+| `ToolExecutionException` | Tool execution failures | No |
+
+### Handling Agent Errors
+
+```java
+import com.paragon.responses.exception.*;
+
+AgentResult result = agent.interact("Hello").join();
+
+if (result.isError()) {
+    Throwable error = result.error();
+    
+    if (error instanceof AgentExecutionException e) {
+        System.err.println("Agent '" + e.agentName() + "' failed in phase: " + e.phase());
+        System.err.println("Turns completed: " + e.turnsCompleted());
+        System.err.println("Error code: " + e.code());
+        if (e.suggestion() != null) {
+            System.err.println("Suggestion: " + e.suggestion());
+        }
+        
+        // Retry if the error is transient (e.g., LLM_CALL failures)
+        if (e.isRetryable()) {
+            result = agent.interact("Hello").join(); // Retry
+        }
+    } else if (error instanceof GuardrailException e) {
+        System.err.println("Guardrail failed: " + e.reason());
+        System.err.println("Violation type: " + e.violationType()); // INPUT or OUTPUT
+        
+        if (e.violationType() == GuardrailException.ViolationType.INPUT) {
+            // Prompt user to rephrase
+        }
+    } else if (error instanceof ToolExecutionException e) {
+        System.err.println("Tool '" + e.toolName() + "' failed: " + e.getMessage());
+        System.err.println("Call ID: " + e.callId());
+        System.err.println("Arguments: " + e.arguments());
+    }
+}
+```
+
+### AgentExecutionException Phases
+
+| Phase | Description | Retryable | Suggestion |
+|-------|-------------|-----------|------------|
+| `INPUT_GUARDRAIL` | Input validation failed | No | Rephrase your input |
+| `LLM_CALL` | LLM API call failed | Yes | Check API connectivity |
+| `TOOL_EXECUTION` | Tool failed during execution | No | Check tool implementation |
+| `OUTPUT_GUARDRAIL` | Output validation failed | No | AI response was blocked |
+| `HANDOFF` | Agent handoff failed | No | Verify target agent config |
+| `PARSING` | Response parsing failed | No | Check response format |
+| `MAX_TURNS_EXCEEDED` | Turn limit exceeded | No | Increase maxTurns |
+
+### Using Error Codes
+
+```java
+if (error instanceof AgentleException e) {
+    switch (e.code()) {
+        case GUARDRAIL_VIOLATED -> handleGuardrailViolation();
+        case TOOL_EXECUTION_FAILED -> handleToolFailure();
+        case MAX_TURNS_EXCEEDED -> handleMaxTurns();
+        case SERVER_ERROR -> retryWithBackoff();
+        default -> logAndAlert(e);
+    }
+}
+```
+
+### Telemetry for Errors
+
+Agent errors are automatically broadcast as `AgentFailedEvent` for observability:
+
+```java
+Responder responder = Responder.builder()
+    .openRouter()
+    .apiKey(apiKey)
+    .addTelemetryProcessor(LangfuseProcessor.fromEnv())
+    .build();
+
+// Errors are automatically traced with:
+// - agent.name, agent.phase, error.code
+// - agent.turns_completed, error.suggestion
+// - Full trace correlation (traceId, spanId)
+```
+
+---
+
 ## Best Practices
 
 ### ✅ Do

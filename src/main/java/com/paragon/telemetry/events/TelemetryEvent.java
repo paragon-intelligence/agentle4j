@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
  * <p>Events are designed to be immutable and thread-safe for async processing.
  */
 public sealed interface TelemetryEvent
-    permits ResponseStartedEvent, ResponseCompletedEvent, ResponseFailedEvent {
+    permits ResponseStartedEvent, ResponseCompletedEvent, ResponseFailedEvent, AgentFailedEvent {
 
   /**
    * Unique session identifier for correlating events within a single respond() call. Either
