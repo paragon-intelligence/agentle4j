@@ -734,9 +734,79 @@ public class GetWeatherTool extends FunctionTool<WeatherParams> {
 }
 ```
 
-#### Synchronous Approval (Short-Running)
+#### Non-Streaming Approval (interact method)
 
-For immediate user confirmation (CLI, UI dialog):
+For non-streaming scenarios using `interact()`, the agent automatically pauses when encountering a tool requiring confirmation. Check `AgentResult.isPaused()` and use `agent.resume()`:
+
+```java
+// Start agent - it will pause when it needs to execute send_email
+AgentResult result = agent.interact("Send an email to John").join();
+
+if (result.isPaused()) {
+    AgentRunState state = result.pausedState();
+    FunctionToolCall pendingTool = state.pendingToolCall();
+    
+    System.out.println("🔧 Approval needed: " + pendingTool.name());
+    System.out.println("   Arguments: " + pendingTool.arguments());
+    
+    // Get user decision (CLI, UI dialog, etc.)
+    if (askUser("Execute? (y/n)")) {
+        state.approveToolCall("User approved");  // ✅ Execute
+    } else {
+        state.rejectToolCall("User denied");     // ❌ Reject
+    }
+    
+    // Resume and get final result
+    result = agent.resume(state);
+}
+
+System.out.println("Final output: " + result.output());
+```
+
+#### Long-Running Approval (Persist to Database)
+
+For approvals that may take hours or days (manager approval, compliance review):
+
+```java
+// Step 1: Start agent, save state when paused
+AgentResult result = agent.interact("Delete all customer records").join();
+
+if (result.isPaused()) {
+    AgentRunState state = result.pausedState();
+    
+    // AgentRunState is Serializable - save to database
+    String json = objectMapper.writeValueAsString(state);
+    database.save("pending_approval:" + state.pendingToolCall().callId(), json);
+    
+    // Notify approver via email, Slack, etc.
+    slackClient.send("#approvals", 
+        "🔧 Tool approval needed: " + state.pendingToolCall().name());
+}
+
+// Step 2: Days later, when approval received via REST endpoint
+@PostMapping("/approve/{callId}")
+public void handleApproval(@PathVariable String callId, @RequestBody ApprovalRequest req) {
+    // Load saved state
+    String json = database.get("pending_approval:" + callId);
+    AgentRunState state = objectMapper.readValue(json, AgentRunState.class);
+    
+    if (req.approved()) {
+        state.approveToolCall("Approved by manager");
+    } else {
+        state.rejectToolCall("Denied: " + req.reason());
+    }
+    
+    // Resume agent execution
+    AgentResult result = agent.resume(state);
+    notifyUser(result.output());
+}
+```
+
+---
+
+#### Streaming Approval (interactStream method)
+
+For streaming scenarios with immediate user confirmation (CLI, UI dialog):
 
 ```java
 agent.interactStream("Send an email to John and check the weather")
@@ -755,7 +825,7 @@ agent.interactStream("Send an email to John and check the weather")
 // get_weather auto-executes, send_email waits for approval
 ```
 
-#### Async Pause/Resume (Long-Running)
+#### Streaming Pause/Resume (Long-Running)
 
 For approvals that take hours or days (manager approval, compliance review):
 

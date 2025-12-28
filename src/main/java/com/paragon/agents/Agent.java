@@ -738,7 +738,17 @@ public final class Agent implements Serializable {
         for (FunctionToolCall call : toolCalls) {
           if (call == null) continue;
 
-          // Check for pause request
+          // Non-streaming: auto-pause for tools requiring confirmation
+          if (callbacks == null) {
+            FunctionTool<?> tool = toolStore.get(call.name());
+            if (tool != null && tool.requiresConfirmation()) {
+              AgentRunState pauseState = AgentRunState.pendingApproval(
+                  name, context, call, lastResponse, allToolExecutions, turn);
+              return AgentResult.paused(pauseState, context);
+            }
+          }
+
+          // Check for pause request (streaming)
           if (callbacks != null) {
             AgentRunState pauseState = callbacks.onPauseRequested(
                 call, lastResponse, allToolExecutions, context);
