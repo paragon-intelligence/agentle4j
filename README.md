@@ -193,6 +193,8 @@ responder.respond(streamingPayload)
 
 ### Handoffs
 
+![Multi-Agent](docs/media/multiagent.png)
+
 Route conversations between specialized agents:
 
 ```java
@@ -216,6 +218,8 @@ if (result.isHandoff()) {
 
 ### RouterAgent
 
+![Routing](docs/media/routing.png)
+
 For pure classification without conversational noise:
 
 ```java
@@ -234,6 +238,8 @@ Agent selected = router.classify("My app keeps crashing").join();
 
 ### Parallel execution
 
+![Parallel Agents](docs/media/parallel_agents.png)
+
 Run multiple agents concurrently:
 
 ```java
@@ -249,6 +255,8 @@ AgentResult combined = team.runAndSynthesize("What's the outlook?", writerAgent)
 ```
 
 ## Guardrails
+
+![Guardrails](docs/media/guardrails.png)
 
 Validate inputs and outputs:
 
@@ -271,6 +279,8 @@ Agent agent = Agent.builder()
 ```
 
 ## Human-in-the-loop
+
+![Human-in-the-Loop](docs/media/hitl.png)
 
 Mark sensitive tools that require approval:
 
@@ -327,6 +337,8 @@ Agent agent = Agent.builder()
 ```
 
 ## Memory
+
+![Memory](docs/media/memory.png)
 
 Persistent memory across conversations:
 
