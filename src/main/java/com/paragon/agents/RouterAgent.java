@@ -10,6 +10,7 @@ import org.jspecify.annotations.Nullable;
 
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.CreateResponsePayload;
+import com.paragon.responses.spec.Message;
 
 /**
  * A specialized agent for routing inputs to appropriate target agents.
@@ -101,7 +102,8 @@ public final class RouterAgent {
             context, 0));
       }
 
-      return selected.interact(input, context)
+      context.addInput(Message.user(input));
+      return selected.interact(context)
           .thenApply(result -> AgentResult.handoff(selected, result, context));
     });
   }

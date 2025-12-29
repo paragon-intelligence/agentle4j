@@ -17,6 +17,32 @@ public record File(
     @Nullable String fileUrl,
     @Nullable String filename)
     implements MessageContent, FunctionToolCallOutputKind, CustomToolCallOutputKind {
+
+  /** Creates a file from a URL. */
+  public static File fromUrl(String fileUrl) {
+    return new File(null, null, fileUrl, null);
+  }
+
+  /** Creates a file from a URL with filename. */
+  public static File fromUrl(String fileUrl, String filename) {
+    return new File(null, null, fileUrl, filename);
+  }
+
+  /** Creates a file from a file ID. */
+  public static File fromFileId(String fileId) {
+    return new File(null, fileId, null, null);
+  }
+
+  /** Creates a file from a file ID with filename. */
+  public static File fromFileId(String fileId, String filename) {
+    return new File(null, fileId, null, filename);
+  }
+
+  /** Creates a file from base64-encoded data. */
+  public static File fromBase64(String base64Data, String filename) {
+    return new File(base64Data, null, null, filename);
+  }
+
   @Override
   public @NonNull String toString() {
     return "</input_file>";

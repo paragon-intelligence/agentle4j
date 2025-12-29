@@ -119,8 +119,8 @@ context.setState("userId", "user-123");
 context.setState("orderId", 42);
 context.setState("isPremium", true);
 
-// Use context in interactions
-AgentResult result = agent.interact("What's my order status?", context).join();
+context.addInput(Message.user("What's my order status?"));
+AgentResult result = agent.interact(context).join();
 
 // Retrieve state later
 String userId = context.getState("userId", String.class);
@@ -135,7 +135,8 @@ List<ResponseInputItem> previousMessages = loadFromDatabase();
 AgentContext resumed = AgentContext.withHistory(previousMessages);
 
 // Continue the conversation
-agent.interact("Thanks for the help earlier!", resumed).join();
+resumed.addInput(Message.user("Thanks for the help earlier!"));
+agent.interact(resumed).join();
 ```
 
 ---
@@ -346,10 +347,12 @@ AgentContext context = AgentContext.create();
 context.setState("userId", "user-123");
 
 // First conversation - store preference
-agent.interact("My favorite color is blue", context).join();
+context.addInput(Message.user("My favorite color is blue"));
+agent.interact(context).join();
 
 // Later conversation - retrieve preference
-AgentResult result = agent.interact("What's my favorite color?", context).join();
+context.addInput(Message.user("What's my favorite color?"));
+AgentResult result = agent.interact(context).join();
 System.out.println(result.output());
 // Output: "Your favorite color is blue!"
 ```

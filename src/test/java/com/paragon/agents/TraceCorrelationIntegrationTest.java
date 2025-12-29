@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.paragon.responses.Responder;
+import com.paragon.responses.spec.Message;
 import com.paragon.telemetry.processors.TraceIdGenerator;
 
 import okhttp3.mockwebserver.MockResponse;
@@ -61,7 +62,8 @@ class TraceCorrelationIntegrationTest {
       
       enqueueSuccessResponse("Hello!");
       
-      agent.interact("Hello", ctx).get(5, TimeUnit.SECONDS);
+      ctx.addInput(Message.user("Hello"));
+      agent.interact(ctx).get(5, TimeUnit.SECONDS);
       
       // After interact, context should have trace initialized
       assertTrue(ctx.hasTraceContext(), "Context should have trace after interact");
@@ -83,7 +85,8 @@ class TraceCorrelationIntegrationTest {
       
       enqueueSuccessResponse("Hello!");
       
-      agent.interact("Hello", ctx).get(5, TimeUnit.SECONDS);
+      ctx.addInput(Message.user("Hello"));
+      agent.interact(ctx).get(5, TimeUnit.SECONDS);
       
       // Original trace should be preserved
       assertEquals(existingTraceId, ctx.parentTraceId(), "TraceId should be preserved");
@@ -98,14 +101,16 @@ class TraceCorrelationIntegrationTest {
       
       enqueueSuccessResponse("First response");
       
-      agent.interact("First message", ctx).get(5, TimeUnit.SECONDS);
+      ctx.addInput(Message.user("First message"));
+      agent.interact(ctx).get(5, TimeUnit.SECONDS);
       
       String firstTraceId = ctx.parentTraceId();
       String firstSpanId = ctx.parentSpanId();
       
       enqueueSuccessResponse("Second response");
       
-      agent.interact("Second message", ctx).get(5, TimeUnit.SECONDS);
+      ctx.addInput(Message.user("Second message"));
+      agent.interact(ctx).get(5, TimeUnit.SECONDS);
       
       // Trace should be preserved across interactions
       assertEquals(firstTraceId, ctx.parentTraceId(), "TraceId should be consistent across turns");
@@ -207,7 +212,8 @@ class TraceCorrelationIntegrationTest {
       
       enqueueSuccessResponse("Hello!");
       
-      agent.interact("Hello", ctx).get(5, TimeUnit.SECONDS);
+      ctx.addInput(Message.user("Hello"));
+      agent.interact(ctx).get(5, TimeUnit.SECONDS);
       
       assertEquals("user-session-12345", ctx.requestId(), "RequestId should be preserved");
     }

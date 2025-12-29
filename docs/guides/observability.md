@@ -187,8 +187,8 @@ AgentContext ctx = AgentContext.create()
     .withTraceContext("8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d", "1a2b3c4d5e6f7a8b")
     .withRequestId("user-session-12345");  // Optional high-level correlation
 
-// All subsequent LLM calls share this trace
-AgentResult result = agent.interact("Help me", ctx).join();
+ctx.addInput(Message.user("Help me"));
+AgentResult result = agent.interact(ctx).join();
 ```
 
 ### Viewing Traces

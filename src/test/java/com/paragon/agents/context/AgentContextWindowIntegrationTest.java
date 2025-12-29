@@ -135,7 +135,8 @@ class AgentContextWindowIntegrationTest {
 
             enqueueSuccessResponse("Final response");
 
-            AgentResult result = agent.interact("Last message", context).get(5, TimeUnit.SECONDS);
+            context.addInput(Message.user("Last message"));
+            AgentResult result = agent.interact(context).get(5, TimeUnit.SECONDS);
 
             assertNotNull(result);
             

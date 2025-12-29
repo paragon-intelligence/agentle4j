@@ -349,9 +349,9 @@ Agent agent = Agent.builder()
     .addMemoryTools(memory)  // Adds store/retrieve tools
     .build();
 
-agent.interact("My favorite color is blue", context);
+agent.interact("My favorite color is blue");
 // Later...
-agent.interact("What's my favorite color?", context);
+agent.interact("What's my favorite color?");
 // -> "Your favorite color is blue"
 ```
 

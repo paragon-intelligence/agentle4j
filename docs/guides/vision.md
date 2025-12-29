@@ -9,27 +9,19 @@ Agentle4j supports vision capabilities for analyzing images with GPT-4o, Claude,
 Send images to the AI for analysis:
 
 ```java
-import com.paragon.responses.spec.content.Image;
-import com.paragon.responses.spec.content.ImageDetail;
-import com.paragon.responses.spec.input.UserMessage;
+import com.paragon.responses.spec.Image;
+import com.paragon.responses.spec.ImageDetail;
 import com.paragon.responses.spec.Message;
 
-// Create image from URL
-Image image = new Image(
-    ImageDetail.AUTO,  // AUTO, LOW, or HIGH
-    null,              // Base64 data (null if using URL)
-    "https://example.com/photo.jpg"  // Image URL
-);
+Image image = Image.fromUrl("https://example.com/photo.jpg");
 
-// Create message with image and text
 UserMessage message = Message.builder()
     .addText("What's in this image?")
     .addContent(image)
     .asUser();
 
-// Build and send request
 var payload = CreateResponsePayload.builder()
-    .model("openai/gpt-4o")  // Must use vision-capable model
+    .model("openai/gpt-4o")
     .addMessage(message)
     .build();
 
@@ -48,19 +40,8 @@ System.out.println(response.outputText());
 | `ImageDetail.HIGH` | Detailed analysis | OCR, fine details |
 
 ```java
-// High detail for precise analysis
-Image highDetailImage = new Image(
-    ImageDetail.HIGH,
-    null,
-    "https://example.com/document.png"
-);
-
-// Low detail for quick categorization
-Image lowDetailImage = new Image(
-    ImageDetail.LOW,
-    null,
-    "https://example.com/thumbnail.jpg"
-);
+Image highDetailImage = Image.fromUrl(ImageDetail.HIGH, "https://example.com/document.png");
+Image lowDetailImage = Image.fromUrl(ImageDetail.LOW, "https://example.com/thumbnail.jpg");
 ```
 
 ---
@@ -74,16 +55,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 
-// Read file and encode to base64
 byte[] imageBytes = Files.readAllBytes(Path.of("local-image.jpg"));
-String base64Data = Base64.getEncoder().encodeToString(imageBytes);
+String base64Data = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageBytes);
 
-// Create image with base64
-Image image = new Image(
-    ImageDetail.AUTO,
-    "data:image/jpeg;base64," + base64Data,  // Base64 with data URI prefix
-    null  // No URL when using base64
-);
+Image image = Image.fromBase64(base64Data);
 
 UserMessage message = Message.builder()
     .addText("Describe this image")
@@ -98,8 +73,8 @@ UserMessage message = Message.builder()
 Analyze multiple images in one request:
 
 ```java
-Image image1 = new Image(ImageDetail.AUTO, null, "https://example.com/before.jpg");
-Image image2 = new Image(ImageDetail.AUTO, null, "https://example.com/after.jpg");
+Image image1 = Image.fromUrl("https://example.com/before.jpg");
+Image image2 = Image.fromUrl("https://example.com/after.jpg");
 
 UserMessage message = Message.builder()
     .addText("Compare these two images and describe the differences")
@@ -120,7 +95,7 @@ var payload = CreateResponsePayload.builder()
 ### Document OCR
 
 ```java
-Image document = new Image(ImageDetail.HIGH, null, "https://example.com/receipt.png");
+Image document = Image.fromUrl(ImageDetail.HIGH, "https://example.com/receipt.png");
 
 UserMessage message = Message.builder()
     .addText("Extract all text from this receipt. Format as JSON with date, items, and total.")
@@ -155,7 +130,7 @@ record Classification(
     String description
 ) {}
 
-Image photo = new Image(ImageDetail.AUTO, null, imageUrl);
+Image photo = Image.fromUrl(imageUrl);
 
 UserMessage message = Message.builder()
     .addText("Classify this image. Categories: product, person, landscape, document, food, animal, other")
@@ -175,7 +150,7 @@ System.out.println("Category: " + result.category() + " (" + result.confidence()
 ### Chart/Graph Analysis
 
 ```java
-Image chart = new Image(ImageDetail.HIGH, null, "https://example.com/sales-chart.png");
+Image chart = Image.fromUrl(ImageDetail.HIGH, "https://example.com/sales-chart.png");
 
 UserMessage message = Message.builder()
     .addText("""
@@ -216,15 +191,13 @@ Agent visionAssistant = Agent.builder()
     .build();
 
 // Create context with image
-Image image = new Image(ImageDetail.HIGH, null, documentUrl);
+Image image = Image.fromUrl(ImageDetail.HIGH, documentUrl);
 UserMessage message = Message.builder()
     .addText("Extract all text from this document and save it to a file")
     .addContent(image)
     .asUser();
 
-AgentContext context = AgentContext.create();
-// The message is passed directly to interact()
-AgentResult result = visionAssistant.interact(message.content().toString(), context).join();
+AgentResult result = visionAssistant.interact(message).join();
 ```
 
 ---
@@ -252,7 +225,7 @@ AgentResult result = visionAssistant.interact(message.content().toString(), cont
 
 ```java
 // Use HIGH detail for text extraction
-Image doc = new Image(ImageDetail.HIGH, null, url);
+Image doc = Image.fromUrl(ImageDetail.HIGH, url);
 
 // Be specific in prompts
 .addText("Extract the product name, price, and SKU from this product label")

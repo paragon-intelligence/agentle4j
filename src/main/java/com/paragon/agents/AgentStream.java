@@ -45,7 +45,6 @@ import com.paragon.responses.streaming.ResponseStream;
 public final class AgentStream {
 
   private final Agent agent;
-  private final List<ResponseInputItem> input;
   private final AgentContext context;
   private final Responder responder;
   private final ObjectMapper objectMapper;
@@ -53,6 +52,9 @@ public final class AgentStream {
   // For resuming
   private final List<ToolExecution> initialExecutions;
   private final int startTurn;
+  
+  // For pre-failed streams
+  private final @Nullable AgentResult preFailedResult;
 
   // Callbacks
   private Consumer<Integer> onTurnStart;
@@ -79,6 +81,17 @@ public final class AgentStream {
   }
 
   /**
+   * Constructor for context-only (no new input).
+   */
+  AgentStream(
+      @NonNull Agent agent,
+      @NonNull AgentContext context,
+      @NonNull Responder responder,
+      @NonNull ObjectMapper objectMapper) {
+    this(agent, List.of(), context, responder, objectMapper, List.of(), 0);
+  }
+
+  /**
    * Constructor for resuming from a saved state.
    */
   AgentStream(
@@ -90,12 +103,37 @@ public final class AgentStream {
       @NonNull List<ToolExecution> initialExecutions,
       int startTurn) {
     this.agent = agent;
-    this.input = input;
     this.context = context;
     this.responder = responder;
     this.objectMapper = objectMapper;
     this.initialExecutions = new ArrayList<>(initialExecutions);
     this.startTurn = startTurn;
+    this.preFailedResult = null;
+    
+    // Add input to context immediately
+    for (ResponseInputItem item : input) {
+      context.addInput(item);
+    }
+  }
+
+  /**
+   * Creates a pre-failed AgentStream for immediate error return (e.g., guardrail failure).
+   */
+  private AgentStream(@NonNull AgentResult failedResult) {
+    this.agent = null;
+    this.context = null;  // Not needed for pre-failed streams
+    this.responder = null;
+    this.objectMapper = null;
+    this.initialExecutions = List.of();
+    this.startTurn = 0;
+    this.preFailedResult = failedResult;
+  }
+
+  /**
+   * Creates a pre-failed stream that immediately completes with the given result.
+   */
+  static @NonNull AgentStream failed(@NonNull AgentResult failedResult) {
+    return new AgentStream(failedResult);
   }
 
   // ===== Event Registration =====
@@ -255,24 +293,13 @@ public final class AgentStream {
   }
 
   private AgentResult runAgenticLoop() {
+    // Check for pre-failed result (e.g., guardrail failure)
+    if (preFailedResult != null) {
+      emit(onComplete, preFailedResult);
+      return preFailedResult;
+    }
+    
     try {
-      // 1. Validate input guardrails
-      String inputText = extractTextFromInput(input);
-      for (InputGuardrail guardrail : agent.inputGuardrails()) {
-        GuardrailResult result = guardrail.validate(inputText, context);
-        if (result.isFailed()) {
-          GuardrailResult.Failed failed = (GuardrailResult.Failed) result;
-          emit(onGuardrailFailed, failed);
-          AgentResult errorResult = AgentResult.guardrailFailed(failed.reason(), context);
-          emit(onComplete, errorResult);
-          return errorResult;
-        }
-      }
-
-      // 2. Add input to context
-      for (ResponseInputItem item : input) {
-        context.addInput(item);
-      }
 
       // 3. Execute agentic loop
       List<ToolExecution> allToolExecutions = new ArrayList<>(initialExecutions);

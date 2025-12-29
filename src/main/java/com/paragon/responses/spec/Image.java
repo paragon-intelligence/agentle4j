@@ -32,6 +32,14 @@ public record Image(@NonNull ImageDetail detail, @Nullable String fileId, @Nulla
     return new Image(detail, fileId, null);
   }
 
+  public static Image fromBase64(String base64DataUrl) {
+    return new Image(ImageDetail.AUTO, base64DataUrl, null);
+  }
+
+  public static Image fromBase64(ImageDetail detail, String base64DataUrl) {
+    return new Image(detail, base64DataUrl, null);
+  }
+
   @Override
   public @NonNull String toString() {
     return "</input_image>";

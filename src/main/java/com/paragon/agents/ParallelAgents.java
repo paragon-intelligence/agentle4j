@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
+import com.paragon.responses.spec.Message;
 import com.paragon.telemetry.processors.TraceIdGenerator;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -125,7 +126,8 @@ public final class ParallelAgents {
       AgentContext ctx = sharedContext != null ? sharedContext.copy() : AgentContext.create();
       // Each agent gets a forked context with shared parent trace
       ctx.withTraceContext(parentTraceId, parentSpanId);
-      futures.add(agent.interact(input, ctx));
+      ctx.addInput(Message.user(input));
+      futures.add(agent.interact(ctx));
     }
 
     // Combine all futures
@@ -166,7 +168,8 @@ public final class ParallelAgents {
     List<CompletableFuture<AgentResult>> futures = new ArrayList<>();
     for (Agent agent : agents) {
       AgentContext ctx = sharedContext != null ? sharedContext.copy() : AgentContext.create();
-      futures.add(agent.interact(input, ctx));
+      ctx.addInput(Message.user(input));
+      futures.add(agent.interact(ctx));
     }
 
     // Return first to complete
@@ -227,7 +230,8 @@ public final class ParallelAgents {
 
       // Run synthesizer
       AgentContext synthContext = sharedContext != null ? sharedContext.copy() : AgentContext.create();
-      return synthesizer.interact(synthesisPrompt.toString(), synthContext);
+      synthContext.addInput(Message.user(synthesisPrompt.toString()));
+      return synthesizer.interact(synthContext);
     });
   }
 }

@@ -142,7 +142,8 @@ class AgentStructuredOutputTest {
 
       enqueueStructuredResponse("{\"name\": \"Jane\", \"age\": 25}");
 
-      StructuredAgentResult<PersonInfo> result = structured.interact("Tell me about Jane", context).join();
+      context.addInput(com.paragon.responses.spec.Message.user("Tell me about Jane"));
+      StructuredAgentResult<PersonInfo> result = structured.interact(context).join();
 
       assertNotNull(result);
       assertFalse(result.isError());

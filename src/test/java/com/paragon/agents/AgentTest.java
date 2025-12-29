@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.FunctionTool;
 import com.paragon.responses.spec.FunctionToolCallOutput;
+import com.paragon.responses.spec.Message;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -158,7 +159,8 @@ class AgentTest {
       AgentContext context = AgentContext.create();
       enqueueSuccessResponse("Hello");
 
-      CompletableFuture<AgentResult> future = agent.interact("Hello", context);
+      context.addInput(Message.user("Hello"));
+      CompletableFuture<AgentResult> future = agent.interact(context);
 
       assertNotNull(future);
       assertInstanceOf(CompletableFuture.class, future);
@@ -319,7 +321,8 @@ class AgentTest {
 
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Hello", context).get(5, TimeUnit.SECONDS);
+      context.addInput(Message.user("Hello"));
+      AgentResult result = agent.interact(context).get(5, TimeUnit.SECONDS);
 
       // Context should be updated during interaction
       assertNotNull(result);
@@ -336,8 +339,10 @@ class AgentTest {
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
 
-      CompletableFuture<AgentResult> future1 = agent.interact("Hello 1", context1);
-      CompletableFuture<AgentResult> future2 = agent.interact("Hello 2", context2);
+      context1.addInput(Message.user("Hello 1"));
+      context2.addInput(Message.user("Hello 2"));
+      CompletableFuture<AgentResult> future1 = agent.interact(context1);
+      CompletableFuture<AgentResult> future2 = agent.interact(context2);
 
       AgentResult result1 = future1.get(5, TimeUnit.SECONDS);
       AgentResult result2 = future2.get(5, TimeUnit.SECONDS);

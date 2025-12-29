@@ -482,13 +482,15 @@ public class Main {
     AgentContext context = AgentContext.create();
 
     System.out.println("📤 Sending: 'What is the capital of France?'");
-    AgentResult result1 = agent.interact("What is the capital of France?", context).join();
+    context.addInput(Message.user("What is the capital of France?"));
+    AgentResult result1 = agent.interact(context).join();
     System.out.println("📥 Response: " + result1.output());
     System.out.println("📊 Turns used: " + result1.turnsUsed());
 
     // The context now contains the previous exchange in its history
     System.out.println("\n📤 Sending: 'And what about Germany?' (using same context)");
-    AgentResult result2 = agent.interact("And what about Germany?", context).join();
+    context.addInput(Message.user("And what about Germany?"));
+    AgentResult result2 = agent.interact(context).join();
     System.out.println("📥 Response: " + result2.output());
     System.out.println("📊 Context history size: " + context.historySize());
   }
