@@ -1,17 +1,12 @@
 package com.paragon.agents;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
+import java.util.*;
 
 /**
  * Holds conversation state for an agent interaction.
@@ -58,10 +53,10 @@ public final class AgentContext {
   private @Nullable String parentSpanId;
   private @Nullable String requestId;
 
-  private AgentContext() {
-    this.history = new ArrayList<>();
-    this.state = new HashMap<>();
-    this.turnCount = 0;
+  private AgentContext(List<ResponseInputItem> history, Map<String, Object> state, int turnCount) {
+    this.history = history;
+    this.state = state;
+    this.turnCount = turnCount;
   }
 
   /**
@@ -70,8 +65,21 @@ public final class AgentContext {
    * @return a fresh context with no history or state
    */
   public static @NonNull AgentContext create() {
-    return new AgentContext();
+    return new AgentContext(new ArrayList<>(), new HashMap<>(), 0);
   }
+
+  public static @NonNull AgentContext create(@NonNull List<ResponseInputItem> history) {
+    return new AgentContext(history, new HashMap<>(), 0);
+  }
+
+  public static @NonNull AgentContext create(@NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state) {
+    return new AgentContext(history, state, 0);
+  }
+
+  public static @NonNull AgentContext create(@NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state, int turnCount) {
+    return new AgentContext(history, state, turnCount);
+  }
+
 
   /**
    * Creates an AgentContext pre-populated with conversation history.
@@ -83,9 +91,7 @@ public final class AgentContext {
    */
   public static @NonNull AgentContext withHistory(@NonNull List<ResponseInputItem> initialHistory) {
     Objects.requireNonNull(initialHistory, "initialHistory cannot be null");
-    AgentContext context = new AgentContext();
-    context.history.addAll(initialHistory);
-    return context;
+    return AgentContext.create(initialHistory);
   }
 
   /**
@@ -148,7 +154,7 @@ public final class AgentContext {
   /**
    * Stores a custom value in the context's state.
    *
-   * @param key the key to store under
+   * @param key   the key to store under
    * @param value the value to store (can be null to remove)
    * @return this context for method chaining
    */
@@ -176,9 +182,9 @@ public final class AgentContext {
   /**
    * Retrieves a typed value from the context's state.
    *
-   * @param key the key to look up
+   * @param key  the key to look up
    * @param type the expected type
-   * @param <T> the type parameter
+   * @param <T>  the type parameter
    * @return the stored value cast to the expected type, or null if not found
    * @throws ClassCastException if the stored value is not of the expected type
    */
@@ -253,10 +259,11 @@ public final class AgentContext {
    * @return a new context with copied history and state
    */
   public @NonNull AgentContext copy() {
-    AgentContext copy = new AgentContext();
-    copy.history.addAll(this.history);
-    copy.state.putAll(this.state);
-    copy.turnCount = this.turnCount;
+    AgentContext copy = new AgentContext(
+        new ArrayList<>(this.history),
+        new HashMap<>(this.state),
+        this.turnCount
+    );
     copy.parentTraceId = this.parentTraceId;
     copy.parentSpanId = this.parentSpanId;
     copy.requestId = this.requestId;
@@ -281,7 +288,7 @@ public final class AgentContext {
    * end-to-end trace correlation across multi-agent runs.
    *
    * @param traceId the parent trace ID (32-char hex)
-   * @param spanId the parent span ID (16-char hex)
+   * @param spanId  the parent span ID (16-char hex)
    * @return this context for method chaining
    */
   public @NonNull AgentContext withTraceContext(@NonNull String traceId, @NonNull String spanId) {
