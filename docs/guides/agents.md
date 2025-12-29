@@ -108,36 +108,160 @@ The loop continues until the LLM responds without tool calls (final answer) or m
 
 ## AgentContext
 
-`AgentContext` holds the per-conversation state:
+`AgentContext` is the **conversation state container** for agent interactions. It acts as the agent's short-term memory, tracking everything that happens during a conversation.
+
+### Why AgentContext?
+
+| Feature | Purpose |
+|---------|---------|
+| **Conversation History** | Tracks all messages exchanged between user and agent |
+| **Custom State** | Store arbitrary key-value data (user IDs, preferences, etc.) |
+| **Turn Tracking** | Counts LLM calls for loop limits |
+| **Trace Correlation** | Links spans for distributed tracing across agents |
+| **Isolation** | Each context is independent, making agents thread-safe |
+
+### Creating Contexts
 
 ```java
-// Create fresh context for each conversation
+// Fresh context for new conversations
 AgentContext context = AgentContext.create();
 
-// Store custom state
+// Pre-populated context for resuming conversations
+List<ResponseInputItem> previousMessages = loadFromDatabase();
+AgentContext resumed = AgentContext.withHistory(previousMessages);
+```
+
+### Adding Input
+
+```java
+// Add text messages
+context.addInput(Message.user("Hello!"));
+
+// Add messages with images
+context.addInput(Message.user(Image.fromUrl("https://...")));
+
+// Add tool results (called automatically by agent)
+context.addToolResult(FunctionToolCallOutput.success(callId, result));
+```
+
+### Custom State Storage
+
+Store any data your tools or application needs:
+
+```java
 context.setState("userId", "user-123");
 context.setState("orderId", 42);
 context.setState("isPremium", true);
 
-context.addInput(Message.user("What's my order status?"));
-AgentResult result = agent.interact(context).join();
-
-// Retrieve state later
+// Retrieve typed values
 String userId = context.getState("userId", String.class);
-int orderId = context.getState("orderId", Integer.class);
+Integer orderId = context.getState("orderId", Integer.class);
+Boolean isPremium = context.getState("isPremium", Boolean.class);
+
+// Check existence
+if (context.hasState("userId")) {
+    // ...
+}
+
+// Get all state
+Map<String, Object> allState = context.getAllState();
 ```
 
-### Resuming Conversations
+### Multi-Turn Conversations
+
+The key to multi-turn conversations is **reusing the same context**:
 
 ```java
-// Create context with existing history
-List<ResponseInputItem> previousMessages = loadFromDatabase();
-AgentContext resumed = AgentContext.withHistory(previousMessages);
+AgentContext context = AgentContext.create();
 
-// Continue the conversation
-resumed.addInput(Message.user("Thanks for the help earlier!"));
-agent.interact(resumed).join();
+// Turn 1
+context.addInput(Message.user("My name is Alice"));
+agent.interact(context).join();
+
+// Turn 2 - agent remembers the context
+context.addInput(Message.user("What's my name?"));
+AgentResult result = agent.interact(context).join();
+// -> "Your name is Alice"
+
+// Check turn count
+System.out.println("Turns used: " + context.getTurnCount());
 ```
+
+### Copy and Fork
+
+For parallel agent execution, each agent needs its own isolated context:
+
+```java
+AgentContext original = AgentContext.create();
+original.setState("userId", "user-123");
+
+// Copy creates an independent clone
+AgentContext copy = original.copy();
+copy.setState("task", "different-task");
+// original is unaffected
+
+// Fork creates a child context for handoffs (resets turn count)
+String childSpanId = TraceIdGenerator.generateSpanId();
+AgentContext child = original.fork(childSpanId);
+```
+
+### Trace Correlation
+
+Link traces across multi-agent systems for observability:
+
+```java
+AgentContext context = AgentContext.create()
+    .withTraceContext(
+        "8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d",  // 32-char trace ID
+        "1a2b3c4d5e6f7a8b"                    // 16-char span ID
+    )
+    .withRequestId("user-session-12345");    // Custom correlation ID
+
+// Check if trace is set
+if (context.hasTraceContext()) {
+    System.out.println("Trace: " + context.parentTraceId());
+    System.out.println("Span: " + context.parentSpanId());
+}
+```
+
+### Reading History
+
+```java
+// Get immutable view
+List<ResponseInputItem> history = context.getHistory();
+
+// Get mutable copy (for building payloads)
+List<ResponseInputItem> mutableHistory = context.getHistoryMutable();
+
+// Check size
+int size = context.historySize();
+```
+
+### Resetting Context
+
+```java
+// Clear everything and reuse
+context.clear();
+```
+
+### API Reference
+
+| Method | Description |
+|--------|-------------|
+| `create()` | Create empty context |
+| `withHistory(list)` | Create with pre-populated messages |
+| `addInput(item)` | Add message/input to history |
+| `addToolResult(output)` | Add tool execution result |
+| `getHistory()` | Get immutable history view |
+| `setState(key, value)` | Store custom state |
+| `getState(key, type)` | Retrieve typed state |
+| `hasState(key)` | Check if state exists |
+| `getTurnCount()` | Get number of LLM calls |
+| `copy()` | Create independent clone |
+| `fork(spanId)` | Create child context for handoffs |
+| `withTraceContext(traceId, spanId)` | Set trace correlation |
+| `withRequestId(id)` | Set request correlation ID |
+| `clear()` | Reset context |
 
 ---
 
@@ -811,7 +935,35 @@ for (String point : analysis.keyPoints()) {
 
 ## Error Handling
 
-Agents use typed exceptions for robust error handling and recovery.
+Agents never throw exceptions. Instead, they return `AgentResult` objects that may contain errors. This makes error handling explicit and predictable.
+
+### AgentResult Status Checks
+
+```java
+AgentResult result = agent.interact("Hello").join();
+
+// Check status
+if (result.isSuccess()) {
+    System.out.println(result.output());
+} else if (result.isError()) {
+    System.err.println("Error: " + result.error().getMessage());
+} else if (result.isHandoff()) {
+    System.out.println("Handled by: " + result.handoffAgent().name());
+    System.out.println(result.output());
+} else if (result.isPaused()) {
+    // Human-in-the-loop: waiting for tool approval
+    AgentRunState state = result.pausedState();
+    // Present to user for approval...
+}
+```
+
+| Method | Returns true when... |
+|--------|---------------------|
+| `isSuccess()` | No error occurred |
+| `isError()` | An error occurred |
+| `isHandoff()` | Control was transferred to another agent |
+| `isPaused()` | Waiting for human-in-the-loop approval |
+| `hasParsed()` | Structured output was parsed |
 
 ### Exception Types
 

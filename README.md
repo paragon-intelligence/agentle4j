@@ -126,17 +126,43 @@ AgentResult result = agent.interact("What's the weather in Tokyo?").join();
 
 ### AgentContext
 
-Per-conversation state. Holds message history, turn count, and custom key-value data.
+`AgentContext` is the conversation state container—the agent's short-term memory:
 
 ```java
 AgentContext context = AgentContext.create();
-context.setState("userId", "user-123");
 
-// Later
+// Store custom state
+context.setState("userId", "user-123");
+context.setState("orderId", 42);
+
+// Multi-turn conversation (reuse context)
+context.addInput(Message.user("My name is Alice"));
+agent.interact(context).join();
+
+context.addInput(Message.user("What's my name?"));
+agent.interact(context).join();  // -> "Your name is Alice"
+
+// Retrieve state
 String userId = context.getState("userId", String.class);
 ```
 
-This separation means you can serialize context to pause/resume conversations, and agents stay reusable without side effects.
+**Key features:**
+- **Conversation History** – Tracks all messages exchanged
+- **Custom State** – Key-value store for user IDs, session data, etc.
+- **Turn Tracking** – Counts LLM calls for loop limits
+- **Trace Correlation** – Links spans for distributed tracing
+- **Copy/Fork** – Isolated copies for parallel execution
+
+```java
+// Resume previous conversation
+AgentContext resumed = AgentContext.withHistory(loadFromDatabase());
+
+// Trace correlation for observability
+context.withTraceContext(traceId, spanId);
+context.withRequestId("session-123");
+```
+
+See the [Agents Guide](docs/guides/agents.md#agentcontext) for full API reference.
 
 ## Function calling
 
@@ -396,38 +422,60 @@ The tradeoff vs. LangChain4J/Spring AI: they have native integrations per provid
 
 ## Error handling
 
-Typed exceptions for different failure modes:
+### Responder Errors
+
+Typed exceptions for Responder failures:
 
 ```java
 try {
     Response response = responder.respond(payload).join();
 } catch (CompletionException e) {
     switch (e.getCause()) {
-        case RateLimitException ex -> {
-            System.err.println("Rate limited. Retry after: " + ex.retryAfter());
-        }
-        case AuthenticationException ex -> {
-            System.err.println("Auth failed: " + ex.suggestion());
-        }
-        case ServerException ex -> {
-            System.err.println("Server error: " + ex.statusCode());
-        }
+        case RateLimitException ex -> System.err.println("Retry after: " + ex.retryAfter());
+        case AuthenticationException ex -> System.err.println("Auth: " + ex.suggestion());
+        case ServerException ex -> System.err.println("Server: " + ex.statusCode());
         default -> throw e;
     }
 }
 ```
 
-All exceptions have `isRetryable()`. The library also has built-in retry with exponential backoff for 429s and 5xx errors:
+Built-in retry with exponential backoff for 429s and 5xx:
 
 ```java
-Responder.builder()
-    .maxRetries(5)
-    .retryPolicy(RetryPolicy.builder()
-        .initialDelay(Duration.ofMillis(500))
-        .maxDelay(Duration.ofSeconds(30))
-        .build())
-    .build();
+Responder.builder().maxRetries(5).retryPolicy(RetryPolicy.builder()...build()).build();
 ```
+
+### Agent Errors
+
+Agents **never throw exceptions**. Errors are returned in `AgentResult`:
+
+```java
+AgentResult result = agent.interact("Hello").join();
+
+if (result.isError()) {
+    Throwable error = result.error();
+    
+    if (error instanceof AgentExecutionException e) {
+        System.err.println("Agent '" + e.agentName() + "' failed in: " + e.phase());
+        System.err.println("Suggestion: " + e.suggestion());
+        if (e.isRetryable()) { /* retry */ }
+    } else if (error instanceof GuardrailException e) {
+        System.err.println("Guardrail: " + e.reason() + " (" + e.violationType() + ")");
+    } else if (error instanceof ToolExecutionException e) {
+        System.err.println("Tool '" + e.toolName() + "' failed: " + e.getMessage());
+    }
+}
+```
+
+| Phase | When | Retryable |
+|-------|------|-----------|
+| `INPUT_GUARDRAIL` | Input validation failed | No |
+| `LLM_CALL` | API call failed | Yes |
+| `TOOL_EXECUTION` | Tool threw exception | No |
+| `OUTPUT_GUARDRAIL` | Output validation failed | No |
+| `MAX_TURNS_EXCEEDED` | Turn limit hit | No |
+
+See the [Agents Guide](docs/guides/agents.md#error-handling) for comprehensive error handling patterns.
 
 ## Configuration
 
