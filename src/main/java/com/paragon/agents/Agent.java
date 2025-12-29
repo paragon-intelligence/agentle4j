@@ -580,6 +580,18 @@ public final class Agent implements Serializable {
       context.withTraceContext(traceId, spanId);
     }
 
+    // Validate input guardrails before processing
+    String inputText = extractTextFromInput(context.getHistory());
+    for (InputGuardrail guardrail : inputGuardrails) {
+      GuardrailResult result = guardrail.validate(inputText, context);
+      if (result.isFailed()) {
+        GuardrailResult.Failed failed = (GuardrailResult.Failed) result;
+        GuardrailException guardEx = GuardrailException.inputViolation(failed.reason());
+        broadcastFailedEvent(guardEx, context);
+        return AgentResult.error(guardEx, context, context.getTurnCount());
+      }
+    }
+
     // Execute agentic loop
     return executeAgenticLoop(context, new ArrayList<>(), callbacks, "");
   }
