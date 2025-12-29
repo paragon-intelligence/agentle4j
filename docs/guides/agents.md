@@ -1022,6 +1022,30 @@ if (result.isError()) {
 | `PARSING` | Response parsing failed | No | Check response format |
 | `MAX_TURNS_EXCEEDED` | Turn limit exceeded | No | Increase maxTurns |
 
+### Accessing Underlying API Errors
+
+For `LLM_CALL` failures, the original API exception is preserved as the **cause**:
+
+```java
+if (result.isError() && result.error() instanceof AgentExecutionException e) {
+    if (e.phase() == AgentExecutionException.Phase.LLM_CALL) {
+        Throwable cause = e.getCause();
+        
+        if (cause instanceof RateLimitException rate) {
+            System.out.println("Rate limited. Retry after: " + rate.retryAfter());
+        } else if (cause instanceof AuthenticationException auth) {
+            System.out.println("Auth failed: " + auth.suggestion());
+        } else if (cause instanceof ServerException server) {
+            System.out.println("Server error: " + server.statusCode());
+        } else if (cause instanceof InvalidRequestException invalid) {
+            System.out.println("Invalid request: " + invalid.getMessage());
+        }
+    }
+}
+```
+
+This gives you full access to API-specific error details like retry timing, status codes, and suggestions.
+
 ### Using Error Codes
 
 ```java

@@ -475,6 +475,20 @@ if (result.isError()) {
 | `OUTPUT_GUARDRAIL` | Output validation failed | No |
 | `MAX_TURNS_EXCEEDED` | Turn limit hit | No |
 
+For `LLM_CALL` errors, access the underlying API exception via `getCause()`:
+
+```java
+if (e.phase() == AgentExecutionException.Phase.LLM_CALL) {
+    Throwable cause = e.getCause();
+    
+    if (cause instanceof RateLimitException rate) {
+        System.out.println("Retry after: " + rate.retryAfter());
+    } else if (cause instanceof ServerException server) {
+        System.out.println("Status: " + server.statusCode());
+    }
+}
+```
+
 See the [Agents Guide](docs/guides/agents.md#error-handling) for comprehensive error handling patterns.
 
 ## Configuration
