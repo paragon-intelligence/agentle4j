@@ -381,6 +381,28 @@ agent.interact("What's my favorite color?");
 // -> "Your favorite color is blue"
 ```
 
+## Embeddings
+
+Text embedding with built-in retry and fallback support:
+
+```java
+EmbeddingProvider embeddings = OpenRouterEmbeddingProvider.builder()
+    .apiKey(System.getenv("OPENROUTER_API_KEY"))
+    .retryPolicy(RetryPolicy.defaults())  // Retry on 429, 529, 5xx
+    .allowFallbacks(true)                 // Use backup providers on overload
+    .build();
+
+List<Embedding> results = embeddings.createEmbeddings(
+    List.of("Hello world", "AI is amazing"),
+    "openai/text-embedding-3-small"
+).join();
+```
+
+**Automatic retry on:**
+- **429** - Rate limit exceeded (exponential backoff)
+- **529** - Provider overloaded (uses fallback providers when enabled)
+- **5xx** - Server errors
+
 ## Observability
 
 Built-in OpenTelemetry support:

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.Duration;
 import java.util.Set;
+import com.paragon.http.RetryPolicy;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link RetryPolicy}. */
@@ -17,7 +18,7 @@ class RetryPolicyTest {
     assertEquals(Duration.ofSeconds(1), policy.initialDelay());
     assertEquals(Duration.ofSeconds(30), policy.maxDelay());
     assertEquals(2.0, policy.multiplier());
-    assertEquals(Set.of(429, 500, 502, 503, 504), policy.retryableStatusCodes());
+    assertEquals(Set.of(429, 500, 502, 503, 504, 529), policy.retryableStatusCodes());
   }
 
   @Test

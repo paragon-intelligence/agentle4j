@@ -1041,7 +1041,7 @@ public final class Agent implements Serializable {
     private @Nullable Integer maxOutputTokens;
     private @Nullable Map<String, String> metadata;
     private @Nullable TelemetryContext telemetryContext;
-    private com.paragon.responses.RetryPolicy retryPolicy; // nullable by default
+    private com.paragon.http.RetryPolicy retryPolicy; // nullable by default
     private int maxTurns = 10;
     private final List<FunctionTool<?>> tools = new ArrayList<>();
     private final List<Handoff> handoffs = new ArrayList<>();
@@ -1324,9 +1324,9 @@ public final class Agent implements Serializable {
      *
      * @param retryPolicy the retry policy to use
      * @return this builder
-     * @see com.paragon.responses.RetryPolicy
+     * @see com.paragon.http.RetryPolicy
      */
-    public @NonNull Builder retryPolicy(com.paragon.responses.RetryPolicy retryPolicy) {
+    public @NonNull Builder retryPolicy(com.paragon.http.RetryPolicy retryPolicy) {
       this.retryPolicy = Objects.requireNonNull(retryPolicy);
       return this;
     }
@@ -1347,7 +1347,7 @@ public final class Agent implements Serializable {
      * @return this builder
      */
     public @NonNull Builder maxRetries(int maxRetries) {
-      this.retryPolicy = com.paragon.responses.RetryPolicy.builder().maxRetries(maxRetries).build();
+      this.retryPolicy = com.paragon.http.RetryPolicy.builder().maxRetries(maxRetries).build();
       return this;
     }
 
@@ -1496,7 +1496,7 @@ public final class Agent implements Serializable {
     }
 
     public @NonNull StructuredBuilder<T> retryPolicy(
-        com.paragon.responses.RetryPolicy retryPolicy) {
+        com.paragon.http.RetryPolicy retryPolicy) {
       parentBuilder.retryPolicy(retryPolicy);
       return this;
     }

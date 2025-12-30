@@ -1,4 +1,4 @@
-package com.paragon.responses;
+package com.paragon.http;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -8,23 +8,21 @@ import org.jspecify.annotations.NonNull;
 /**
  * Configuration for retry behavior with exponential backoff.
  *
- * <p>Use this to configure how the {@link Responder} handles transient failures such as rate
- * limiting (HTTP 429) and server errors (HTTP 5xx).
+ * <p>Use this to configure how HTTP clients handle transient failures such as rate limiting (HTTP
+ * 429), provider overload (HTTP 529), and server errors (HTTP 5xx).
  *
  * <p>Example usage:
  *
  * <pre>{@code
  * // Simple configuration
- * Responder.builder()
- *     .openRouter()
- *     .apiKey(key)
- *     .maxRetries(3)
+ * AsyncHttpClient.builder()
+ *     .baseUrl("https://api.example.com")
+ *     .retryPolicy(RetryPolicy.defaults())
  *     .build();
  *
  * // Advanced configuration
- * Responder.builder()
- *     .openRouter()
- *     .apiKey(key)
+ * AsyncHttpClient.builder()
+ *     .baseUrl("https://api.example.com")
  *     .retryPolicy(RetryPolicy.builder()
  *         .maxRetries(5)
  *         .initialDelay(Duration.ofMillis(500))
@@ -47,8 +45,12 @@ public record RetryPolicy(
     double multiplier,
     @NonNull Set<Integer> retryableStatusCodes) {
 
-  /** Default retryable status codes: 429 (rate limit), 500, 502, 503, 504 (server errors). */
-  public static final Set<Integer> DEFAULT_RETRYABLE_STATUS_CODES = Set.of(429, 500, 502, 503, 504);
+  /**
+   * Default retryable status codes: 429 (rate limit), 500, 502, 503, 504 (server errors), 529
+   * (provider overloaded).
+   */
+  public static final Set<Integer> DEFAULT_RETRYABLE_STATUS_CODES =
+      Set.of(429, 500, 502, 503, 504, 529);
 
   public RetryPolicy {
     if (maxRetries < 0) {
@@ -70,7 +72,7 @@ public record RetryPolicy(
    *   <li>initialDelay: 1 second
    *   <li>maxDelay: 30 seconds
    *   <li>multiplier: 2.0
-   *   <li>retryableStatusCodes: 429, 500, 502, 503, 504
+   *   <li>retryableStatusCodes: 429, 500, 502, 503, 504, 529
    * </ul>
    */
   public static @NonNull RetryPolicy defaults() {
@@ -85,6 +87,15 @@ public record RetryPolicy(
   public static @NonNull RetryPolicy disabled() {
     return new RetryPolicy(
         0, Duration.ofSeconds(1), Duration.ofSeconds(30), 2.0, DEFAULT_RETRYABLE_STATUS_CODES);
+  }
+
+  /**
+   * Alias for {@link #disabled()}. Returns a retry policy that disables retries.
+   *
+   * @return a retry policy with no retries
+   */
+  public static @NonNull RetryPolicy none() {
+    return disabled();
   }
 
   /**
@@ -112,6 +123,16 @@ public record RetryPolicy(
   }
 
   /**
+   * Returns the delay in milliseconds for a specific retry attempt using exponential backoff.
+   *
+   * @param attempt the retry attempt number (1-based)
+   * @return the delay in milliseconds, capped at maxDelay
+   */
+  public long delayForAttempt(int attempt) {
+    return getDelayForAttempt(attempt).toMillis();
+  }
+
+  /**
    * Checks if the given HTTP status code should trigger a retry.
    *
    * @param statusCode the HTTP status code
@@ -119,6 +140,24 @@ public record RetryPolicy(
    */
   public boolean isRetryable(int statusCode) {
     return retryableStatusCodes.contains(statusCode);
+  }
+
+  /**
+   * Determines if a request should be retried based on the error and attempt count.
+   *
+   * @param error the HTTP exception that occurred
+   * @param attempt the current attempt number (1-based, after failure)
+   * @return true if the request should be retried
+   */
+  public boolean shouldRetry(@NonNull HttpException error, int attempt) {
+    if (attempt >= maxRetries) {
+      return false;
+    }
+    // Network errors (status code -1) are always retryable
+    if (error.statusCode() == -1) {
+      return true;
+    }
+    return isRetryable(error.statusCode());
   }
 
   /** Builder for constructing {@link RetryPolicy} instances. */

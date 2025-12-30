@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.paragon.responses.Responder;
 import com.paragon.responses.ResponsesApiObjectMapper;
-import com.paragon.responses.RetryPolicy;
+import com.paragon.http.RetryPolicy;
 import com.paragon.responses.spec.*;
 import java.io.IOException;
 import java.util.List;

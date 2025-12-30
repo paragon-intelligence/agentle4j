@@ -3,6 +3,7 @@ package com.paragon.responses;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.paragon.responses.spec.*;
+import com.paragon.http.RetryPolicy;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
