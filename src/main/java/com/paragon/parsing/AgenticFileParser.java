@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 
+@SuppressWarnings("ClassCanBeRecord")
 public class AgenticFileParser {
   @NonNull
   private final Responder responder;
