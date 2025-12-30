@@ -9,14 +9,16 @@ import org.jspecify.annotations.Nullable;
  * <p>This exception is not retryable—the request must be fixed.
  *
  * <p>Common causes:
+ *
  * <ul>
- *   <li>Invalid JSON payload</li>
- *   <li>Missing required parameters</li>
- *   <li>Invalid parameter values</li>
- *   <li>Unsupported model or feature</li>
+ *   <li>Invalid JSON payload
+ *   <li>Missing required parameters
+ *   <li>Invalid parameter values
+ *   <li>Unsupported model or feature
  * </ul>
  *
  * <p>Example usage:
+ *
  * <pre>{@code
  * if (error instanceof InvalidRequestException e) {
  *     log.error("Invalid request: {}", e.getMessage());
@@ -56,7 +58,14 @@ public class InvalidRequestException extends ApiException {
    * @param cause the underlying cause
    */
   public InvalidRequestException(@NonNull String message, @NonNull Throwable cause) {
-    super(ErrorCode.INVALID_REQUEST, 400, message, cause, null, null,
-        "Check the request payload for missing or invalid parameters", false);
+    super(
+        ErrorCode.INVALID_REQUEST,
+        400,
+        message,
+        cause,
+        null,
+        null,
+        "Check the request payload for missing or invalid parameters",
+        false);
   }
 }

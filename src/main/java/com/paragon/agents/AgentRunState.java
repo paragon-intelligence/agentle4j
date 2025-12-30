@@ -1,22 +1,21 @@
 package com.paragon.agents;
 
+import com.paragon.responses.spec.FunctionToolCall;
+import com.paragon.responses.spec.Response;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-
-import com.paragon.responses.spec.FunctionToolCall;
-import com.paragon.responses.spec.Response;
 
 /**
  * Serializable state of a paused agent run.
  *
- * <p>When an agent run is paused (e.g., waiting for human approval of a tool call),
- * this state captures everything needed to resume the run later - even days later.
+ * <p>When an agent run is paused (e.g., waiting for human approval of a tool call), this state
+ * captures everything needed to resume the run later - even days later.
  *
  * <p>Usage:
+ *
  * <pre>{@code
  * // Pause when tool needs approval
  * AgentRunState state = agent.interact("Do something")
@@ -38,9 +37,7 @@ public final class AgentRunState implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  /**
-   * The current status of the agent run.
-   */
+  /** The current status of the agent run. */
   public enum Status {
     /** Run is in progress. */
     RUNNING,
@@ -82,9 +79,7 @@ public final class AgentRunState implements Serializable {
 
   // ===== Factory Methods =====
 
-  /**
-   * Creates a state for a run pending tool approval.
-   */
+  /** Creates a state for a run pending tool approval. */
   static AgentRunState pendingApproval(
       @NonNull String agentName,
       @NonNull AgentContext context,
@@ -93,13 +88,16 @@ public final class AgentRunState implements Serializable {
       @NonNull List<ToolExecution> toolExecutions,
       int currentTurn) {
     return new AgentRunState(
-        agentName, context, Status.PENDING_TOOL_APPROVAL, 
-        pendingToolCall, lastResponse, toolExecutions, currentTurn);
+        agentName,
+        context,
+        Status.PENDING_TOOL_APPROVAL,
+        pendingToolCall,
+        lastResponse,
+        toolExecutions,
+        currentTurn);
   }
 
-  /**
-   * Creates a state for a completed run.
-   */
+  /** Creates a state for a completed run. */
   static AgentRunState completed(
       @NonNull String agentName,
       @NonNull AgentContext context,
@@ -107,20 +105,13 @@ public final class AgentRunState implements Serializable {
       @NonNull List<ToolExecution> toolExecutions,
       int currentTurn) {
     return new AgentRunState(
-        agentName, context, Status.COMPLETED, 
-        null, lastResponse, toolExecutions, currentTurn);
+        agentName, context, Status.COMPLETED, null, lastResponse, toolExecutions, currentTurn);
   }
 
-  /**
-   * Creates a state for a failed run.
-   */
+  /** Creates a state for a failed run. */
   static AgentRunState failed(
-      @NonNull String agentName,
-      @NonNull AgentContext context,
-      int currentTurn) {
-    return new AgentRunState(
-        agentName, context, Status.FAILED, 
-        null, null, List.of(), currentTurn);
+      @NonNull String agentName, @NonNull AgentContext context, int currentTurn) {
+    return new AgentRunState(agentName, context, Status.FAILED, null, null, List.of(), currentTurn);
   }
 
   // ===== Approval Methods =====
@@ -143,7 +134,8 @@ public final class AgentRunState implements Serializable {
   /**
    * Rejects the pending tool call.
    *
-   * <p>Call this if the user denies the tool execution, then pass the state to {@code Agent.resume()}.
+   * <p>Call this if the user denies the tool execution, then pass the state to {@code
+   * Agent.resume()}.
    *
    * @throws IllegalStateException if not pending approval
    */

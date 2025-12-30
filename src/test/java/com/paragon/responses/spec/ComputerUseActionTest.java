@@ -7,9 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for Computer Use Action records: ClickAction, DragAction, TypeAction, WaitAction.
- */
+/** Tests for Computer Use Action records: ClickAction, DragAction, TypeAction, WaitAction. */
 class ComputerUseActionTest {
 
   @Nested

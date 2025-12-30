@@ -6,10 +6,11 @@ import org.jspecify.annotations.Nullable;
 /**
  * Exception thrown when the server encounters an error (HTTP 5xx).
  *
- * <p>Server errors are typically retryable. The built-in retry policy will
- * automatically retry on 500, 502, 503, and 504 status codes.
+ * <p>Server errors are typically retryable. The built-in retry policy will automatically retry on
+ * 500, 502, 503, and 504 status codes.
  *
  * <p>Example usage:
+ *
  * <pre>{@code
  * if (error instanceof ServerException e && e.isRetryable()) {
  *     // Log and let built-in retry handle it

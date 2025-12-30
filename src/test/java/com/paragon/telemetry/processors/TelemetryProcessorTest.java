@@ -2,26 +2,21 @@ package com.paragon.telemetry.processors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.paragon.telemetry.events.ResponseCompletedEvent;
+import com.paragon.telemetry.events.TelemetryEvent;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.paragon.telemetry.events.ResponseCompletedEvent;
-import com.paragon.telemetry.events.TelemetryEvent;
-
 /**
  * Comprehensive tests for TelemetryProcessor.
  *
- * <p>Tests cover:
- * - Async event processing
- * - Queue behavior
- * - Flush and shutdown lifecycle
- * - Error handling
+ * <p>Tests cover: - Async event processing - Queue behavior - Flush and shutdown lifecycle - Error
+ * handling
  */
 @DisplayName("TelemetryProcessor Tests")
 class TelemetryProcessorTest {
@@ -214,11 +209,12 @@ class TelemetryProcessorTest {
       TestProcessor processor = new TestProcessor("test");
 
       // Multiple shutdowns should not throw
-      assertDoesNotThrow(() -> {
-        processor.shutdown();
-        processor.shutdown();
-        processor.shutdown();
-      });
+      assertDoesNotThrow(
+          () -> {
+            processor.shutdown();
+            processor.shutdown();
+            processor.shutdown();
+          });
     }
   }
 
@@ -260,12 +256,7 @@ class TelemetryProcessorTest {
 
   private TelemetryEvent createTestEvent(String sessionId) {
     return ResponseCompletedEvent.create(
-        sessionId,
-        "trace-456",
-        "span-789",
-        System.currentTimeMillis() * 1_000_000L,
-        "test-model"
-    );
+        sessionId, "trace-456", "span-789", System.currentTimeMillis() * 1_000_000L, "test-model");
   }
 
   /** Basic test processor that counts processed events. */

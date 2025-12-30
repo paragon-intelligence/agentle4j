@@ -1,13 +1,10 @@
 package com.paragon.agents;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import com.paragon.responses.spec.Response;
 import com.paragon.responses.spec.ResponseInputItem;
+import java.util.List;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The result of an agent interaction, containing the final output and execution metadata.
@@ -157,11 +154,7 @@ public final class AgentResult {
    */
   public static @NonNull AgentResult error(
       @NonNull Throwable error, @NonNull AgentContext context, int turnsUsed) {
-    return new Builder()
-        .error(error)
-        .history(context.getHistory())
-        .turnsUsed(turnsUsed)
-        .build();
+    return new Builder().error(error).history(context.getHistory()).turnsUsed(turnsUsed).build();
   }
 
   /**
@@ -393,9 +386,7 @@ public final class AgentResult {
     }
   }
 
-  /**
-   * Exception thrown when a guardrail validation fails.
-   */
+  /** Exception thrown when a guardrail validation fails. */
   public static final class GuardrailException extends RuntimeException {
     public GuardrailException(String message) {
       super(message);

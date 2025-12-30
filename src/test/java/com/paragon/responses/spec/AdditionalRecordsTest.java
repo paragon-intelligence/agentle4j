@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for various spec records: ResponseError, PendingSafetyCheck, ReasoningSummaryText.
- */
+/** Tests for various spec records: ResponseError, PendingSafetyCheck, ReasoningSummaryText. */
 class AdditionalRecordsTest {
 
   @Nested
@@ -71,7 +69,8 @@ class AdditionalRecordsTest {
     @Test
     @DisplayName("can be created with all fields")
     void creationWithAll() {
-      PendingSafetyCheck check = new PendingSafetyCheck("check-123", "dangerous_action", "Review needed");
+      PendingSafetyCheck check =
+          new PendingSafetyCheck("check-123", "dangerous_action", "Review needed");
 
       assertEquals("check-123", check.id());
       assertEquals("dangerous_action", check.code());

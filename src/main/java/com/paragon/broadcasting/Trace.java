@@ -6,39 +6,29 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 public interface Trace {
-  @NonNull
-  String getId();
+  @NonNull String getId();
 
-  @NonNull
-  String getName();
+  @NonNull String getName();
 
   long getStartTimeMs();
 
   long getEndTimeMs();
 
-  @Nullable
-  String getUserId();
+  @Nullable String getUserId();
 
-  @Nullable
-  String getSessionId();
+  @Nullable String getSessionId();
 
-  @Nullable
-  String getVersion();
+  @Nullable String getVersion();
 
-  @Nullable
-  String getRelease();
+  @Nullable String getRelease();
 
-  @Nullable
-  String getEnvironment();
+  @Nullable String getEnvironment();
 
-  @NonNull
-  Map<String, Object> getMetadata();
+  @NonNull Map<String, Object> getMetadata();
 
-  @NonNull
-  List<String> getTags();
+  @NonNull List<String> getTags();
 
-  @NonNull
-  List<Observation> getObservations();
+  @NonNull List<Observation> getObservations();
 
   boolean isPublic();
 }

@@ -9,6 +9,7 @@ import org.jspecify.annotations.Nullable;
  * <p>This exception is not retryable—the tool implementation or arguments need to be fixed.
  *
  * <p>Example usage:
+ *
  * <pre>{@code
  * if (error instanceof ToolExecutionException e) {
  *     log.error("Tool {} failed: {}", e.toolName(), e.getMessage());

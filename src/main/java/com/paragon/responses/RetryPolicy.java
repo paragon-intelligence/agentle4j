@@ -48,8 +48,7 @@ public record RetryPolicy(
     @NonNull Set<Integer> retryableStatusCodes) {
 
   /** Default retryable status codes: 429 (rate limit), 500, 502, 503, 504 (server errors). */
-  public static final Set<Integer> DEFAULT_RETRYABLE_STATUS_CODES =
-      Set.of(429, 500, 502, 503, 504);
+  public static final Set<Integer> DEFAULT_RETRYABLE_STATUS_CODES = Set.of(429, 500, 502, 503, 504);
 
   public RetryPolicy {
     if (maxRetries < 0) {

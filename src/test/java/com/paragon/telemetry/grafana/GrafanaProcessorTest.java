@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,8 +11,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Tests for GrafanaProcessor builder and configuration.
  *
- * <p>Note: Integration tests that actually send telemetry require a Grafana Cloud account
- * and are not included here. These tests focus on builder configuration and accessors.
+ * <p>Note: Integration tests that actually send telemetry require a Grafana Cloud account and are
+ * not included here. These tests focus on builder configuration and accessors.
  */
 @DisplayName("GrafanaProcessor Tests")
 class GrafanaProcessorTest {
@@ -29,11 +28,12 @@ class GrafanaProcessorTest {
     @Test
     @DisplayName("builder creates processor with required fields")
     void builderCreatesProcessor() {
-      GrafanaProcessor processor = GrafanaProcessor.builder()
-          .baseUrl("https://otlp-gateway.grafana.net/otlp")
-          .instanceId("123456")
-          .apiToken("test-token")
-          .build();
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .build();
 
       assertNotNull(processor);
     }
@@ -43,12 +43,13 @@ class GrafanaProcessorTest {
     void builderSetsHttpClient() {
       OkHttpClient client = new OkHttpClient.Builder().build();
 
-      GrafanaProcessor processor = GrafanaProcessor.builder()
-          .httpClient(client)
-          .baseUrl("https://otlp-gateway.grafana.net/otlp")
-          .instanceId("123456")
-          .apiToken("test-token")
-          .build();
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .httpClient(client)
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .build();
 
       assertNotNull(processor);
     }
@@ -58,12 +59,13 @@ class GrafanaProcessorTest {
     void builderSetsObjectMapper() {
       ObjectMapper mapper = new ObjectMapper();
 
-      GrafanaProcessor processor = GrafanaProcessor.builder()
-          .objectMapper(mapper)
-          .baseUrl("https://otlp-gateway.grafana.net/otlp")
-          .instanceId("123456")
-          .apiToken("test-token")
-          .build();
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .objectMapper(mapper)
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .build();
 
       assertNotNull(processor);
     }
@@ -80,11 +82,12 @@ class GrafanaProcessorTest {
     @Test
     @DisplayName("traces enabled by default")
     void tracesEnabledByDefault() {
-      GrafanaProcessor processor = GrafanaProcessor.builder()
-          .baseUrl("https://otlp-gateway.grafana.net/otlp")
-          .instanceId("123456")
-          .apiToken("test-token")
-          .build();
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .build();
 
       assertTrue(processor.isTracesEnabled());
     }
@@ -92,11 +95,12 @@ class GrafanaProcessorTest {
     @Test
     @DisplayName("metrics disabled by default")
     void metricsDisabledByDefault() {
-      GrafanaProcessor processor = GrafanaProcessor.builder()
-          .baseUrl("https://otlp-gateway.grafana.net/otlp")
-          .instanceId("123456")
-          .apiToken("test-token")
-          .build();
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .build();
 
       assertFalse(processor.isMetricsEnabled());
     }
@@ -104,11 +108,12 @@ class GrafanaProcessorTest {
     @Test
     @DisplayName("logs disabled by default")
     void logsDisabledByDefault() {
-      GrafanaProcessor processor = GrafanaProcessor.builder()
-          .baseUrl("https://otlp-gateway.grafana.net/otlp")
-          .instanceId("123456")
-          .apiToken("test-token")
-          .build();
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .build();
 
       assertFalse(processor.isLogsEnabled());
     }
@@ -116,12 +121,13 @@ class GrafanaProcessorTest {
     @Test
     @DisplayName("can enable metrics")
     void canEnableMetrics() {
-      GrafanaProcessor processor = GrafanaProcessor.builder()
-          .baseUrl("https://otlp-gateway.grafana.net/otlp")
-          .instanceId("123456")
-          .apiToken("test-token")
-          .metricsEnabled(true)
-          .build();
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .metricsEnabled(true)
+              .build();
 
       assertTrue(processor.isMetricsEnabled());
     }
@@ -129,12 +135,13 @@ class GrafanaProcessorTest {
     @Test
     @DisplayName("can enable logs")
     void canEnableLogs() {
-      GrafanaProcessor processor = GrafanaProcessor.builder()
-          .baseUrl("https://otlp-gateway.grafana.net/otlp")
-          .instanceId("123456")
-          .apiToken("test-token")
-          .logsEnabled(true)
-          .build();
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .logsEnabled(true)
+              .build();
 
       assertTrue(processor.isLogsEnabled());
     }
@@ -142,12 +149,13 @@ class GrafanaProcessorTest {
     @Test
     @DisplayName("can disable traces")
     void canDisableTraces() {
-      GrafanaProcessor processor = GrafanaProcessor.builder()
-          .baseUrl("https://otlp-gateway.grafana.net/otlp")
-          .instanceId("123456")
-          .apiToken("test-token")
-          .tracesEnabled(false)
-          .build();
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .tracesEnabled(false)
+              .build();
 
       assertFalse(processor.isTracesEnabled());
     }
@@ -164,32 +172,33 @@ class GrafanaProcessorTest {
     @Test
     @DisplayName("throws on missing baseUrl")
     void throwsOnMissingBaseUrl() {
-      assertThrows(IllegalStateException.class, () ->
-          GrafanaProcessor.builder()
-              .instanceId("123456")
-              .apiToken("test-token")
-              .build());
+      assertThrows(
+          IllegalStateException.class,
+          () -> GrafanaProcessor.builder().instanceId("123456").apiToken("test-token").build());
     }
 
     @Test
     @DisplayName("throws on missing instanceId")
     void throwsOnMissingInstanceId() {
-      assertThrows(IllegalStateException.class, () ->
-          GrafanaProcessor.builder()
-              .baseUrl("https://otlp-gateway.grafana.net/otlp")
-              .apiToken("test-token")
-              .build());
+      assertThrows(
+          IllegalStateException.class,
+          () ->
+              GrafanaProcessor.builder()
+                  .baseUrl("https://otlp-gateway.grafana.net/otlp")
+                  .apiToken("test-token")
+                  .build());
     }
 
     @Test
     @DisplayName("throws on missing apiToken")
     void throwsOnMissingApiToken() {
-      assertThrows(IllegalStateException.class, () ->
-          GrafanaProcessor.builder()
-              .baseUrl("https://otlp-gateway.grafana.net/otlp")
-              .instanceId("123456")
-              .build());
+      assertThrows(
+          IllegalStateException.class,
+          () ->
+              GrafanaProcessor.builder()
+                  .baseUrl("https://otlp-gateway.grafana.net/otlp")
+                  .instanceId("123456")
+                  .build());
     }
   }
-
 }

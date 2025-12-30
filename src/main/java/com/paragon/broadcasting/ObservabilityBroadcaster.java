@@ -23,12 +23,10 @@ public interface ObservabilityBroadcaster {
    * @param traceContext The initial context (user, session, metadata, etc.)
    * @return A trace handle to pass to observations
    */
-  @NonNull
-  Trace startTrace(@NonNull String name, @NonNull TraceContext traceContext);
+  @NonNull Trace startTrace(@NonNull String name, @NonNull TraceContext traceContext);
 
   /** Retrieves an existing trace by ID. */
-  @Nullable
-  Trace getTrace(@NonNull String traceId);
+  @Nullable Trace getTrace(@NonNull String traceId);
 
   /** Ends an active trace with the final output and status. */
   void endTrace(@NonNull String traceId, @NonNull TraceEndOptions options);
@@ -44,8 +42,7 @@ public interface ObservabilityBroadcaster {
    * @param observationContext The observation-specific context
    * @return An observation handle
    */
-  @NonNull
-  Observation startObservation(
+  @NonNull Observation startObservation(
       @NonNull String traceId,
       @NonNull String name,
       @NonNull ObservationType type,
@@ -55,8 +52,7 @@ public interface ObservabilityBroadcaster {
    * Starts a nested observation under a parent observation. Allows hierarchical span structures for
    * agent graphs.
    */
-  @NonNull
-  Observation startObservation(
+  @NonNull Observation startObservation(
       @NonNull String traceId,
       @NonNull String parentObservationId,
       @NonNull String name,
@@ -67,8 +63,7 @@ public interface ObservabilityBroadcaster {
   void endObservation(@NonNull String observationId, @NonNull ObservationEndOptions options);
 
   /** Retrieves an existing observation by ID. */
-  @Nullable
-  Observation getObservation(@NonNull String observationId);
+  @Nullable Observation getObservation(@NonNull String observationId);
 
   // ============ ATTRIBUTES & METADATA ============
 
@@ -79,8 +74,7 @@ public interface ObservabilityBroadcaster {
   void setAttribute(@NonNull String observationId, @NonNull String key, @Nullable Object value);
 
   /** Sets multiple attributes at once. */
-  void setAttributes(
-      @NonNull String observationId, java.util.Map<String, Object> attributes);
+  void setAttributes(@NonNull String observationId, java.util.Map<String, Object> attributes);
 
   /**
    * Sets observation-level metadata (unstructured, searchable data). Nested keys are flattened for
@@ -131,8 +125,7 @@ public interface ObservabilityBroadcaster {
    *
    * <p>Maps to: gen_ai.request.*, llm.invocation_parameters.*
    */
-  void setModelParameters(
-      @NonNull String observationId, java.util.Map<String, Object> parameters);
+  void setModelParameters(@NonNull String observationId, java.util.Map<String, Object> parameters);
 
   /**
    * Records token usage for a generation (input, output, total). Only applies to observations of
@@ -261,8 +254,7 @@ public interface ObservabilityBroadcaster {
    *
    * <p>Example: text prompt, screenshot, audio file, etc.
    */
-  void logMultiModalInput(
-      @NonNull String observationId, java.util.List<MultiModalContent> content);
+  void logMultiModalInput(@NonNull String observationId, java.util.List<MultiModalContent> content);
 
   /**
    * Logs multi-modal output for an observation.
@@ -304,8 +296,7 @@ public interface ObservabilityBroadcaster {
   // ============ TRACE ANALYTICS ============
 
   /** Retrieves aggregated metrics for a trace (cost, latency, token counts, etc.). */
-  @NonNull
-  TraceMetrics getTraceMetrics(@NonNull String traceId);
+  @NonNull TraceMetrics getTraceMetrics(@NonNull String traceId);
 
   /** Retrieves all observations within a trace (for building agent graphs). */
   java.util.List<Observation> getTraceObservations(@NonNull String traceId);

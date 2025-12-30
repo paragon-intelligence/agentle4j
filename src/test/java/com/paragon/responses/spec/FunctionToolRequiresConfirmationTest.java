@@ -7,9 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for FunctionTool.requiresConfirmation() feature.
- */
+/** Tests for FunctionTool.requiresConfirmation() feature. */
 @DisplayName("FunctionTool requiresConfirmation")
 class FunctionToolRequiresConfirmationTest {
 
@@ -76,9 +74,8 @@ class FunctionToolRequiresConfirmationTest {
     @Test
     @DisplayName("returns tool by name")
     void get_returnsToolByName() {
-      FunctionToolStore store = FunctionToolStore.create()
-          .add(new SafeTool())
-          .add(new DangerousTool());
+      FunctionToolStore store =
+          FunctionToolStore.create().add(new SafeTool()).add(new DangerousTool());
 
       FunctionTool<?> safe = store.get("safe_tool");
       FunctionTool<?> dangerous = store.get("dangerous_tool");
@@ -92,8 +89,7 @@ class FunctionToolRequiresConfirmationTest {
     @Test
     @DisplayName("returns null for unknown tool")
     void get_returnsNullForUnknownTool() {
-      FunctionToolStore store = FunctionToolStore.create()
-          .add(new SafeTool());
+      FunctionToolStore store = FunctionToolStore.create().add(new SafeTool());
 
       assertNull(store.get("unknown"));
     }
@@ -101,9 +97,8 @@ class FunctionToolRequiresConfirmationTest {
     @Test
     @DisplayName("can check requiresConfirmation via store")
     void canCheckRequiresConfirmationViaStore() {
-      FunctionToolStore store = FunctionToolStore.create()
-          .add(new SafeTool())
-          .add(new DangerousTool());
+      FunctionToolStore store =
+          FunctionToolStore.create().add(new SafeTool()).add(new DangerousTool());
 
       FunctionTool<?> safe = store.get("safe_tool");
       FunctionTool<?> dangerous = store.get("dangerous_tool");

@@ -1,24 +1,24 @@
 package com.paragon.agents;
 
+import com.paragon.responses.annotations.FunctionMetadata;
+import com.paragon.responses.spec.FunctionTool;
+import com.paragon.responses.spec.FunctionToolCallOutput;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-import com.paragon.responses.annotations.FunctionMetadata;
-import com.paragon.responses.spec.FunctionTool;
-import com.paragon.responses.spec.FunctionToolCallOutput;
-
 /**
  * Memory exposed as FunctionTools for agent use.
  *
- * <p>This class provides 4 tools for memory operations. The userId is set
- * securely by the developer (not by the LLM) to prevent prompt injection attacks.
+ * <p>This class provides 4 tools for memory operations. The userId is set securely by the developer
+ * (not by the LLM) to prevent prompt injection attacks.
  *
  * <p>Usage:
+ *
  * <pre>{@code
  * Memory storage = InMemoryMemory.create();
- * 
+ *
  * Agent agent = Agent.builder()
  *     .addMemoryTools(storage)  // Adds all 4 memory tools
  *     .build();
@@ -42,23 +42,16 @@ public final class MemoryTool {
         new AddMemoryTool(memory),
         new RetrieveMemoriesTool(memory),
         new UpdateMemoryTool(memory),
-        new DeleteMemoryTool(memory)
-    );
+        new DeleteMemoryTool(memory));
   }
 
   // ===== Request Records =====
 
   public record AddMemoryRequest(@NonNull String content) {}
 
-  public record RetrieveMemoriesRequest(
-      @NonNull String query,
-      @Nullable Integer limit
-  ) {}
+  public record RetrieveMemoriesRequest(@NonNull String query, @Nullable Integer limit) {}
 
-  public record UpdateMemoryRequest(
-      @NonNull String id,
-      @NonNull String content
-  ) {}
+  public record UpdateMemoryRequest(@NonNull String id, @NonNull String content) {}
 
   public record DeleteMemoryRequest(@NonNull String id) {}
 
@@ -66,9 +59,9 @@ public final class MemoryTool {
 
   @FunctionMetadata(
       name = "add_memory",
-      description = "Store a new memory for the current user. Use this to remember important " +
-          "information, preferences, or facts the user has shared."
-  )
+      description =
+          "Store a new memory for the current user. Use this to remember important "
+              + "information, preferences, or facts the user has shared.")
   public static final class AddMemoryTool extends FunctionTool<AddMemoryRequest> {
     private final Memory memory;
     private String userId; // Injected by Agent per-call
@@ -97,9 +90,9 @@ public final class MemoryTool {
 
   @FunctionMetadata(
       name = "retrieve_memories",
-      description = "Search and retrieve relevant memories for the current user. " +
-          "Use this to recall information from previous conversations."
-  )
+      description =
+          "Search and retrieve relevant memories for the current user. "
+              + "Use this to recall information from previous conversations.")
   public static final class RetrieveMemoriesTool extends FunctionTool<RetrieveMemoriesRequest> {
     private final Memory memory;
     private String userId;
@@ -135,9 +128,9 @@ public final class MemoryTool {
 
   @FunctionMetadata(
       name = "update_memory",
-      description = "Update an existing memory by its ID. Use this to correct or update " +
-          "previously stored information."
-  )
+      description =
+          "Update an existing memory by its ID. Use this to correct or update "
+              + "previously stored information.")
   public static final class UpdateMemoryTool extends FunctionTool<UpdateMemoryRequest> {
     private final Memory memory;
     private String userId;
@@ -170,8 +163,7 @@ public final class MemoryTool {
 
   @FunctionMetadata(
       name = "delete_memory",
-      description = "Delete a memory by its ID. Use this when the user asks to forget something."
-  )
+      description = "Delete a memory by its ID. Use this when the user asks to forget something.")
   public static final class DeleteMemoryTool extends FunctionTool<DeleteMemoryRequest> {
     private final Memory memory;
     private String userId;

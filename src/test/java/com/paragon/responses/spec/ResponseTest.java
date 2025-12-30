@@ -3,10 +3,7 @@ package com.paragon.responses.spec;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.List;
-import java.util.Map;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,11 +12,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Comprehensive tests for Response class.
  *
- * <p>Tests cover:
- * - Accessors for all fields
- * - outputText aggregation
- * - parse method for structured output
- * - Edge cases
+ * <p>Tests cover: - Accessors for all fields - outputText aggregation - parse method for structured
+ * output - Edge cases
  */
 @DisplayName("Response Tests")
 class ResponseTest {
@@ -164,7 +158,7 @@ class ResponseTest {
         null, // conversation
         System.currentTimeMillis() / 1000, // createdAt
         null, // error
-        id,   // id
+        id, // id
         null, // incompleteDetails
         null, // instructions (ResponseInputItem)
         null, // maxOutputTokens
@@ -187,36 +181,78 @@ class ResponseTest {
         null, // tools
         null, // topLogprobs
         null, // topP
-        null  // truncation
-    );
+        null // truncation
+        );
   }
 
   private Response createMinimalResponseWithEmptyOutput() {
     return new Response(
-        null, null, System.currentTimeMillis() / 1000, null, "resp_123",
-        null, null, null, null, null, "gpt-4o", ResponseObject.RESPONSE,
-        List.of(), null, null, null, null, null, null, null,
-        ResponseGenerationStatus.COMPLETED, null, null, null, null, null, null, null
-    );
+        null,
+        null,
+        System.currentTimeMillis() / 1000,
+        null,
+        "resp_123",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "gpt-4o",
+        ResponseObject.RESPONSE,
+        List.of(),
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        ResponseGenerationStatus.COMPLETED,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 
   private Response createResponseWithOutput(String text) {
     return new Response(
-        null, null, System.currentTimeMillis() / 1000, null, "resp_123",
-        null, null, null, null, null, "gpt-4o", ResponseObject.RESPONSE,
-        List.of(createOutputMessage(text)), null, null, null, null, null, null, null,
-        ResponseGenerationStatus.COMPLETED, null, null, null, null, null, null, null
-    );
+        null,
+        null,
+        System.currentTimeMillis() / 1000,
+        null,
+        "resp_123",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "gpt-4o",
+        ResponseObject.RESPONSE,
+        List.of(createOutputMessage(text)),
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        ResponseGenerationStatus.COMPLETED,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 
   private ResponseOutput createOutputMessage(String text) {
     // OutputMessage constructor: content, id, status, parsed
     return new OutputMessage<Void>(
-        List.of(Text.valueOf(text)),
-        "msg_123",
-        InputMessageStatus.COMPLETED,
-        null
-    );
+        List.of(Text.valueOf(text)), "msg_123", InputMessageStatus.COMPLETED, null);
   }
 
   public record Person(String name, int age) {}

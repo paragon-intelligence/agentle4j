@@ -8,9 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for {@link Coordinate} record and its Flyweight Factory.
- */
+/** Tests for {@link Coordinate} record and its Flyweight Factory. */
 class CoordinateTest {
 
   @BeforeEach
@@ -102,7 +100,8 @@ class CoordinateTest {
       Coordinate coord1 = Coordinate.Factory.getCoordinate(10, 20);
       Coordinate coord2 = Coordinate.Factory.getCoordinate(10, 20);
 
-      assertSame(coord1, coord2, "Factory should return the same instance for identical coordinates");
+      assertSame(
+          coord1, coord2, "Factory should return the same instance for identical coordinates");
     }
 
     @Test

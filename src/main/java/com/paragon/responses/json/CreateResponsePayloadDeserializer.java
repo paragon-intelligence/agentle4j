@@ -30,48 +30,46 @@ public class CreateResponsePayloadDeserializer extends JsonDeserializer<CreateRe
     // Standard fields
     @Nullable Boolean background = getBoolean(node, "background");
     @Nullable String conversation = getString(node, "conversation");
-    @Nullable
-    List<OutputDataInclude> include = getList(mapper, node, "include", new TypeReference<>() {});
-    @Nullable
-    List<ResponseInputItem> input = getListWithType(mapper, node, "input", ResponseInputItem.class);
+    @Nullable List<OutputDataInclude> include =
+        getList(mapper, node, "include", new TypeReference<>() {});
+    @Nullable List<ResponseInputItem> input =
+        getListWithType(mapper, node, "input", ResponseInputItem.class);
     @Nullable String instructions = getString(node, "instructions");
     @Nullable Integer maxOutputTokens = getInteger(node, "max_output_tokens");
     @Nullable Integer maxToolCalls = getInteger(node, "max_tool_calls");
-    @Nullable
-    Map<String, String> metadata = getObject(mapper, node, "metadata", new TypeReference<>() {});
+    @Nullable Map<String, String> metadata =
+        getObject(mapper, node, "metadata", new TypeReference<>() {});
     @Nullable String model = getString(node, "model");
     @Nullable Boolean parallelToolCalls = getBoolean(node, "parallel_tool_calls");
     @Nullable PromptTemplate prompt = getObject(mapper, node, "prompt", new TypeReference<>() {});
     @Nullable String promptCacheKey = getString(node, "prompt_cache_key");
     @Nullable String promptCacheRetention = getString(node, "prompt_cache_retention");
-    @Nullable
-    ReasoningConfig reasoning = getObject(mapper, node, "reasoning", new TypeReference<>() {});
+    @Nullable ReasoningConfig reasoning =
+        getObject(mapper, node, "reasoning", new TypeReference<>() {});
     @Nullable String safetyIdentifier = getString(node, "safety_identifier");
-    @Nullable
-    ServiceTierType serviceTier = getObject(mapper, node, "service_tier", new TypeReference<>() {});
+    @Nullable ServiceTierType serviceTier =
+        getObject(mapper, node, "service_tier", new TypeReference<>() {});
     @Nullable Boolean store = getBoolean(node, "store");
     @Nullable Boolean stream = getBoolean(node, "stream");
-    @Nullable
-    StreamOptions streamOptions =
+    @Nullable StreamOptions streamOptions =
         getObject(mapper, node, "stream_options", new TypeReference<>() {});
     @Nullable Double temperature = getDouble(node, "temperature");
-    @Nullable
-    TextConfigurationOptions text = getObject(mapper, node, "text", new TypeReference<>() {});
+    @Nullable TextConfigurationOptions text =
+        getObject(mapper, node, "text", new TypeReference<>() {});
     @Nullable ToolChoice toolChoice = getToolChoice(mapper, node);
     @Nullable List<Tool> tools = getList(mapper, node, "tools", new TypeReference<>() {});
     @Nullable Integer topLogprobs = getInteger(node, "top_logprobs");
     @Nullable Number topP = getNumber(node, "top_p");
-    @Nullable
-    Truncation truncation = getObject(mapper, node, "truncation", new TypeReference<>() {});
+    @Nullable Truncation truncation =
+        getObject(mapper, node, "truncation", new TypeReference<>() {});
 
     // OpenRouter custom payload - unwrapped fields
-    @Nullable
-    List<OpenRouterPlugin> plugins = getList(mapper, node, "plugins", new TypeReference<>() {});
-    @Nullable
-    OpenRouterProviderConfig providerConfig =
+    @Nullable List<OpenRouterPlugin> plugins =
+        getList(mapper, node, "plugins", new TypeReference<>() {});
+    @Nullable OpenRouterProviderConfig providerConfig =
         getObject(mapper, node, "provider_config", new TypeReference<>() {});
-    @Nullable
-    OpenRouterRouteStrategy route = getObject(mapper, node, "route", new TypeReference<>() {});
+    @Nullable OpenRouterRouteStrategy route =
+        getObject(mapper, node, "route", new TypeReference<>() {});
     @Nullable String user = getString(node, "user");
     @Nullable String sessionId = getString(node, "session_id");
 

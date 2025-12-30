@@ -13,8 +13,7 @@ public interface MemoryStore {
    * @param value The value to store
    * @return A message indicating the result of the operation
    */
-  @NonNull
-  String store(@NonNull String key, @NonNull String value);
+  @NonNull String store(@NonNull String key, @NonNull String value);
 
   /**
    * Retrieves a value associated with a key.
@@ -22,8 +21,7 @@ public interface MemoryStore {
    * @param key The key to retrieve
    * @return The value, or null if not found
    */
-  @Nullable
-  String retrieve(@NonNull String key);
+  @Nullable String retrieve(@NonNull String key);
 
   /**
    * Deletes a value associated with a key.
@@ -31,6 +29,5 @@ public interface MemoryStore {
    * @param key The key to delete
    * @return A message indicating the result of the operation
    */
-  @NonNull
-  String delete(@NonNull String key);
+  @NonNull String delete(@NonNull String key);
 }

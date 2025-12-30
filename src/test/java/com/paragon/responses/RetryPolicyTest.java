@@ -93,8 +93,7 @@ class RetryPolicyTest {
   void constructor_throwsOnNullStatusCodes() {
     assertThrows(
         NullPointerException.class,
-        () ->
-            new RetryPolicy(3, Duration.ofSeconds(1), Duration.ofSeconds(30), 2.0, null));
+        () -> new RetryPolicy(3, Duration.ofSeconds(1), Duration.ofSeconds(30), 2.0, null));
   }
 
   @Test
@@ -169,8 +168,7 @@ class RetryPolicyTest {
 
   @Test
   void isRetryable_usesCustomStatusCodes() {
-    RetryPolicy policy =
-        RetryPolicy.builder().retryableStatusCodes(Set.of(418, 503)).build();
+    RetryPolicy policy = RetryPolicy.builder().retryableStatusCodes(Set.of(418, 503)).build();
 
     assertTrue(policy.isRetryable(418));
     assertTrue(policy.isRetryable(503));

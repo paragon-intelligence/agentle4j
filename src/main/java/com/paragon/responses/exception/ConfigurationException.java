@@ -9,6 +9,7 @@ import org.jspecify.annotations.Nullable;
  * <p>This exception is thrown during builder validation and is not retryable.
  *
  * <p>Example usage:
+ *
  * <pre>{@code
  * try {
  *     Responder responder = Responder.builder()
@@ -32,9 +33,7 @@ public class ConfigurationException extends AgentleException {
    * @param suggestion optional resolution hint
    */
   public ConfigurationException(
-      @NonNull String message,
-      @Nullable String configKey,
-      @Nullable String suggestion) {
+      @NonNull String message, @Nullable String configKey, @Nullable String suggestion) {
     super(ErrorCode.MISSING_CONFIGURATION, message, suggestion, false);
     this.configKey = configKey;
   }

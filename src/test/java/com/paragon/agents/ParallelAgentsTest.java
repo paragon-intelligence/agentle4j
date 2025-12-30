@@ -2,38 +2,23 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.paragon.responses.Responder;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.paragon.responses.Responder;
-import com.paragon.responses.spec.CreateResponsePayload;
-import com.paragon.responses.spec.Message;
-import com.paragon.responses.spec.Response;
-import com.paragon.responses.spec.Text;
-
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-
 /**
  * Comprehensive tests for ParallelAgents.
  *
- * <p>Tests cover:
- * - Factory methods (of)
- * - Parallel execution (run)
- * - First-to-complete racing (runFirst)
- * - Fan-out/fan-in synthesis (runAndSynthesize)
- * - Context isolation
- * - Error handling
- * - Async behavior
+ * <p>Tests cover: - Factory methods (of) - Parallel execution (run) - First-to-complete racing
+ * (runFirst) - Fan-out/fan-in synthesis (runAndSynthesize) - Context isolation - Error handling -
+ * Async behavior
  */
 @DisplayName("ParallelAgents")
 class ParallelAgentsTest {
@@ -46,10 +31,8 @@ class ParallelAgentsTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
 
-    responder = Responder.builder()
-        .baseUrl(mockWebServer.url("/v1/responses"))
-        .apiKey("test-key")
-        .build();
+    responder =
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   void tearDown() throws Exception {
@@ -103,7 +86,8 @@ class ParallelAgentsTest {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
-      assertThrows(UnsupportedOperationException.class, 
+      assertThrows(
+          UnsupportedOperationException.class,
           () -> orchestrator.agents().add(createTestAgent("New")));
     }
   }
@@ -131,7 +115,7 @@ class ParallelAgentsTest {
       Agent agent1 = createTestAgent("First");
       Agent agent2 = createTestAgent("Second");
       ParallelAgents orchestrator = ParallelAgents.of(agent1, agent2);
-      
+
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
 
@@ -160,7 +144,7 @@ class ParallelAgentsTest {
       Agent agent1 = createTestAgent("Fast");
       Agent agent2 = createTestAgent("Slow");
       ParallelAgents orchestrator = ParallelAgents.of(agent1, agent2);
-      
+
       enqueueSuccessResponse("First!");
       enqueueSuccessResponse("Second!");
 
@@ -191,7 +175,7 @@ class ParallelAgentsTest {
       Agent worker = createTestAgent("Worker");
       Agent synthesizer = createTestAgent("Synthesizer");
       ParallelAgents orchestrator = ParallelAgents.of(worker);
-      
+
       enqueueSuccessResponse("Worker output");
       enqueueSuccessResponse("Synthesized result");
 
@@ -208,8 +192,8 @@ class ParallelAgentsTest {
       Agent synthesizer = createTestAgent("Synthesizer");
       ParallelAgents orchestrator = ParallelAgents.of(worker);
 
-      assertThrows(NullPointerException.class, 
-          () -> orchestrator.runAndSynthesize(null, synthesizer));
+      assertThrows(
+          NullPointerException.class, () -> orchestrator.runAndSynthesize(null, synthesizer));
     }
 
     @Test
@@ -218,8 +202,7 @@ class ParallelAgentsTest {
       Agent worker = createTestAgent("Worker");
       ParallelAgents orchestrator = ParallelAgents.of(worker);
 
-      assertThrows(NullPointerException.class, 
-          () -> orchestrator.runAndSynthesize("Task", null));
+      assertThrows(NullPointerException.class, () -> orchestrator.runAndSynthesize("Task", null));
     }
   }
 
@@ -273,7 +256,8 @@ class ParallelAgentsTest {
   }
 
   private void enqueueSuccessResponse(String text) {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -299,11 +283,13 @@ class ParallelAgentsTest {
             "total_tokens": 15
           }
         }
-        """.formatted(text);
+        """
+            .formatted(text);
 
-    mockWebServer.enqueue(new MockResponse()
-        .setResponseCode(200)
-        .setBody(json)
-        .addHeader("Content-Type", "application/json"));
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 }

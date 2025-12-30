@@ -9,6 +9,7 @@ import org.jspecify.annotations.Nullable;
  * <p>This exception is not retryable—the API key or credentials must be fixed.
  *
  * <p>Example usage:
+ *
  * <pre>{@code
  * if (error instanceof AuthenticationException e) {
  *     log.error("Auth failed: {}", e.suggestion());

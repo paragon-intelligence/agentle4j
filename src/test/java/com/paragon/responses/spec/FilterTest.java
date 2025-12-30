@@ -7,9 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for filter-related records: ComparisonFilter, CompoundFilter, and ComparisonFilterType.
- */
+/** Tests for filter-related records: ComparisonFilter, CompoundFilter, and ComparisonFilterType. */
 class FilterTest {
 
   @Nested

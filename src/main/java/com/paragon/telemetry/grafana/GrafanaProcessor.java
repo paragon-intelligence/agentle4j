@@ -219,7 +219,12 @@ public class GrafanaProcessor extends TelemetryProcessor {
         }
         logRecord =
             OtelLogRecord.error(
-                "Agent " + agentFailed.agentName() + " failed in " + agentFailed.phase() + ": " + agentFailed.errorMessage(),
+                "Agent "
+                    + agentFailed.agentName()
+                    + " failed in "
+                    + agentFailed.phase()
+                    + ": "
+                    + agentFailed.errorMessage(),
                 attributes,
                 agentFailed.traceId(),
                 agentFailed.spanId());
@@ -297,7 +302,7 @@ public class GrafanaProcessor extends TelemetryProcessor {
       case AgentFailedEvent agentFailed -> {
         spanBuilder
             .name("agentle.agent." + agentFailed.agentName())
-            .startTimeNanos(agentFailed.timestampNanos() - 1_000_000_000L)  // Estimate 1s earlier
+            .startTimeNanos(agentFailed.timestampNanos() - 1_000_000_000L) // Estimate 1s earlier
             .endTimeNanos(agentFailed.timestampNanos())
             .status(OtelStatus.error(agentFailed.errorMessage()));
 

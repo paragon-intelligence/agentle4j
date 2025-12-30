@@ -4,9 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.List;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,11 +13,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Comprehensive tests for OpenTelemetry DTOs.
  *
- * <p>Tests cover:
- * - OtelAttribute creation and factory methods
- * - OtelSpan builder and serialization
- * - OtelStatus, OtelResource, OtelScope
- * - JSON serialization compatibility
+ * <p>Tests cover: - OtelAttribute creation and factory methods - OtelSpan builder and serialization
+ * - OtelStatus, OtelResource, OtelScope - JSON serialization compatibility
  */
 @DisplayName("OpenTelemetry DTOs Tests")
 class OtelDtoTest {
@@ -110,12 +105,13 @@ class OtelDtoTest {
     @Test
     @DisplayName("builder creates span with required fields")
     void builder_createsSpan() {
-      OtelSpan span = OtelSpan.builder()
-          .traceId("abc123")
-          .spanId("span456")
-          .name("test-operation")
-          .startTimeNanos(System.nanoTime())
-          .build();
+      OtelSpan span =
+          OtelSpan.builder()
+              .traceId("abc123")
+              .spanId("span456")
+              .name("test-operation")
+              .startTimeNanos(System.nanoTime())
+              .build();
 
       assertEquals("abc123", span.traceId());
       assertEquals("span456", span.spanId());
@@ -125,16 +121,17 @@ class OtelDtoTest {
     @Test
     @DisplayName("builder sets optional fields")
     void builder_setsOptionalFields() {
-      OtelSpan span = OtelSpan.builder()
-          .traceId("abc123")
-          .spanId("span456")
-          .parentSpanId("parent789")
-          .name("test-operation")
-          .clientKind()
-          .startTimeNanos(1000L)
-          .endTimeNanos(2000L)
-          .status(OtelStatus.ok())
-          .build();
+      OtelSpan span =
+          OtelSpan.builder()
+              .traceId("abc123")
+              .spanId("span456")
+              .parentSpanId("parent789")
+              .name("test-operation")
+              .clientKind()
+              .startTimeNanos(1000L)
+              .endTimeNanos(2000L)
+              .status(OtelStatus.ok())
+              .build();
 
       assertEquals("parent789", span.parentSpanId());
       assertEquals(OtelSpan.SPAN_KIND_CLIENT, span.kind());
@@ -146,16 +143,17 @@ class OtelDtoTest {
     @Test
     @DisplayName("builder sets attributes")
     void builder_setsAttributes() {
-      OtelSpan span = OtelSpan.builder()
-          .traceId("abc123")
-          .spanId("span456")
-          .name("test")
-          .startTimeNanos(1000L)
-          .attributes(List.of(
-              OtelAttribute.ofString("gen_ai.system", "openai"),
-              OtelAttribute.ofString("gen_ai.request.model", "gpt-4")
-          ))
-          .build();
+      OtelSpan span =
+          OtelSpan.builder()
+              .traceId("abc123")
+              .spanId("span456")
+              .name("test")
+              .startTimeNanos(1000L)
+              .attributes(
+                  List.of(
+                      OtelAttribute.ofString("gen_ai.system", "openai"),
+                      OtelAttribute.ofString("gen_ai.request.model", "gpt-4")))
+              .build();
 
       assertNotNull(span.attributes());
       assertEquals(2, span.attributes().size());
@@ -175,12 +173,13 @@ class OtelDtoTest {
     @Test
     @DisplayName("serializes to JSON correctly")
     void serializesToJson() throws JsonProcessingException {
-      OtelSpan span = OtelSpan.builder()
-          .traceId("trace123")
-          .spanId("span456")
-          .name("my-span")
-          .startTimeNanos(1234567890L)
-          .build();
+      OtelSpan span =
+          OtelSpan.builder()
+              .traceId("trace123")
+              .spanId("span456")
+              .name("my-span")
+              .startTimeNanos(1234567890L)
+              .build();
 
       String json = objectMapper.writeValueAsString(span);
 
@@ -235,10 +234,11 @@ class OtelDtoTest {
     @Test
     @DisplayName("creates resource with attributes")
     void createsResourceWithAttributes() {
-      OtelResource resource = new OtelResource(List.of(
-          OtelAttribute.ofString("service.name", "my-service"),
-          OtelAttribute.ofString("service.version", "1.0.0")
-      ));
+      OtelResource resource =
+          new OtelResource(
+              List.of(
+                  OtelAttribute.ofString("service.name", "my-service"),
+                  OtelAttribute.ofString("service.version", "1.0.0")));
 
       assertNotNull(resource.attributes());
       assertEquals(2, resource.attributes().size());
@@ -247,9 +247,8 @@ class OtelDtoTest {
     @Test
     @DisplayName("serializes to JSON correctly")
     void serializesToJson() throws JsonProcessingException {
-      OtelResource resource = new OtelResource(List.of(
-          OtelAttribute.ofString("service.name", "test-service")
-      ));
+      OtelResource resource =
+          new OtelResource(List.of(OtelAttribute.ofString("service.name", "test-service")));
 
       String json = objectMapper.writeValueAsString(resource);
 

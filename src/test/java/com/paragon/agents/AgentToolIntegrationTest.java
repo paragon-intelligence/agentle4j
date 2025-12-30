@@ -2,14 +2,6 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.IOException;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.annotations.FunctionMetadata;
@@ -18,21 +10,22 @@ import com.paragon.responses.spec.FunctionTool;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.FunctionToolFactory;
 import com.paragon.responses.spec.FunctionToolStore;
-
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
+import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration tests for Agent with function tools.
  *
- * <p>Tests cover:
- * - Tool registration and retrieval
- * - Tool call execution
- * - Tool results handling
- * - Tool errors
+ * <p>Tests cover: - Tool registration and retrieval - Tool call execution - Tool results handling -
+ * Tool errors
  */
 @DisplayName("Agent Tool Integration Tests")
 class AgentToolIntegrationTest {
@@ -48,11 +41,8 @@ class AgentToolIntegrationTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
 
-    responder = Responder.builder()
-        .openRouter()
-        .apiKey("test-key")
-        .baseUrl(mockWebServer.url("/"))
-        .build();
+    responder =
+        Responder.builder().openRouter().apiKey("test-key").baseUrl(mockWebServer.url("/")).build();
 
     objectMapper = new ObjectMapper();
     toolFactory = FunctionToolFactory.withProducer(new JacksonJsonSchemaProducer(objectMapper));
@@ -77,13 +67,14 @@ class AgentToolIntegrationTest {
     void agentWithTool_createdSuccessfully() {
       FunctionTool<AddParams> addTool = toolFactory.create(AddTool.class);
 
-      Agent agent = Agent.builder()
-          .name("Calculator")
-          .instructions("You are a calculator.")
-          .model("test-model")
-          .responder(responder)
-          .addTool(addTool)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("Calculator")
+              .instructions("You are a calculator.")
+              .model("test-model")
+              .responder(responder)
+              .addTool(addTool)
+              .build();
 
       assertNotNull(agent);
       assertNotNull(agent.toolStore());
@@ -95,14 +86,15 @@ class AgentToolIntegrationTest {
       FunctionTool<AddParams> addTool = toolFactory.create(AddTool.class);
       FunctionTool<MultiplyParams> multiplyTool = toolFactory.create(MultiplyTool.class);
 
-      Agent agent = Agent.builder()
-          .name("Calculator")
-          .instructions("You are a calculator.")
-          .model("test-model")
-          .responder(responder)
-          .addTool(addTool)
-          .addTool(multiplyTool)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("Calculator")
+              .instructions("You are a calculator.")
+              .model("test-model")
+              .responder(responder)
+              .addTool(addTool)
+              .addTool(multiplyTool)
+              .build();
 
       assertNotNull(agent.toolStore());
     }
@@ -120,14 +112,15 @@ class AgentToolIntegrationTest {
     @DisplayName("agent responds without tool call")
     void agent_respondsWithoutToolCall() {
       FunctionTool<AddParams> addTool = toolFactory.create(AddTool.class);
-      
-      Agent agent = Agent.builder()
-          .name("Calculator")
-          .instructions("You are a calculator. Only use tools when math is needed.")
-          .model("test-model")
-          .responder(responder)
-          .addTool(addTool)
-          .build();
+
+      Agent agent =
+          Agent.builder()
+              .name("Calculator")
+              .instructions("You are a calculator. Only use tools when math is needed.")
+              .model("test-model")
+              .responder(responder)
+              .addTool(addTool)
+              .build();
 
       enqueueSuccessResponse("Hello! I'm a calculator. How can I help?");
 
@@ -142,14 +135,15 @@ class AgentToolIntegrationTest {
     void agent_executesToolWhenCalled() {
       FunctionTool<AddParams> addTool = toolFactory.create(AddTool.class);
       toolStore.add(addTool);
-      
-      Agent agent = Agent.builder()
-          .name("Calculator")
-          .instructions("You are a calculator.")
-          .model("test-model")
-          .responder(responder)
-          .addTool(addTool)
-          .build();
+
+      Agent agent =
+          Agent.builder()
+              .name("Calculator")
+              .instructions("You are a calculator.")
+              .model("test-model")
+              .responder(responder)
+              .addTool(addTool)
+              .build();
 
       // First response: LLM wants to call the tool
       enqueueToolCallResponse("add", "{\"a\": 2, \"b\": 3}");
@@ -175,14 +169,15 @@ class AgentToolIntegrationTest {
     @DisplayName("tool executions are tracked in result")
     void toolExecutions_trackedInResult() {
       FunctionTool<AddParams> addTool = toolFactory.create(AddTool.class);
-      
-      Agent agent = Agent.builder()
-          .name("Calculator")
-          .instructions("You are a calculator.")
-          .model("test-model")
-          .responder(responder)
-          .addTool(addTool)
-          .build();
+
+      Agent agent =
+          Agent.builder()
+              .name("Calculator")
+              .instructions("You are a calculator.")
+              .model("test-model")
+              .responder(responder)
+              .addTool(addTool)
+              .build();
 
       enqueueToolCallResponse("add", "{\"a\": 1, \"b\": 2}");
       enqueueSuccessResponse("The answer is 3.");
@@ -199,7 +194,8 @@ class AgentToolIntegrationTest {
   // ═══════════════════════════════════════════════════════════════════════════
 
   private void enqueueSuccessResponse(String text) {
-    String responseJson = """
+    String responseJson =
+        """
         {
           "id": "resp_%d",
           "object": "response",
@@ -226,16 +222,19 @@ class AgentToolIntegrationTest {
             "total_tokens": 30
           }
         }
-        """.formatted(System.nanoTime(), text);
+        """
+            .formatted(System.nanoTime(), text);
 
-    mockWebServer.enqueue(new MockResponse()
-        .setBody(responseJson)
-        .setHeader("Content-Type", "application/json")
-        .setResponseCode(200));
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setBody(responseJson)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
   }
 
   private void enqueueToolCallResponse(String toolName, String arguments) {
-    String responseJson = """
+    String responseJson =
+        """
         {
           "id": "resp_%d",
           "object": "response",
@@ -257,12 +256,14 @@ class AgentToolIntegrationTest {
             "total_tokens": 30
           }
         }
-        """.formatted(System.nanoTime(), toolName, arguments.replace("\"", "\\\""));
+        """
+            .formatted(System.nanoTime(), toolName, arguments.replace("\"", "\\\""));
 
-    mockWebServer.enqueue(new MockResponse()
-        .setBody(responseJson)
-        .setHeader("Content-Type", "application/json")
-        .setResponseCode(200));
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setBody(responseJson)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -270,6 +271,7 @@ class AgentToolIntegrationTest {
   // ═══════════════════════════════════════════════════════════════════════════
 
   public record AddParams(int a, int b) {}
+
   public record MultiplyParams(int a, int b) {}
 
   @FunctionMetadata(name = "add", description = "Adds two numbers")

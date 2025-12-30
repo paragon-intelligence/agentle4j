@@ -7,10 +7,10 @@ import org.jspecify.annotations.Nullable;
 /**
  * Exception thrown when rate limited by the API (HTTP 429).
  *
- * <p>This exception is always retryable. Use {@link #retryAfter()} to determine
- * when to retry.
+ * <p>This exception is always retryable. Use {@link #retryAfter()} to determine when to retry.
  *
  * <p>Example usage:
+ *
  * <pre>{@code
  * if (error instanceof RateLimitException e) {
  *     Duration wait = e.retryAfter();
@@ -44,7 +44,8 @@ public class RateLimitException extends ApiException {
         message,
         requestId,
         responseBody,
-        "Wait " + (retryAfter != null ? retryAfter.toSeconds() + " seconds" : "a moment")
+        "Wait "
+            + (retryAfter != null ? retryAfter.toSeconds() + " seconds" : "a moment")
             + " before retrying",
         true);
     this.retryAfter = retryAfter;

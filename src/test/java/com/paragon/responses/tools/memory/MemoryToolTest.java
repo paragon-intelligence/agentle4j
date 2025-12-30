@@ -4,17 +4,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.FunctionToolCallOutputStatus;
-
+import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.ConcurrentHashMap;
-
-/**
- * Comprehensive tests for MemoryTool and related classes.
- */
+/** Comprehensive tests for MemoryTool and related classes. */
 @DisplayName("Memory Tool Tests")
 class MemoryToolTest {
 
@@ -38,8 +34,7 @@ class MemoryToolTest {
     @Test
     @DisplayName("stores value successfully")
     void storesValue() {
-      MemoryToolParams params = new MemoryToolParams(
-          MemoryAction.STORE, "user_name", "John");
+      MemoryToolParams params = new MemoryToolParams(MemoryAction.STORE, "user_name", "John");
 
       FunctionToolCallOutput output = memoryTool.call(params);
 
@@ -52,8 +47,7 @@ class MemoryToolTest {
     void overwritesValue() {
       memoryStore.store("key1", "original");
 
-      MemoryToolParams params = new MemoryToolParams(
-          MemoryAction.STORE, "key1", "updated");
+      MemoryToolParams params = new MemoryToolParams(MemoryAction.STORE, "key1", "updated");
       memoryTool.call(params);
 
       assertEquals("updated", memoryStore.retrieve("key1"));
@@ -73,8 +67,7 @@ class MemoryToolTest {
     void retrievesValue() {
       memoryStore.store("city", "New York");
 
-      MemoryToolParams params = new MemoryToolParams(
-          MemoryAction.RETRIEVE, "city", null);
+      MemoryToolParams params = new MemoryToolParams(MemoryAction.RETRIEVE, "city", null);
 
       FunctionToolCallOutput output = memoryTool.call(params);
 
@@ -84,8 +77,7 @@ class MemoryToolTest {
     @Test
     @DisplayName("returns not found for missing key")
     void returnsNotFound() {
-      MemoryToolParams params = new MemoryToolParams(
-          MemoryAction.RETRIEVE, "nonexistent", null);
+      MemoryToolParams params = new MemoryToolParams(MemoryAction.RETRIEVE, "nonexistent", null);
 
       FunctionToolCallOutput output = memoryTool.call(params);
 
@@ -106,8 +98,7 @@ class MemoryToolTest {
     void deletesValue() {
       memoryStore.store("temp", "data");
 
-      MemoryToolParams params = new MemoryToolParams(
-          MemoryAction.DELETE, "temp", null);
+      MemoryToolParams params = new MemoryToolParams(MemoryAction.DELETE, "temp", null);
 
       memoryTool.call(params);
 
@@ -143,22 +134,23 @@ class MemoryToolTest {
     @Test
     @DisplayName("throws on blank key")
     void throwsOnBlankKey() {
-      assertThrows(IllegalArgumentException.class, () ->
-          new MemoryToolParams(MemoryAction.RETRIEVE, "  ", null));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> new MemoryToolParams(MemoryAction.RETRIEVE, "  ", null));
     }
 
     @Test
     @DisplayName("throws on null value for STORE")
     void throwsOnNullValueForStore() {
-      assertThrows(IllegalArgumentException.class, () ->
-          new MemoryToolParams(MemoryAction.STORE, "key", null));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> new MemoryToolParams(MemoryAction.STORE, "key", null));
     }
 
     @Test
     @DisplayName("allows null value for RETRIEVE")
     void allowsNullValueForRetrieve() {
-      MemoryToolParams params = new MemoryToolParams(
-          MemoryAction.RETRIEVE, "key", null);
+      MemoryToolParams params = new MemoryToolParams(MemoryAction.RETRIEVE, "key", null);
 
       assertNotNull(params);
     }
@@ -166,8 +158,7 @@ class MemoryToolTest {
     @Test
     @DisplayName("allows null value for DELETE")
     void allowsNullValueForDelete() {
-      MemoryToolParams params = new MemoryToolParams(
-          MemoryAction.DELETE, "key", null);
+      MemoryToolParams params = new MemoryToolParams(MemoryAction.DELETE, "key", null);
 
       assertNotNull(params);
     }

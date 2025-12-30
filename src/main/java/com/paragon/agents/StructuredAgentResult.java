@@ -1,11 +1,10 @@
 package com.paragon.agents;
 
+import com.paragon.responses.spec.Response;
+import com.paragon.responses.spec.ResponseInputItem;
 import java.util.List;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-
-import com.paragon.responses.spec.Response;
-import com.paragon.responses.spec.ResponseInputItem;
 
 /**
  * The result of a structured agent interaction, containing the typed output.

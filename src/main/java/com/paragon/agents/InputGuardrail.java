@@ -44,6 +44,5 @@ public interface InputGuardrail {
    * @param context the current agent context (for state-based validation)
    * @return the validation result
    */
-  @NonNull
-  GuardrailResult validate(@NonNull String input, @NonNull AgentContext context);
+  @NonNull GuardrailResult validate(@NonNull String input, @NonNull AgentContext context);
 }

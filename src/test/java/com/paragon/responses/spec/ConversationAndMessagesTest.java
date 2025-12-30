@@ -7,9 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for Conversation, AssistantMessage, DeveloperMessage, and UserMessage classes.
- */
+/** Tests for Conversation, AssistantMessage, DeveloperMessage, and UserMessage classes. */
 class ConversationAndMessagesTest {
 
   @Nested
@@ -70,8 +68,7 @@ class ConversationAndMessagesTest {
     @Test
     @DisplayName("AssistantMessage role is ASSISTANT")
     void roleIsAssistant() {
-      AssistantMessage message =
-          new AssistantMessage(List.of(new Text("Test")), null);
+      AssistantMessage message = new AssistantMessage(List.of(new Text("Test")), null);
 
       assertEquals(MessageRole.ASSISTANT, message.role());
     }
@@ -79,8 +76,7 @@ class ConversationAndMessagesTest {
     @Test
     @DisplayName("AssistantMessage with null status is valid")
     void nullStatusAllowed() {
-      AssistantMessage message =
-          new AssistantMessage(List.of(new Text("Test")), null);
+      AssistantMessage message = new AssistantMessage(List.of(new Text("Test")), null);
 
       assertNull(message.status());
     }
@@ -88,8 +84,7 @@ class ConversationAndMessagesTest {
     @Test
     @DisplayName("AssistantMessage extends Message")
     void extendsMessage() {
-      AssistantMessage message =
-          new AssistantMessage(List.of(new Text("Test")), null);
+      AssistantMessage message = new AssistantMessage(List.of(new Text("Test")), null);
 
       assertTrue(message instanceof Message);
     }
@@ -122,8 +117,7 @@ class ConversationAndMessagesTest {
     @Test
     @DisplayName("UserMessage role is USER")
     void roleIsUser() {
-      UserMessage message =
-          new UserMessage(List.of(new Text("Test")), null);
+      UserMessage message = new UserMessage(List.of(new Text("Test")), null);
 
       assertEquals(MessageRole.USER, message.role());
     }
@@ -131,8 +125,7 @@ class ConversationAndMessagesTest {
     @Test
     @DisplayName("UserMessage extends Message")
     void extendsMessage() {
-      UserMessage message =
-          new UserMessage(List.of(new Text("Test")), null);
+      UserMessage message = new UserMessage(List.of(new Text("Test")), null);
 
       assertTrue(message instanceof Message);
     }
@@ -165,8 +158,7 @@ class ConversationAndMessagesTest {
     @Test
     @DisplayName("DeveloperMessage role is DEVELOPER")
     void roleIsDeveloper() {
-      DeveloperMessage message =
-          new DeveloperMessage(List.of(new Text("Test")), null);
+      DeveloperMessage message = new DeveloperMessage(List.of(new Text("Test")), null);
 
       assertEquals(MessageRole.DEVELOPER, message.role());
     }
@@ -174,8 +166,7 @@ class ConversationAndMessagesTest {
     @Test
     @DisplayName("DeveloperMessage extends Message")
     void extendsMessage() {
-      DeveloperMessage message =
-          new DeveloperMessage(List.of(new Text("Test")), null);
+      DeveloperMessage message = new DeveloperMessage(List.of(new Text("Test")), null);
 
       assertTrue(message instanceof Message);
     }

@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for {@link ReasoningConfig} record.
- */
+/** Tests for {@link ReasoningConfig} record. */
 class ReasoningConfigTest {
 
   @Nested
@@ -59,8 +57,10 @@ class ReasoningConfigTest {
     @Test
     @DisplayName("Equal configs have same hashCode")
     void equalHashCodes() {
-      ReasoningConfig config1 = new ReasoningConfig(ReasoningEffort.LOW, ReasoningSummaryKind.CONCISE);
-      ReasoningConfig config2 = new ReasoningConfig(ReasoningEffort.LOW, ReasoningSummaryKind.CONCISE);
+      ReasoningConfig config1 =
+          new ReasoningConfig(ReasoningEffort.LOW, ReasoningSummaryKind.CONCISE);
+      ReasoningConfig config2 =
+          new ReasoningConfig(ReasoningEffort.LOW, ReasoningSummaryKind.CONCISE);
 
       assertEquals(config1, config2);
       assertEquals(config1.hashCode(), config2.hashCode());
@@ -69,7 +69,8 @@ class ReasoningConfigTest {
     @Test
     @DisplayName("Different configs are not equal")
     void differentConfigsNotEqual() {
-      ReasoningConfig config1 = new ReasoningConfig(ReasoningEffort.HIGH, ReasoningSummaryKind.AUTO);
+      ReasoningConfig config1 =
+          new ReasoningConfig(ReasoningEffort.HIGH, ReasoningSummaryKind.AUTO);
       ReasoningConfig config2 = new ReasoningConfig(ReasoningEffort.LOW, ReasoningSummaryKind.AUTO);
 
       assertNotEquals(config1, config2);
@@ -78,8 +79,10 @@ class ReasoningConfigTest {
     @Test
     @DisplayName("Configs with different summary are not equal")
     void differentSummaryNotEqual() {
-      ReasoningConfig config1 = new ReasoningConfig(ReasoningEffort.HIGH, ReasoningSummaryKind.AUTO);
-      ReasoningConfig config2 = new ReasoningConfig(ReasoningEffort.HIGH, ReasoningSummaryKind.CONCISE);
+      ReasoningConfig config1 =
+          new ReasoningConfig(ReasoningEffort.HIGH, ReasoningSummaryKind.AUTO);
+      ReasoningConfig config2 =
+          new ReasoningConfig(ReasoningEffort.HIGH, ReasoningSummaryKind.CONCISE);
 
       assertNotEquals(config1, config2);
     }
@@ -88,7 +91,8 @@ class ReasoningConfigTest {
     @DisplayName("Null values in comparison")
     void nullValueComparison() {
       ReasoningConfig withNull = new ReasoningConfig(null, null);
-      ReasoningConfig withValues = new ReasoningConfig(ReasoningEffort.HIGH, ReasoningSummaryKind.AUTO);
+      ReasoningConfig withValues =
+          new ReasoningConfig(ReasoningEffort.HIGH, ReasoningSummaryKind.AUTO);
 
       assertNotEquals(withNull, withValues);
     }

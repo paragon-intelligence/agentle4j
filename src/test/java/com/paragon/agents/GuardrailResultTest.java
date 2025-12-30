@@ -9,11 +9,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Comprehensive tests for GuardrailResult.
  *
- * <p>Tests cover:
- * - Passed result creation
- * - Failed result creation
- * - Status checking methods
- * - Reason handling for failures
+ * <p>Tests cover: - Passed result creation - Failed result creation - Status checking methods -
+ * Reason handling for failures
  */
 @DisplayName("GuardrailResult")
 class GuardrailResultTest {
@@ -89,7 +86,8 @@ class GuardrailResultTest {
     @Test
     @DisplayName("Failed.reason() returns the rejection reason")
     void failed_reason_returnsReason() {
-      GuardrailResult.Failed result = (GuardrailResult.Failed) GuardrailResult.failed("Custom message");
+      GuardrailResult.Failed result =
+          (GuardrailResult.Failed) GuardrailResult.failed("Custom message");
 
       assertEquals("Custom message", result.reason());
     }
@@ -126,15 +124,17 @@ class GuardrailResultTest {
       GuardrailResult passed = GuardrailResult.passed();
       GuardrailResult failed = GuardrailResult.failed("Error");
 
-      String passedMessage = switch (passed) {
-        case GuardrailResult.Passed p -> "passed";
-        case GuardrailResult.Failed f -> "failed: " + f.reason();
-      };
+      String passedMessage =
+          switch (passed) {
+            case GuardrailResult.Passed p -> "passed";
+            case GuardrailResult.Failed f -> "failed: " + f.reason();
+          };
 
-      String failedMessage = switch (failed) {
-        case GuardrailResult.Passed p -> "passed";
-        case GuardrailResult.Failed f -> "failed: " + f.reason();
-      };
+      String failedMessage =
+          switch (failed) {
+            case GuardrailResult.Passed p -> "passed";
+            case GuardrailResult.Failed f -> "failed: " + f.reason();
+          };
 
       assertEquals("passed", passedMessage);
       assertEquals("failed: Error", failedMessage);

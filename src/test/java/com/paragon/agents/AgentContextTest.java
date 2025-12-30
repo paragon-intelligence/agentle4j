@@ -2,28 +2,21 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.HashMap;
+import com.paragon.responses.spec.Message;
+import com.paragon.responses.spec.ResponseInputItem;
+import com.paragon.responses.spec.Text;
 import java.util.List;
 import java.util.Map;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.paragon.responses.spec.Message;
-import com.paragon.responses.spec.ResponseInputItem;
-import com.paragon.responses.spec.Text;
-
 /**
  * Comprehensive tests for AgentContext.
  *
- * <p>Tests cover:
- * - Creation and factory methods
- * - History management
- * - State management (key-value store)
- * - Turn counting
- * - Copy functionality for parallel agent isolation
- * - Clear/reset functionality
+ * <p>Tests cover: - Creation and factory methods - History management - State management (key-value
+ * store) - Turn counting - Copy functionality for parallel agent isolation - Clear/reset
+ * functionality
  */
 @DisplayName("AgentContext")
 class AgentContextTest {
@@ -110,7 +103,9 @@ class AgentContextTest {
 
       List<ResponseInputItem> history = context.getHistory();
 
-      assertThrows(UnsupportedOperationException.class, () -> history.add(Message.user(Text.valueOf("New"))));
+      assertThrows(
+          UnsupportedOperationException.class,
+          () -> history.add(Message.user(Text.valueOf("New"))));
     }
 
     @Test

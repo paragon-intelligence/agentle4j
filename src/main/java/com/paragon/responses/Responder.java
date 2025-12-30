@@ -17,18 +17,17 @@ import com.paragon.telemetry.events.ResponseStartedEvent;
 import com.paragon.telemetry.processors.ProcessorRegistry;
 import com.paragon.telemetry.processors.TelemetryProcessor;
 import com.paragon.telemetry.processors.TraceIdGenerator;
-import okhttp3.*;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import okhttp3.*;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Core class for sending requests to the Responses API.
@@ -42,7 +41,7 @@ import java.util.concurrent.CompletableFuture;
 @SuppressWarnings("ClassCanBeRecord")
 public class Responder {
   private static final @NonNull ObjectMapper responsesApiObjectMapper =
-          ResponsesApiObjectMapper.create();
+      ResponsesApiObjectMapper.create();
   private static final @NonNull Logger logger = LoggerFactory.getLogger(Responder.class);
   private static final MediaType JSON = MediaType.get("application/json");
 
@@ -57,15 +56,15 @@ public class Responder {
   private final @NonNull RetryPolicy retryPolicy;
 
   private Responder(
-          @Nullable ResponsesAPIProvider provider,
-          @NonNull HttpUrl baseUrl,
-          @NonNull JsonSchemaProducer jsonSchemaProducer,
-          @NonNull OkHttpClient httpClient,
-          @NonNull String apiKey,
-          @NonNull ObjectMapper objectMapper,
-          @NonNull ProcessorRegistry telemetryProcessors,
-          @Nullable OpenRouterModelRegistry modelRegistry,
-          @NonNull RetryPolicy retryPolicy) {
+      @Nullable ResponsesAPIProvider provider,
+      @NonNull HttpUrl baseUrl,
+      @NonNull JsonSchemaProducer jsonSchemaProducer,
+      @NonNull OkHttpClient httpClient,
+      @NonNull String apiKey,
+      @NonNull ObjectMapper objectMapper,
+      @NonNull ProcessorRegistry telemetryProcessors,
+      @Nullable OpenRouterModelRegistry modelRegistry,
+      @NonNull RetryPolicy retryPolicy) {
     this.provider = provider;
     this.baseUrl = Objects.requireNonNull(baseUrl);
     this.jsonSchemaProducer = Objects.requireNonNull(jsonSchemaProducer);
@@ -75,11 +74,11 @@ public class Responder {
     this.modelRegistry = modelRegistry;
     this.retryPolicy = Objects.requireNonNull(retryPolicy);
     this.headers =
-            Headers.of(
-                    "Authorization",
-                    String.format("Bearer %s", Objects.requireNonNull(apiKey)),
-                    "Content-Type",
-                    JSON.toString());
+        Headers.of(
+            "Authorization",
+            String.format("Bearer %s", Objects.requireNonNull(apiKey)),
+            "Content-Type",
+            JSON.toString());
   }
 
   public static @NonNull Builder builder() {
@@ -103,44 +102,45 @@ public class Responder {
    * @return a future that completes with the response
    */
   public @NonNull CompletableFuture<Response> respond(
-          @NonNull CreateResponsePayload payload, @NonNull TelemetryContext context) {
+      @NonNull CreateResponsePayload payload, @NonNull TelemetryContext context) {
     return respond(payload, UUID.randomUUID().toString(), context);
   }
 
   /**
    * Sends a request to the API with a specific session ID for telemetry correlation.
    *
-   * @param payload   the request payload
+   * @param payload the request payload
    * @param sessionId unique identifier for this session (used for trace correlation)
    * @return a future that completes with the response
    */
   public @NonNull CompletableFuture<Response> respond(
-          @NonNull CreateResponsePayload payload, @NonNull String sessionId) {
+      @NonNull CreateResponsePayload payload, @NonNull String sessionId) {
     return respond(payload, sessionId, TelemetryContext.empty());
   }
 
   /**
    * Sends a request to the API with telemetry context for rich metadata.
    *
-   * @param payload   the request payload
+   * @param payload the request payload
    * @param sessionId unique identifier for this session (used for trace correlation)
-   * @param context   telemetry context with user_id, tags, metadata
+   * @param context telemetry context with user_id, tags, metadata
    * @return a future that completes with the response
    */
   public @NonNull CompletableFuture<Response> respond(
-          @NonNull CreateResponsePayload payload,
-          @NonNull String sessionId,
-          @NonNull TelemetryContext context) {
+      @NonNull CreateResponsePayload payload,
+      @NonNull String sessionId,
+      @NonNull TelemetryContext context) {
 
     // Use parent trace context if provided, otherwise generate new IDs
-    String traceId = context.parentTraceId() != null
+    String traceId =
+        context.parentTraceId() != null
             ? context.parentTraceId()
             : TraceIdGenerator.generateTraceId();
     String spanId = TraceIdGenerator.generateSpanId();
 
     // Emit started event with context (async, non-blocking)
     ResponseStartedEvent startedEvent =
-            ResponseStartedEvent.create(sessionId, traceId, spanId, payload.model(), context);
+        ResponseStartedEvent.create(sessionId, traceId, spanId, payload.model(), context);
     telemetryProcessors.broadcast(startedEvent);
 
     Request request = payload.toRequest(responsesApiObjectMapper, JSON, baseUrl, headers);
@@ -148,92 +148,91 @@ public class Responder {
     return executeWithRetry(request, startedEvent, 0);
   }
 
-  /**
-   * Executes an HTTP request with retry logic and exponential backoff.
-   */
+  /** Executes an HTTP request with retry logic and exponential backoff. */
   private @NonNull CompletableFuture<Response> executeWithRetry(
-          @NonNull Request request,
-          @NonNull ResponseStartedEvent startedEvent,
-          int attempt) {
+      @NonNull Request request, @NonNull ResponseStartedEvent startedEvent, int attempt) {
 
     CompletableFuture<Response> future = new CompletableFuture<>();
 
     httpClient
-            .newCall(request)
-            .enqueue(
-                    new Callback() {
-                      @Override
-                      public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                        // Network errors are retryable
-                        if (attempt < retryPolicy.maxRetries()) {
-                          logger.warn("Request failed (attempt {}), retrying: {}", attempt + 1, e.getMessage());
-                          scheduleRetry(request, startedEvent, attempt, future);
-                        } else {
-                          telemetryProcessors.broadcast(ResponseFailedEvent.from(startedEvent, e));
-                          future.completeExceptionally(e);
-                        }
-                      }
+        .newCall(request)
+        .enqueue(
+            new Callback() {
+              @Override
+              public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                // Network errors are retryable
+                if (attempt < retryPolicy.maxRetries()) {
+                  logger.warn(
+                      "Request failed (attempt {}), retrying: {}", attempt + 1, e.getMessage());
+                  scheduleRetry(request, startedEvent, attempt, future);
+                } else {
+                  telemetryProcessors.broadcast(ResponseFailedEvent.from(startedEvent, e));
+                  future.completeExceptionally(e);
+                }
+              }
 
-                      @Override
-                      public void onResponse(@NonNull Call call, okhttp3.Response response) {
-                        try (ResponseBody body = response.body()) {
-                          String json = body.string();
-                          logger.debug("Raw API Response:\n{}", json);
+              @Override
+              public void onResponse(@NonNull Call call, okhttp3.Response response) {
+                try (ResponseBody body = response.body()) {
+                  String json = body.string();
+                  logger.debug("Raw API Response:\n{}", json);
 
-                          if (!response.isSuccessful()) {
-                            // Check if we should retry this status code
-                            if (retryPolicy.isRetryable(response.code()) && attempt < retryPolicy.maxRetries()) {
-                              logger.warn("Received {} (attempt {}), retrying", response.code(), attempt + 1);
-                              scheduleRetry(request, startedEvent, attempt, future);
-                              return;
-                            }
+                  if (!response.isSuccessful()) {
+                    // Check if we should retry this status code
+                    if (retryPolicy.isRetryable(response.code())
+                        && attempt < retryPolicy.maxRetries()) {
+                      logger.warn(
+                          "Received {} (attempt {}), retrying", response.code(), attempt + 1);
+                      scheduleRetry(request, startedEvent, attempt, future);
+                      return;
+                    }
 
-                            String errorMessage =
-                                    String.format(
-                                            "API Error: %s %d - %s%nResponse Body: %s",
-                                            response.protocol(), response.code(), response.message(), json);
-                            logger.error(errorMessage);
+                    String errorMessage =
+                        String.format(
+                            "API Error: %s %d - %s%nResponse Body: %s",
+                            response.protocol(), response.code(), response.message(), json);
+                    logger.error(errorMessage);
 
-                            telemetryProcessors.broadcast(
-                                    ResponseFailedEvent.fromHttpError(
-                                            startedEvent, response.code(), errorMessage));
+                    telemetryProcessors.broadcast(
+                        ResponseFailedEvent.fromHttpError(
+                            startedEvent, response.code(), errorMessage));
 
-                            future.completeExceptionally(new RuntimeException(errorMessage));
-                            return;
-                          }
+                    future.completeExceptionally(new RuntimeException(errorMessage));
+                    return;
+                  }
 
-                          Response mapped = responsesApiObjectMapper.readValue(json, Response.class);
+                  Response mapped = responsesApiObjectMapper.readValue(json, Response.class);
 
-                          telemetryProcessors.broadcast(
-                                  ResponseCompletedEvent.from(startedEvent, null, null, null, null));
+                  telemetryProcessors.broadcast(
+                      ResponseCompletedEvent.from(startedEvent, null, null, null, null));
 
-                          future.complete(mapped);
-                        } catch (Exception e) {
-                          telemetryProcessors.broadcast(ResponseFailedEvent.from(startedEvent, e));
-                          future.completeExceptionally(e);
-                        }
-                      }
-                    });
+                  future.complete(mapped);
+                } catch (Exception e) {
+                  telemetryProcessors.broadcast(ResponseFailedEvent.from(startedEvent, e));
+                  future.completeExceptionally(e);
+                }
+              }
+            });
 
     return future;
   }
 
-  /**
-   * Schedules a retry with exponential backoff delay.
-   */
+  /** Schedules a retry with exponential backoff delay. */
   private void scheduleRetry(
-          @NonNull Request request,
-          @NonNull ResponseStartedEvent startedEvent,
-          int attempt,
-          @NonNull CompletableFuture<Response> originalFuture) {
+      @NonNull Request request,
+      @NonNull ResponseStartedEvent startedEvent,
+      int attempt,
+      @NonNull CompletableFuture<Response> originalFuture) {
 
     java.time.Duration delay = retryPolicy.getDelayForAttempt(attempt + 1);
     logger.debug("Scheduling retry {} after {}ms", attempt + 2, delay.toMillis());
 
     CompletableFuture.delayedExecutor(delay.toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
-            .execute(() -> {
+        .execute(
+            () -> {
               executeWithRetry(request, startedEvent, attempt + 1)
-                      .whenComplete((result, error) -> {
+                  .whenComplete(
+                      (result, error) -> {
                         if (error != null) {
                           originalFuture.completeExceptionally(error);
                         } else {
@@ -243,19 +242,15 @@ public class Responder {
             });
   }
 
-  /**
-   * Sends a structured output request and parses the response.
-   */
+  /** Sends a structured output request and parses the response. */
   public <T> @NonNull CompletableFuture<ParsedResponse<T>> respond(
-          CreateResponsePayload.Structured<T> payload) {
+      CreateResponsePayload.Structured<T> payload) {
     return respond(payload, UUID.randomUUID().toString());
   }
 
-  /**
-   * Sends a structured output request with session ID and parses the response.
-   */
+  /** Sends a structured output request with session ID and parses the response. */
   public <T> @NonNull CompletableFuture<ParsedResponse<T>> respond(
-          CreateResponsePayload.Structured<T> payload, @NonNull String sessionId) {
+      CreateResponsePayload.Structured<T> payload, @NonNull String sessionId) {
     if (payload.hasEmptyText()) {
       throw new IllegalArgumentException("\"payload.text\" parameter cannot be null.");
     }
@@ -266,30 +261,28 @@ public class Responder {
 
     if (!payload.hasJsonSchemaTextFormat()) {
       throw new IllegalArgumentException(
-              """
-                      "Format" parameter must be of type TextConfigurationOptionsJsonSchemaFormat.
-                      Please, use:
-                       <pre>
-                       CreateResponsePayload.builder().withStructuredOutput(YourClass.class);
-                       </pre>
-                      """);
+          """
+          "Format" parameter must be of type TextConfigurationOptionsJsonSchemaFormat.
+          Please, use:
+           <pre>
+           CreateResponsePayload.builder().withStructuredOutput(YourClass.class);
+           </pre>
+          """);
     }
 
     CompletableFuture<Response> response = respond(((CreateResponsePayload) payload), sessionId);
 
     return response.thenApply(
-            res -> {
-              try {
-                return res.parse(payload.responseType(), objectMapper);
-              } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-              }
-            });
+        res -> {
+          try {
+            return res.parse(payload.responseType(), objectMapper);
+          } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+          }
+        });
   }
 
-  /**
-   * Simple text-only respond method.
-   */
+  /** Simple text-only respond method. */
   public @NonNull CompletableFuture<Response> respond(String input) {
     var payload = CreateResponsePayload.builder().addUserMessage(input);
     if (provider != null && provider.equals(ResponsesAPIProvider.OPEN_ROUTER)) {
@@ -330,23 +323,21 @@ public class Responder {
    * @param payload the streaming request payload
    * @return a ResponseStream for processing streaming events
    */
-  public ResponseStream<Void> respond(
-          CreateResponsePayload.Streaming payload) {
+  public ResponseStream<Void> respond(CreateResponsePayload.Streaming payload) {
     return respond(payload, UUID.randomUUID().toString());
   }
 
   /**
    * Sends a streaming request with a specific session ID for telemetry correlation.
    *
-   * @param payload   the streaming request payload
+   * @param payload the streaming request payload
    * @param sessionId unique identifier for this session (used for trace correlation)
    * @return a ResponseStream for processing streaming events
    */
   public ResponseStream<Void> respond(
-          CreateResponsePayload.Streaming payload, @NonNull String sessionId) {
+      CreateResponsePayload.Streaming payload, @NonNull String sessionId) {
     Request request = payload.toRequest(responsesApiObjectMapper, JSON, baseUrl, headers);
-    return new ResponseStream<>(
-            httpClient, request, objectMapper, null);
+    return new ResponseStream<>(httpClient, request, objectMapper, null);
   }
 
   /**
@@ -370,41 +361,39 @@ public class Responder {
    * }</pre>
    *
    * @param payload the structured streaming request payload
-   * @param <T>     the structured output type
+   * @param <T> the structured output type
    * @return a ResponseStream for processing streaming events with structured parsing
    */
-  public <T> ResponseStream<T> respond(
-          CreateResponsePayload.StructuredStreaming<T> payload) {
+  public <T> ResponseStream<T> respond(CreateResponsePayload.StructuredStreaming<T> payload) {
     return respond(payload, UUID.randomUUID().toString());
   }
 
   /**
    * Sends a structured output streaming request with session ID.
    *
-   * @param payload   the structured streaming request payload
+   * @param payload the structured streaming request payload
    * @param sessionId unique identifier for this session
-   * @param <T>       the structured output type
+   * @param <T> the structured output type
    * @return a ResponseStream for processing streaming events with structured parsing
    */
   public <T> ResponseStream<T> respond(
-          CreateResponsePayload.StructuredStreaming<T> payload, @NonNull String sessionId) {
+      CreateResponsePayload.StructuredStreaming<T> payload, @NonNull String sessionId) {
     if (payload.hasEmptyText()) {
       throw new IllegalArgumentException(
-              "\"payload.text\" parameter cannot be null for structured output.");
+          "\"payload.text\" parameter cannot be null for structured output.");
     }
     if (payload.hasEmptyTextFormat()) {
       throw new IllegalArgumentException(
-              "\"payload.text.format\" parameter cannot be null for structured output.");
+          "\"payload.text.format\" parameter cannot be null for structured output.");
     }
     if (!payload.hasJsonSchemaTextFormat()) {
       throw new IllegalArgumentException(
-              "\"Format\" parameter must be of type TextConfigurationOptionsJsonSchemaFormat for"
-                      + " structured output.");
+          "\"Format\" parameter must be of type TextConfigurationOptionsJsonSchemaFormat for"
+              + " structured output.");
     }
 
     Request request = payload.toRequest(responsesApiObjectMapper, JSON, baseUrl, headers);
-    return new ResponseStream<>(
-            httpClient, request, objectMapper, payload.responseType());
+    return new ResponseStream<>(httpClient, request, objectMapper, payload.responseType());
   }
 
   @Override
@@ -413,9 +402,9 @@ public class Responder {
     if (obj == null || obj.getClass() != this.getClass()) return false;
     var that = (Responder) obj;
     return Objects.equals(this.provider, that.provider)
-            && Objects.equals(this.baseUrl, that.baseUrl)
-            && Objects.equals(this.jsonSchemaProducer, that.jsonSchemaProducer)
-            && Objects.equals(this.httpClient, that.httpClient);
+        && Objects.equals(this.baseUrl, that.baseUrl)
+        && Objects.equals(this.jsonSchemaProducer, that.jsonSchemaProducer)
+        && Objects.equals(this.httpClient, that.httpClient);
   }
 
   @Override
@@ -426,40 +415,33 @@ public class Responder {
   @Override
   public String toString() {
     return "Responder["
-            + "provider="
-            + provider
-            + ", "
-            + "baseUrl="
-            + baseUrl
-            + ", "
-            + "jsonSchemaProducer="
-            + jsonSchemaProducer
-            + ", "
-            + "httpClient="
-            + httpClient
-            + ']';
+        + "provider="
+        + provider
+        + ", "
+        + "baseUrl="
+        + baseUrl
+        + ", "
+        + "jsonSchemaProducer="
+        + jsonSchemaProducer
+        + ", "
+        + "httpClient="
+        + httpClient
+        + ']';
   }
 
   public static final class Builder {
-    @NonNull
-    private final List<TelemetryProcessor> telemetryProcessors = new ArrayList<>();
+    @NonNull private final List<TelemetryProcessor> telemetryProcessors = new ArrayList<>();
 
     @NonNull
     private JsonSchemaProducer jsonSchemaProducer =
-            new JacksonJsonSchemaProducer(new ObjectMapper());
+        new JacksonJsonSchemaProducer(new ObjectMapper());
 
-    @NonNull
-    private OkHttpClient httpClient = new OkHttpClient();
-    @Nullable
-    private ResponsesAPIProvider provider = ResponsesAPIProvider.OPEN_ROUTER;
-    @Nullable
-    private HttpUrl baseUrl = null;
-    @Nullable
-    private String apiKey = null;
-    @NonNull
-    private ObjectMapper objectMapper = ResponsesApiObjectMapper.create();
-    @NonNull
-    private RetryPolicy retryPolicy = RetryPolicy.defaults();
+    @NonNull private OkHttpClient httpClient = new OkHttpClient();
+    @Nullable private ResponsesAPIProvider provider = ResponsesAPIProvider.OPEN_ROUTER;
+    @Nullable private HttpUrl baseUrl = null;
+    @Nullable private String apiKey = null;
+    @NonNull private ObjectMapper objectMapper = ResponsesApiObjectMapper.create();
+    @NonNull private RetryPolicy retryPolicy = RetryPolicy.defaults();
 
     public Builder openRouter() {
       provider = ResponsesAPIProvider.OPEN_ROUTER;
@@ -491,9 +473,7 @@ public class Responder {
       return this;
     }
 
-    /**
-     * Sets a custom base URL for API requests.
-     */
+    /** Sets a custom base URL for API requests. */
     public Builder baseUrl(@NonNull HttpUrl baseUrl) {
       this.baseUrl = Objects.requireNonNull(baseUrl);
       this.provider = null;
@@ -519,8 +499,8 @@ public class Responder {
     /**
      * Sets the retry policy for handling transient failures.
      *
-     * <p>By default, retries are enabled with 3 attempts and exponential backoff.
-     * Use {@link RetryPolicy#disabled()} to disable retries.
+     * <p>By default, retries are enabled with 3 attempts and exponential backoff. Use {@link
+     * RetryPolicy#disabled()} to disable retries.
      *
      * @param retryPolicy the retry policy to use
      * @return this builder
@@ -534,6 +514,7 @@ public class Responder {
      * Sets the maximum number of retry attempts with default backoff settings.
      *
      * <p>This is a convenience method equivalent to:
+     *
      * <pre>{@code
      * .retryPolicy(RetryPolicy.builder().maxRetries(n).build())
      * }</pre>
@@ -562,7 +543,7 @@ public class Responder {
       }
       if (resolvedApiKey == null) {
         throw new IllegalStateException(
-                "API key must be set either explicitly or via environment variable");
+            "API key must be set either explicitly or via environment variable");
       }
 
       // Auto-create model registry for OpenRouter (used internally for telemetry cost calculation)
@@ -570,26 +551,26 @@ public class Responder {
       if (provider == ResponsesAPIProvider.OPEN_ROUTER) {
         try {
           resolvedModelRegistry =
-                  OpenRouterModelRegistry.builder()
-                          .apiKey(resolvedApiKey)
-                          .httpClient(httpClient)
-                          .objectMapper(objectMapper)
-                          .build();
+              OpenRouterModelRegistry.builder()
+                  .apiKey(resolvedApiKey)
+                  .httpClient(httpClient)
+                  .objectMapper(objectMapper)
+                  .build();
         } catch (Exception e) {
           // Silently ignore if registry creation fails - cost calculation is optional
         }
       }
 
       return new Responder(
-              provider,
-              resolvedBaseUrl,
-              jsonSchemaProducer,
-              httpClient,
-              resolvedApiKey,
-              objectMapper,
-              ProcessorRegistry.of(telemetryProcessors),
-              resolvedModelRegistry,
-              retryPolicy);
+          provider,
+          resolvedBaseUrl,
+          jsonSchemaProducer,
+          httpClient,
+          resolvedApiKey,
+          objectMapper,
+          ProcessorRegistry.of(telemetryProcessors),
+          resolvedModelRegistry,
+          retryPolicy);
     }
   }
 }

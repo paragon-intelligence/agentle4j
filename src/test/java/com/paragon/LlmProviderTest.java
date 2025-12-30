@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for LlmProvider enum.
- */
+/** Tests for LlmProvider enum. */
 @DisplayName("LlmProvider Tests")
 class LlmProviderTest {
 

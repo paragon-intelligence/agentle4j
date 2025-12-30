@@ -2,30 +2,21 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.List;
+import com.paragon.responses.Responder;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.paragon.responses.Responder;
-
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-
 /**
  * Comprehensive tests for RouterAgent.
  *
- * <p>Tests cover:
- * - Builder pattern
- * - Route configuration
- * - Classification (classify)
- * - Routing with execution (route)
- * - Fallback handling
- * - Async behavior
+ * <p>Tests cover: - Builder pattern - Route configuration - Classification (classify) - Routing
+ * with execution (route) - Fallback handling - Async behavior
  */
 @DisplayName("RouterAgent")
 class RouterAgentTest {
@@ -38,10 +29,8 @@ class RouterAgentTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
 
-    responder = Responder.builder()
-        .baseUrl(mockWebServer.url("/v1/responses"))
-        .apiKey("test-key")
-        .build();
+    responder =
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   void tearDown() throws Exception {
@@ -63,12 +52,11 @@ class RouterAgentTest {
     @Test
     @DisplayName("build() throws when no routes provided")
     void build_throwsWhenNoRoutes() {
-      assertThrows(IllegalArgumentException.class, () -> {
-        RouterAgent.builder()
-            .model("test-model")
-            .responder(responder)
-            .build();
-      });
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> {
+            RouterAgent.builder().model("test-model").responder(responder).build();
+          });
     }
 
     @Test
@@ -76,12 +64,11 @@ class RouterAgentTest {
     void build_throwsWhenModelNull() {
       Agent target = createTestAgent("Target");
 
-      assertThrows(NullPointerException.class, () -> {
-        RouterAgent.builder()
-            .responder(responder)
-            .addRoute(target, "test")
-            .build();
-      });
+      assertThrows(
+          NullPointerException.class,
+          () -> {
+            RouterAgent.builder().responder(responder).addRoute(target, "test").build();
+          });
     }
 
     @Test
@@ -89,12 +76,11 @@ class RouterAgentTest {
     void build_throwsWhenResponderNull() {
       Agent target = createTestAgent("Target");
 
-      assertThrows(NullPointerException.class, () -> {
-        RouterAgent.builder()
-            .model("test-model")
-            .addRoute(target, "test")
-            .build();
-      });
+      assertThrows(
+          NullPointerException.class,
+          () -> {
+            RouterAgent.builder().model("test-model").addRoute(target, "test").build();
+          });
     }
 
     @Test
@@ -102,11 +88,12 @@ class RouterAgentTest {
     void addRoute_addsRouteToRouter() {
       Agent target = createTestAgent("Target");
 
-      RouterAgent router = RouterAgent.builder()
-          .model("test-model")
-          .responder(responder)
-          .addRoute(target, "test description")
-          .build();
+      RouterAgent router =
+          RouterAgent.builder()
+              .model("test-model")
+              .responder(responder)
+              .addRoute(target, "test description")
+              .build();
 
       assertEquals(1, router.routes().size());
       assertEquals(target, router.routes().getFirst().agent());
@@ -120,13 +107,14 @@ class RouterAgentTest {
       Agent agent2 = createTestAgent("Agent2");
       Agent agent3 = createTestAgent("Agent3");
 
-      RouterAgent router = RouterAgent.builder()
-          .model("test-model")
-          .responder(responder)
-          .addRoute(agent1, "billing")
-          .addRoute(agent2, "technical")
-          .addRoute(agent3, "sales")
-          .build();
+      RouterAgent router =
+          RouterAgent.builder()
+              .model("test-model")
+              .responder(responder)
+              .addRoute(agent1, "billing")
+              .addRoute(agent2, "technical")
+              .addRoute(agent3, "sales")
+              .build();
 
       assertEquals(3, router.routes().size());
     }
@@ -137,12 +125,13 @@ class RouterAgentTest {
       Agent target = createTestAgent("Target");
       Agent fallback = createTestAgent("Fallback");
 
-      RouterAgent router = RouterAgent.builder()
-          .model("test-model")
-          .responder(responder)
-          .addRoute(target, "test")
-          .fallback(fallback)
-          .build();
+      RouterAgent router =
+          RouterAgent.builder()
+              .model("test-model")
+              .responder(responder)
+              .addRoute(target, "test")
+              .fallback(fallback)
+              .build();
 
       assertNotNull(router);
     }
@@ -158,9 +147,11 @@ class RouterAgentTest {
       Agent target = createTestAgent("Target");
       RouterAgent router = createRouter(target);
 
-      assertThrows(UnsupportedOperationException.class, () -> {
-        router.routes().add(new RouterAgent.Route(createTestAgent("New"), "new"));
-      });
+      assertThrows(
+          UnsupportedOperationException.class,
+          () -> {
+            router.routes().add(new RouterAgent.Route(createTestAgent("New"), "new"));
+          });
     }
 
     @Test
@@ -176,9 +167,11 @@ class RouterAgentTest {
     @Test
     @DisplayName("Route throws when agent is null")
     void route_throwsWhenAgentNull() {
-      assertThrows(NullPointerException.class, () -> {
-        new RouterAgent.Route(null, "test");
-      });
+      assertThrows(
+          NullPointerException.class,
+          () -> {
+            new RouterAgent.Route(null, "test");
+          });
     }
 
     @Test
@@ -186,9 +179,11 @@ class RouterAgentTest {
     void route_throwsWhenDescriptionNull() {
       Agent agent = createTestAgent("Test");
 
-      assertThrows(NullPointerException.class, () -> {
-        new RouterAgent.Route(agent, null);
-      });
+      assertThrows(
+          NullPointerException.class,
+          () -> {
+            new RouterAgent.Route(agent, null);
+          });
     }
   }
 
@@ -213,13 +208,14 @@ class RouterAgentTest {
     void classify_selectsCorrectAgent() throws Exception {
       Agent billing = createTestAgent("Billing");
       Agent tech = createTestAgent("TechSupport");
-      
-      RouterAgent router = RouterAgent.builder()
-          .model("test-model")
-          .responder(responder)
-          .addRoute(billing, "billing, invoices")
-          .addRoute(tech, "technical issues")
-          .build();
+
+      RouterAgent router =
+          RouterAgent.builder()
+              .model("test-model")
+              .responder(responder)
+              .addRoute(billing, "billing, invoices")
+              .addRoute(tech, "technical issues")
+              .build();
 
       enqueueResponse("1"); // LLM says route to first agent
 
@@ -233,13 +229,14 @@ class RouterAgentTest {
     void classify_returnsFallbackWhenInvalid() throws Exception {
       Agent target = createTestAgent("Target");
       Agent fallback = createTestAgent("Fallback");
-      
-      RouterAgent router = RouterAgent.builder()
-          .model("test-model")
-          .responder(responder)
-          .addRoute(target, "test")
-          .fallback(fallback)
-          .build();
+
+      RouterAgent router =
+          RouterAgent.builder()
+              .model("test-model")
+              .responder(responder)
+              .addRoute(target, "test")
+              .fallback(fallback)
+              .build();
 
       enqueueResponse("invalid"); // LLM returns unparseable response
 
@@ -252,12 +249,13 @@ class RouterAgentTest {
     @DisplayName("classify() returns null when no fallback and LLM invalid")
     void classify_returnsNullWhenNoFallback() throws Exception {
       Agent target = createTestAgent("Target");
-      
-      RouterAgent router = RouterAgent.builder()
-          .model("test-model")
-          .responder(responder)
-          .addRoute(target, "test")
-          .build();
+
+      RouterAgent router =
+          RouterAgent.builder()
+              .model("test-model")
+              .responder(responder)
+              .addRoute(target, "test")
+              .build();
 
       enqueueResponse("invalid");
 
@@ -300,12 +298,13 @@ class RouterAgentTest {
     @DisplayName("route() returns error when no agent selected")
     void route_returnsErrorWhenNoAgentSelected() throws Exception {
       Agent target = createTestAgent("Target");
-      
-      RouterAgent router = RouterAgent.builder()
-          .model("test-model")
-          .responder(responder)
-          .addRoute(target, "test")
-          .build();
+
+      RouterAgent router =
+          RouterAgent.builder()
+              .model("test-model")
+              .responder(responder)
+              .addRoute(target, "test")
+              .build();
 
       enqueueResponse("invalid"); // No valid agent selected
 
@@ -353,7 +352,8 @@ class RouterAgentTest {
   }
 
   private void enqueueResponse(String text) {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -379,12 +379,14 @@ class RouterAgentTest {
             "total_tokens": 15
           }
         }
-        """.formatted(text);
+        """
+            .formatted(text);
 
-    mockWebServer.enqueue(new MockResponse()
-        .setResponseCode(200)
-        .setBody(json)
-        .addHeader("Content-Type", "application/json"));
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   private void enqueueSuccessResponse(String text) {

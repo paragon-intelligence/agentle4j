@@ -43,6 +43,10 @@ public record File(
     return new File(base64Data, null, null, filename);
   }
 
+  public static File fromBase64(String base64Data) {
+    return new File(base64Data, null, null, null);
+  }
+
   @Override
   public @NonNull String toString() {
     return "</input_file>";

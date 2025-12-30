@@ -7,13 +7,15 @@ import org.jspecify.annotations.Nullable;
  * Base exception for all Agentle4j errors.
  *
  * <p>All exceptions in the Agentle hierarchy extend this class, providing:
+ *
  * <ul>
- *   <li>{@link #code()} - Machine-readable error code for programmatic handling</li>
- *   <li>{@link #suggestion()} - Optional hint for resolution</li>
- *   <li>{@link #isRetryable()} - Whether this error is safe to retry</li>
+ *   <li>{@link #code()} - Machine-readable error code for programmatic handling
+ *   <li>{@link #suggestion()} - Optional hint for resolution
+ *   <li>{@link #isRetryable()} - Whether this error is safe to retry
  * </ul>
  *
  * <p>Example usage:
+ *
  * <pre>{@code
  * responder.respond(payload)
  *     .exceptionally(error -> {
@@ -97,9 +99,7 @@ public class AgentleException extends RuntimeException {
     return retryable;
   }
 
-  /**
-   * Error codes for Agentle exceptions.
-   */
+  /** Error codes for Agentle exceptions. */
   public enum ErrorCode {
     // API errors
     RATE_LIMITED,
@@ -108,21 +108,21 @@ public class AgentleException extends RuntimeException {
     INVALID_REQUEST,
     SERVER_ERROR,
     SERVICE_UNAVAILABLE,
-    
+
     // Streaming errors
     CONNECTION_DROPPED,
     PARTIAL_OUTPUT,
     STREAM_TIMEOUT,
-    
+
     // Agent errors
     GUARDRAIL_VIOLATED,
     TOOL_EXECUTION_FAILED,
     MAX_TURNS_EXCEEDED,
-    
+
     // Configuration errors
     MISSING_CONFIGURATION,
     INVALID_CONFIGURATION,
-    
+
     // General
     UNKNOWN
   }

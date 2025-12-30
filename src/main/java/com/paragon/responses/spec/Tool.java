@@ -38,6 +38,5 @@ public sealed interface Tool extends ToolChoiceRepresentable
         LocalShellTool,
         ShellTool,
         CustomTool {
-  @NonNull
-  String toToolChoice(ObjectMapper mapper) throws JsonProcessingException;
+  @NonNull String toToolChoice(ObjectMapper mapper) throws JsonProcessingException;
 }

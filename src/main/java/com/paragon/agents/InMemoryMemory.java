@@ -12,9 +12,9 @@ import org.jspecify.annotations.NonNull;
 /**
  * Thread-safe in-memory implementation of {@link Memory} with user isolation.
  *
- * <p>Memories are stored per-user in separate maps to ensure complete isolation.
- * For production use with large amounts of data or semantic search requirements,
- * consider implementations backed by vector databases.
+ * <p>Memories are stored per-user in separate maps to ensure complete isolation. For production use
+ * with large amounts of data or semantic search requirements, consider implementations backed by
+ * vector databases.
  *
  * @see Memory
  * @see MemoryEntry
@@ -94,8 +94,7 @@ public final class InMemoryMemory implements Memory {
   }
 
   @Override
-  public void update(
-      @NonNull String userId, @NonNull String id, @NonNull MemoryEntry entry) {
+  public void update(@NonNull String userId, @NonNull String id, @NonNull MemoryEntry entry) {
     Objects.requireNonNull(userId, "userId cannot be null");
     Objects.requireNonNull(id, "id cannot be null");
     Objects.requireNonNull(entry, "entry cannot be null");

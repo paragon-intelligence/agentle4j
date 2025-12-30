@@ -9,10 +9,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Comprehensive tests for FunctionToolCallOutput.
  *
- * <p>Tests cover:
- * - Factory methods (success, error, inProgress)
- * - Image and file outputs
- * - CallId generation
+ * <p>Tests cover: - Factory methods (success, error, inProgress) - Image and file outputs - CallId
+ * generation
  */
 @DisplayName("FunctionToolCallOutput Tests")
 class FunctionToolCallOutputTest {

@@ -6,75 +6,54 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 public interface Observation {
-  @NonNull
-  String getId();
+  @NonNull String getId();
 
-  @NonNull
-  String getTraceId();
+  @NonNull String getTraceId();
 
-  @Nullable
-  String getParentObservationId(); // null if root observation
+  @Nullable String getParentObservationId(); // null if root observation
 
-  @NonNull
-  String getName();
+  @NonNull String getName();
 
-  @NonNull
-  ObservationType getType();
+  @NonNull ObservationType getType();
 
   long getStartTimeMs();
 
   long getEndTimeMs();
 
   // Input/Output
-  @Nullable
-  Object getInput();
+  @Nullable Object getInput();
 
-  @Nullable
-  Object getOutput();
+  @Nullable Object getOutput();
 
-  @NonNull
-  List<MultiModalContent> getInputModalities();
+  @NonNull List<MultiModalContent> getInputModalities();
 
-  @NonNull
-  List<MultiModalContent> getOutputModalities();
+  @NonNull List<MultiModalContent> getOutputModalities();
 
   // Metadata & Attributes
-  @NonNull
-  Map<String, Object> getMetadata();
+  @NonNull Map<String, Object> getMetadata();
 
-  @NonNull
-  Map<String, Object> getAttributes();
+  @NonNull Map<String, Object> getAttributes();
 
   // LLM-specific (for GENERATION type)
-  @Nullable
-  String getModel();
+  @Nullable String getModel();
 
-  @NonNull
-  Map<String, Object> getModelParameters();
+  @NonNull Map<String, Object> getModelParameters();
 
-  @Nullable
-  TokenUsage getTokenUsage();
+  @Nullable TokenUsage getTokenUsage();
 
-  @Nullable
-  CostDetails getCost();
+  @Nullable CostDetails getCost();
 
-  @Nullable
-  Long getCompletionStartTimeMs();
+  @Nullable Long getCompletionStartTimeMs();
 
   // Status
-  @NonNull
-  ObservationLevel getLevel();
+  @NonNull ObservationLevel getLevel();
 
-  @Nullable
-  String getStatusMessage();
+  @Nullable String getStatusMessage();
 
-  @NonNull
-  ObservationStatus getStatus();
+  @NonNull ObservationStatus getStatus();
 
   // Versioning
-  @Nullable
-  String getVersion();
+  @Nullable String getVersion();
 
-  @Nullable
-  String getEnvironment();
+  @Nullable String getEnvironment();
 }

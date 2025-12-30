@@ -19,26 +19,22 @@ public sealed interface TelemetryEvent
    * Unique session identifier for correlating events within a single respond() call. Either
    * provided by the user or auto-generated as a UUID.
    */
-  @NonNull
-  String sessionId();
+  @NonNull String sessionId();
 
   /**
    * OpenTelemetry trace ID (16-byte hex string, 32 characters). Groups all spans that are part of
    * the same distributed trace.
    */
-  @NonNull
-  String traceId();
+  @NonNull String traceId();
 
   /**
    * OpenTelemetry span ID (8-byte hex string, 16 characters). Unique identifier for this specific
    * span/event.
    */
-  @NonNull
-  String spanId();
+  @NonNull String spanId();
 
   /** Parent span ID for trace correlation, null if this is the root span. */
-  @Nullable
-  String parentSpanId();
+  @Nullable String parentSpanId();
 
   /**
    * Event timestamp in nanoseconds since Unix epoch. Used for precise timing in OpenTelemetry
@@ -47,6 +43,5 @@ public sealed interface TelemetryEvent
   long timestampNanos();
 
   /** Additional key-value attributes for the event. Follows OpenTelemetry semantic conventions. */
-  @NonNull
-  Map<String, Object> attributes();
+  @NonNull Map<String, Object> attributes();
 }

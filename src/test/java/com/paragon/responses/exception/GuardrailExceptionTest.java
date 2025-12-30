@@ -43,8 +43,7 @@ class GuardrailExceptionTest {
     @DisplayName("should have appropriate suggestion for INPUT violation")
     void shouldHaveSuggestionForInput() {
       GuardrailException e =
-          new GuardrailException(
-              "test", GuardrailException.ViolationType.INPUT, "blocked");
+          new GuardrailException("test", GuardrailException.ViolationType.INPUT, "blocked");
 
       assertTrue(e.suggestion().toLowerCase().contains("rephrase"));
     }
@@ -53,8 +52,7 @@ class GuardrailExceptionTest {
     @DisplayName("should have appropriate suggestion for OUTPUT violation")
     void shouldHaveSuggestionForOutput() {
       GuardrailException e =
-          new GuardrailException(
-              "test", GuardrailException.ViolationType.OUTPUT, "blocked");
+          new GuardrailException("test", GuardrailException.ViolationType.OUTPUT, "blocked");
 
       assertTrue(e.suggestion().toLowerCase().contains("blocked"));
     }

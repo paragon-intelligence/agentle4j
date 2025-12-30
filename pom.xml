@@ -10,7 +10,9 @@
     <packaging>jar</packaging>
 
     <name>Agentle4j</name>
-    <description>A modern Java client library for interacting with the Anthropic Claude API with support for streaming, tool calling, and observability</description>
+    <description>A modern Java client library for interacting with the Anthropic Claude API with support for streaming,
+        tool calling, and observability
+    </description>
     <url>https://github.com/paragon-intelligence/agentle4j</url>
 
     <licenses>
@@ -156,6 +158,13 @@
             <version>${jmh.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.datatype/jackson-datatype-jsr310 -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.20.1</version>
+        </dependency>
     </dependencies>
 
     <distributionManagement>
@@ -227,7 +236,7 @@
             </plugin>
 
             <!-- Maven Central Publishing Requirements -->
-            
+
             <!-- Generate sources jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

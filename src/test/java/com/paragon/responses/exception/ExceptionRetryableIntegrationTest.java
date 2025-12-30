@@ -8,9 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/**
- * Integration tests verifying the isRetryable() behavior across all exception types.
- */
+/** Integration tests verifying the isRetryable() behavior across all exception types. */
 @DisplayName("Exception Retryability Integration")
 class ExceptionRetryableIntegrationTest {
 
@@ -36,8 +34,8 @@ class ExceptionRetryableIntegrationTest {
     @Test
     @DisplayName("StreamingException from connectionDropped should be retryable")
     void connectionDroppedShouldBeRetryable() {
-      StreamingException e = StreamingException.connectionDropped(
-          new java.io.IOException("Reset"), null, 0);
+      StreamingException e =
+          StreamingException.connectionDropped(new java.io.IOException("Reset"), null, 0);
       assertTrue(e.isRetryable());
     }
 
@@ -65,7 +63,8 @@ class ExceptionRetryableIntegrationTest {
     @ValueSource(ints = {400, 404, 405, 422})
     @DisplayName("InvalidRequestException should not be retryable")
     void invalidRequestShouldNotBeRetryable(int statusCode) {
-      InvalidRequestException e = new InvalidRequestException(statusCode, "Bad request", null, null);
+      InvalidRequestException e =
+          new InvalidRequestException(statusCode, "Bad request", null, null);
       assertFalse(e.isRetryable());
     }
 
@@ -121,8 +120,9 @@ class ExceptionRetryableIntegrationTest {
     @DisplayName("all exceptions should extend RuntimeException")
     void runtimeExceptionHierarchy() {
       assertInstanceOf(RuntimeException.class, new RateLimitException("", null, null, null));
-      assertInstanceOf(RuntimeException.class, new StreamingException(
-          AgentleException.ErrorCode.STREAM_TIMEOUT, "", null, 0, false));
+      assertInstanceOf(
+          RuntimeException.class,
+          new StreamingException(AgentleException.ErrorCode.STREAM_TIMEOUT, "", null, 0, false));
       assertInstanceOf(RuntimeException.class, GuardrailException.outputViolation("test"));
     }
   }
@@ -134,26 +134,29 @@ class ExceptionRetryableIntegrationTest {
     @Test
     @DisplayName("should create correct exception type for each status code")
     void shouldCreateCorrectTypes() {
-      assertInstanceOf(RateLimitException.class, 
-          ApiException.fromStatusCode(429, "Rate limit", null, null));
-      
-      assertInstanceOf(AuthenticationException.class,
+      assertInstanceOf(
+          RateLimitException.class, ApiException.fromStatusCode(429, "Rate limit", null, null));
+
+      assertInstanceOf(
+          AuthenticationException.class,
           ApiException.fromStatusCode(401, "Unauthorized", null, null));
-      
-      assertInstanceOf(AuthenticationException.class,
-          ApiException.fromStatusCode(403, "Forbidden", null, null));
-      
-      assertInstanceOf(InvalidRequestException.class,
+
+      assertInstanceOf(
+          AuthenticationException.class, ApiException.fromStatusCode(403, "Forbidden", null, null));
+
+      assertInstanceOf(
+          InvalidRequestException.class,
           ApiException.fromStatusCode(400, "Bad request", null, null));
-      
-      assertInstanceOf(InvalidRequestException.class,
+
+      assertInstanceOf(
+          InvalidRequestException.class,
           ApiException.fromStatusCode(422, "Unprocessable", null, null));
-      
-      assertInstanceOf(ServerException.class,
-          ApiException.fromStatusCode(500, "Internal error", null, null));
-      
-      assertInstanceOf(ServerException.class,
-          ApiException.fromStatusCode(503, "Unavailable", null, null));
+
+      assertInstanceOf(
+          ServerException.class, ApiException.fromStatusCode(500, "Internal error", null, null));
+
+      assertInstanceOf(
+          ServerException.class, ApiException.fromStatusCode(503, "Unavailable", null, null));
     }
 
     @Test

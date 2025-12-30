@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -22,13 +21,14 @@ import org.junit.jupiter.api.Test;
  * Integration tests for retry functionality in {@link Responder}.
  *
  * <p>Tests verify:
+ *
  * <ul>
- *   <li>Retry on 429 (rate limit)</li>
- *   <li>Retry on 5xx server errors</li>
- *   <li>No retry on 4xx client errors (except 429)</li>
- *   <li>Retry on network failures</li>
- *   <li>Max retries limit</li>
- *   <li>Disabled retries</li>
+ *   <li>Retry on 429 (rate limit)
+ *   <li>Retry on 5xx server errors
+ *   <li>No retry on 4xx client errors (except 429)
+ *   <li>Retry on network failures
+ *   <li>Max retries limit
+ *   <li>Disabled retries
  * </ul>
  */
 class ResponderRetryTest {
@@ -42,11 +42,12 @@ class ResponderRetryTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
     // Short timeouts for faster tests
-    okHttpClient = new OkHttpClient.Builder()
-        .connectTimeout(1, TimeUnit.SECONDS)
-        .readTimeout(1, TimeUnit.SECONDS)
-        .writeTimeout(1, TimeUnit.SECONDS)
-        .build();
+    okHttpClient =
+        new OkHttpClient.Builder()
+            .connectTimeout(1, TimeUnit.SECONDS)
+            .readTimeout(1, TimeUnit.SECONDS)
+            .writeTimeout(1, TimeUnit.SECONDS)
+            .build();
   }
 
   @AfterEach
@@ -125,9 +126,11 @@ class ResponderRetryTest {
 
     Responder responder = createResponder(RetryPolicy.defaults());
 
-    ExecutionException ex = assertThrows(ExecutionException.class, 
-        () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
-    
+    ExecutionException ex =
+        assertThrows(
+            ExecutionException.class,
+            () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+
     assertTrue(ex.getCause().getMessage().contains("400"));
     assertEquals(1, mockWebServer.getRequestCount()); // No retry
   }
@@ -138,9 +141,11 @@ class ResponderRetryTest {
 
     Responder responder = createResponder(RetryPolicy.defaults());
 
-    ExecutionException ex = assertThrows(ExecutionException.class,
-        () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
-    
+    ExecutionException ex =
+        assertThrows(
+            ExecutionException.class,
+            () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+
     assertTrue(ex.getCause().getMessage().contains("401"));
     assertEquals(1, mockWebServer.getRequestCount());
   }
@@ -151,9 +156,11 @@ class ResponderRetryTest {
 
     Responder responder = createResponder(RetryPolicy.defaults());
 
-    ExecutionException ex = assertThrows(ExecutionException.class,
-        () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
-    
+    ExecutionException ex =
+        assertThrows(
+            ExecutionException.class,
+            () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+
     assertTrue(ex.getCause().getMessage().contains("404"));
     assertEquals(1, mockWebServer.getRequestCount());
   }
@@ -166,15 +173,18 @@ class ResponderRetryTest {
     mockWebServer.enqueue(new MockResponse().setResponseCode(500).setBody("Error 3"));
     mockWebServer.enqueue(new MockResponse().setResponseCode(500).setBody("Error 4"));
 
-    RetryPolicy policy = RetryPolicy.builder()
-        .maxRetries(3)
-        .initialDelay(Duration.ofMillis(10)) // Fast for tests
-        .build();
+    RetryPolicy policy =
+        RetryPolicy.builder()
+            .maxRetries(3)
+            .initialDelay(Duration.ofMillis(10)) // Fast for tests
+            .build();
     Responder responder = createResponder(policy);
 
-    ExecutionException ex = assertThrows(ExecutionException.class,
-        () -> responder.respond(createPayload()).get(30, TimeUnit.SECONDS));
-    
+    ExecutionException ex =
+        assertThrows(
+            ExecutionException.class,
+            () -> responder.respond(createPayload()).get(30, TimeUnit.SECONDS));
+
     assertTrue(ex.getCause().getMessage().contains("500"));
     assertEquals(4, mockWebServer.getRequestCount()); // 1 initial + 3 retries
   }
@@ -185,9 +195,11 @@ class ResponderRetryTest {
 
     Responder responder = createResponder(RetryPolicy.disabled());
 
-    ExecutionException ex = assertThrows(ExecutionException.class,
-        () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
-    
+    ExecutionException ex =
+        assertThrows(
+            ExecutionException.class,
+            () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+
     assertTrue(ex.getCause().getMessage().contains("429"));
     assertEquals(1, mockWebServer.getRequestCount());
   }
@@ -199,12 +211,10 @@ class ResponderRetryTest {
     // Second request: success
     mockWebServer.enqueue(createSuccessResponse());
 
-    RetryPolicy policy = RetryPolicy.builder()
-        .maxRetries(3)
-        .initialDelay(Duration.ofMillis(10))
-        .build();
+    RetryPolicy policy =
+        RetryPolicy.builder().maxRetries(3).initialDelay(Duration.ofMillis(10)).build();
     Responder responder = createResponder(policy);
-    
+
     Response response = responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
 
     assertNotNull(response);
@@ -219,12 +229,10 @@ class ResponderRetryTest {
     mockWebServer.enqueue(new MockResponse().setResponseCode(500).setBody("Error"));
     mockWebServer.enqueue(createSuccessResponse());
 
-    RetryPolicy policy = RetryPolicy.builder()
-        .maxRetries(5)
-        .initialDelay(Duration.ofMillis(10))
-        .build();
+    RetryPolicy policy =
+        RetryPolicy.builder().maxRetries(5).initialDelay(Duration.ofMillis(10)).build();
     Responder responder = createResponder(policy);
-    
+
     Response response = responder.respond(createPayload()).get(30, TimeUnit.SECONDS);
 
     assertNotNull(response);
@@ -233,17 +241,18 @@ class ResponderRetryTest {
 
   @Test
   void customRetryableStatusCodes_onlyRetriesConfiguredCodes() throws Exception {
-    // 418 is normally not retryable, but we configure it 
+    // 418 is normally not retryable, but we configure it
     mockWebServer.enqueue(new MockResponse().setResponseCode(418).setBody("I'm a teapot"));
     mockWebServer.enqueue(createSuccessResponse());
 
-    RetryPolicy policy = RetryPolicy.builder()
-        .maxRetries(3)
-        .retryableStatusCodes(Set.of(418))
-        .initialDelay(Duration.ofMillis(10))
-        .build();
+    RetryPolicy policy =
+        RetryPolicy.builder()
+            .maxRetries(3)
+            .retryableStatusCodes(Set.of(418))
+            .initialDelay(Duration.ofMillis(10))
+            .build();
     Responder responder = createResponder(policy);
-    
+
     Response response = responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
 
     assertNotNull(response);
@@ -256,13 +265,14 @@ class ResponderRetryTest {
     mockWebServer.enqueue(createSuccessResponse());
 
     // Use the simple maxRetries() builder method
-    Responder responder = Responder.builder()
-        .httpClient(okHttpClient)
-        .apiKey(TEST_API_KEY)
-        .baseUrl(mockWebServer.url("/v1/responses"))
-        .maxRetries(3)
-        .build();
-    
+    Responder responder =
+        Responder.builder()
+            .httpClient(okHttpClient)
+            .apiKey(TEST_API_KEY)
+            .baseUrl(mockWebServer.url("/v1/responses"))
+            .maxRetries(3)
+            .build();
+
     Response response = responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
 
     assertNotNull(response);
@@ -281,13 +291,37 @@ class ResponderRetryTest {
   }
 
   private MockResponse createSuccessResponse() throws Exception {
-    Response response = new Response(
-        null, null, System.currentTimeMillis() / 1000, null,
-        "resp-123", null, null, null, null, null,
-        "gpt-4o", ResponseObject.RESPONSE, null, null, null, null,
-        null, null, null, null, ResponseGenerationStatus.COMPLETED,
-        null, null, null, null, null, null, null);
-    
+    Response response =
+        new Response(
+            null,
+            null,
+            System.currentTimeMillis() / 1000,
+            null,
+            "resp-123",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "gpt-4o",
+            ResponseObject.RESPONSE,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            ResponseGenerationStatus.COMPLETED,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
+
     String json = ResponsesApiObjectMapper.create().writeValueAsString(response);
     return new MockResponse()
         .setResponseCode(200)
@@ -297,9 +331,32 @@ class ResponderRetryTest {
 
   private CreateResponsePayload createPayload() {
     return new CreateResponsePayload(
-        null, null, null,
+        null,
+        null,
+        null,
         List.of(new DeveloperMessage(List.of(new Text("Test")), null)),
-        "Test", null, null, null, "gpt-4o", null, null, null, null,
-        null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        "Test",
+        null,
+        null,
+        null,
+        "gpt-4o",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 }

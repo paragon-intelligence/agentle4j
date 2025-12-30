@@ -2,29 +2,22 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
+import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
+import java.io.IOException;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.paragon.responses.Responder;
-
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-
 /**
  * Tests for Agent multi-turn conversation behavior.
  *
- * <p>Tests cover:
- * - Context reuse across multiple interact() calls
- * - History accumulation verification
- * - Turn count tracking
- * - State preservation
+ * <p>Tests cover: - Context reuse across multiple interact() calls - History accumulation
+ * verification - Turn count tracking - State preservation
  */
 @DisplayName("Agent Multi-Turn Tests")
 class AgentMultiTurnTest {
@@ -37,11 +30,8 @@ class AgentMultiTurnTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
 
-    responder = Responder.builder()
-        .openRouter()
-        .apiKey("test-key")
-        .baseUrl(mockWebServer.url("/"))
-        .build();
+    responder =
+        Responder.builder().openRouter().apiKey("test-key").baseUrl(mockWebServer.url("/")).build();
   }
 
   @AfterEach
@@ -287,7 +277,8 @@ class AgentMultiTurnTest {
   }
 
   private void enqueueSuccessResponse(String text) {
-    String responseJson = """
+    String responseJson =
+        """
         {
           "id": "resp_%d",
           "object": "response",
@@ -314,11 +305,13 @@ class AgentMultiTurnTest {
             "total_tokens": 30
           }
         }
-        """.formatted(System.nanoTime(), text);
+        """
+            .formatted(System.nanoTime(), text);
 
-    mockWebServer.enqueue(new MockResponse()
-        .setBody(responseJson)
-        .setHeader("Content-Type", "application/json")
-        .setResponseCode(200));
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setBody(responseJson)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
   }
 }

@@ -12,9 +12,7 @@ package com.paragon.agents;
  */
 public sealed interface GuardrailResult {
 
-  /**
-   * Indicates the validation passed successfully.
-   */
+  /** Indicates the validation passed successfully. */
   record Passed() implements GuardrailResult {
     private static final Passed INSTANCE = new Passed();
   }

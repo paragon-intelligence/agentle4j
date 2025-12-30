@@ -34,8 +34,7 @@ class AgentleExceptionTest {
     @DisplayName("should create exception with null suggestion")
     void shouldCreateWithNullSuggestion() {
       AgentleException e =
-          new AgentleException(
-              AgentleException.ErrorCode.SERVER_ERROR, "Server error", null, true);
+          new AgentleException(AgentleException.ErrorCode.SERVER_ERROR, "Server error", null, true);
 
       assertEquals(AgentleException.ErrorCode.SERVER_ERROR, e.code());
       assertNull(e.suggestion());

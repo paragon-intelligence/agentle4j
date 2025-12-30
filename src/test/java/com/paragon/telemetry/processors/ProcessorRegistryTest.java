@@ -2,25 +2,20 @@ package com.paragon.telemetry.processors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.paragon.telemetry.events.ResponseCompletedEvent;
+import com.paragon.telemetry.events.TelemetryEvent;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.paragon.telemetry.events.ResponseCompletedEvent;
-import com.paragon.telemetry.events.TelemetryEvent;
-
 /**
  * Comprehensive tests for ProcessorRegistry.
  *
- * <p>Tests cover:
- * - Factory methods (empty, of)
- * - Broadcast to multiple processors
- * - Flush and shutdown lifecycle
- * - Accessors (hasProcessors, size)
+ * <p>Tests cover: - Factory methods (empty, of) - Broadcast to multiple processors - Flush and
+ * shutdown lifecycle - Accessors (hasProcessors, size)
  */
 @DisplayName("ProcessorRegistry Tests")
 class ProcessorRegistryTest {
@@ -76,8 +71,9 @@ class ProcessorRegistryTest {
       TestProcessor processor = new TestProcessor("test");
       ProcessorRegistry registry = ProcessorRegistry.of(processor);
 
-      assertThrows(UnsupportedOperationException.class, () ->
-          registry.processors().add(new TestProcessor("another")));
+      assertThrows(
+          UnsupportedOperationException.class,
+          () -> registry.processors().add(new TestProcessor("another")));
 
       processor.shutdown();
     }
@@ -243,8 +239,7 @@ class ProcessorRegistryTest {
         "trace-456",
         "span-789",
         System.currentTimeMillis() * 1_000_000L,
-        "test-model"
-    );
+        "test-model");
   }
 
   /** Test processor that counts processed events. */

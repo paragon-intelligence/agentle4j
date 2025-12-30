@@ -16,6 +16,5 @@ public interface TraceMetrics {
 
   int getObservationCount();
 
-  @NonNull
-  Map<String, Object> getAggregatedAttributes();
+  @NonNull Map<String, Object> getAggregatedAttributes();
 }

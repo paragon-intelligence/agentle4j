@@ -21,12 +21,13 @@ public @interface FunctionMetadata {
   /**
    * Whether this tool requires human confirmation before execution.
    *
-   * <p>When true, the tool will trigger the {@code onToolCallPending} or {@code onPause}
-   * callback in AgentStream, allowing human-in-the-loop approval workflows.
+   * <p>When true, the tool will trigger the {@code onToolCallPending} or {@code onPause} callback
+   * in AgentStream, allowing human-in-the-loop approval workflows.
    *
    * <p>When false (default), the tool executes automatically without confirmation.
    *
    * <p>Example:
+   *
    * <pre>{@code
    * @FunctionMetadata(
    *     name = "delete_records",
@@ -38,4 +39,3 @@ public @interface FunctionMetadata {
    */
   boolean requiresConfirmation() default false;
 }
-

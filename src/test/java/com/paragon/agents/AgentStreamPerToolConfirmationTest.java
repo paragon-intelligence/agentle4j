@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for AgentStream per-tool confirmation behavior.
- * Tests the logic that determines which tools require confirmation.
+ * Tests for AgentStream per-tool confirmation behavior. Tests the logic that determines which tools
+ * require confirmation.
  */
 @DisplayName("AgentStream Per-Tool Confirmation")
 class AgentStreamPerToolConfirmationTest {
@@ -55,10 +55,11 @@ class AgentStreamPerToolConfirmationTest {
     @Test
     @DisplayName("store correctly identifies tools requiring confirmation")
     void store_identifiesToolsRequiringConfirmation() {
-      FunctionToolStore store = FunctionToolStore.create()
-          .add(new SafeTool())
-          .add(new DangerousTool())
-          .add(new SendEmailTool());
+      FunctionToolStore store =
+          FunctionToolStore.create()
+              .add(new SafeTool())
+              .add(new DangerousTool())
+              .add(new SendEmailTool());
 
       // Safe tool - no confirmation
       FunctionTool<?> safe = store.get("safe_tool");
@@ -79,8 +80,7 @@ class AgentStreamPerToolConfirmationTest {
     @Test
     @DisplayName("unknown tool returns null and check is safe")
     void unknownTool_nullSafeCheck() {
-      FunctionToolStore store = FunctionToolStore.create()
-          .add(new SafeTool());
+      FunctionToolStore store = FunctionToolStore.create().add(new SafeTool());
 
       FunctionTool<?> unknown = store.get("unknown_tool");
 
@@ -96,9 +96,7 @@ class AgentStreamPerToolConfirmationTest {
   @DisplayName("Per-Tool Confirmation Logic (AgentStream simulation)")
   class PerToolConfirmationLogicTests {
 
-    /**
-     * Simulates the AgentStream logic for checking if a tool requires confirmation.
-     */
+    /** Simulates the AgentStream logic for checking if a tool requires confirmation. */
     private boolean checkRequiresConfirmation(FunctionToolStore store, String toolName) {
       FunctionTool<?> tool = store.get(toolName);
       return tool != null && tool.requiresConfirmation();
@@ -107,9 +105,8 @@ class AgentStreamPerToolConfirmationTest {
     @Test
     @DisplayName("safe tool does not trigger confirmation")
     void safeTool_noConfirmation() {
-      FunctionToolStore store = FunctionToolStore.create()
-          .add(new SafeTool())
-          .add(new DangerousTool());
+      FunctionToolStore store =
+          FunctionToolStore.create().add(new SafeTool()).add(new DangerousTool());
 
       assertFalse(checkRequiresConfirmation(store, "safe_tool"));
     }
@@ -117,9 +114,8 @@ class AgentStreamPerToolConfirmationTest {
     @Test
     @DisplayName("dangerous tool triggers confirmation")
     void dangerousTool_triggersConfirmation() {
-      FunctionToolStore store = FunctionToolStore.create()
-          .add(new SafeTool())
-          .add(new DangerousTool());
+      FunctionToolStore store =
+          FunctionToolStore.create().add(new SafeTool()).add(new DangerousTool());
 
       assertTrue(checkRequiresConfirmation(store, "dangerous_tool"));
     }
@@ -127,10 +123,11 @@ class AgentStreamPerToolConfirmationTest {
     @Test
     @DisplayName("multiple dangerous tools each trigger confirmation")
     void multipleDangerousTools_eachTriggersConfirmation() {
-      FunctionToolStore store = FunctionToolStore.create()
-          .add(new SafeTool())
-          .add(new DangerousTool())
-          .add(new SendEmailTool());
+      FunctionToolStore store =
+          FunctionToolStore.create()
+              .add(new SafeTool())
+              .add(new DangerousTool())
+              .add(new SendEmailTool());
 
       assertFalse(checkRequiresConfirmation(store, "safe_tool"));
       assertTrue(checkRequiresConfirmation(store, "dangerous_tool"));
@@ -146,18 +143,18 @@ class AgentStreamPerToolConfirmationTest {
     @DisplayName("handler receives tool call and can approve")
     void handler_canApprove() {
       // Constructor order: arguments, callId, name, id, status
-      FunctionToolCall mockCall = new FunctionToolCall(
-          "{\"value\": \"test\"}", "call-123", "dangerous_tool", null, null
-      );
+      FunctionToolCall mockCall =
+          new FunctionToolCall("{\"value\": \"test\"}", "call-123", "dangerous_tool", null, null);
 
       AtomicBoolean result = new AtomicBoolean(false);
 
-      AgentStream.ToolConfirmationHandler handler = (call, approve) -> {
-        assertEquals("dangerous_tool", call.name());
-        assertEquals("{\"value\": \"test\"}", call.arguments());
-        assertEquals("call-123", call.callId());
-        approve.accept(true);
-      };
+      AgentStream.ToolConfirmationHandler handler =
+          (call, approve) -> {
+            assertEquals("dangerous_tool", call.name());
+            assertEquals("{\"value\": \"test\"}", call.arguments());
+            assertEquals("call-123", call.callId());
+            approve.accept(true);
+          };
 
       handler.handle(mockCall, result::set);
 
@@ -168,15 +165,15 @@ class AgentStreamPerToolConfirmationTest {
     @DisplayName("handler can reject")
     void handler_canReject() {
       // Constructor order: arguments, callId, name, id, status
-      FunctionToolCall mockCall = new FunctionToolCall(
-          "{}", "call-123", "dangerous_tool", null, null
-      );
+      FunctionToolCall mockCall =
+          new FunctionToolCall("{}", "call-123", "dangerous_tool", null, null);
 
       AtomicBoolean result = new AtomicBoolean(true);
 
-      AgentStream.ToolConfirmationHandler handler = (call, approve) -> {
-        approve.accept(false);  // Reject
-      };
+      AgentStream.ToolConfirmationHandler handler =
+          (call, approve) -> {
+            approve.accept(false); // Reject
+          };
 
       handler.handle(mockCall, result::set);
 
@@ -192,18 +189,12 @@ class AgentStreamPerToolConfirmationTest {
     @DisplayName("can approve with tool output")
     void approveToolCall_withOutput() {
       // Constructor order: arguments, callId, name, id, status
-      FunctionToolCall pendingCall = new FunctionToolCall(
-          "{\"table\": \"users\"}", "call-123", "delete_records", null, null
-      );
+      FunctionToolCall pendingCall =
+          new FunctionToolCall("{\"table\": \"users\"}", "call-123", "delete_records", null, null);
 
-      AgentRunState state = AgentRunState.pendingApproval(
-          "TestAgent",
-          AgentContext.create(),
-          pendingCall,
-          null,
-          java.util.List.of(),
-          1
-      );
+      AgentRunState state =
+          AgentRunState.pendingApproval(
+              "TestAgent", AgentContext.create(), pendingCall, null, java.util.List.of(), 1);
 
       assertTrue(state.isPendingApproval());
       assertEquals("delete_records", state.pendingToolCall().name());
@@ -221,18 +212,12 @@ class AgentStreamPerToolConfirmationTest {
     @DisplayName("can reject with reason")
     void rejectToolCall_withReason() {
       // Constructor order: arguments, callId, name, id, status
-      FunctionToolCall pendingCall = new FunctionToolCall(
-          "{}", "call-123", "delete_records", null, null
-      );
+      FunctionToolCall pendingCall =
+          new FunctionToolCall("{}", "call-123", "delete_records", null, null);
 
-      AgentRunState state = AgentRunState.pendingApproval(
-          "TestAgent",
-          AgentContext.create(),
-          pendingCall,
-          null,
-          java.util.List.of(),
-          1
-      );
+      AgentRunState state =
+          AgentRunState.pendingApproval(
+              "TestAgent", AgentContext.create(), pendingCall, null, java.util.List.of(), 1);
 
       state.rejectToolCall("Manager denied: too risky");
 
@@ -244,17 +229,14 @@ class AgentStreamPerToolConfirmationTest {
     @Test
     @DisplayName("throws if approving when not pending")
     void approveToolCall_throwsIfNotPending() {
-      AgentRunState completedState = AgentRunState.completed(
-          "TestAgent",
-          AgentContext.create(),
-          null,
-          java.util.List.of(),
-          1
-      );
+      AgentRunState completedState =
+          AgentRunState.completed("TestAgent", AgentContext.create(), null, java.util.List.of(), 1);
 
-      assertThrows(IllegalStateException.class, () -> {
-        completedState.approveToolCall("output");
-      });
+      assertThrows(
+          IllegalStateException.class,
+          () -> {
+            completedState.approveToolCall("output");
+          });
     }
   }
 }

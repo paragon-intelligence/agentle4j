@@ -3,7 +3,6 @@ package com.paragon.agents;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,14 +11,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Comprehensive tests for InMemoryMemory.
  *
- * <p>Tests cover:
- * - Creation
- * - Add operations
- * - Retrieve operations (with relevance scoring)
- * - Update operations
- * - Delete operations
- * - User isolation
- * - Clear operations
+ * <p>Tests cover: - Creation - Add operations - Retrieve operations (with relevance scoring) -
+ * Update operations - Delete operations - User isolation - Clear operations
  */
 @DisplayName("InMemoryMemory")
 class InMemoryMemoryTest {
@@ -78,7 +71,7 @@ class InMemoryMemoryTest {
     @DisplayName("add() throws when userId is null")
     void add_throwsWhenUserIdNull() {
       MemoryEntry entry = MemoryEntry.of("content");
-      
+
       assertThrows(NullPointerException.class, () -> memory.add(null, entry));
     }
 
@@ -287,8 +280,8 @@ class InMemoryMemoryTest {
     void update_throwsForNonExistentId() {
       MemoryEntry entry = MemoryEntry.of("content");
 
-      assertThrows(IllegalArgumentException.class, 
-          () -> memory.update("user1", "non-existent", entry));
+      assertThrows(
+          IllegalArgumentException.class, () -> memory.update("user1", "non-existent", entry));
     }
   }
 }

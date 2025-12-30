@@ -9,9 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for Tool-related records: AllowedTools, WebSearchTool.
- */
+/** Tests for Tool-related records: AllowedTools, WebSearchTool. */
 class ToolRecordsTest {
 
   private final ObjectMapper mapper = new ObjectMapper();

@@ -1,13 +1,12 @@
 package com.paragon.agents;
 
+import com.paragon.responses.spec.Message;
+import com.paragon.telemetry.processors.TraceIdGenerator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-
-import com.paragon.responses.spec.Message;
-import com.paragon.telemetry.processors.TraceIdGenerator;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -17,11 +16,11 @@ import org.jspecify.annotations.Nullable;
  * <p>From Chapter 7 (Multi-Agent Collaboration): "Multiple agents work on different parts of a
  * problem simultaneously, and their results are later combined."
  *
- * <p><b>All methods are async by default</b> - they return {@link CompletableFuture}.
- * For blocking calls, use {@code .join()}.
+ * <p><b>All methods are async by default</b> - they return {@link CompletableFuture}. For blocking
+ * calls, use {@code .join()}.
  *
- * <p><b>Trace Correlation:</b> All parallel agents share the same parent traceId,
- * enabling end-to-end debugging of fan-out patterns.
+ * <p><b>Trace Correlation:</b> All parallel agents share the same parent traceId, enabling
+ * end-to-end debugging of fan-out patterns.
  *
  * <h2>Usage Example</h2>
  *
@@ -105,8 +104,8 @@ public final class ParallelAgents {
   /**
    * Runs all agents concurrently with the same input and shared context.
    *
-   * <p>Each agent receives a copy of the context to prevent interference.
-   * All parallel agents share the same parent traceId for trace correlation.
+   * <p>Each agent receives a copy of the context to prevent interference. All parallel agents share
+   * the same parent traceId for trace correlation.
    *
    * @param input the input text for all agents
    * @param sharedContext optional shared context (each agent gets a copy)
@@ -132,13 +131,14 @@ public final class ParallelAgents {
 
     // Combine all futures
     return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-        .thenApply(v -> {
-          List<AgentResult> results = new ArrayList<>();
-          for (CompletableFuture<AgentResult> future : futures) {
-            results.add(future.join());
-          }
-          return results;
-        });
+        .thenApply(
+            v -> {
+              List<AgentResult> results = new ArrayList<>();
+              for (CompletableFuture<AgentResult> future : futures) {
+                results.add(future.join());
+              }
+              return results;
+            });
   }
 
   /**
@@ -201,37 +201,43 @@ public final class ParallelAgents {
    * @return future completing with the synthesized result
    */
   public @NonNull CompletableFuture<AgentResult> runAndSynthesize(
-      @NonNull String input,
-      @NonNull Agent synthesizer,
-      @Nullable AgentContext sharedContext) {
+      @NonNull String input, @NonNull Agent synthesizer, @Nullable AgentContext sharedContext) {
     Objects.requireNonNull(input, "input cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
 
     // Run all agents in parallel, then synthesize
-    return run(input, sharedContext).thenCompose(results -> {
-      // Build synthesis prompt with all outputs
-      StringBuilder synthesisPrompt = new StringBuilder();
-      synthesisPrompt.append("Original query: ").append(input).append("\n\n");
-      synthesisPrompt.append("The following agents have provided their outputs:\n\n");
+    return run(input, sharedContext)
+        .thenCompose(
+            results -> {
+              // Build synthesis prompt with all outputs
+              StringBuilder synthesisPrompt = new StringBuilder();
+              synthesisPrompt.append("Original query: ").append(input).append("\n\n");
+              synthesisPrompt.append("The following agents have provided their outputs:\n\n");
 
-      for (int i = 0; i < agents.size(); i++) {
-        Agent agent = agents.get(i);
-        AgentResult result = results.get(i);
-        synthesisPrompt.append("--- ").append(agent.name()).append(" ---\n");
-        if (result.isError()) {
-          synthesisPrompt.append("[ERROR: ").append(result.error().getMessage()).append("]\n");
-        } else {
-          synthesisPrompt.append(result.output() != null ? result.output() : "[No output]").append("\n");
-        }
-        synthesisPrompt.append("\n");
-      }
+              for (int i = 0; i < agents.size(); i++) {
+                Agent agent = agents.get(i);
+                AgentResult result = results.get(i);
+                synthesisPrompt.append("--- ").append(agent.name()).append(" ---\n");
+                if (result.isError()) {
+                  synthesisPrompt
+                      .append("[ERROR: ")
+                      .append(result.error().getMessage())
+                      .append("]\n");
+                } else {
+                  synthesisPrompt
+                      .append(result.output() != null ? result.output() : "[No output]")
+                      .append("\n");
+                }
+                synthesisPrompt.append("\n");
+              }
 
-      synthesisPrompt.append("Please synthesize these outputs into a coherent response.");
+              synthesisPrompt.append("Please synthesize these outputs into a coherent response.");
 
-      // Run synthesizer
-      AgentContext synthContext = sharedContext != null ? sharedContext.copy() : AgentContext.create();
-      synthContext.addInput(Message.user(synthesisPrompt.toString()));
-      return synthesizer.interact(synthContext);
-    });
+              // Run synthesizer
+              AgentContext synthContext =
+                  sharedContext != null ? sharedContext.copy() : AgentContext.create();
+              synthContext.addInput(Message.user(synthesisPrompt.toString()));
+              return synthesizer.interact(synthContext);
+            });
   }
 }

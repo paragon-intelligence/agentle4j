@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for the parsing package classes: File, ParsedFile, and ParsingOptions.
- */
+/** Tests for the parsing package classes: File, ParsedFile, and ParsingOptions. */
 class ParsingTest {
 
   @Nested
@@ -100,14 +98,15 @@ class ParsingTest {
       final boolean[] parseWithOptionsCalled = {false};
       final ParsingOptions[] receivedOptions = {null};
 
-      FileParser parser = new FileParser() {
-        @Override
-        public ParsedFile parse(File file, ParsingOptions options) {
-          parseWithOptionsCalled[0] = true;
-          receivedOptions[0] = options;
-          return new ParsedFile();
-        }
-      };
+      AgenticFileParser parser =
+          new AgenticFileParser() {
+            @Override
+            public ParsedFile parse(File file, ParsingOptions options) {
+              parseWithOptionsCalled[0] = true;
+              receivedOptions[0] = options;
+              return new ParsedFile();
+            }
+          };
 
       File file = new File();
       ParsedFile result = parser.parse(file);

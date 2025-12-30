@@ -1,5 +1,9 @@
 package com.paragon.agents;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paragon.responses.Responder;
+import com.paragon.responses.spec.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -8,24 +12,18 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.paragon.responses.Responder;
-import com.paragon.responses.spec.*;
-import com.paragon.responses.streaming.ResponseStream;
 
 /**
  * Streaming agent interaction with full agentic loop.
  *
  * <p>Unlike simple streaming which only streams one LLM response, AgentStream runs the complete
- * agentic loop including guardrails, tool execution, and multi-turn conversations, emitting
- * events at each phase.
+ * agentic loop including guardrails, tool execution, and multi-turn conversations, emitting events
+ * at each phase.
  *
  * <p>Example usage:
+ *
  * <pre>{@code
  * agent.interactStream("Help me debug this code", context)
  *     .onTurnStart(turn -> System.out.println("--- Turn " + turn + " ---"))
@@ -52,7 +50,7 @@ public final class AgentStream {
   // For resuming
   private final List<ToolExecution> initialExecutions;
   private final int startTurn;
-  
+
   // For pre-failed streams
   private final @Nullable AgentResult preFailedResult;
 
@@ -80,9 +78,7 @@ public final class AgentStream {
     this(agent, input, context, responder, objectMapper, List.of(), 0);
   }
 
-  /**
-   * Constructor for context-only (no new input).
-   */
+  /** Constructor for context-only (no new input). */
   AgentStream(
       @NonNull Agent agent,
       @NonNull AgentContext context,
@@ -91,9 +87,7 @@ public final class AgentStream {
     this(agent, List.of(), context, responder, objectMapper, List.of(), 0);
   }
 
-  /**
-   * Constructor for resuming from a saved state.
-   */
+  /** Constructor for resuming from a saved state. */
   AgentStream(
       @NonNull Agent agent,
       @NonNull List<ResponseInputItem> input,
@@ -109,19 +103,17 @@ public final class AgentStream {
     this.initialExecutions = new ArrayList<>(initialExecutions);
     this.startTurn = startTurn;
     this.preFailedResult = null;
-    
+
     // Add input to context immediately
     for (ResponseInputItem item : input) {
       context.addInput(item);
     }
   }
 
-  /**
-   * Creates a pre-failed AgentStream for immediate error return (e.g., guardrail failure).
-   */
+  /** Creates a pre-failed AgentStream for immediate error return (e.g., guardrail failure). */
   private AgentStream(@NonNull AgentResult failedResult) {
     this.agent = null;
-    this.context = null;  // Not needed for pre-failed streams
+    this.context = null; // Not needed for pre-failed streams
     this.responder = null;
     this.objectMapper = null;
     this.initialExecutions = List.of();
@@ -129,9 +121,7 @@ public final class AgentStream {
     this.preFailedResult = failedResult;
   }
 
-  /**
-   * Creates a pre-failed stream that immediately completes with the given result.
-   */
+  /** Creates a pre-failed stream that immediately completes with the given result. */
   static @NonNull AgentStream failed(@NonNull AgentResult failedResult) {
     return new AgentStream(failedResult);
   }
@@ -174,10 +164,11 @@ public final class AgentStream {
   /**
    * Called when a tool call is detected, BEFORE execution. Enables human-in-the-loop.
    *
-   * <p>If this handler is set, tools are NOT auto-executed. The handler must call the
-   * callback with {@code true} to approve or {@code false} to reject.
+   * <p>If this handler is set, tools are NOT auto-executed. The handler must call the callback with
+   * {@code true} to approve or {@code false} to reject.
    *
    * <p>Example:
+   *
    * <pre>{@code
    * .onToolCallPending((call, approve) -> {
    *     System.out.println("Tool: " + call.name() + " - Args: " + call.arguments());
@@ -201,6 +192,7 @@ public final class AgentStream {
    * that can be persisted (e.g., to a database) and resumed later with {@code Agent.resume()}.
    *
    * <p>Example:
+   *
    * <pre>{@code
    * .onPause(state -> {
    *     // Save to database for later approval
@@ -298,7 +290,7 @@ public final class AgentStream {
       emit(onComplete, preFailedResult);
       return preFailedResult;
     }
-    
+
     try {
 
       // 3. Execute agentic loop
@@ -325,8 +317,8 @@ public final class AgentStream {
         // 3c. Check for handoffs
         List<FunctionToolCall> allCalls = lastResponse.functionToolCalls();
         for (Handoff handoff : agent.handoffs()) {
-          boolean hasHandoffCall = allCalls.stream()
-              .anyMatch(call -> handoff.name().equals(call.name()));
+          boolean hasHandoffCall =
+              allCalls.stream().anyMatch(call -> handoff.name().equals(call.name()));
           if (hasHandoffCall) {
             emit(onHandoff, handoff);
             // TODO: Execute handoff agent
@@ -347,9 +339,9 @@ public final class AgentStream {
           // Check if this specific tool requires confirmation
           FunctionTool<?> tool = agent.toolStore().get(call.name());
           boolean toolRequiresConfirmation = tool != null && tool.requiresConfirmation();
-          
+
           boolean shouldExecute = true;
-          
+
           // Only trigger HITL callbacks for tools that require confirmation
           if (toolRequiresConfirmation) {
             // Handle synchronous approval callback
@@ -358,12 +350,17 @@ public final class AgentStream {
               onToolCallPending.handle(call, approved::set);
               shouldExecute = approved.get();
             }
-            
+
             // Handle async pause for long-running approvals
             if (onPause != null) {
-              AgentRunState pauseState = AgentRunState.pendingApproval(
-                  agent.name(), context, call, lastResponse, 
-                  allToolExecutions, context.getTurnCount());
+              AgentRunState pauseState =
+                  AgentRunState.pendingApproval(
+                      agent.name(),
+                      context,
+                      call,
+                      lastResponse,
+                      allToolExecutions,
+                      context.getTurnCount());
               onPause.onPause(pauseState);
               // Return paused result - caller must resume later
               return AgentResult.paused(pauseState, context);
@@ -377,8 +374,8 @@ public final class AgentStream {
             context.addToolResult(exec.output());
           } else {
             // Tool rejected - add rejection message
-            FunctionToolCallOutput rejectedOutput = FunctionToolCallOutput.error(
-                call.callId(), "Tool execution was rejected by user");
+            FunctionToolCallOutput rejectedOutput =
+                FunctionToolCallOutput.error(call.callId(), "Tool execution was rejected by user");
             context.addToolResult(rejectedOutput);
           }
         }
@@ -391,16 +388,17 @@ public final class AgentStream {
         if (result.isFailed()) {
           GuardrailResult.Failed failed = (GuardrailResult.Failed) result;
           emit(onGuardrailFailed, failed);
-          AgentResult errorResult = AgentResult.guardrailFailed(
-              "Output guardrail: " + failed.reason(), context);
+          AgentResult errorResult =
+              AgentResult.guardrailFailed("Output guardrail: " + failed.reason(), context);
           emit(onComplete, errorResult);
           return errorResult;
         }
       }
 
       // 5. Success
-      AgentResult successResult = AgentResult.success(
-          output, lastResponse, context, allToolExecutions, context.getTurnCount());
+      AgentResult successResult =
+          AgentResult.success(
+              output, lastResponse, context, allToolExecutions, context.getTurnCount());
       emit(onComplete, successResult);
       return successResult;
 
@@ -414,17 +412,17 @@ public final class AgentStream {
 
   private Response streamLLMResponse(AgentContext context) {
     CreateResponsePayload payload = agent.buildPayloadInternal(context);
-    
+
     // For now, use non-streaming since we need the full agentic loop
     // TODO: Integrate with ResponseStream for true streaming within each turn
     CompletableFuture<Response> future = responder.respond(payload);
     Response response = future.join();
-    
+
     // Emit text delta for the complete response (for now)
     if (onTextDelta != null && response.outputText() != null) {
       onTextDelta.accept(response.outputText());
     }
-    
+
     return response;
   }
 
@@ -436,8 +434,9 @@ public final class AgentStream {
       return new ToolExecution(call.name(), call.callId(), call.arguments(), output, duration);
     } catch (JsonProcessingException e) {
       Duration duration = Duration.between(start, Instant.now());
-      FunctionToolCallOutput errorOutput = FunctionToolCallOutput.error(
-          call.callId(), "Failed to parse arguments: " + e.getMessage());
+      FunctionToolCallOutput errorOutput =
+          FunctionToolCallOutput.error(
+              call.callId(), "Failed to parse arguments: " + e.getMessage());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
     }
   }
@@ -460,9 +459,7 @@ public final class AgentStream {
 
   // ===== Functional Interfaces =====
 
-  /**
-   * Handler for tool call confirmation (human-in-the-loop).
-   */
+  /** Handler for tool call confirmation (human-in-the-loop). */
   @FunctionalInterface
   public interface ToolConfirmationHandler {
     /**
@@ -474,16 +471,14 @@ public final class AgentStream {
     void handle(@NonNull FunctionToolCall call, @NonNull Consumer<Boolean> approvalCallback);
   }
 
-  /**
-   * Handler for pausing agent runs (for long-running approvals).
-   */
+  /** Handler for pausing agent runs (for long-running approvals). */
   @FunctionalInterface
   public interface PauseHandler {
     /**
      * Called when an agent run should pause for tool approval.
      *
-     * <p>The state is serializable and can be persisted to a database.
-     * Resume later with {@code Agent.resume(state)}.
+     * <p>The state is serializable and can be persisted to a database. Resume later with {@code
+     * Agent.resume(state)}.
      *
      * @param state the serializable run state to save
      */

@@ -3,10 +3,9 @@ package com.paragon.agents;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
+import java.util.*;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-
-import java.util.*;
 
 /**
  * Holds conversation state for an agent interaction.
@@ -72,14 +71,15 @@ public final class AgentContext {
     return new AgentContext(history, new HashMap<>(), 0);
   }
 
-  public static @NonNull AgentContext create(@NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state) {
+  public static @NonNull AgentContext create(
+      @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state) {
     return new AgentContext(history, state, 0);
   }
 
-  public static @NonNull AgentContext create(@NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state, int turnCount) {
+  public static @NonNull AgentContext create(
+      @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state, int turnCount) {
     return new AgentContext(history, state, turnCount);
   }
-
 
   /**
    * Creates an AgentContext pre-populated with conversation history.
@@ -154,7 +154,7 @@ public final class AgentContext {
   /**
    * Stores a custom value in the context's state.
    *
-   * @param key   the key to store under
+   * @param key the key to store under
    * @param value the value to store (can be null to remove)
    * @return this context for method chaining
    */
@@ -182,9 +182,9 @@ public final class AgentContext {
   /**
    * Retrieves a typed value from the context's state.
    *
-   * @param key  the key to look up
+   * @param key the key to look up
    * @param type the expected type
-   * @param <T>  the type parameter
+   * @param <T> the type parameter
    * @return the stored value cast to the expected type, or null if not found
    * @throws ClassCastException if the stored value is not of the expected type
    */
@@ -259,11 +259,8 @@ public final class AgentContext {
    * @return a new context with copied history and state
    */
   public @NonNull AgentContext copy() {
-    AgentContext copy = new AgentContext(
-        new ArrayList<>(this.history),
-        new HashMap<>(this.state),
-        this.turnCount
-    );
+    AgentContext copy =
+        new AgentContext(new ArrayList<>(this.history), new HashMap<>(this.state), this.turnCount);
     copy.parentTraceId = this.parentTraceId;
     copy.parentSpanId = this.parentSpanId;
     copy.requestId = this.requestId;
@@ -284,11 +281,11 @@ public final class AgentContext {
   /**
    * Sets the parent trace context for distributed tracing.
    *
-   * <p>When set, child spans will be linked to this parent, enabling
-   * end-to-end trace correlation across multi-agent runs.
+   * <p>When set, child spans will be linked to this parent, enabling end-to-end trace correlation
+   * across multi-agent runs.
    *
    * @param traceId the parent trace ID (32-char hex)
-   * @param spanId  the parent span ID (16-char hex)
+   * @param spanId the parent span ID (16-char hex)
    * @return this context for method chaining
    */
   public @NonNull AgentContext withTraceContext(@NonNull String traceId, @NonNull String spanId) {
@@ -300,8 +297,8 @@ public final class AgentContext {
   /**
    * Sets the request ID for high-level correlation.
    *
-   * <p>The request ID is a user-defined identifier that groups all
-   * operations from a single user request, even across multiple traces.
+   * <p>The request ID is a user-defined identifier that groups all operations from a single user
+   * request, even across multiple traces.
    *
    * @param requestId the unique request identifier
    * @return this context for method chaining
@@ -350,8 +347,8 @@ public final class AgentContext {
   /**
    * Creates a forked copy for child agent execution with updated parent span.
    *
-   * <p>Use this when handing off to a child agent. The child will have the
-   * same history but can generate its own child spans under the given parent.
+   * <p>Use this when handing off to a child agent. The child will have the same history but can
+   * generate its own child spans under the given parent.
    *
    * @param newParentSpanId the span ID to use as the parent for the child
    * @return a new context with the updated parent span

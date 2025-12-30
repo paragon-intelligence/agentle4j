@@ -32,8 +32,7 @@ class ToolExecutionExceptionTest {
     @Test
     @DisplayName("should create with null optional fields")
     void shouldCreateWithNullOptionalFields() {
-      ToolExecutionException e =
-          new ToolExecutionException("my_tool", null, null, "Tool failed");
+      ToolExecutionException e = new ToolExecutionException("my_tool", null, null, "Tool failed");
 
       assertEquals("my_tool", e.toolName());
       assertNull(e.callId());
@@ -62,8 +61,7 @@ class ToolExecutionExceptionTest {
     @Test
     @DisplayName("should extend AgentleException")
     void shouldExtendAgentleException() {
-      ToolExecutionException e =
-          new ToolExecutionException("tool", null, null, "error");
+      ToolExecutionException e = new ToolExecutionException("tool", null, null, "error");
 
       assertInstanceOf(AgentleException.class, e);
     }

@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.Map;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,12 +11,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Comprehensive tests for TelemetryContext.
  *
- * <p>Tests cover:
- * - Builder pattern
- * - Factory methods (empty, forUser)
- * - toAttributes() output
- * - Immutability
- * - Null handling
+ * <p>Tests cover: - Builder pattern - Factory methods (empty, forUser) - toAttributes() output -
+ * Immutability - Null handling
  */
 @DisplayName("TelemetryContext Tests")
 class TelemetryContextTest {
@@ -72,9 +67,7 @@ class TelemetryContextTest {
     @Test
     @DisplayName("builder sets userId")
     void builder_setsUserId() {
-      TelemetryContext context = TelemetryContext.builder()
-          .userId("user-456")
-          .build();
+      TelemetryContext context = TelemetryContext.builder().userId("user-456").build();
 
       assertEquals("user-456", context.userId());
     }
@@ -82,9 +75,7 @@ class TelemetryContextTest {
     @Test
     @DisplayName("builder sets traceName")
     void builder_setsTraceName() {
-      TelemetryContext context = TelemetryContext.builder()
-          .traceName("chat.completion")
-          .build();
+      TelemetryContext context = TelemetryContext.builder().traceName("chat.completion").build();
 
       assertEquals("chat.completion", context.traceName());
     }
@@ -92,9 +83,7 @@ class TelemetryContextTest {
     @Test
     @DisplayName("builder adds single metadata entry")
     void builder_addsSingleMetadata() {
-      TelemetryContext context = TelemetryContext.builder()
-          .addMetadata("version", "1.0")
-          .build();
+      TelemetryContext context = TelemetryContext.builder().addMetadata("version", "1.0").build();
 
       assertEquals("1.0", context.metadata().get("version"));
     }
@@ -102,10 +91,11 @@ class TelemetryContextTest {
     @Test
     @DisplayName("builder adds multiple metadata entries via addMetadata")
     void builder_addsMultipleMetadataViaAddMetadata() {
-      TelemetryContext context = TelemetryContext.builder()
-          .addMetadata("version", "1.0")
-          .addMetadata("environment", "production")
-          .build();
+      TelemetryContext context =
+          TelemetryContext.builder()
+              .addMetadata("version", "1.0")
+              .addMetadata("environment", "production")
+              .build();
 
       assertEquals("1.0", context.metadata().get("version"));
       assertEquals("production", context.metadata().get("environment"));
@@ -114,14 +104,9 @@ class TelemetryContextTest {
     @Test
     @DisplayName("builder adds all metadata from map")
     void builder_addsAllMetadataFromMap() {
-      Map<String, Object> metadataMap = Map.of(
-          "key1", "value1",
-          "key2", 123
-      );
+      Map<String, Object> metadataMap = Map.of("key1", "value1", "key2", 123);
 
-      TelemetryContext context = TelemetryContext.builder()
-          .metadata(metadataMap)
-          .build();
+      TelemetryContext context = TelemetryContext.builder().metadata(metadataMap).build();
 
       assertEquals("value1", context.metadata().get("key1"));
       assertEquals(123, context.metadata().get("key2"));
@@ -130,9 +115,7 @@ class TelemetryContextTest {
     @Test
     @DisplayName("builder adds single tag")
     void builder_addsSingleTag() {
-      TelemetryContext context = TelemetryContext.builder()
-          .addTag("production")
-          .build();
+      TelemetryContext context = TelemetryContext.builder().addTag("production").build();
 
       assertEquals(1, context.tags().size());
       assertTrue(context.tags().contains("production"));
@@ -141,10 +124,8 @@ class TelemetryContextTest {
     @Test
     @DisplayName("builder adds multiple tags via addTag")
     void builder_addsMultipleTagsViaAddTag() {
-      TelemetryContext context = TelemetryContext.builder()
-          .addTag("production")
-          .addTag("critical")
-          .build();
+      TelemetryContext context =
+          TelemetryContext.builder().addTag("production").addTag("critical").build();
 
       assertEquals(2, context.tags().size());
       assertTrue(context.tags().contains("production"));
@@ -156,9 +137,7 @@ class TelemetryContextTest {
     void builder_addsAllTagsFromList() {
       List<String> tagList = List.of("tag1", "tag2", "tag3");
 
-      TelemetryContext context = TelemetryContext.builder()
-          .tags(tagList)
-          .build();
+      TelemetryContext context = TelemetryContext.builder().tags(tagList).build();
 
       assertEquals(3, context.tags().size());
       assertTrue(context.tags().containsAll(tagList));
@@ -167,12 +146,13 @@ class TelemetryContextTest {
     @Test
     @DisplayName("builder chains all methods fluently")
     void builder_chainsFluently() {
-      TelemetryContext context = TelemetryContext.builder()
-          .userId("user-123")
-          .traceName("agent.run")
-          .addMetadata("version", "2.0")
-          .addTag("test")
-          .build();
+      TelemetryContext context =
+          TelemetryContext.builder()
+              .userId("user-123")
+              .traceName("agent.run")
+              .addMetadata("version", "2.0")
+              .addTag("test")
+              .build();
 
       assertEquals("user-123", context.userId());
       assertEquals("agent.run", context.traceName());
@@ -183,36 +163,33 @@ class TelemetryContextTest {
     @Test
     @DisplayName("builder throws on null userId")
     void builder_throwsOnNullUserId() {
-      assertThrows(NullPointerException.class, () ->
-          TelemetryContext.builder().userId(null));
+      assertThrows(NullPointerException.class, () -> TelemetryContext.builder().userId(null));
     }
 
     @Test
     @DisplayName("builder throws on null traceName")
     void builder_throwsOnNullTraceName() {
-      assertThrows(NullPointerException.class, () ->
-          TelemetryContext.builder().traceName(null));
+      assertThrows(NullPointerException.class, () -> TelemetryContext.builder().traceName(null));
     }
 
     @Test
     @DisplayName("builder throws on null metadata key")
     void builder_throwsOnNullMetadataKey() {
-      assertThrows(NullPointerException.class, () ->
-          TelemetryContext.builder().addMetadata(null, "value"));
+      assertThrows(
+          NullPointerException.class, () -> TelemetryContext.builder().addMetadata(null, "value"));
     }
 
     @Test
     @DisplayName("builder throws on null metadata value")
     void builder_throwsOnNullMetadataValue() {
-      assertThrows(NullPointerException.class, () ->
-          TelemetryContext.builder().addMetadata("key", null));
+      assertThrows(
+          NullPointerException.class, () -> TelemetryContext.builder().addMetadata("key", null));
     }
 
     @Test
     @DisplayName("builder throws on null tag")
     void builder_throwsOnNullTag() {
-      assertThrows(NullPointerException.class, () ->
-          TelemetryContext.builder().addTag(null));
+      assertThrows(NullPointerException.class, () -> TelemetryContext.builder().addTag(null));
     }
   }
 
@@ -248,9 +225,7 @@ class TelemetryContextTest {
     @Test
     @DisplayName("toAttributes includes span.name")
     void toAttributes_includesSpanName() {
-      TelemetryContext context = TelemetryContext.builder()
-          .traceName("my.span")
-          .build();
+      TelemetryContext context = TelemetryContext.builder().traceName("my.span").build();
 
       Map<String, Object> attrs = context.toAttributes();
 
@@ -260,10 +235,8 @@ class TelemetryContextTest {
     @Test
     @DisplayName("toAttributes includes langfuse.tags as comma-separated")
     void toAttributes_includesTagsAsCommaSeparated() {
-      TelemetryContext context = TelemetryContext.builder()
-          .addTag("prod")
-          .addTag("critical")
-          .build();
+      TelemetryContext context =
+          TelemetryContext.builder().addTag("prod").addTag("critical").build();
 
       Map<String, Object> attrs = context.toAttributes();
 
@@ -273,9 +246,7 @@ class TelemetryContextTest {
     @Test
     @DisplayName("toAttributes includes metadata with langfuse prefix")
     void toAttributes_includesMetadataWithPrefix() {
-      TelemetryContext context = TelemetryContext.builder()
-          .addMetadata("version", "1.0")
-          .build();
+      TelemetryContext context = TelemetryContext.builder().addMetadata("version", "1.0").build();
 
       Map<String, Object> attrs = context.toAttributes();
 
@@ -286,14 +257,11 @@ class TelemetryContextTest {
     @Test
     @DisplayName("toAttributes returns unmodifiable map")
     void toAttributes_returnsUnmodifiableMap() {
-      TelemetryContext context = TelemetryContext.builder()
-          .userId("user-123")
-          .build();
+      TelemetryContext context = TelemetryContext.builder().userId("user-123").build();
 
       Map<String, Object> attrs = context.toAttributes();
 
-      assertThrows(UnsupportedOperationException.class, () ->
-          attrs.put("new.key", "value"));
+      assertThrows(UnsupportedOperationException.class, () -> attrs.put("new.key", "value"));
     }
   }
 
@@ -308,9 +276,7 @@ class TelemetryContextTest {
     @Test
     @DisplayName("returns traceName when set")
     void returnsTraceNameWhenSet() {
-      TelemetryContext context = TelemetryContext.builder()
-          .traceName("custom.trace")
-          .build();
+      TelemetryContext context = TelemetryContext.builder().traceName("custom.trace").build();
 
       assertEquals("custom.trace", context.getTraceNameOrDefault("default"));
     }
@@ -335,23 +301,18 @@ class TelemetryContextTest {
     @Test
     @DisplayName("metadata map is immutable")
     void metadataMapIsImmutable() {
-      TelemetryContext context = TelemetryContext.builder()
-          .addMetadata("key", "value")
-          .build();
+      TelemetryContext context = TelemetryContext.builder().addMetadata("key", "value").build();
 
-      assertThrows(UnsupportedOperationException.class, () ->
-          context.metadata().put("new", "value"));
+      assertThrows(
+          UnsupportedOperationException.class, () -> context.metadata().put("new", "value"));
     }
 
     @Test
     @DisplayName("tags list is immutable")
     void tagsListIsImmutable() {
-      TelemetryContext context = TelemetryContext.builder()
-          .addTag("tag1")
-          .build();
+      TelemetryContext context = TelemetryContext.builder().addTag("tag1").build();
 
-      assertThrows(UnsupportedOperationException.class, () ->
-          context.tags().add("newTag"));
+      assertThrows(UnsupportedOperationException.class, () -> context.tags().add("newTag"));
     }
   }
 }

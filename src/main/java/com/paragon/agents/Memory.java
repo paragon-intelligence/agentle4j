@@ -6,18 +6,18 @@ import org.jspecify.annotations.NonNull;
 /**
  * Interface for agent long-term memory storage with user isolation.
  *
- * <p>Memory provides persistent storage for agent knowledge that persists across sessions.
- * All operations are scoped by userId to ensure data isolation between users.
+ * <p>Memory provides persistent storage for agent knowledge that persists across sessions. All
+ * operations are scoped by userId to ensure data isolation between users.
  *
- * <p>Memory is exposed to the agent as tools via {@link MemoryTool}. The userId is passed
- * securely by the developer in {@code Agent.interact(input, context, userId)}, NOT by the LLM,
- * to prevent prompt injection attacks.
+ * <p>Memory is exposed to the agent as tools via {@link MemoryTool}. The userId is passed securely
+ * by the developer in {@code Agent.interact(input, context, userId)}, NOT by the LLM, to prevent
+ * prompt injection attacks.
  *
  * <p>Example usage:
  *
  * <pre>{@code
  * Memory storage = InMemoryMemory.create();
- * 
+ *
  * Agent agent = Agent.builder()
  *     .addMemoryTools(storage)  // Adds memory as tools
  *     .build();
@@ -59,8 +59,7 @@ public interface Memory {
    * @param limit maximum number of memories to return
    * @return list of relevant memories, ordered by relevance
    */
-  @NonNull
-  List<MemoryEntry> retrieve(@NonNull String userId, @NonNull String query, int limit);
+  @NonNull List<MemoryEntry> retrieve(@NonNull String userId, @NonNull String query, int limit);
 
   /**
    * Updates an existing memory entry for a user.
@@ -87,8 +86,7 @@ public interface Memory {
    * @param userId the user ID
    * @return list of all memories for this user
    */
-  @NonNull
-  List<MemoryEntry> all(@NonNull String userId);
+  @NonNull List<MemoryEntry> all(@NonNull String userId);
 
   /**
    * Returns the number of stored memories for a user.
@@ -105,8 +103,6 @@ public interface Memory {
    */
   void clear(@NonNull String userId);
 
-  /**
-   * Clears all memories for all users.
-   */
+  /** Clears all memories for all users. */
   void clearAll();
 }

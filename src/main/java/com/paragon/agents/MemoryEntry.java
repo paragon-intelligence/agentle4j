@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Represents a single memory entry for long-term agent memory.
@@ -31,8 +30,7 @@ public record MemoryEntry(
    * @return a new memory entry
    */
   public static @NonNull MemoryEntry of(@NonNull String content) {
-    return new MemoryEntry(
-        UUID.randomUUID().toString(), Instant.now(), content, Map.of());
+    return new MemoryEntry(UUID.randomUUID().toString(), Instant.now(), content, Map.of());
   }
 
   /**
@@ -59,9 +57,7 @@ public record MemoryEntry(
     return new MemoryEntry(id, Instant.now(), content, Map.of());
   }
 
-  /**
-   * Returns a formatted string representation for injection into prompts.
-   */
+  /** Returns a formatted string representation for injection into prompts. */
   public @NonNull String toPromptFormat() {
     return String.format("[%s] %s", timestamp.toString(), content);
   }

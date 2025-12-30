@@ -217,8 +217,7 @@ public sealed interface StreamingEvent
         StreamingErrorEvent {
 
   /** The event type identifier. */
-  @NonNull
-  String type();
+  @NonNull String type();
 
   /** Sequence number for ordering events. */
   int sequenceNumber();

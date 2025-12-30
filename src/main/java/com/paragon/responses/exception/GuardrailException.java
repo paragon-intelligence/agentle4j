@@ -7,13 +7,15 @@ import org.jspecify.annotations.Nullable;
  * Exception thrown when a guardrail validation fails.
  *
  * <p>Provides guardrail-specific context:
+ *
  * <ul>
- *   <li>{@link #guardrailName()} - Which guardrail failed</li>
- *   <li>{@link #violationType()} - INPUT or OUTPUT</li>
- *   <li>{@link #reason()} - Human-readable reason for failure</li>
+ *   <li>{@link #guardrailName()} - Which guardrail failed
+ *   <li>{@link #violationType()} - INPUT or OUTPUT
+ *   <li>{@link #reason()} - Human-readable reason for failure
  * </ul>
  *
  * <p>Example usage:
+ *
  * <pre>{@code
  * if (result.isError() && result.error() instanceof GuardrailException e) {
  *     log.warn("Blocked by {}: {}", e.guardrailName(), e.reason());
@@ -29,9 +31,7 @@ public class GuardrailException extends AgentleException {
   private final @NonNull ViolationType violationType;
   private final @NonNull String reason;
 
-  /**
-   * Type of guardrail violation.
-   */
+  /** Type of guardrail violation. */
   public enum ViolationType {
     /** Input guardrail blocked the request before LLM call. */
     INPUT,

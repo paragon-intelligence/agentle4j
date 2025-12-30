@@ -10,10 +10,9 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Tests for StructuredAgentResult record.
- * 
- * Note: We use null for Response parameters since Response is a complex class
- * that's difficult to mock. The core logic of StructuredAgentResult doesn't
- * depend on the actual Response content.
+ *
+ * <p>Note: We use null for Response parameters since Response is a complex class that's difficult
+ * to mock. The core logic of StructuredAgentResult doesn't depend on the actual Response content.
  */
 class StructuredAgentResultTest {
 
@@ -31,7 +30,8 @@ class StructuredAgentResultTest {
       int turnsUsed = 3;
 
       StructuredAgentResult<String> result =
-          StructuredAgentResult.success(output, rawOutput, null, history, toolExecutions, turnsUsed);
+          StructuredAgentResult.success(
+              output, rawOutput, null, history, toolExecutions, turnsUsed);
 
       assertEquals(output, result.output());
       assertEquals(rawOutput, result.rawOutput());
@@ -159,8 +159,7 @@ class StructuredAgentResultTest {
     @DisplayName("result with no error and no handoff is success")
     void noErrorNoHandoffIsSuccess() {
       StructuredAgentResult<String> result =
-          new StructuredAgentResult<>(
-              "output", "raw", null, List.of(), List.of(), 1, null, null);
+          new StructuredAgentResult<>("output", "raw", null, List.of(), List.of(), 1, null, null);
 
       assertTrue(result.isSuccess());
       assertFalse(result.isError());

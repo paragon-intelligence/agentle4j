@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.Map;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,11 +11,9 @@ import org.junit.jupiter.api.Test;
 /**
  * Comprehensive tests for broadcasting package DTOs.
  *
- * <p>Tests cover:
- * - TraceContext creation and minimal factory
- * - ObservationContext creation and minimal factory
- * - Enums (ObservationType, ObservationLevel, ObservationStatus)
- * - Value objects (TokenUsage, CostDetails)
+ * <p>Tests cover: - TraceContext creation and minimal factory - ObservationContext creation and
+ * minimal factory - Enums (ObservationType, ObservationLevel, ObservationStatus) - Value objects
+ * (TokenUsage, CostDetails)
  */
 @DisplayName("Broadcasting DTOs Tests")
 class BroadcastingDtoTest {
@@ -47,16 +44,16 @@ class BroadcastingDtoTest {
     @Test
     @DisplayName("creates context with all fields")
     void createsContextWithAllFields() {
-      TraceContext ctx = new TraceContext(
-          "user-123",
-          "session-456",
-          Map.of("key", "value"),
-          List.of("tag1", "tag2"),
-          "1.0.0",
-          "v1.0.0",
-          "production",
-          true
-      );
+      TraceContext ctx =
+          new TraceContext(
+              "user-123",
+              "session-456",
+              Map.of("key", "value"),
+              List.of("tag1", "tag2"),
+              "1.0.0",
+              "v1.0.0",
+              "production",
+              true);
 
       assertEquals("user-123", ctx.userId());
       assertEquals("session-456", ctx.sessionId());
@@ -91,12 +88,12 @@ class BroadcastingDtoTest {
     @Test
     @DisplayName("creates context with all fields")
     void createsContextWithAllFields() {
-      ObservationContext ctx = new ObservationContext(
-          ObservationLevel.WARNING,
-          "input data",
-          Map.of("meta-key", "meta-value"),
-          Map.of("attr-key", "attr-value")
-      );
+      ObservationContext ctx =
+          new ObservationContext(
+              ObservationLevel.WARNING,
+              "input data",
+              Map.of("meta-key", "meta-value"),
+              Map.of("attr-key", "attr-value"));
 
       assertEquals(ObservationLevel.WARNING, ctx.level());
       assertEquals("input data", ctx.input());
@@ -291,11 +288,8 @@ class BroadcastingDtoTest {
     @Test
     @DisplayName("creates record with values")
     void createsRecord() {
-      ObservationEndOptions options = new ObservationEndOptions(
-          "output", 
-          null,
-          ObservationStatus.SUCCESS
-      );
+      ObservationEndOptions options =
+          new ObservationEndOptions("output", null, ObservationStatus.SUCCESS);
 
       assertEquals("output", options.output());
       assertEquals(ObservationStatus.SUCCESS, options.status());

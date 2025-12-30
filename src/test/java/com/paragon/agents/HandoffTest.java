@@ -2,22 +2,17 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.paragon.responses.Responder;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.paragon.responses.Responder;
-
-import okhttp3.mockwebserver.MockWebServer;
-
 /**
  * Comprehensive tests for Handoff.
  *
- * <p>Tests cover:
- * - Builder pattern
- * - Agent reference
- * - Description/name handling
+ * <p>Tests cover: - Builder pattern - Agent reference - Description/name handling
  */
 @DisplayName("Handoff")
 class HandoffTest {
@@ -30,10 +25,8 @@ class HandoffTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
 
-    responder = Responder.builder()
-        .baseUrl(mockWebServer.url("/v1/responses"))
-        .apiKey("test-key")
-        .build();
+    responder =
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   void tearDown() throws Exception {
@@ -70,9 +63,7 @@ class HandoffTest {
     void withDescription_setsDescription() {
       Agent target = createTestAgent("Target");
 
-      Handoff handoff = Handoff.to(target)
-          .withDescription("when user asks about billing")
-          .build();
+      Handoff handoff = Handoff.to(target).withDescription("when user asks about billing").build();
 
       assertEquals("when user asks about billing", handoff.description());
     }
@@ -82,9 +73,7 @@ class HandoffTest {
     void withName_setsCustomToolName() {
       Agent target = createTestAgent("Target");
 
-      Handoff handoff = Handoff.to(target)
-          .withName("custom_transfer")
-          .build();
+      Handoff handoff = Handoff.to(target).withName("custom_transfer").build();
 
       assertEquals("custom_transfer", handoff.name());
     }
@@ -113,9 +102,7 @@ class HandoffTest {
     @DisplayName("description() returns the description")
     void description_returnsDescription() {
       Agent target = createTestAgent("Target");
-      Handoff handoff = Handoff.to(target)
-          .withDescription("billing issues")
-          .build();
+      Handoff handoff = Handoff.to(target).withDescription("billing issues").build();
 
       assertEquals("billing issues", handoff.description());
     }

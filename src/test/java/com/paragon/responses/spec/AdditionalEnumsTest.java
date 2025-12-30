@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Additional tests for more spec package enums.
- */
+/** Additional tests for more spec package enums. */
 @DisplayName("Additional Spec Enums Tests")
 class AdditionalEnumsTest {
 
@@ -331,7 +329,8 @@ class AdditionalEnumsTest {
     @DisplayName("OpenRouterProviderSortingStrategy has values")
     void providerSortingStrategy() {
       assertTrue(OpenRouterProviderSortingStrategy.values().length > 0);
-      for (OpenRouterProviderSortingStrategy strategy : OpenRouterProviderSortingStrategy.values()) {
+      for (OpenRouterProviderSortingStrategy strategy :
+          OpenRouterProviderSortingStrategy.values()) {
         assertNotNull(strategy.name());
       }
     }

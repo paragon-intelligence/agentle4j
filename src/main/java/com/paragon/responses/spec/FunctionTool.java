@@ -172,8 +172,8 @@ public abstract non-sealed class FunctionTool<P extends Record> implements Tool 
   /**
    * Returns whether this tool requires human confirmation before execution.
    *
-   * <p>When true, the tool will trigger the {@code onToolCallPending} or {@code onPause}
-   * callback in AgentStream, allowing human-in-the-loop approval workflows.
+   * <p>When true, the tool will trigger the {@code onToolCallPending} or {@code onPause} callback
+   * in AgentStream, allowing human-in-the-loop approval workflows.
    *
    * @return true if confirmation is required, false otherwise
    */

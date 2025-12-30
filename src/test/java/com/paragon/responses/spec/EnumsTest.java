@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for spec package enums.
- */
+/** Tests for spec package enums. */
 @DisplayName("Spec Enums Tests")
 class EnumsTest {
 

@@ -72,12 +72,13 @@ public class OperatorBenchmark {
    */
   @Benchmark
   public void instantiateMinimalOperator(Blackhole bh) {
-    Agent agent = Agent.builder()
-        .name("MinimalAgent")
-        .responder(sharedResponder)
-        .model("openai/gpt-4o-mini")
-        .instructions("You are a minimal agent.")
-        .build();
+    Agent agent =
+        Agent.builder()
+            .name("MinimalAgent")
+            .responder(sharedResponder)
+            .model("openai/gpt-4o-mini")
+            .instructions("You are a minimal agent.")
+            .build();
     bh.consume(agent);
   }
 
@@ -161,12 +162,13 @@ public class OperatorBenchmark {
   @BenchmarkMode(Mode.SingleShotTime)
   @Measurement(iterations = 100)
   public void memoryAllocationProfile(Blackhole bh) {
-    Agent agent = Agent.builder()
-        .name("MemoryAgent")
-        .responder(sharedResponder)
-        .model("openai/gpt-4o-mini")
-        .instructions("Memory profile agent.")
-        .build();
+    Agent agent =
+        Agent.builder()
+            .name("MemoryAgent")
+            .responder(sharedResponder)
+            .model("openai/gpt-4o-mini")
+            .instructions("Memory profile agent.")
+            .build();
     bh.consume(agent);
   }
 

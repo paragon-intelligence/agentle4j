@@ -1,10 +1,9 @@
 package com.paragon.agents;
 
-import java.time.Duration;
-import org.jspecify.annotations.NonNull;
-
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.FunctionToolCallOutputStatus;
+import java.time.Duration;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Records the execution details of a single tool call during an agent run.

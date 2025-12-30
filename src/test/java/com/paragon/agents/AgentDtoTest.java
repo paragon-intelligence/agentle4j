@@ -2,23 +2,18 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.paragon.responses.Responder;
+import com.paragon.responses.spec.FunctionToolCallOutput;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.paragon.responses.Responder;
-import com.paragon.responses.spec.FunctionToolCallOutput;
-import com.paragon.responses.spec.FunctionToolCallOutputStatus;
-
-import okhttp3.mockwebserver.MockWebServer;
-
-/**
- * Tests for agent DTOs: ToolExecution, GuardrailResult, MemoryEntry.
- */
+/** Tests for agent DTOs: ToolExecution, GuardrailResult, MemoryEntry. */
 @DisplayName("Agent DTO Tests")
 class AgentDtoTest {
 
@@ -34,13 +29,10 @@ class AgentDtoTest {
     @DisplayName("creates with valid parameters")
     void createsWithValidParams() {
       var output = FunctionToolCallOutput.success("result");
-      var exec = new ToolExecution(
-          "my_tool",
-          "call_123",
-          "{\"arg\": \"value\"}",
-          output,
-          Duration.ofMillis(150));
-      
+      var exec =
+          new ToolExecution(
+              "my_tool", "call_123", "{\"arg\": \"value\"}", output, Duration.ofMillis(150));
+
       assertEquals("my_tool", exec.toolName());
       assertEquals("call_123", exec.callId());
       assertEquals("{\"arg\": \"value\"}", exec.arguments());
@@ -53,7 +45,7 @@ class AgentDtoTest {
     void isSuccessWhenCompleted() {
       var output = FunctionToolCallOutput.success("result");
       var exec = new ToolExecution("tool", "id", "{}", output, Duration.ofMillis(10));
-      
+
       assertTrue(exec.isSuccess());
     }
 
@@ -62,7 +54,7 @@ class AgentDtoTest {
     void isNotSuccessWhenInProgress() {
       var output = FunctionToolCallOutput.inProgress("still working");
       var exec = new ToolExecution("tool", "id", "{}", output, Duration.ofMillis(10));
-      
+
       assertFalse(exec.isSuccess());
     }
 
@@ -71,7 +63,7 @@ class AgentDtoTest {
     void isNotSuccessWhenError() {
       var output = FunctionToolCallOutput.error("failed");
       var exec = new ToolExecution("tool", "id", "{}", output, Duration.ofMillis(10));
-      
+
       assertFalse(exec.isSuccess());
     }
 
@@ -79,47 +71,53 @@ class AgentDtoTest {
     @DisplayName("throws on null toolName")
     void throwsOnNullToolName() {
       var output = FunctionToolCallOutput.success("result");
-      assertThrows(IllegalArgumentException.class, () ->
-          new ToolExecution(null, "id", "{}", output, Duration.ofMillis(10)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> new ToolExecution(null, "id", "{}", output, Duration.ofMillis(10)));
     }
 
     @Test
     @DisplayName("throws on blank toolName")
     void throwsOnBlankToolName() {
       var output = FunctionToolCallOutput.success("result");
-      assertThrows(IllegalArgumentException.class, () ->
-          new ToolExecution("  ", "id", "{}", output, Duration.ofMillis(10)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> new ToolExecution("  ", "id", "{}", output, Duration.ofMillis(10)));
     }
 
     @Test
     @DisplayName("throws on null callId")
     void throwsOnNullCallId() {
       var output = FunctionToolCallOutput.success("result");
-      assertThrows(IllegalArgumentException.class, () ->
-          new ToolExecution("tool", null, "{}", output, Duration.ofMillis(10)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> new ToolExecution("tool", null, "{}", output, Duration.ofMillis(10)));
     }
 
     @Test
     @DisplayName("throws on null arguments")
     void throwsOnNullArguments() {
       var output = FunctionToolCallOutput.success("result");
-      assertThrows(IllegalArgumentException.class, () ->
-          new ToolExecution("tool", "id", null, output, Duration.ofMillis(10)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> new ToolExecution("tool", "id", null, output, Duration.ofMillis(10)));
     }
 
     @Test
     @DisplayName("throws on null output")
     void throwsOnNullOutput() {
-      assertThrows(IllegalArgumentException.class, () ->
-          new ToolExecution("tool", "id", "{}", null, Duration.ofMillis(10)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> new ToolExecution("tool", "id", "{}", null, Duration.ofMillis(10)));
     }
 
     @Test
     @DisplayName("throws on null duration")
     void throwsOnNullDuration() {
       var output = FunctionToolCallOutput.success("result");
-      assertThrows(IllegalArgumentException.class, () ->
-          new ToolExecution("tool", "id", "{}", output, null));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> new ToolExecution("tool", "id", "{}", output, null));
     }
   }
 
@@ -173,15 +171,13 @@ class AgentDtoTest {
     @Test
     @DisplayName("Failed throws on null reason")
     void failedThrowsOnNullReason() {
-      assertThrows(IllegalArgumentException.class, () ->
-          GuardrailResult.failed(null));
+      assertThrows(IllegalArgumentException.class, () -> GuardrailResult.failed(null));
     }
 
     @Test
     @DisplayName("Failed throws on blank reason")
     void failedThrowsOnBlankReason() {
-      assertThrows(IllegalArgumentException.class, () ->
-          GuardrailResult.failed("   "));
+      assertThrows(IllegalArgumentException.class, () -> GuardrailResult.failed("   "));
     }
   }
 
@@ -199,7 +195,7 @@ class AgentDtoTest {
       var before = Instant.now();
       var entry = MemoryEntry.of("User prefers dark mode");
       var after = Instant.now();
-      
+
       assertNotNull(entry.id());
       assertFalse(entry.id().isBlank());
       assertEquals("User prefers dark mode", entry.content());
@@ -213,7 +209,7 @@ class AgentDtoTest {
     void ofCreatesWithMetadata() {
       var metadata = Map.<String, Object>of("source", "chat", "priority", 1);
       var entry = MemoryEntry.of("Important fact", metadata);
-      
+
       assertEquals("Important fact", entry.content());
       assertEquals("chat", entry.metadata().get("source"));
       assertEquals(1, entry.metadata().get("priority"));
@@ -223,7 +219,7 @@ class AgentDtoTest {
     @DisplayName("withId creates entry with specific id")
     void withIdCreatesWithSpecificId() {
       var entry = MemoryEntry.withId("custom-id-123", "Some content");
-      
+
       assertEquals("custom-id-123", entry.id());
       assertEquals("Some content", entry.content());
       assertTrue(entry.metadata().isEmpty());
@@ -234,7 +230,7 @@ class AgentDtoTest {
     void toPromptFormatReturnsFormatted() {
       var entry = MemoryEntry.of("Test memory");
       var formatted = entry.toPromptFormat();
-      
+
       assertTrue(formatted.contains("Test memory"));
       assertTrue(formatted.startsWith("["));
       assertTrue(formatted.contains("]"));
@@ -256,10 +252,11 @@ class AgentDtoTest {
     void setUp() throws Exception {
       mockWebServer = new MockWebServer();
       mockWebServer.start();
-      responder = Responder.builder()
-          .baseUrl(mockWebServer.url("/v1/responses"))
-          .apiKey("test-key")
-          .build();
+      responder =
+          Responder.builder()
+              .baseUrl(mockWebServer.url("/v1/responses"))
+              .apiKey("test-key")
+              .build();
     }
 
     private Agent createTestAgent(String name, String instructions) {
@@ -276,7 +273,7 @@ class AgentDtoTest {
     void toCreatesBuilder() throws Exception {
       var targetAgent = createTestAgent("Support", "Handle support issues");
       var handoff = Handoff.to(targetAgent).build();
-      
+
       assertNotNull(handoff);
       assertEquals(targetAgent, handoff.targetAgent());
     }
@@ -287,7 +284,7 @@ class AgentDtoTest {
     void defaultNameFormat() throws Exception {
       var targetAgent = createTestAgent("CustomerSupport", "Handle support");
       var handoff = Handoff.to(targetAgent).build();
-      
+
       assertEquals("transfer_to_customer_support", handoff.name());
     }
 
@@ -296,7 +293,7 @@ class AgentDtoTest {
     void defaultDescriptionIncludesInstructions() throws Exception {
       var targetAgent = createTestAgent("Sales", "Handle sales inquiries");
       var handoff = Handoff.to(targetAgent).build();
-      
+
       assertTrue(handoff.description().contains("Sales"));
       assertTrue(handoff.description().contains("Handle sales inquiries"));
     }
@@ -305,10 +302,8 @@ class AgentDtoTest {
     @DisplayName("withName sets custom name")
     void withNameSetsCustomName() throws Exception {
       var targetAgent = createTestAgent("Support", "Handle support");
-      var handoff = Handoff.to(targetAgent)
-          .withName("escalate_issue")
-          .build();
-      
+      var handoff = Handoff.to(targetAgent).withName("escalate_issue").build();
+
       assertEquals("escalate_issue", handoff.name());
     }
 
@@ -316,10 +311,9 @@ class AgentDtoTest {
     @DisplayName("withDescription sets custom description")
     void withDescriptionSetsCustom() throws Exception {
       var targetAgent = createTestAgent("Support", "Handle support");
-      var handoff = Handoff.to(targetAgent)
-          .withDescription("Escalate to support for complex issues")
-          .build();
-      
+      var handoff =
+          Handoff.to(targetAgent).withDescription("Escalate to support for complex issues").build();
+
       assertEquals("Escalate to support for complex issues", handoff.description());
     }
 
@@ -329,7 +323,7 @@ class AgentDtoTest {
       var targetAgent = createTestAgent("Support", "Handle support");
       var handoff = Handoff.to(targetAgent).build();
       var tool = handoff.asTool();
-      
+
       assertNotNull(tool);
       assertEquals(handoff.name(), tool.getName());
       assertEquals(handoff.description(), tool.getDescription());
@@ -338,8 +332,7 @@ class AgentDtoTest {
     @Test
     @DisplayName("throws on null target agent")
     void throwsOnNullTargetAgent() {
-      assertThrows(NullPointerException.class, () ->
-          Handoff.to(null));
+      assertThrows(NullPointerException.class, () -> Handoff.to(null));
     }
   }
 }

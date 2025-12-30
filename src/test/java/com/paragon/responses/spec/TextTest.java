@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for Text record.
- */
+/** Tests for Text record. */
 @DisplayName("Text Tests")
 class TextTest {
 

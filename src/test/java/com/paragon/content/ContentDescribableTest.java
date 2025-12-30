@@ -5,9 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for ContentDescribable class.
- */
+/** Tests for ContentDescribable class. */
 class ContentDescribableTest {
 
   @Test

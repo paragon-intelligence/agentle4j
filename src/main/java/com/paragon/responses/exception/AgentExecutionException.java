@@ -7,13 +7,15 @@ import org.jspecify.annotations.Nullable;
  * Exception thrown when an agent execution fails.
  *
  * <p>Provides agent-specific context:
+ *
  * <ul>
- *   <li>{@link #agentName()} - Name of the agent that failed</li>
- *   <li>{@link #phase()} - Phase where failure occurred</li>
- *   <li>{@link #turnsCompleted()} - Number of turns completed before failure</li>
+ *   <li>{@link #agentName()} - Name of the agent that failed
+ *   <li>{@link #phase()} - Phase where failure occurred
+ *   <li>{@link #turnsCompleted()} - Number of turns completed before failure
  * </ul>
  *
  * <p>Example usage:
+ *
  * <pre>{@code
  * AgentResult result = agent.interact("Hello").join();
  * if (result.isError() && result.error() instanceof AgentExecutionException e) {
@@ -27,9 +29,7 @@ import org.jspecify.annotations.Nullable;
  */
 public class AgentExecutionException extends AgentleException {
 
-  /**
-   * Execution phases where an agent can fail.
-   */
+  /** Execution phases where an agent can fail. */
   public enum Phase {
     /** Input guardrail validation failed. */
     INPUT_GUARDRAIL,
@@ -65,7 +65,8 @@ public class AgentExecutionException extends AgentleException {
       @NonNull Phase phase,
       int turnsCompleted,
       @NonNull String message) {
-    super(mapPhaseToErrorCode(phase), message, getSuggestionForPhase(phase), isPhaseRetryable(phase));
+    super(
+        mapPhaseToErrorCode(phase), message, getSuggestionForPhase(phase), isPhaseRetryable(phase));
     this.agentName = agentName;
     this.phase = phase;
     this.turnsCompleted = turnsCompleted;
@@ -87,7 +88,12 @@ public class AgentExecutionException extends AgentleException {
       int turnsCompleted,
       @NonNull String message,
       @NonNull Throwable cause) {
-    super(mapPhaseToErrorCode(phase), message, cause, getSuggestionForPhase(phase), isPhaseRetryable(phase));
+    super(
+        mapPhaseToErrorCode(phase),
+        message,
+        cause,
+        getSuggestionForPhase(phase),
+        isPhaseRetryable(phase));
     this.agentName = agentName;
     this.phase = phase;
     this.turnsCompleted = turnsCompleted;
@@ -111,9 +117,12 @@ public class AgentExecutionException extends AgentleException {
       @Nullable String lastResponseId,
       @NonNull String message,
       @Nullable Throwable cause) {
-    super(mapPhaseToErrorCode(phase), message, 
-        cause != null ? cause : null, 
-        getSuggestionForPhase(phase), isPhaseRetryable(phase));
+    super(
+        mapPhaseToErrorCode(phase),
+        message,
+        cause != null ? cause : null,
+        getSuggestionForPhase(phase),
+        isPhaseRetryable(phase));
     this.agentName = agentName;
     this.phase = phase;
     this.turnsCompleted = turnsCompleted;
@@ -136,7 +145,9 @@ public class AgentExecutionException extends AgentleException {
         agentName,
         Phase.MAX_TURNS_EXCEEDED,
         turnsCompleted,
-        String.format("Agent '%s' exceeded maximum turns (%d). Consider increasing maxTurns or simplifying the request.", 
+        String.format(
+            "Agent '%s' exceeded maximum turns (%d). Consider increasing maxTurns or simplifying"
+                + " the request.",
             agentName, maxTurns));
   }
 
@@ -186,15 +197,17 @@ public class AgentExecutionException extends AgentleException {
    * @return a new AgentExecutionException
    */
   public static AgentExecutionException handoffFailed(
-      @NonNull String agentName, 
-      @NonNull String targetAgentName, 
-      int turnsCompleted, 
+      @NonNull String agentName,
+      @NonNull String targetAgentName,
+      int turnsCompleted,
       @NonNull Throwable cause) {
     return new AgentExecutionException(
         agentName,
         Phase.HANDOFF,
         turnsCompleted,
-        String.format("Agent '%s' handoff to '%s' failed: %s", agentName, targetAgentName, cause.getMessage()),
+        String.format(
+            "Agent '%s' handoff to '%s' failed: %s",
+            agentName, targetAgentName, cause.getMessage()),
         cause);
   }
 
@@ -258,9 +271,14 @@ public class AgentExecutionException extends AgentleException {
 
   private static boolean isPhaseRetryable(Phase phase) {
     return switch (phase) {
-      case LLM_CALL -> true;  // Network errors may be transient
-      case INPUT_GUARDRAIL, OUTPUT_GUARDRAIL, TOOL_EXECUTION, 
-           MAX_TURNS_EXCEEDED, HANDOFF, PARSING -> false;
+      case LLM_CALL -> true; // Network errors may be transient
+      case INPUT_GUARDRAIL,
+          OUTPUT_GUARDRAIL,
+          TOOL_EXECUTION,
+          MAX_TURNS_EXCEEDED,
+          HANDOFF,
+          PARSING ->
+          false;
     };
   }
 }

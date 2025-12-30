@@ -7,12 +7,14 @@ import org.jspecify.annotations.Nullable;
  * Exception thrown when an error occurs during streaming.
  *
  * <p>Provides streaming-specific context:
+ *
  * <ul>
- *   <li>{@link #partialOutput()} - Any content received before the failure</li>
- *   <li>{@link #bytesReceived()} - Total bytes received before failure</li>
+ *   <li>{@link #partialOutput()} - Any content received before the failure
+ *   <li>{@link #bytesReceived()} - Total bytes received before failure
  * </ul>
  *
  * <p>Example usage:
+ *
  * <pre>{@code
  * responder.respond(streamingPayload)
  *     .onError(error -> {
@@ -79,9 +81,7 @@ public class StreamingException extends AgentleException {
    * @return a new StreamingException
    */
   public static StreamingException connectionDropped(
-      @NonNull Throwable cause,
-      @Nullable String partialOutput,
-      long bytesReceived) {
+      @NonNull Throwable cause, @Nullable String partialOutput, long bytesReceived) {
     return new StreamingException(
         ErrorCode.CONNECTION_DROPPED,
         "Connection dropped during streaming: " + cause.getMessage(),
@@ -98,9 +98,7 @@ public class StreamingException extends AgentleException {
    * @param bytesReceived total bytes received
    * @return a new StreamingException
    */
-  public static StreamingException timeout(
-      @Nullable String partialOutput,
-      long bytesReceived) {
+  public static StreamingException timeout(@Nullable String partialOutput, long bytesReceived) {
     return new StreamingException(
         ErrorCode.STREAM_TIMEOUT,
         "Stream timed out waiting for data",

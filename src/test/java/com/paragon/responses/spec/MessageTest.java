@@ -3,7 +3,6 @@ package com.paragon.responses.spec;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -11,11 +10,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Comprehensive tests for Message class factory methods and builder.
  *
- * <p>Tests cover:
- * - Developer/User/Assistant factory methods
- * - Multi-content messages
- * - Builder pattern
- * - Edge cases and validation
+ * <p>Tests cover: - Developer/User/Assistant factory methods - Multi-content messages - Builder
+ * pattern - Edge cases and validation
  */
 @DisplayName("Message Tests")
 class MessageTest {
@@ -50,11 +46,7 @@ class MessageTest {
     @Test
     @DisplayName("creates developer message from varargs")
     void createsFromVarargs() {
-      DeveloperMessage msg = Message.developer(
-          "Be helpful.",
-          "Be concise.",
-          "Use proper grammar."
-      );
+      DeveloperMessage msg = Message.developer("Be helpful.", "Be concise.", "Use proper grammar.");
 
       assertEquals(3, msg.content().size());
     }
@@ -62,10 +54,8 @@ class MessageTest {
     @Test
     @DisplayName("creates developer message from content list")
     void createsFromContentList() {
-      List<MessageContent> content = List.of(
-          Text.valueOf("Instruction 1"),
-          Text.valueOf("Instruction 2")
-      );
+      List<MessageContent> content =
+          List.of(Text.valueOf("Instruction 1"), Text.valueOf("Instruction 2"));
 
       DeveloperMessage msg = Message.developer(content);
 
@@ -75,8 +65,7 @@ class MessageTest {
     @Test
     @DisplayName("throws on empty string varargs")
     void throwsOnEmptyVarargs() {
-      assertThrows(IllegalArgumentException.class, () -> 
-          Message.developer(new String[0]));
+      assertThrows(IllegalArgumentException.class, () -> Message.developer(new String[0]));
     }
   }
 
@@ -109,10 +98,7 @@ class MessageTest {
     @Test
     @DisplayName("creates user message from varargs")
     void createsFromVarargs() {
-      UserMessage msg = Message.user(
-          "First part.",
-          "Second part."
-      );
+      UserMessage msg = Message.user("First part.", "Second part.");
 
       assertEquals(2, msg.content().size());
     }
@@ -129,10 +115,8 @@ class MessageTest {
     @Test
     @DisplayName("creates user message from content list")
     void createsFromContentList() {
-      List<MessageContent> content = List.of(
-          Text.valueOf("Analyze this:"),
-          Text.valueOf("More context")
-      );
+      List<MessageContent> content =
+          List.of(Text.valueOf("Analyze this:"), Text.valueOf("More context"));
 
       UserMessage msg = Message.user(content);
 
@@ -169,10 +153,7 @@ class MessageTest {
     @Test
     @DisplayName("creates assistant message from varargs")
     void createsFromVarargs() {
-      AssistantMessage msg = Message.assistant(
-          "First response.",
-          "Second response."
-      );
+      AssistantMessage msg = Message.assistant("First response.", "Second response.");
 
       assertEquals(2, msg.content().size());
     }
@@ -198,9 +179,7 @@ class MessageTest {
     @Test
     @DisplayName("builds user message")
     void buildsUserMessage() {
-      UserMessage msg = Message.builder()
-          .addText("Hello")
-          .asUser();
+      UserMessage msg = Message.builder().addText("Hello").asUser();
 
       assertNotNull(msg);
       assertEquals(MessageRole.USER, msg.role());
@@ -209,9 +188,7 @@ class MessageTest {
     @Test
     @DisplayName("builds developer message")
     void buildsDeveloperMessage() {
-      DeveloperMessage msg = Message.builder()
-          .addText("Be helpful")
-          .asDeveloper();
+      DeveloperMessage msg = Message.builder().addText("Be helpful").asDeveloper();
 
       assertEquals(MessageRole.DEVELOPER, msg.role());
     }
@@ -219,9 +196,7 @@ class MessageTest {
     @Test
     @DisplayName("builds assistant message")
     void buildsAssistantMessage() {
-      AssistantMessage msg = Message.builder()
-          .addText("Response")
-          .asAssistant();
+      AssistantMessage msg = Message.builder().addText("Response").asAssistant();
 
       assertEquals(MessageRole.ASSISTANT, msg.role());
     }
@@ -229,11 +204,8 @@ class MessageTest {
     @Test
     @DisplayName("builds with multiple text segments")
     void buildsWithMultipleText() {
-      UserMessage msg = Message.builder()
-          .addText("First")
-          .addText("Second")
-          .addText("Third")
-          .asUser();
+      UserMessage msg =
+          Message.builder().addText("First").addText("Second").addText("Third").asUser();
 
       assertEquals(3, msg.content().size());
     }
@@ -241,10 +213,8 @@ class MessageTest {
     @Test
     @DisplayName("builds with status")
     void buildsWithStatus() {
-      UserMessage msg = Message.builder()
-          .addText("Text")
-          .status(InputMessageStatus.IN_PROGRESS)
-          .asUser();
+      UserMessage msg =
+          Message.builder().addText("Text").status(InputMessageStatus.IN_PROGRESS).asUser();
 
       assertEquals(InputMessageStatus.IN_PROGRESS, msg.status());
     }
@@ -253,9 +223,7 @@ class MessageTest {
     @DisplayName("builds with content item")
     void buildsWithContentItem() {
       Text text = Text.valueOf("Custom text");
-      UserMessage msg = Message.builder()
-          .addContent(text)
-          .asUser();
+      UserMessage msg = Message.builder().addContent(text).asUser();
 
       assertEquals(1, msg.content().size());
     }
@@ -284,8 +252,8 @@ class MessageTest {
     void contentReturnsImmutableList() {
       UserMessage msg = Message.user("Test");
 
-      assertThrows(UnsupportedOperationException.class, () ->
-          msg.content().add(Text.valueOf("Illegal")));
+      assertThrows(
+          UnsupportedOperationException.class, () -> msg.content().add(Text.valueOf("Illegal")));
     }
 
     @Test
@@ -308,15 +276,13 @@ class MessageTest {
     @Test
     @DisplayName("throws on empty content list")
     void throwsOnEmptyContent() {
-      assertThrows(IllegalArgumentException.class, () ->
-          Message.user(List.of()));
+      assertThrows(IllegalArgumentException.class, () -> Message.user(List.of()));
     }
 
     @Test
     @DisplayName("throws on null varargs")
     void throwsOnNullVarargs() {
-      assertThrows(IllegalArgumentException.class, () ->
-          Message.user((String[]) null));
+      assertThrows(IllegalArgumentException.class, () -> Message.user((String[]) null));
     }
   }
 }

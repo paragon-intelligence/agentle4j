@@ -1,25 +1,23 @@
 package com.paragon.agents;
 
+import com.paragon.responses.Responder;
+import com.paragon.responses.spec.CreateResponsePayload;
+import com.paragon.responses.spec.Message;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-
-import com.paragon.responses.Responder;
-import com.paragon.responses.spec.CreateResponsePayload;
-import com.paragon.responses.spec.Message;
 
 /**
  * A specialized agent for routing inputs to appropriate target agents.
  *
- * <p>Unlike general agents with complex instructions, RouterAgent focuses purely on
- * classification and routing, avoiding the noise of full agent instructions.
+ * <p>Unlike general agents with complex instructions, RouterAgent focuses purely on classification
+ * and routing, avoiding the noise of full agent instructions.
  *
- * <p><b>All methods are async by default</b> - they return {@link CompletableFuture}.
- * For blocking calls, use {@code .join()}.
+ * <p><b>All methods are async by default</b> - they return {@link CompletableFuture}. For blocking
+ * calls, use {@code .join()}.
  *
  * <h2>Usage Example</h2>
  *
@@ -95,17 +93,22 @@ public final class RouterAgent {
     Objects.requireNonNull(input, "input cannot be null");
     Objects.requireNonNull(context, "context cannot be null");
 
-    return classify(input).thenCompose(selected -> {
-      if (selected == null) {
-        return CompletableFuture.completedFuture(AgentResult.error(
-            new IllegalStateException("No suitable agent found for input"),
-            context, 0));
-      }
+    return classify(input)
+        .thenCompose(
+            selected -> {
+              if (selected == null) {
+                return CompletableFuture.completedFuture(
+                    AgentResult.error(
+                        new IllegalStateException("No suitable agent found for input"),
+                        context,
+                        0));
+              }
 
-      context.addInput(Message.user(input));
-      return selected.interact(context)
-          .thenApply(result -> AgentResult.handoff(selected, result, context));
-    });
+              context.addInput(Message.user(input));
+              return selected
+                  .interact(context)
+                  .thenApply(result -> AgentResult.handoff(selected, result, context));
+            });
   }
 
   /**
@@ -121,34 +124,42 @@ public final class RouterAgent {
 
     // Build routing prompt
     StringBuilder prompt = new StringBuilder();
-    prompt.append("You are a routing classifier. Based on the user input, select the most appropriate handler.\n\n");
+    prompt.append(
+        "You are a routing classifier. Based on the user input, select the most appropriate"
+            + " handler.\n\n");
     prompt.append("Available handlers:\n");
     for (int i = 0; i < routes.size(); i++) {
       Route route = routes.get(i);
-      prompt.append(i + 1).append(". ").append(route.agent.name())
-          .append(" - handles: ").append(route.description).append("\n");
+      prompt
+          .append(i + 1)
+          .append(". ")
+          .append(route.agent.name())
+          .append(" - handles: ")
+          .append(route.description)
+          .append("\n");
     }
     prompt.append("\nUser input: \"").append(input).append("\"\n\n");
     prompt.append("Respond with ONLY the handler number (e.g., \"1\" or \"2\"). Nothing else.");
 
     // Call LLM for classification
-    CreateResponsePayload payload = CreateResponsePayload.builder()
-        .model(model)
-        .addUserMessage(prompt.toString())
-        .build();
+    CreateResponsePayload payload =
+        CreateResponsePayload.builder().model(model).addUserMessage(prompt.toString()).build();
 
-    return responder.respond(payload).thenApply(response -> {
-      try {
-        String output = response.outputText().trim();
-        int selectedIndex = Integer.parseInt(output) - 1;
-        if (selectedIndex >= 0 && selectedIndex < routes.size()) {
-          return routes.get(selectedIndex).agent;
-        }
-      } catch (Exception e) {
-        // Fall through to fallback
-      }
-      return fallbackAgent;
-    });
+    return responder
+        .respond(payload)
+        .thenApply(
+            response -> {
+              try {
+                String output = response.outputText().trim();
+                int selectedIndex = Integer.parseInt(output) - 1;
+                if (selectedIndex >= 0 && selectedIndex < routes.size()) {
+                  return routes.get(selectedIndex).agent;
+                }
+              } catch (Exception e) {
+                // Fall through to fallback
+              }
+              return fallbackAgent;
+            });
   }
 
   /**
@@ -162,9 +173,7 @@ public final class RouterAgent {
 
   // ===== Inner Classes =====
 
-  /**
-   * Represents a route to a target agent.
-   */
+  /** Represents a route to a target agent. */
   public record Route(@NonNull Agent agent, @NonNull String description) {
     public Route {
       Objects.requireNonNull(agent, "agent cannot be null");
@@ -172,9 +181,7 @@ public final class RouterAgent {
     }
   }
 
-  /**
-   * Builder for RouterAgent.
-   */
+  /** Builder for RouterAgent. */
   public static final class Builder {
     private String model;
     private Responder responder;

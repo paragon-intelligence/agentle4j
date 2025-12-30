@@ -21,11 +21,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Integration tests verifying that Responder throws the correct exception types
- * when various HTTP errors occur.
+ * Integration tests verifying that Responder throws the correct exception types when various HTTP
+ * errors occur.
  *
- * <p>These tests use MockWebServer to simulate different HTTP status codes and
- * verify that the appropriate exception subclass is thrown with correct properties.
+ * <p>These tests use MockWebServer to simulate different HTTP status codes and verify that the
+ * appropriate exception subclass is thrown with correct properties.
  */
 @DisplayName("Responder Exception Integration")
 class ResponderExceptionIntegrationTest {
@@ -38,11 +38,12 @@ class ResponderExceptionIntegrationTest {
   void setUp() throws IOException {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
-    okHttpClient = new OkHttpClient.Builder()
-        .connectTimeout(1, TimeUnit.SECONDS)
-        .readTimeout(1, TimeUnit.SECONDS)
-        .writeTimeout(1, TimeUnit.SECONDS)
-        .build();
+    okHttpClient =
+        new OkHttpClient.Builder()
+            .connectTimeout(1, TimeUnit.SECONDS)
+            .readTimeout(1, TimeUnit.SECONDS)
+            .writeTimeout(1, TimeUnit.SECONDS)
+            .build();
   }
 
   @AfterEach
@@ -57,14 +58,17 @@ class ResponderExceptionIntegrationTest {
     @Test
     @DisplayName("should throw exception with 429 status code")
     void shouldThrowOnRateLimit() {
-      mockWebServer.enqueue(new MockResponse()
-          .setResponseCode(429)
-          .setBody("{\"error\": {\"message\": \"Rate limit exceeded\"}}"));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setResponseCode(429)
+              .setBody("{\"error\": {\"message\": \"Rate limit exceeded\"}}"));
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex = assertThrows(ExecutionException.class,
-          () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+      ExecutionException ex =
+          assertThrows(
+              ExecutionException.class,
+              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
 
       // Verify the exception message contains the status code
       assertTrue(ex.getCause().getMessage().contains("429"));
@@ -79,9 +83,10 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.builder().maxRetries(1).build());
 
-      assertDoesNotThrow(() -> {
-        responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
-      });
+      assertDoesNotThrow(
+          () -> {
+            responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+          });
       assertEquals(2, mockWebServer.getRequestCount());
     }
   }
@@ -93,14 +98,17 @@ class ResponderExceptionIntegrationTest {
     @Test
     @DisplayName("should throw exception on 401 Unauthorized")
     void shouldThrowOn401() {
-      mockWebServer.enqueue(new MockResponse()
-          .setResponseCode(401)
-          .setBody("{\"error\": {\"message\": \"Invalid API key\"}}"));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setResponseCode(401)
+              .setBody("{\"error\": {\"message\": \"Invalid API key\"}}"));
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex = assertThrows(ExecutionException.class,
-          () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+      ExecutionException ex =
+          assertThrows(
+              ExecutionException.class,
+              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
 
       assertTrue(ex.getCause().getMessage().contains("401"));
     }
@@ -108,14 +116,17 @@ class ResponderExceptionIntegrationTest {
     @Test
     @DisplayName("should throw exception on 403 Forbidden")
     void shouldThrowOn403() {
-      mockWebServer.enqueue(new MockResponse()
-          .setResponseCode(403)
-          .setBody("{\"error\": {\"message\": \"Access denied\"}}"));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setResponseCode(403)
+              .setBody("{\"error\": {\"message\": \"Access denied\"}}"));
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex = assertThrows(ExecutionException.class,
-          () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+      ExecutionException ex =
+          assertThrows(
+              ExecutionException.class,
+              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
 
       assertTrue(ex.getCause().getMessage().contains("403"));
     }
@@ -127,7 +138,8 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.defaults());
 
-      assertThrows(ExecutionException.class,
+      assertThrows(
+          ExecutionException.class,
           () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
 
       assertEquals(1, mockWebServer.getRequestCount()); // No retry
@@ -141,14 +153,17 @@ class ResponderExceptionIntegrationTest {
     @Test
     @DisplayName("should throw exception on 500 Internal Server Error")
     void shouldThrowOn500() {
-      mockWebServer.enqueue(new MockResponse()
-          .setResponseCode(500)
-          .setBody("{\"error\": {\"message\": \"Internal server error\"}}"));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setResponseCode(500)
+              .setBody("{\"error\": {\"message\": \"Internal server error\"}}"));
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex = assertThrows(ExecutionException.class,
-          () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+      ExecutionException ex =
+          assertThrows(
+              ExecutionException.class,
+              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
 
       assertTrue(ex.getCause().getMessage().contains("500"));
     }
@@ -156,14 +171,17 @@ class ResponderExceptionIntegrationTest {
     @Test
     @DisplayName("should throw exception on 503 Service Unavailable")
     void shouldThrowOn503() {
-      mockWebServer.enqueue(new MockResponse()
-          .setResponseCode(503)
-          .setBody("{\"error\": {\"message\": \"Service unavailable\"}}"));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setResponseCode(503)
+              .setBody("{\"error\": {\"message\": \"Service unavailable\"}}"));
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex = assertThrows(ExecutionException.class,
-          () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+      ExecutionException ex =
+          assertThrows(
+              ExecutionException.class,
+              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
 
       assertTrue(ex.getCause().getMessage().contains("503"));
     }
@@ -177,9 +195,10 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.builder().maxRetries(1).build());
 
-      assertDoesNotThrow(() -> {
-        responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
-      });
+      assertDoesNotThrow(
+          () -> {
+            responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+          });
       assertEquals(2, mockWebServer.getRequestCount());
     }
   }
@@ -191,14 +210,17 @@ class ResponderExceptionIntegrationTest {
     @Test
     @DisplayName("should throw exception on 400 Bad Request")
     void shouldThrowOn400() {
-      mockWebServer.enqueue(new MockResponse()
-          .setResponseCode(400)
-          .setBody("{\"error\": {\"message\": \"Invalid model\"}}"));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setResponseCode(400)
+              .setBody("{\"error\": {\"message\": \"Invalid model\"}}"));
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex = assertThrows(ExecutionException.class,
-          () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+      ExecutionException ex =
+          assertThrows(
+              ExecutionException.class,
+              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
 
       assertTrue(ex.getCause().getMessage().contains("400"));
     }
@@ -206,14 +228,17 @@ class ResponderExceptionIntegrationTest {
     @Test
     @DisplayName("should throw exception on 404 Not Found")
     void shouldThrowOn404() {
-      mockWebServer.enqueue(new MockResponse()
-          .setResponseCode(404)
-          .setBody("{\"error\": {\"message\": \"Model not found\"}}"));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setResponseCode(404)
+              .setBody("{\"error\": {\"message\": \"Model not found\"}}"));
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex = assertThrows(ExecutionException.class,
-          () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+      ExecutionException ex =
+          assertThrows(
+              ExecutionException.class,
+              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
 
       assertTrue(ex.getCause().getMessage().contains("404"));
     }
@@ -221,14 +246,17 @@ class ResponderExceptionIntegrationTest {
     @Test
     @DisplayName("should throw exception on 422 Unprocessable Entity")
     void shouldThrowOn422() {
-      mockWebServer.enqueue(new MockResponse()
-          .setResponseCode(422)
-          .setBody("{\"error\": {\"message\": \"Invalid parameters\"}}"));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setResponseCode(422)
+              .setBody("{\"error\": {\"message\": \"Invalid parameters\"}}"));
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex = assertThrows(ExecutionException.class,
-          () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+      ExecutionException ex =
+          assertThrows(
+              ExecutionException.class,
+              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
 
       assertTrue(ex.getCause().getMessage().contains("422"));
     }
@@ -240,7 +268,8 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.defaults());
 
-      assertThrows(ExecutionException.class,
+      assertThrows(
+          ExecutionException.class,
           () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
 
       assertEquals(1, mockWebServer.getRequestCount()); // No retry
@@ -254,12 +283,12 @@ class ResponderExceptionIntegrationTest {
     @Test
     @DisplayName("should throw on connection drop")
     void shouldThrowOnConnectionDrop() {
-      mockWebServer.enqueue(new MockResponse()
-          .setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+      mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      assertThrows(ExecutionException.class,
+      assertThrows(
+          ExecutionException.class,
           () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
     }
 
@@ -271,9 +300,10 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.builder().maxRetries(1).build());
 
-      assertDoesNotThrow(() -> {
-        responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
-      });
+      assertDoesNotThrow(
+          () -> {
+            responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+          });
       assertEquals(2, mockWebServer.getRequestCount());
     }
   }
@@ -285,31 +315,33 @@ class ResponderExceptionIntegrationTest {
     @Test
     @DisplayName("should include status code in error message")
     void shouldIncludeStatusCode() {
-      mockWebServer.enqueue(new MockResponse()
-          .setResponseCode(418)
-          .setBody("I'm a teapot"));
+      mockWebServer.enqueue(new MockResponse().setResponseCode(418).setBody("I'm a teapot"));
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex = assertThrows(ExecutionException.class,
-          () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+      ExecutionException ex =
+          assertThrows(
+              ExecutionException.class,
+              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
 
       String message = ex.getCause().getMessage();
-      assertTrue(message.contains("418") || message.contains("teapot"),
+      assertTrue(
+          message.contains("418") || message.contains("teapot"),
           "Error message should contain status info");
     }
 
     @Test
     @DisplayName("should include response body in error")
     void shouldIncludeResponseBody() {
-      mockWebServer.enqueue(new MockResponse()
-          .setResponseCode(400)
-          .setBody("Specific error details here"));
+      mockWebServer.enqueue(
+          new MockResponse().setResponseCode(400).setBody("Specific error details here"));
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex = assertThrows(ExecutionException.class,
-          () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+      ExecutionException ex =
+          assertThrows(
+              ExecutionException.class,
+              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
 
       // Error message or cause should contain the response body
       assertNotNull(ex.getCause().getMessage());
@@ -329,12 +361,36 @@ class ResponderExceptionIntegrationTest {
 
   private MockResponse createSuccessResponse() {
     try {
-      Response response = new Response(
-          null, null, System.currentTimeMillis() / 1000, null,
-          "resp-123", null, null, null, null, null,
-          "gpt-4o", ResponseObject.RESPONSE, null, null, null, null,
-          null, null, null, null, ResponseGenerationStatus.COMPLETED,
-          null, null, null, null, null, null, null);
+      Response response =
+          new Response(
+              null,
+              null,
+              System.currentTimeMillis() / 1000,
+              null,
+              "resp-123",
+              null,
+              null,
+              null,
+              null,
+              null,
+              "gpt-4o",
+              ResponseObject.RESPONSE,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              ResponseGenerationStatus.COMPLETED,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null);
 
       String json = ResponsesApiObjectMapper.create().writeValueAsString(response);
       return new MockResponse()
@@ -348,9 +404,32 @@ class ResponderExceptionIntegrationTest {
 
   private CreateResponsePayload createPayload() {
     return new CreateResponsePayload(
-        null, null, null,
+        null,
+        null,
+        null,
         List.of(new DeveloperMessage(List.of(new Text("Test")), null)),
-        "Test", null, null, null, "gpt-4o", null, null, null, null,
-        null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        "Test",
+        null,
+        null,
+        null,
+        "gpt-4o",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 }

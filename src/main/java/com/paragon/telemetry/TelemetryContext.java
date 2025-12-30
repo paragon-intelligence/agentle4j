@@ -150,8 +150,13 @@ public record TelemetryContext(
     /** Builds the TelemetryContext. */
     public @NonNull TelemetryContext build() {
       return new TelemetryContext(
-          userId, traceName, parentTraceId, parentSpanId, requestId,
-          Map.copyOf(metadata), List.copyOf(tags));
+          userId,
+          traceName,
+          parentTraceId,
+          parentSpanId,
+          requestId,
+          Map.copyOf(metadata),
+          List.copyOf(tags));
     }
   }
 }

@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for StreamingEvent implementations.
- */
+/** Tests for StreamingEvent implementations. */
 @DisplayName("StreamingEvent Tests")
 class StreamingEventTest {
 
@@ -23,15 +21,9 @@ class StreamingEventTest {
     @Test
     @DisplayName("creates output text delta event")
     void createsOutputTextDelta() {
-      OutputTextDeltaEvent event = new OutputTextDeltaEvent(
-          "response.output_text.delta",
-          "item_123",
-          0,
-          0,
-          "Hello",
-          null,
-          1
-      );
+      OutputTextDeltaEvent event =
+          new OutputTextDeltaEvent(
+              "response.output_text.delta", "item_123", 0, 0, "Hello", null, 1);
 
       assertEquals("response.output_text.delta", event.type());
       assertEquals("item_123", event.itemId());
@@ -52,13 +44,13 @@ class StreamingEventTest {
     @Test
     @DisplayName("creates streaming error event")
     void createsStreamingError() {
-      StreamingErrorEvent event = new StreamingErrorEvent(
-          "error",
-          "server_error",
-          "Internal server error",
-          null,  // param
-          1
-      );
+      StreamingErrorEvent event =
+          new StreamingErrorEvent(
+              "error",
+              "server_error",
+              "Internal server error",
+              null, // param
+              1);
 
       assertEquals("error", event.type());
       assertEquals("server_error", event.code());
@@ -78,13 +70,9 @@ class StreamingEventTest {
     @Test
     @DisplayName("creates function call arguments delta")
     void createsFunctionCallDelta() {
-      FunctionCallArgumentsDeltaEvent event = new FunctionCallArgumentsDeltaEvent(
-          "response.function_call_arguments.delta",
-          "item_456",
-          0,
-          "{\"city\":",
-          1
-      );
+      FunctionCallArgumentsDeltaEvent event =
+          new FunctionCallArgumentsDeltaEvent(
+              "response.function_call_arguments.delta", "item_456", 0, "{\"city\":", 1);
 
       assertEquals("response.function_call_arguments.delta", event.type());
       assertEquals("{\"city\":", event.delta());

@@ -1,18 +1,17 @@
 package com.paragon.telemetry.events;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import com.paragon.responses.exception.AgentExecutionException;
 import com.paragon.responses.exception.AgentleException;
+import java.util.HashMap;
+import java.util.Map;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Telemetry event emitted when an agent execution fails.
  *
- * <p>Contains context about the failure including agent name, phase, error details, and trace correlation.
+ * <p>Contains context about the failure including agent name, phase, error details, and trace
+ * correlation.
  *
  * @param agentName the name of the agent that failed
  * @param sessionId the session ID for correlation
@@ -37,8 +36,8 @@ public record AgentFailedEvent(
     @NonNull String errorCode,
     @NonNull String errorMessage,
     int turnsCompleted,
-    @Nullable String suggestion
-) implements TelemetryEvent {
+    @Nullable String suggestion)
+    implements TelemetryEvent {
 
   @Override
   public @NonNull Map<String, Object> attributes() {
@@ -81,8 +80,7 @@ public record AgentFailedEvent(
         exception.code().name(),
         exception.getMessage(),
         exception.turnsCompleted(),
-        exception.suggestion()
-    );
+        exception.suggestion());
   }
 
   /**
@@ -105,11 +103,11 @@ public record AgentFailedEvent(
       @Nullable String traceId,
       @Nullable String spanId,
       @Nullable String parentSpanId) {
-    
+
     String errorCode = "UNKNOWN";
     String suggestion = null;
     String phase = "UNKNOWN";
-    
+
     if (exception instanceof AgentExecutionException agentEx) {
       errorCode = agentEx.code().name();
       suggestion = agentEx.suggestion();
@@ -118,7 +116,7 @@ public record AgentFailedEvent(
       errorCode = agentleEx.code().name();
       suggestion = agentleEx.suggestion();
     }
-    
+
     return new AgentFailedEvent(
         agentName,
         sessionId,
@@ -128,9 +126,10 @@ public record AgentFailedEvent(
         System.nanoTime(),
         phase,
         errorCode,
-        exception.getMessage() != null ? exception.getMessage() : exception.getClass().getSimpleName(),
+        exception.getMessage() != null
+            ? exception.getMessage()
+            : exception.getClass().getSimpleName(),
         turnsCompleted,
-        suggestion
-    );
+        suggestion);
   }
 }

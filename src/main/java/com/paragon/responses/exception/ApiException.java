@@ -7,13 +7,15 @@ import org.jspecify.annotations.Nullable;
  * Exception thrown when an API request fails.
  *
  * <p>Provides HTTP-specific context:
+ *
  * <ul>
- *   <li>{@link #statusCode()} - The HTTP status code</li>
- *   <li>{@link #requestId()} - Request correlation ID for debugging</li>
- *   <li>{@link #responseBody()} - Raw error response from the API</li>
+ *   <li>{@link #statusCode()} - The HTTP status code
+ *   <li>{@link #requestId()} - Request correlation ID for debugging
+ *   <li>{@link #responseBody()} - Raw error response from the API
  * </ul>
  *
  * <p>Example usage:
+ *
  * <pre>{@code
  * if (error instanceof ApiException e) {
  *     log.error("API error {} (request {}): {}",
@@ -88,11 +90,12 @@ public class ApiException extends AgentleException {
    * Creates an ApiException from an HTTP status code.
    *
    * <p>Automatically determines the appropriate subclass based on status code:
+   *
    * <ul>
-   *   <li>401/403 → {@link AuthenticationException}</li>
-   *   <li>429 → {@link RateLimitException}</li>
-   *   <li>4xx → {@link InvalidRequestException}</li>
-   *   <li>5xx → {@link ServerException}</li>
+   *   <li>401/403 → {@link AuthenticationException}
+   *   <li>429 → {@link RateLimitException}
+   *   <li>4xx → {@link InvalidRequestException}
+   *   <li>5xx → {@link ServerException}
    * </ul>
    *
    * @param statusCode the HTTP status code
@@ -117,13 +120,7 @@ public class ApiException extends AgentleException {
         }
         // Fallback for unexpected status codes
         yield new ApiException(
-            ErrorCode.UNKNOWN,
-            statusCode,
-            message,
-            requestId,
-            responseBody,
-            null,
-            false);
+            ErrorCode.UNKNOWN, statusCode, message, requestId, responseBody, null, false);
       }
     };
   }

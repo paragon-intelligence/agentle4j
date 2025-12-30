@@ -1,14 +1,12 @@
 package com.paragon.agents;
 
+import com.paragon.responses.annotations.FunctionMetadata;
+import com.paragon.responses.spec.FunctionTool;
+import com.paragon.responses.spec.FunctionToolCallOutput;
 import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.paragon.responses.annotations.FunctionMetadata;
-import com.paragon.responses.spec.FunctionTool;
-import com.paragon.responses.spec.FunctionToolCallOutput;
 
 /**
  * A handoff defines when and to which agent control should be transferred.
@@ -100,31 +98,31 @@ public final class Handoff {
     return new HandoffTool(name, description);
   }
 
-  /**
-   * Parameters for the handoff tool - just an optional message.
-   */
+  /** Parameters for the handoff tool - just an optional message. */
   public record HandoffParams(@Nullable String message) {}
 
-  /**
-   * Internal tool implementation for handoffs.
-   */
+  /** Internal tool implementation for handoffs. */
   @FunctionMetadata(name = "", description = "")
   private static final class HandoffTool extends FunctionTool<HandoffParams> {
     private final String toolName;
     private final String toolDescription;
 
     HandoffTool(String name, String description) {
-      super(Map.of(
-          "type", "object",
-          "properties", Map.of(
-              "message", Map.of(
-                  "type", "string",
-                  "description", "Optional message to pass to the next agent"
-              )
-          ),
-          "required", java.util.List.of(),
-          "additionalProperties", false
-      ), true);
+      super(
+          Map.of(
+              "type",
+              "object",
+              "properties",
+              Map.of(
+                  "message",
+                  Map.of(
+                      "type", "string",
+                      "description", "Optional message to pass to the next agent")),
+              "required",
+              java.util.List.of(),
+              "additionalProperties",
+              false),
+          true);
       this.toolName = name;
       this.toolDescription = description;
     }
@@ -148,9 +146,7 @@ public final class Handoff {
     }
   }
 
-  /**
-   * Builder for creating Handoff instances.
-   */
+  /** Builder for creating Handoff instances. */
   public static final class Builder {
     private final @NonNull Agent targetAgent;
     private @Nullable String name;
