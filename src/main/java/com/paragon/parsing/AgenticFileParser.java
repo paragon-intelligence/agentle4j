@@ -18,6 +18,8 @@ import java.util.concurrent.CompletableFuture;
 @SuppressWarnings("ClassCanBeRecord")
 public class AgenticFileParser {
   @NonNull
+  private static final String INSTRUCTIONS = "Convert the document to markdown format, with each page as a separate markdown string. Preserve all structure (headings, lists, tables, formatting) and ensure clean, readable output. For images, replace with a descriptive paragraph explaining the image content in detail.";
+  @NonNull
   private final Responder responder;
 
   public AgenticFileParser(@NonNull Responder responder) {
@@ -53,11 +55,12 @@ public class AgenticFileParser {
 
   public @NonNull CompletableFuture<MarkdownResult> parse(@NonNull File file) throws IOException {
     return responder.respond(
-            CreateResponsePayload.builder()
-                    .addUserMessage(Message.builder().addContent(file).asUser())
-                    .withStructuredOutput(MarkdownResult.class)
-                    .build()).thenApply(ParsedResponse::outputParsed);
-
+                    CreateResponsePayload.builder()
+                            .addDeveloperMessage(Message.developer(INSTRUCTIONS))
+                            .addUserMessage(Message.builder().addContent(file).asUser())
+                            .withStructuredOutput(MarkdownResult.class)
+                            .build())
+            .thenApply(ParsedResponse::outputParsed);
   }
 
   private boolean seemsLikeFile(URI uri) {
