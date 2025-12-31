@@ -235,6 +235,13 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.14</version>
+                <configuration>
+                    <excludes>
+                        <!-- Exclude demo/sample classes from coverage -->
+                        <exclude>com/paragon/Main.class</exclude>
+                        <exclude>com/paragon/Main$*.class</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
