@@ -3,7 +3,8 @@ package com.paragon.agents;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.paragon.responses.Responder;
-import com.paragon.responses.spec.Message;
+import com.paragon.responses.spec.*;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
 
 /**
  * Comprehensive tests for Agent.
@@ -549,6 +551,183 @@ class AgentTest {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INTERACT OVERLOADS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("Interact Overloads")
+  class InteractOverloads {
+
+    @Test
+    @DisplayName("interact(Text) creates fresh context")
+    void interact_Text_createsFreshContext() throws Exception {
+      Agent agent = createTestAgent("Test");
+      enqueueSuccessResponse("Response");
+
+      CompletableFuture<AgentResult> future = agent.interact(Text.valueOf("Hello"));
+
+      assertNotNull(future);
+      AgentResult result = future.get(5, TimeUnit.SECONDS);
+      assertNotNull(result);
+    }
+
+    @Test
+    @DisplayName("interact(File) creates fresh context")
+    void interact_File_createsFreshContext() throws Exception {
+      Agent agent = createTestAgent("Test");
+      enqueueSuccessResponse("File processed");
+
+      File file = File.fromBase64("SGVsbG8gV29ybGQ=");
+      CompletableFuture<AgentResult> future = agent.interact(file);
+
+      assertNotNull(future);
+      AgentResult result = future.get(5, TimeUnit.SECONDS);
+      assertNotNull(result);
+    }
+
+    @Test
+    @DisplayName("interact(Image) creates fresh context")
+    void interact_Image_createsFreshContext() throws Exception {
+      Agent agent = createTestAgent("Test");
+      enqueueSuccessResponse("Image response");
+
+      Image image = Image.fromBase64("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+      CompletableFuture<AgentResult> future = agent.interact(image);
+
+      assertNotNull(future);
+      AgentResult result = future.get(5, TimeUnit.SECONDS);
+      assertNotNull(result);
+    }
+
+    @Test
+    @DisplayName("interact(Message) creates fresh context")
+    void interact_Message_createsFreshContext() throws Exception {
+      Agent agent = createTestAgent("Test");
+      enqueueSuccessResponse("Message response");
+
+      Message message = Message.user("Hello from message");
+      CompletableFuture<AgentResult> future = agent.interact(message);
+
+      assertNotNull(future);
+      AgentResult result = future.get(5, TimeUnit.SECONDS);
+      assertNotNull(result);
+    }
+
+    @Test
+    @DisplayName("interact(ResponseInputItem) creates fresh context")
+    void interact_ResponseInputItem_createsFreshContext() throws Exception {
+      Agent agent = createTestAgent("Test");
+      enqueueSuccessResponse("Input item response");
+
+      ResponseInputItem item = Message.user("Hello input item");
+      CompletableFuture<AgentResult> future = agent.interact(item);
+
+      assertNotNull(future);
+      AgentResult result = future.get(5, TimeUnit.SECONDS);
+      assertNotNull(result);
+    }
+
+    @Test
+    @DisplayName("interact(List<ResponseInputItem>) creates fresh context")
+    void interact_List_createsFreshContext() throws Exception {
+      Agent agent = createTestAgent("Test");
+      enqueueSuccessResponse("List response");
+
+      List<ResponseInputItem> items = List.of(
+          Message.user("First"),
+          Message.user("Second")
+      );
+      CompletableFuture<AgentResult> future = agent.interact(items);
+
+      assertNotNull(future);
+      AgentResult result = future.get(5, TimeUnit.SECONDS);
+      assertNotNull(result);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STREAMING API
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("Streaming API")
+  class StreamingApi {
+
+    @Test
+    @DisplayName("interactStream(String) returns AgentStream")
+    void interactStream_String_returnsAgentStream() {
+      Agent agent = createTestAgent("Test");
+
+      AgentStream stream = agent.interactStream("Hello");
+
+      assertNotNull(stream);
+    }
+
+    @Test
+    @DisplayName("interactStream(Context) returns AgentStream")
+    void interactStream_Context_returnsAgentStream() {
+      Agent agent = createTestAgent("Test");
+      AgentContext context = AgentContext.create();
+      context.addInput(Message.user("Hello"));
+
+      AgentStream stream = agent.interactStream(context);
+
+      assertNotNull(stream);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUILDER ADDITIONAL OPTIONS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("Builder Additional Options")
+  class BuilderAdditionalOptions {
+
+    @Test
+    @DisplayName("temperature can be set")
+    void temperature_canBeSet() {
+      Agent agent = Agent.builder()
+          .name("Test")
+          .model("test-model")
+          .instructions("Test")
+          .responder(responder)
+          .temperature(0.7)
+          .build();
+
+      assertNotNull(agent);
+    }
+
+    @Test
+    @DisplayName("objectMapper can be set")
+    void objectMapper_canBeSet() {
+      Agent agent = Agent.builder()
+          .name("Test")
+          .model("test-model")
+          .instructions("Test")
+          .responder(responder)
+          .objectMapper(new com.fasterxml.jackson.databind.ObjectMapper())
+          .build();
+
+      assertNotNull(agent);
+    }
+
+    @Test
+    @DisplayName("telemetryContext can be set")
+    void telemetryContext_canBeSet() {
+      Agent agent = Agent.builder()
+          .name("Test")
+          .model("test-model")
+          .instructions("Test")
+          .responder(responder)
+          .telemetryContext(com.paragon.telemetry.TelemetryContext.builder().build())
+          .build();
+
+      assertNotNull(agent);
+    }
+  }
+
   // Helper methods
 
   private Agent createTestAgent(String name) {
@@ -598,3 +777,4 @@ class AgentTest {
             .addHeader("Content-Type", "application/json"));
   }
 }
+
