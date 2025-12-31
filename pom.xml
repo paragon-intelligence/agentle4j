@@ -144,6 +144,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- ByteBuddy 1.17+ required for Java 25 support -->
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>1.17.5</version>
+            <scope>test</scope>
+        </dependency>
+
 
         <!-- JMH for benchmarking -->
         <dependency>
@@ -164,6 +172,26 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>2.20.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>1.57.0</version>
+        </dependency>
+
+        <!-- Flexmark for HTML to Markdown conversion -->
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-html2md-converter</artifactId>
+            <version>0.64.8</version>
+        </dependency>
+
+        <!-- JSoup for HTML parsing and manipulation -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.21.2</version>
         </dependency>
     </dependencies>
 
@@ -192,7 +220,13 @@
                 <version>3.2.5</version>
                 <configuration>
                     <useModulePath>false</useModulePath>
-                    <argLine>@{argLine}</argLine>
+                    <!-- JVM args for Mockito/ByteBuddy compatibility with Java 21+/25 -->
+                    <argLine>@{argLine} 
+                        --add-opens java.base/java.lang=ALL-UNNAMED 
+                        --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                        --add-opens java.base/java.util=ALL-UNNAMED
+                        -Dnet.bytebuddy.experimental=true
+                    </argLine>
                 </configuration>
             </plugin>
 
