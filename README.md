@@ -564,7 +564,7 @@ make benchmark  # Performance benchmarks
 
 ## Test Coverage
 
-**Current Coverage: 69%** | [View Full Report](target/site/jacoco/index.html)
+**Current Coverage: 74%** | [View Full Report](target/site/jacoco/index.html)
 
 Run tests and generate coverage report:
 
@@ -576,11 +576,12 @@ Coverage report is generated at `target/site/jacoco/index.html`.
 
 | Module | Coverage |
 |--------|----------|
-| `responses` | 90% |
-| `prompts` | 90% |
-| `agents` | 75% |
-| `http` | 70% |
-| `telemetry` | 79% |
+| `responses` | 91% |
+| `prompts` | 88% |
+| `http` | 89% |
+| `streaming` | 74% |
+| `agents` | 62% |
+| `telemetry` | 55% |
 
 ## License
 

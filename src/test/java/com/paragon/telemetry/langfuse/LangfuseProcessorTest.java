@@ -1,12 +1,22 @@
 package com.paragon.telemetry.langfuse;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paragon.telemetry.events.*;
+import okhttp3.Call;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Tests for LangfuseProcessor builder and configuration.
@@ -14,6 +24,7 @@ import org.junit.jupiter.api.Test;
  * <p>Note: Integration tests that actually send telemetry require a Langfuse account and are not
  * included here. These tests focus on builder configuration and accessors.
  */
+@ExtendWith(MockitoExtension.class)
 @DisplayName("LangfuseProcessor Tests")
 class LangfuseProcessorTest {
 
@@ -79,6 +90,13 @@ class LangfuseProcessorTest {
 
       assertNotNull(processor);
     }
+
+    @Test
+    @DisplayName("fromEnv method exists")
+    void fromEnvMethodExists() {
+      LangfuseProcessor.Builder builder = LangfuseProcessor.builder().fromEnv();
+      assertNotNull(builder);
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -105,4 +123,5 @@ class LangfuseProcessorTest {
           () -> LangfuseProcessor.builder().publicKey("pk-test").build());
     }
   }
+
 }
