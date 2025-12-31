@@ -3,7 +3,14 @@ package com.paragon.telemetry.grafana;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paragon.telemetry.events.*;
+import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -201,4 +208,189 @@ class GrafanaProcessorTest {
                   .build());
     }
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EVENT PROCESSING INTEGRATION TESTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("Event Processing")
+  class EventProcessingTests {
+
+    private MockWebServer mockWebServer;
+    private GrafanaProcessor processor;
+
+    @BeforeEach
+    void setUp() throws Exception {
+      mockWebServer = new MockWebServer();
+      mockWebServer.start();
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+      if (processor != null) {
+        processor.shutdown();
+      }
+      mockWebServer.shutdown();
+    }
+
+    private GrafanaProcessor createProcessor(boolean traces, boolean metrics, boolean logs) {
+      return GrafanaProcessor.builder()
+          .baseUrl(mockWebServer.url("/otlp").toString())
+          .instanceId("test-instance")
+          .apiToken("test-token")
+          .tracesEnabled(traces)
+          .metricsEnabled(metrics)
+          .logsEnabled(logs)
+          .build();
+    }
+
+    @Test
+    @DisplayName("sends trace for ResponseStartedEvent")
+    void sendsTraceForResponseStartedEvent() throws Exception {
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200));
+      processor = createProcessor(true, false, false);
+
+      ResponseStartedEvent event = ResponseStartedEvent.create(
+          "session-1", "trace-123", "span-456", "gpt-4o");
+
+      processor.process(event);
+      
+      // Wait for async processing
+      Thread.sleep(100);
+
+      RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(request);
+      assertEquals("/otlp/v1/traces", request.getPath());
+      assertTrue(request.getHeader("Authorization").startsWith("Basic "));
+    }
+
+    @Test
+    @DisplayName("sends trace and metrics for ResponseCompletedEvent")
+    void sendsTraceAndMetricsForResponseCompletedEvent() throws Exception {
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // trace
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // metrics
+      processor = createProcessor(true, true, false);
+
+      ResponseStartedEvent started = ResponseStartedEvent.create(
+          "session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseCompletedEvent completed = ResponseCompletedEvent.from(
+          started, 100, 200, 300, 0.01);
+
+      processor.process(completed);
+      
+      Thread.sleep(100);
+
+      RecordedRequest traceRequest = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(traceRequest);
+      assertEquals("/otlp/v1/traces", traceRequest.getPath());
+
+      RecordedRequest metricsRequest = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(metricsRequest);
+      assertEquals("/otlp/v1/metrics", metricsRequest.getPath());
+    }
+
+    @Test
+    @DisplayName("sends log for ResponseStartedEvent when logs enabled")
+    void sendsLogWhenLogsEnabled() throws Exception {
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // trace
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // log
+      processor = createProcessor(true, false, true);
+
+      ResponseStartedEvent event = ResponseStartedEvent.create(
+          "session-1", "trace-123", "span-456", "gpt-4o");
+
+      processor.process(event);
+      
+      Thread.sleep(100);
+
+      // First request is trace
+      RecordedRequest traceRequest = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(traceRequest);
+
+      // Second request is log
+      RecordedRequest logRequest = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(logRequest);
+      assertEquals("/otlp/v1/logs", logRequest.getPath());
+    }
+
+    @Test
+    @DisplayName("sends all signal types for ResponseFailedEvent")
+    void sendsAllSignalTypesForResponseFailedEvent() throws Exception {
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // trace
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // log
+      processor = createProcessor(true, false, true);
+
+      ResponseStartedEvent started = ResponseStartedEvent.create(
+          "session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseFailedEvent failed = ResponseFailedEvent.from(
+          started, new RuntimeException("Test error"));
+
+      processor.process(failed);
+      
+      Thread.sleep(100);
+
+      RecordedRequest request1 = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(request1);
+      
+      RecordedRequest request2 = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(request2);
+    }
+
+    @Test
+    @DisplayName("sends trace for AgentFailedEvent")
+    void sendsTraceForAgentFailedEvent() throws Exception {
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200));
+      processor = createProcessor(true, false, false);
+
+      AgentFailedEvent event = AgentFailedEvent.from(
+          "TestAgent", 3, new RuntimeException("Error"),
+          "session-1", "trace-123", "span-456", null);
+
+      processor.process(event);
+      
+      Thread.sleep(100);
+
+      RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(request);
+      assertEquals("/otlp/v1/traces", request.getPath());
+    }
+
+    @Test
+    @DisplayName("request body contains OTEL JSON")
+    void requestBodyContainsOtelJson() throws Exception {
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200));
+      processor = createProcessor(true, false, false);
+
+      ResponseStartedEvent event = ResponseStartedEvent.create(
+          "session-1", "trace-123", "span-456", "gpt-4o");
+
+      processor.process(event);
+      
+      Thread.sleep(100);
+
+      RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(request);
+      String body = request.getBody().readUtf8();
+      assertTrue(body.contains("resourceSpans"));
+      assertTrue(body.contains("traceId"));
+    }
+
+    @Test
+    @DisplayName("no request when all signals disabled")
+    void noRequestWhenAllSignalsDisabled() throws Exception {
+      processor = createProcessor(false, false, false);
+
+      ResponseStartedEvent event = ResponseStartedEvent.create(
+          "session-1", "trace-123", "span-456", "gpt-4o");
+
+      processor.process(event);
+      
+      Thread.sleep(100);
+
+      RecordedRequest request = mockWebServer.takeRequest(100, TimeUnit.MILLISECONDS);
+      assertNull(request);
+    }
+  }
 }
+
