@@ -293,8 +293,8 @@ class GrafanaProcessorTest {
     @Test
     @DisplayName("sends log for ResponseStartedEvent when logs enabled")
     void sendsLogWhenLogsEnabled() throws Exception {
-      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // trace
-      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // log
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // first request
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // second request
       processor = createProcessor(true, false, true);
 
       ResponseStartedEvent event = ResponseStartedEvent.create(
@@ -304,14 +304,17 @@ class GrafanaProcessorTest {
       
       Thread.sleep(100);
 
-      // First request is trace
-      RecordedRequest traceRequest = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
-      assertNotNull(traceRequest);
-
-      // Second request is log
-      RecordedRequest logRequest = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
-      assertNotNull(logRequest);
-      assertEquals("/otlp/v1/logs", logRequest.getPath());
+      // Get both requests - order is not guaranteed due to async processing
+      RecordedRequest request1 = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      RecordedRequest request2 = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(request1);
+      assertNotNull(request2);
+      
+      // Verify that we got both traces and logs (in either order)
+      boolean hasTraces = request1.getPath().equals("/otlp/v1/traces") || request2.getPath().equals("/otlp/v1/traces");
+      boolean hasLogs = request1.getPath().equals("/otlp/v1/logs") || request2.getPath().equals("/otlp/v1/logs");
+      assertTrue(hasTraces, "Expected a trace request");
+      assertTrue(hasLogs, "Expected a log request");
     }
 
     @Test
