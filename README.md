@@ -564,7 +564,7 @@ make benchmark  # Performance benchmarks
 
 ## Test Coverage
 
-**Current Coverage: 79.3%** | [View Full Report](target/site/jacoco/index.html)
+**Current Coverage: 80%** | [View Full Report](target/site/jacoco/index.html)
 
 Run tests and generate coverage report:
 
