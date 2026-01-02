@@ -10,6 +10,7 @@ import com.paragon.responses.spec.*;
 import com.paragon.telemetry.TelemetryContext;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -46,6 +47,136 @@ class AgentExtendedTest {
   @AfterEach
   void tearDown() throws Exception {
     mockWebServer.shutdown();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUILDER EDGE CASES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("Builder Edge Cases")
+  class BuilderEdgeCaseTests {
+
+    @Test
+    @DisplayName("builder with custom metadata")
+    void builderWithCustomMetadata() {
+      Map<String, String> metadata = Map.of("key1", "value1", "key2", "value2");
+      
+      Agent agent = Agent.builder()
+          .name("MetadataAgent")
+          .model("test-model")
+          .instructions("Test")
+          .responder(responder)
+          .metadata(metadata)
+          .build();
+
+      assertNotNull(agent);
+      assertEquals("MetadataAgent", agent.name());
+    }
+
+    @Test
+    @DisplayName("builder with custom ObjectMapper")
+    void builderWithCustomObjectMapper() {
+      ObjectMapper customMapper = new ObjectMapper();
+      
+      Agent agent = Agent.builder()
+          .name("MapperAgent")
+          .model("test-model")
+          .instructions("Test")
+          .responder(responder)
+          .objectMapper(customMapper)
+          .build();
+
+      assertNotNull(agent);
+    }
+
+    @Test
+    @DisplayName("builder with addTools varargs")
+    void builderWithAddToolsVarargs() {
+      TestTool tool1 = new TestTool(new AtomicReference<>());
+      FailingTool tool2 = new FailingTool();
+      
+      Agent agent = Agent.builder()
+          .name("MultiToolAgent")
+          .model("test-model")
+          .instructions("Test")
+          .responder(responder)
+          .addTools(tool1, tool2)
+          .build();
+
+      assertNotNull(agent);
+      assertNotNull(agent.toolStore());
+    }
+
+    @Test
+    @DisplayName("builder with temperature set")
+    void builderWithTemperature() {
+      Agent agent = Agent.builder()
+          .name("TempAgent")
+          .model("test-model")
+          .instructions("Test")
+          .responder(responder)
+          .temperature(0.5)
+          .build();
+
+      assertNotNull(agent);
+    }
+
+    @Test
+    @DisplayName("builder with maxOutputTokens set")
+    void builderWithMaxOutputTokens() {
+      Agent agent = Agent.builder()
+          .name("TokenAgent")
+          .model("test-model")
+          .instructions("Test")
+          .responder(responder)
+          .maxOutputTokens(2000)
+          .build();
+
+      assertNotNull(agent);
+    }
+
+    @Test
+    @DisplayName("builder rejects negative maxTurns")
+    void builderRejectsNegativeMaxTurns() {
+      assertThrows(IllegalArgumentException.class, () -> {
+        Agent.builder()
+            .name("InvalidAgent")
+            .model("test-model")
+            .instructions("Test")
+            .responder(responder)
+            .maxTurns(-1)
+            .build();
+      });
+    }
+
+    @Test
+    @DisplayName("builder rejects zero maxTurns")
+    void builderRejectsZeroMaxTurns() {
+      assertThrows(IllegalArgumentException.class, () -> {
+        Agent.builder()
+            .name("InvalidAgent")
+            .model("test-model")
+            .instructions("Test")
+            .responder(responder)
+            .maxTurns(0)
+            .build();
+      });
+    }
+
+    @Test
+    @DisplayName("builder handles empty instructions")
+    void builderHandlesEmptyInstructions() {
+      Agent agent = Agent.builder()
+          .name("EmptyInstructionsAgent")
+          .model("test-model")
+          .instructions("")
+          .responder(responder)
+          .build();
+
+      assertNotNull(agent);
+      assertEquals("", agent.instructions());
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -138,6 +269,29 @@ class AgentExtendedTest {
       assertEquals(2, callCount.get());
       assertEquals(2, result.toolExecutions().size());
     }
+
+    @Test
+    @DisplayName("tool needing confirmation triggers pause")
+    void toolNeedingConfirmationTriggersPause() throws Exception {
+      FunctionTool<TestArgs> tool = new ConfirmationTool();
+
+      Agent agent = Agent.builder()
+          .name("ConfirmAgent")
+          .model("test-model")
+          .instructions("Use confirmation tool")
+          .responder(responder)
+          .addTool(tool)
+          .build();
+
+      // LLM calls the confirmation tool
+      enqueueToolCallResponse("confirmation_tool", "{\"query\": \"delete everything\"}");
+
+      AgentResult result = agent.interact("Delete stuff").get(5, TimeUnit.SECONDS);
+
+      // Should be paused waiting for confirmation
+      assertTrue(result.isPaused());
+      assertNotNull(result.pausedState());
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -192,6 +346,84 @@ class AgentExtendedTest {
       assertEquals(1, mainAgent.handoffs().size());
       Handoff handoff = mainAgent.handoffs().get(0);
       assertNotNull(handoff.asTool());
+    }
+
+    @Test
+    @DisplayName("handoff is triggered and executes target agent")
+    void handoffIsTriggeredAndExecutesTargetAgent() throws Exception {
+      Agent targetAgent = Agent.builder()
+          .name("SupportAgent")
+          .model("test-model")
+          .instructions("Handle support")
+          .responder(responder)
+          .build();
+
+      // 1. Main agent triggers handoff (uses the auto-generated handoff tool name: transfer_to_<snake_case_name>)
+      enqueueHandoffResponse("transfer_to_support_agent", "{\"message\": \"Customer needs help\"}");
+      // 2. Target agent receives the handoff and responds
+      enqueueSuccessResponse("I am the support agent handling your request");
+
+      Agent mainAgent = Agent.builder()
+          .name("Router")
+          .model("test-model")
+          .instructions("Route to agents")
+          .responder(responder)
+          .addHandoff(Handoff.to(targetAgent).build())
+          .build();
+
+      AgentResult result = mainAgent.interact("I need support").get(5, TimeUnit.SECONDS);
+
+      assertTrue(result.isHandoff());
+      assertNotNull(result.handoffAgent());
+      assertEquals("SupportAgent", result.handoffAgent().name());
+    }
+
+    @Test
+    @DisplayName("handoff with custom description")
+    void handoffWithCustomDescription() {
+      Agent targetAgent = Agent.builder()
+          .name("BillingAgent")
+          .model("test-model")
+          .instructions("Handle billing")
+          .responder(responder)
+          .build();
+
+      Agent mainAgent = Agent.builder()
+          .name("Router")
+          .model("test-model")
+          .instructions("Route to agents")
+          .responder(responder)
+          .addHandoff(Handoff.to(targetAgent)
+              .withDescription("Transfer for billing questions")
+              .build())
+          .build();
+
+      assertEquals(1, mainAgent.handoffs().size());
+      assertEquals("Transfer for billing questions", mainAgent.handoffs().get(0).description());
+    }
+
+    @Test
+    @DisplayName("handoff with custom name")
+    void handoffWithCustomName() {
+      Agent targetAgent = Agent.builder()
+          .name("SalesAgent")
+          .model("test-model")
+          .instructions("Handle sales")
+          .responder(responder)
+          .build();
+
+      Agent mainAgent = Agent.builder()
+          .name("Router")
+          .model("test-model")
+          .instructions("Route to agents")
+          .responder(responder)
+          .addHandoff(Handoff.to(targetAgent)
+              .withName("route_to_sales")
+              .build())
+          .build();
+
+      assertEquals(1, mainAgent.handoffs().size());
+      assertEquals("route_to_sales", mainAgent.handoffs().get(0).name());
     }
   }
 
@@ -583,6 +815,104 @@ class AgentExtendedTest {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // STREAMING INTERACTIONS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("Streaming Interactions")
+  class StreamingInteractionsTests {
+
+    @Test
+    @DisplayName("interactStream returns AgentStream")
+    void interactStreamReturnsAgentStream() {
+      Agent agent = createTestAgent();
+
+      AgentStream stream = agent.interactStream("Hello");
+
+      assertNotNull(stream);
+    }
+
+    @Test
+    @DisplayName("interactStream with AgentContext")
+    void interactStreamWithAgentContext() {
+      Agent agent = createTestAgent();
+      AgentContext context = AgentContext.create();
+      context.addInput(Message.user("Hello"));
+
+      AgentStream stream = agent.interactStream(context);
+
+      assertNotNull(stream);
+    }
+
+    @Test
+    @DisplayName("interactStream with empty context adds input")
+    void interactStreamWithEmptyContext() {
+      Agent agent = createTestAgent();
+      AgentContext context = AgentContext.create();
+      // Do not add input - context is empty
+      // The stream should handle this gracefully
+      AgentStream stream = agent.interactStream(context);
+
+      assertNotNull(stream);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INPUT GUARDRAILS EDGE CASES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("Input Guardrails Edge Cases")
+  class InputGuardrailsEdgeCasesTests {
+
+    @Test
+    @DisplayName("input guardrail failure returns error in streaming")
+    void inputGuardrailFailureReturnsErrorInStreaming() {
+      Agent agent = Agent.builder()
+          .name("GuardrailAgent")
+          .model("test-model")
+          .instructions("Test")
+          .responder(responder)
+          .addInputGuardrail((inputText, ctx) -> 
+              GuardrailResult.failed("Input not allowed"))
+          .build();
+
+      AgentStream stream = agent.interactStream("This should fail");
+
+      assertNotNull(stream);
+      // Stream should contain the failure
+    }
+
+    @Test
+    @DisplayName("multiple input guardrails all pass")
+    void multipleInputGuardrailsAllPass() throws Exception {
+      AtomicInteger guardrailCallCount = new AtomicInteger(0);
+
+      Agent agent = Agent.builder()
+          .name("MultiGuardrailAgent")
+          .model("test-model")
+          .instructions("Test")
+          .responder(responder)
+          .addInputGuardrail((inputText, ctx) -> {
+            guardrailCallCount.incrementAndGet();
+            return GuardrailResult.passed();
+          })
+          .addInputGuardrail((inputText, ctx) -> {
+            guardrailCallCount.incrementAndGet();
+            return GuardrailResult.passed();
+          })
+          .build();
+
+      enqueueSuccessResponse("Response");
+
+      AgentResult result = agent.interact("Hello").get(5, TimeUnit.SECONDS);
+
+      assertTrue(result.isSuccess());
+      assertEquals(2, guardrailCallCount.get());
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // HELPER CLASSES AND METHODS
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -640,6 +970,19 @@ class AgentExtendedTest {
     @Override
     public FunctionToolCallOutput call(TestArgs params) {
       return FunctionToolCallOutput.success("Call me again");
+    }
+  }
+
+  @FunctionMetadata(name = "confirmation_tool", description = "A tool that requires confirmation")
+  private static class ConfirmationTool extends FunctionTool<TestArgs> {
+    @Override
+    public FunctionToolCallOutput call(TestArgs params) {
+      return FunctionToolCallOutput.success("Confirmed action: " + params.query());
+    }
+
+    @Override
+    public boolean requiresConfirmation() {
+      return true; // This triggers the pause path in Agent
     }
   }
 

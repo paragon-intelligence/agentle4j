@@ -635,4 +635,90 @@ class PromptTest {
       assertEquals(cause, ex.getCause());
     }
   }
+
+  // ===== String-Like Operations Extended Tests =====
+
+  @Nested
+  class StringOperationsExtended {
+
+    @Test
+    void substring_extractsPortion() {
+      Prompt prompt = Prompt.of("Hello, World!");
+      Prompt sub = prompt.substring(0, 5);
+      assertEquals("Hello", sub.content());
+    }
+
+    @Test
+    void charAt_returnsCorrectCharacter() {
+      Prompt prompt = Prompt.of("Hello");
+      assertEquals('e', prompt.charAt(1));
+    }
+
+    @Test
+    void length_returnsCorrectLength() {
+      Prompt prompt = Prompt.of("Test");
+      assertEquals(4, prompt.length());
+    }
+
+    @Test
+    void isEmpty_returnsTrueForEmpty() {
+      Prompt prompt = Prompt.empty();
+      assertTrue(prompt.isEmpty());
+    }
+
+    @Test
+    void isEmpty_returnsFalseForNonEmpty() {
+      Prompt prompt = Prompt.of("Content");
+      assertFalse(prompt.isEmpty());
+    }
+
+    @Test
+    void append_combinesPrompts() {
+      Prompt p1 = Prompt.of("Hello ");
+      Prompt p2 = Prompt.of("World");
+      Prompt combined = p1.append(p2);
+      assertEquals("Hello World", combined.content());
+    }
+
+    @Test
+    void append_combinesWithString() {
+      Prompt prompt = Prompt.of("Hello ");
+      Prompt combined = prompt.append("World");
+      assertEquals("Hello World", combined.content());
+    }
+  }
+
+  // ===== Extract Variable Names Extended Tests =====
+
+  @Nested
+  class ExtractVariableNamesExtendedTests {
+
+    @Test
+    void extractVariableNames_findsAllVariables() {
+      Prompt prompt = Prompt.of("{{greeting}}, {{name}}! You have {{count}} items.");
+      var names = prompt.extractVariableNames();
+      
+      assertTrue(names.contains("greeting"));
+      assertTrue(names.contains("name"));
+      assertTrue(names.contains("count"));
+      assertEquals(3, names.size());
+    }
+
+    @Test
+    void extractVariableNames_handlesNestedProperties() {
+      Prompt prompt = Prompt.of("{{user.name}} - {{user.address.city}}");
+      var names = prompt.extractVariableNames();
+      
+      // Should extract root keys
+      assertTrue(names.contains("user"));
+    }
+
+    @Test
+    void extractVariableNames_returnsEmptyForNoVariables() {
+      Prompt prompt = Prompt.of("No variables here");
+      var names = prompt.extractVariableNames();
+      
+      assertTrue(names.isEmpty());
+    }
+  }
 }

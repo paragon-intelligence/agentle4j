@@ -284,5 +284,64 @@ class MessageTest {
     void throwsOnNullVarargs() {
       assertThrows(IllegalArgumentException.class, () -> Message.user((String[]) null));
     }
+
+    @Test
+    @DisplayName("developer with content list and status")
+    void developerWithContentListAndStatus() {
+      List<MessageContent> content = List.of(Text.valueOf("Instruction 1"), Text.valueOf("Instruction 2"));
+      DeveloperMessage msg = Message.developer(content, InputMessageStatus.COMPLETED);
+
+      assertEquals(2, msg.content().size());
+      assertEquals(InputMessageStatus.COMPLETED, msg.status());
+    }
+
+    @Test
+    @DisplayName("user with content list and status")
+    void userWithContentListAndStatus() {
+      List<MessageContent> content = List.of(Text.valueOf("User input 1"), Text.valueOf("User input 2"));
+      UserMessage msg = Message.user(content, InputMessageStatus.IN_PROGRESS);
+
+      assertEquals(2, msg.content().size());
+      assertEquals(InputMessageStatus.IN_PROGRESS, msg.status());
+    }
+
+    @Test
+    @DisplayName("assistant with content list and status")
+    void assistantWithContentListAndStatus() {
+      List<MessageContent> content = List.of(Text.valueOf("Response 1"), Text.valueOf("Response 2"));
+      AssistantMessage msg = Message.assistant(content, InputMessageStatus.COMPLETED);
+
+      assertEquals(2, msg.content().size());
+      assertEquals(InputMessageStatus.COMPLETED, msg.status());
+    }
+
+    @Test
+    @DisplayName("developer with single content")
+    void developerWithSingleContent() {
+      Text text = Text.valueOf("Single instruction");
+      DeveloperMessage msg = Message.developer(text);
+
+      assertEquals(1, msg.content().size());
+      assertTrue(msg.content().get(0) instanceof Text);
+    }
+
+    @Test
+    @DisplayName("assistant with single content")
+    void assistantWithSingleContent() {
+      Text text = Text.valueOf("Single response");
+      AssistantMessage msg = Message.assistant(text);
+
+      assertEquals(1, msg.content().size());
+      assertTrue(msg.content().get(0) instanceof Text);
+    }
+
+    @Test
+    @DisplayName("assistant from content list")
+    void assistantFromContentList() {
+      List<MessageContent> content = List.of(Text.valueOf("Part 1"), Text.valueOf("Part 2"));
+      AssistantMessage msg = Message.assistant(content);
+
+      assertEquals(2, msg.content().size());
+    }
   }
 }
