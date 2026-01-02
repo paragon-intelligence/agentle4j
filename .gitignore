@@ -1,5 +1,8 @@
 # Build artifacts
 target/
+!target/site/
+!target/site/jacoco/
+!target/site/jacoco/index.html
 *.jar
 *.war
 *.ear
