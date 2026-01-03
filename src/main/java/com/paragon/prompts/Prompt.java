@@ -227,6 +227,47 @@ public final class Prompt {
   }
 
   /**
+   * Compiles this prompt with variable key-value pairs.
+   *
+   * <p>This is a convenience method that accepts alternating keys and values,
+   * providing a cleaner syntax for simple cases.
+   *
+   * <p>Example usage:
+   * <pre>{@code
+   * Prompt result = prompt.compile("name", "Alice", "age", 30, "active", true);
+   * }</pre>
+   *
+   * @param firstKey the first variable name
+   * @param firstValue the first variable value
+   * @param rest additional alternating keys (String) and values (Object)
+   * @return a new compiled Prompt instance
+   * @throws IllegalArgumentException if rest has an odd number of arguments
+   *                                  or if a key is not a String
+   * @throws TemplateException if the template syntax is invalid or processing fails
+   */
+  public Prompt compile(String firstKey, Object firstValue, Object... rest) {
+    Objects.requireNonNull(firstKey, "firstKey must not be null");
+    
+    if (rest.length % 2 != 0) {
+      throw new IllegalArgumentException(
+          "Must provide an even number of additional arguments as key-value pairs");
+    }
+
+    Map<String, Object> context = new HashMap<>();
+    context.put(firstKey, firstValue);
+    
+    for (int i = 0; i < rest.length; i += 2) {
+      Object key = rest[i];
+      if (!(key instanceof String)) {
+        throw new IllegalArgumentException(
+            "Keys must be strings, got: " + (key == null ? "null" : key.getClass().getName()));
+      }
+      context.put((String) key, rest[i + 1]);
+    }
+    return compile(context);
+  }
+
+  /**
    * Compiles this prompt using a fluent builder for the context.
    *
    * <p>Example usage:

@@ -96,6 +96,7 @@ nav:
   - Guides:
     - Responder: guides/responder.md
     - Agents: guides/agents.md
+    - Prompt Management: guides/prompt-management.md
     - Streaming: guides/streaming.md
     - Function Tools: guides/tools.md
     - Context Management: guides/context-management.md

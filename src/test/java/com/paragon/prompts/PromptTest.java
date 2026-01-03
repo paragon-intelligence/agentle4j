@@ -285,6 +285,73 @@ class PromptTest {
     }
   }
 
+  // ===== Varargs Compile Tests =====
+
+  @Nested
+  class VarargsCompile {
+
+    @Test
+    void compile_varargs_simpleKeyValue() {
+      Prompt prompt = Prompt.of("Hello, {{name}}!");
+      Prompt compiled = prompt.compile("name", "World");
+      
+      assertEquals("Hello, World!", compiled.content());
+    }
+
+    @Test
+    void compile_varargs_multipleKeyValues() {
+      Prompt prompt = Prompt.of("{{greeting}}, {{name}}! You are {{age}} years old.");
+      Prompt compiled = prompt.compile("greeting", "Hi", "name", "Alice", "age", 30);
+      
+      assertEquals("Hi, Alice! You are 30 years old.", compiled.content());
+    }
+
+    @Test
+    void compile_varargs_oddNumberOfRest_throwsException() {
+      Prompt prompt = Prompt.of("{{a}} {{b}}");
+      
+      assertThrows(IllegalArgumentException.class, () ->
+          prompt.compile("key1", "value1", "key2"));
+    }
+
+    @Test
+    void compile_varargs_nonStringRestKey_throwsException() {
+      Prompt prompt = Prompt.of("{{a}} {{b}}");
+      
+      assertThrows(IllegalArgumentException.class, () ->
+          prompt.compile("key1", "value1", 123, "value2"));
+    }
+
+    @Test
+    void compile_varargs_nullFirstKey_throwsException() {
+      Prompt prompt = Prompt.of("{{name}}");
+      
+      assertThrows(NullPointerException.class, () ->
+          prompt.compile(null, "value"));
+    }
+
+    @Test
+    void compile_varargs_nullValue_allowed() {
+      Prompt prompt = Prompt.of("Value: {{value}}");
+      // Note: null values become empty string after compilation
+      Prompt compiled = prompt.compile("value", null);
+      
+      assertTrue(compiled.isCompiled());
+    }
+
+    @Test
+    void compile_varargs_mixedTypes() {
+      Prompt prompt = Prompt.of("{{string}} {{number}} {{bool}}");
+      Prompt compiled = prompt.compile(
+          "string", "text",
+          "number", 42,
+          "bool", true
+      );
+      
+      assertEquals("text 42 true", compiled.content());
+    }
+  }
+
   // ===== Fluent Builder Tests =====
 
   @Nested
