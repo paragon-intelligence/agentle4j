@@ -175,7 +175,7 @@ class AgentExtendedTest {
           .build();
 
       assertNotNull(agent);
-      assertEquals("", agent.instructions());
+      assertEquals("", agent.instructions().toString());
     }
   }
 

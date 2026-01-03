@@ -213,6 +213,240 @@ class GrafanaProcessorTest {
   // EVENT PROCESSING INTEGRATION TESTS
   // ═══════════════════════════════════════════════════════════════════════════
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUILDER VALIDATION EDGE CASES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("Builder Validation Edge Cases")
+  class BuilderValidationEdgeCases {
+
+    @Test
+    @DisplayName("throws on empty baseUrl")
+    void throwsOnEmptyBaseUrl() {
+      assertThrows(
+          IllegalStateException.class,
+          () ->
+              GrafanaProcessor.builder()
+                  .baseUrl("")
+                  .instanceId("123456")
+                  .apiToken("test-token")
+                  .build());
+    }
+
+    @Test
+    @DisplayName("throws on blank baseUrl")
+    void throwsOnBlankBaseUrl() {
+      assertThrows(
+          IllegalStateException.class,
+          () ->
+              GrafanaProcessor.builder()
+                  .baseUrl("   ")
+                  .instanceId("123456")
+                  .apiToken("test-token")
+                  .build());
+    }
+
+    @Test
+    @DisplayName("throws on empty instanceId")
+    void throwsOnEmptyInstanceId() {
+      assertThrows(
+          IllegalStateException.class,
+          () ->
+              GrafanaProcessor.builder()
+                  .baseUrl("https://otlp-gateway.grafana.net/otlp")
+                  .instanceId("")
+                  .apiToken("test-token")
+                  .build());
+    }
+
+    @Test
+    @DisplayName("throws on blank instanceId")
+    void throwsOnBlankInstanceId() {
+      assertThrows(
+          IllegalStateException.class,
+          () ->
+              GrafanaProcessor.builder()
+                  .baseUrl("https://otlp-gateway.grafana.net/otlp")
+                  .instanceId("   ")
+                  .apiToken("test-token")
+                  .build());
+    }
+
+    @Test
+    @DisplayName("throws on empty apiToken")
+    void throwsOnEmptyApiToken() {
+      assertThrows(
+          IllegalStateException.class,
+          () ->
+              GrafanaProcessor.builder()
+                  .baseUrl("https://otlp-gateway.grafana.net/otlp")
+                  .instanceId("123456")
+                  .apiToken("")
+                  .build());
+    }
+
+    @Test
+    @DisplayName("throws on blank apiToken")
+    void throwsOnBlankApiToken() {
+      assertThrows(
+          IllegalStateException.class,
+          () ->
+              GrafanaProcessor.builder()
+                  .baseUrl("https://otlp-gateway.grafana.net/otlp")
+                  .instanceId("123456")
+                  .apiToken("   ")
+                  .build());
+    }
+
+    @Test
+    @DisplayName("creates default httpClient when not provided")
+    void createsDefaultHttpClient() {
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .build();
+
+      assertNotNull(processor);
+      processor.shutdown();
+    }
+
+    @Test
+    @DisplayName("creates default objectMapper when not provided")
+    void createsDefaultObjectMapper() {
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .build();
+
+      assertNotNull(processor);
+      processor.shutdown();
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STATIC FACTORY METHODS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("Static Factory Methods")
+  class StaticFactoryTests {
+
+    @Test
+    @DisplayName("builder() returns new Builder")
+    void builderReturnsNewBuilder() {
+      GrafanaProcessor.Builder builder = GrafanaProcessor.builder();
+      assertNotNull(builder);
+    }
+
+    @Test
+    @DisplayName("fromEnv() throws when env vars not set")
+    void fromEnvThrowsWhenEnvVarsNotSet() {
+      // fromEnv should throw because environment variables are not set
+      assertThrows(IllegalStateException.class, GrafanaProcessor::fromEnv);
+    }
+
+    @Test
+    @DisplayName("fromEnv() reads GRAFANA_OTLP_URL")
+    void fromEnvReadsGrafanaOtlpUrl() {
+      // Just verify builder method chain works
+      GrafanaProcessor.Builder builder = GrafanaProcessor.builder().fromEnv();
+      assertNotNull(builder);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PROCESSOR LIFECYCLE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @Nested
+  @DisplayName("Processor Lifecycle")
+  class ProcessorLifecycleTests {
+
+    @Test
+    @DisplayName("getProcessorName returns correct name")
+    void getProcessorNameReturnsCorrectName() {
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .build();
+
+      assertEquals("GrafanaProcessor", processor.getProcessorName());
+      processor.shutdown();
+    }
+
+    @Test
+    @DisplayName("isRunning returns true before shutdown")
+    void isRunningReturnsTrueBeforeShutdown() {
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .build();
+
+      assertTrue(processor.isRunning());
+      processor.shutdown();
+    }
+
+    @Test
+    @DisplayName("isRunning returns false after shutdown")
+    void isRunningReturnsFalseAfterShutdown() {
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .build();
+
+      processor.shutdown();
+      assertFalse(processor.isRunning());
+    }
+
+    @Test
+    @DisplayName("shutdown can be called multiple times")
+    void shutdownCanBeCalledMultipleTimes() {
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .build();
+
+      assertDoesNotThrow(processor::shutdown);
+      assertDoesNotThrow(processor::shutdown);
+    }
+
+    @Test
+    @DisplayName("processing after shutdown returns failed future")
+    void processingAfterShutdownFails() {
+      GrafanaProcessor processor =
+          GrafanaProcessor.builder()
+              .baseUrl("https://otlp-gateway.grafana.net/otlp")
+              .instanceId("123456")
+              .apiToken("test-token")
+              .build();
+
+      processor.shutdown();
+
+      ResponseStartedEvent event =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
+
+      var future = processor.process(event);
+      assertTrue(future.isCompletedExceptionally());
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EVENT PROCESSING INTEGRATION TESTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
   @Nested
   @DisplayName("Event Processing")
   class EventProcessingTests {

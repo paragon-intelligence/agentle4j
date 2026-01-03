@@ -65,7 +65,7 @@ class AgentTest {
 
       assertEquals("TestAgent", agent.name());
       assertEquals("test-model", agent.model());
-      assertEquals("Test instructions", agent.instructions());
+      assertEquals("Test instructions", agent.instructions().toString());
     }
 
     @Test
@@ -378,7 +378,7 @@ class AgentTest {
               .responder(responder)
               .build();
 
-      assertEquals("Custom instructions", agent.instructions());
+      assertEquals("Custom instructions", agent.instructions().toString());
     }
 
     @Test
