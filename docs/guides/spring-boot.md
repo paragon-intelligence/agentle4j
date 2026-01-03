@@ -123,6 +123,573 @@ public class CustomerSupportAgent {
 
 ---
 
+## Managing Multiple Agents
+
+As your application grows, you'll likely need multiple agents with different purposes. Instead of creating a separate `@Service` wrapper for each agent, you can use Spring's dependency injection patterns to manage agents more elegantly.
+
+### Prompt Management with PromptProvider
+
+Before defining agents, consider externalizing your prompts. Agentle4j provides the `PromptProvider` interface with built-in implementations:
+
+#### Filesystem-Based Prompts
+
+Store prompts as text files and load them at runtime:
+
+```java
+import com.paragon.prompts.PromptProvider;
+import com.paragon.prompts.FilesystemPromptProvider;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class PromptConfig {
+
+    @Bean
+    public PromptProvider filePromptProvider() {
+        return FilesystemPromptProvider.create("./prompts");
+    }
+}
+```
+
+Create prompt files in the `prompts/` directory:
+
+```text
+# prompts/question-generator.txt
+You are an expert question creator. Generate high-quality questions based on the given content.
+
+Requirements:
+- Questions should be clear and unambiguous
+- Include a mix of difficulty levels
+- Cover key concepts from the source material
+```
+
+#### Langfuse-Managed Prompts
+
+For production environments with prompt versioning and A/B testing:
+
+```java
+import com.paragon.prompts.LangfusePromptProvider;
+import okhttp3.OkHttpClient;
+
+@Configuration
+public class PromptConfig {
+
+    @Bean
+    public OkHttpClient okHttpClient() {
+        return new OkHttpClient.Builder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .readTimeout(Duration.ofSeconds(30))
+            .build();
+    }
+
+    @Bean
+    public PromptProvider langfusePromptProvider(OkHttpClient httpClient) {
+        return LangfusePromptProvider.builder()
+            .httpClient(httpClient)
+            .publicKey(System.getenv("LANGFUSE_PUBLIC_KEY"))
+            .secretKey(System.getenv("LANGFUSE_SECRET_KEY"))
+            .build();
+    }
+}
+```
+
+Retrieve prompts with version or label filters:
+
+```java
+// Get latest version
+Prompt prompt = provider.providePrompt("question-generator");
+
+// Get specific version
+Prompt v2 = provider.providePrompt("question-generator", Map.of("version", "2"));
+
+// Get production label
+Prompt prod = provider.providePrompt("question-generator", Map.of("label", "production"));
+```
+
+#### Template Compilation
+
+Prompts support Handlebars-like templating:
+
+```java
+Prompt template = Prompt.of("""
+    You are a {{role}} assistant for {{company}}.
+    
+    {{#if includeDisclaimer}}
+    Always remind users this is AI-generated content.
+    {{/if}}
+    
+    Topics you handle:
+    {{#each topics}}
+    - {{this}}
+    {{/each}}
+    """);
+
+Prompt compiled = template.compile(Map.of(
+    "role", "customer support",
+    "company", "Acme Corp",
+    "includeDisclaimer", true,
+    "topics", List.of("billing", "technical issues", "returns")
+));
+```
+
+---
+
+### Direct Agent Injection with @Qualifier
+
+For a known, finite set of agents, define each as a Spring bean:
+
+```java
+import com.paragon.agents.Agent;
+import com.paragon.prompts.Prompt;
+import com.paragon.prompts.PromptProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AgentConfig {
+
+    @Bean("questionAgent")
+    public Agent questionAgent(Responder responder, 
+                               PromptProvider prompts,
+                               Agentle4jProperties props) {
+        return Agent.builder()
+            .name("QuestionGenerator")
+            .model(props.getModel())
+            .instructions(prompts.providePrompt("question-generator.txt"))
+            .responder(responder)
+            .build();
+    }
+
+    @Bean("summarizationAgent")
+    public Agent summarizationAgent(Responder responder, 
+                                    PromptProvider prompts,
+                                    Agentle4jProperties props) {
+        return Agent.builder()
+            .name("Summarizer")
+            .model(props.getModel())
+            .instructions(prompts.providePrompt("summarizer.txt"))
+            .responder(responder)
+            .build();
+    }
+
+    @Bean("reviewerAgent")
+    public Agent reviewerAgent(Responder responder, 
+                               PromptProvider prompts,
+                               Agentle4jProperties props) {
+        return Agent.builder()
+            .name("Reviewer")
+            .model(props.getModel())
+            .instructions(prompts.providePrompt("reviewer.txt"))
+            .responder(responder)
+            .build();
+    }
+}
+```
+
+Now inject agents directly into your use case classes:
+
+```java
+import com.paragon.agents.Agent;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+
+@Service
+public class CriarQuestaoUseCase {
+
+    private final Agent questionAgent;
+
+    public CriarQuestaoUseCase(@Qualifier("questionAgent") Agent questionAgent) {
+        this.questionAgent = questionAgent;
+    }
+
+    public Questao criarQuestao(CriarQuestaoRequest input) {
+        var result = questionAgent.interact(input.content()).join();
+        return parseQuestaoFromResult(result);
+    }
+}
+```
+
+```java
+@Service
+public class SummarizeDocumentUseCase {
+
+    private final Agent summarizationAgent;
+
+    public SummarizeDocumentUseCase(@Qualifier("summarizationAgent") Agent agent) {
+        this.summarizationAgent = agent;
+    }
+
+    public Summary summarize(Document doc) {
+        return summarizationAgent.interact(doc.content())
+            .thenApply(result -> new Summary(result.output()))
+            .join();
+    }
+}
+```
+
+!!! tip "Thread Safety"
+    Agents are **stateless and thread-safe**. The same agent instance can handle concurrent requests because conversation state lives in `AgentContext`, not the agent itself.
+
+---
+
+### Agent Factory Pattern
+
+For dynamic agent creation or when agents are determined at runtime:
+
+```java
+import com.paragon.agents.Agent;
+import com.paragon.prompts.PromptProvider;
+import org.springframework.stereotype.Component;
+
+@Component
+public class AgentFactory {
+
+    private final Responder responder;
+    private final PromptProvider prompts;
+    private final Agentle4jProperties props;
+
+    public AgentFactory(Responder responder, 
+                        PromptProvider prompts, 
+                        Agentle4jProperties props) {
+        this.responder = responder;
+        this.prompts = prompts;
+        this.props = props;
+    }
+
+    /**
+     * Creates an agent by loading its prompt from the filesystem.
+     * 
+     * @param agentName name used for both the agent and prompt file lookup
+     * @return configured Agent instance
+     */
+    public Agent create(String agentName) {
+        return Agent.builder()
+            .name(agentName)
+            .model(props.getModel())
+            .instructions(prompts.providePrompt(agentName + ".txt"))
+            .responder(responder)
+            .build();
+    }
+
+    /**
+     * Creates an agent with custom configuration.
+     */
+    public Agent create(String agentName, String model, Prompt instructions) {
+        return Agent.builder()
+            .name(agentName)
+            .model(model)
+            .instructions(instructions)
+            .responder(responder)
+            .build();
+    }
+}
+```
+
+Usage:
+
+```java
+@Service
+public class DynamicAgentUseCase {
+
+    private final AgentFactory agentFactory;
+
+    public DynamicAgentUseCase(AgentFactory agentFactory) {
+        this.agentFactory = agentFactory;
+    }
+
+    public String processWithAgent(String agentType, String input) {
+        Agent agent = agentFactory.create(agentType);
+        return agent.interact(input).join().output();
+    }
+}
+```
+
+---
+
+### Agent Registry Pattern
+
+For centralized management with caching (avoids recreating agents):
+
+```java
+import com.paragon.agents.Agent;
+import org.springframework.stereotype.Component;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Component
+public class AgentRegistry {
+
+    private final ConcurrentHashMap<String, Agent> agents = new ConcurrentHashMap<>();
+    private final AgentFactory factory;
+
+    public AgentRegistry(AgentFactory factory) {
+        this.factory = factory;
+    }
+
+    /**
+     * Gets or creates an agent by name.
+     * Agents are cached after first creation.
+     */
+    public Agent get(String name) {
+        return agents.computeIfAbsent(name, factory::create);
+    }
+
+    /**
+     * Checks if an agent is registered.
+     */
+    public boolean has(String name) {
+        return agents.containsKey(name);
+    }
+
+    /**
+     * Registers a pre-configured agent.
+     */
+    public void register(String name, Agent agent) {
+        agents.put(name, agent);
+    }
+
+    /**
+     * Returns all registered agent names.
+     */
+    public Set<String> registeredAgents() {
+        return Set.copyOf(agents.keySet());
+    }
+}
+```
+
+Usage in use cases:
+
+```java
+@Service
+public class FlexibleProcessingUseCase {
+
+    private final AgentRegistry agentRegistry;
+
+    public FlexibleProcessingUseCase(AgentRegistry agentRegistry) {
+        this.agentRegistry = agentRegistry;
+    }
+
+    public ProcessingResult process(String agentName, String input) {
+        Agent agent = agentRegistry.get(agentName);
+        AgentResult result = agent.interact(input).join();
+        return new ProcessingResult(result.output(), result.turnsUsed());
+    }
+}
+```
+
+---
+
+### RouterAgent Injection
+
+For classification and routing use cases:
+
+```java
+import com.paragon.agents.Agent;
+import com.paragon.agents.RouterAgent;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class RouterConfig {
+
+    @Bean
+    public RouterAgent supportRouter(
+            Responder responder,
+            Agentle4jProperties props,
+            @Qualifier("billingAgent") Agent billing,
+            @Qualifier("techSupportAgent") Agent techSupport,
+            @Qualifier("salesAgent") Agent sales) {
+        
+        return RouterAgent.builder()
+            .model(props.getModel())
+            .responder(responder)
+            .addRoute(billing, "billing, invoices, payments, refunds")
+            .addRoute(techSupport, "technical issues, bugs, errors, crashes")
+            .addRoute(sales, "pricing, demos, upgrades, new features")
+            .fallback(techSupport)
+            .build();
+    }
+}
+```
+
+Use the router to classify and dispatch:
+
+```java
+@Service
+public class CustomerInquiryUseCase {
+
+    private final RouterAgent router;
+
+    public CustomerInquiryUseCase(RouterAgent router) {
+        this.router = router;
+    }
+
+    public InquiryResponse handle(String customerMessage) {
+        // Classify the message
+        Agent selectedAgent = router.classify(customerMessage).join();
+        
+        // Process with the appropriate agent
+        AgentResult result = selectedAgent.interact(customerMessage).join();
+        
+        return new InquiryResponse(
+            selectedAgent.name(),
+            result.output()
+        );
+    }
+}
+```
+
+---
+
+### Lazy Agent Initialization
+
+For agents that are rarely used, use `@Lazy` to defer initialization:
+
+```java
+@Configuration
+public class AgentConfig {
+
+    @Bean("expensiveAgent")
+    @Lazy
+    public Agent expensiveAgent(Responder responder, PromptProvider prompts) {
+        // Only created when first injected/used
+        return Agent.builder()
+            .name("ExpensiveAnalyzer")
+            .model("openai/gpt-4-turbo")  // More expensive model
+            .instructions(prompts.providePrompt("expensive-analyzer.txt"))
+            .responder(responder)
+            .build();
+    }
+}
+```
+
+Or use `ObjectProvider` for optional/conditional injection:
+
+```java
+import org.springframework.beans.factory.ObjectProvider;
+
+@Service
+public class ConditionalUseCase {
+
+    private final ObjectProvider<Agent> expensiveAgentProvider;
+
+    public ConditionalUseCase(
+            @Qualifier("expensiveAgent") ObjectProvider<Agent> expensiveAgentProvider) {
+        this.expensiveAgentProvider = expensiveAgentProvider;
+    }
+
+    public String process(String input, boolean useExpensiveModel) {
+        if (useExpensiveModel) {
+            Agent agent = expensiveAgentProvider.getIfAvailable();
+            if (agent != null) {
+                return agent.interact(input).join().output();
+            }
+        }
+        // Fallback to cheaper processing
+        return processWithCheaperMethod(input);
+    }
+}
+```
+
+---
+
+### Best Practices for Organizing Agents
+
+When your application has 10+ agents, organization becomes critical:
+
+#### Package Structure
+
+```
+com.yourapp/
+├── agents/
+│   ├── config/
+│   │   ├── AgentConfig.java        # Bean definitions
+│   │   ├── RouterConfig.java       # Router definitions
+│   │   └── PromptConfig.java       # PromptProvider setup
+│   ├── factory/
+│   │   ├── AgentFactory.java
+│   │   └── AgentRegistry.java
+│   └── tools/
+│       ├── WeatherTool.java
+│       └── SearchTool.java
+├── prompts/                         # If using filesystem prompts
+│   ├── question-generator.txt
+│   ├── summarizer.txt
+│   └── reviewer.txt
+└── usecases/
+    ├── CriarQuestaoUseCase.java
+    └── SummarizeDocumentUseCase.java
+```
+
+#### Naming Conventions
+
+| Item | Convention | Example |
+|------|------------|---------|
+| Agent bean | `{purpose}Agent` | `questionAgent`, `summarizationAgent` |
+| Prompt file | `{purpose}.txt` or `{purpose}-{version}.txt` | `question-generator.txt`, `summarizer-v2.txt` |
+| Router bean | `{domain}Router` | `supportRouter`, `contentRouter` |
+| Use case | `{Action}{Entity}UseCase` | `CriarQuestaoUseCase`, `SummarizeDocumentUseCase` |
+
+#### Configuration via YAML
+
+Define agent metadata in `application.yml`:
+
+```yaml
+agentle4j:
+  api-key: ${OPENROUTER_API_KEY}
+  default-model: openai/gpt-4o
+  
+  agents:
+    question-generator:
+      prompt-file: question-generator.txt
+      model: openai/gpt-4o
+      temperature: 0.7
+    summarizer:
+      prompt-file: summarizer.txt
+      model: openai/gpt-4o-mini
+      temperature: 0.3
+    reviewer:
+      prompt-file: reviewer.txt
+      model: openai/gpt-4o
+      temperature: 0.5
+```
+
+And create a configuration properties class:
+
+```java
+@Configuration
+@ConfigurationProperties(prefix = "agentle4j")
+public class AgentConfigProperties {
+    
+    private String defaultModel = "openai/gpt-4o";
+    private Map<String, AgentDefinition> agents = new HashMap<>();
+    
+    // Getters and setters
+    
+    public static class AgentDefinition {
+        private String promptFile;
+        private String model;
+        private double temperature = 0.7;
+        
+        // Getters and setters
+    }
+}
+```
+
+#### Key Reminders
+
+!!! important "Thread Safety"
+    Agents are **stateless and thread-safe**. Create them once and reuse. State belongs in `AgentContext`.
+
+!!! tip "Prompt Versioning"
+    Use Langfuse labels (`production`, `staging`) or git-versioned prompt files for safe deployments.
+
+!!! note "Memory Usage"
+    Each `Agent` instance is lightweight (~1KB). Having 50+ agent beans is not a memory concern.
+
+---
+
 ## REST API Endpoints
 
 ### Simple Chat Controller
