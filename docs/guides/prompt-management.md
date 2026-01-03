@@ -124,6 +124,168 @@ prompt.content();     // Get raw content
 prompt.isCompiled();  // Check if compiled
 ```
 
+---
+
+## Template Syntax Reference
+
+Agentle uses a **Handlebars-like** templating syntax that supports variable interpolation, conditional blocks, and iteration. All template expressions are wrapped in double curly braces `{{...}}`.
+
+### Variable Interpolation
+
+Insert values into your template using `{{variable_name}}`:
+
+```java
+Prompt prompt = Prompt.of("Hello, {{name}}!");
+Prompt compiled = prompt.compile(Map.of("name", "Alice"));
+// Result: "Hello, Alice!"
+```
+
+### Nested Property Access
+
+Access nested object properties with dot notation `{{object.property.subproperty}}`:
+
+```java
+Prompt prompt = Prompt.of("Welcome, {{user.profile.displayName}}!");
+Prompt compiled = prompt.compile(Map.of(
+    "user", Map.of(
+        "profile", Map.of("displayName", "Bob")
+    )
+));
+// Result: "Welcome, Bob!"
+```
+
+Works with:
+- **Maps** - `Map<String, Object>` with nested structure
+- **Java Beans** - Objects with getters (`getProperty()`, `isProperty()`)
+- **Records** - Java records with accessor methods
+
+### Conditional Blocks (`#if`)
+
+Conditionally include content based on truthiness:
+
+```
+{{#if condition}}
+  Content shown if condition is truthy
+{{/if}}
+```
+
+**Example:**
+```java
+Prompt prompt = Prompt.of("""
+    {{#if premium}}⭐ Premium Member{{/if}}
+    {{#if notifications}}You have {{count}} new messages.{{/if}}
+    """);
+
+Prompt compiled = prompt.compile(Map.of(
+    "premium", true,
+    "notifications", true,
+    "count", 5
+));
+// Result: "⭐ Premium Member\nYou have 5 new messages."
+```
+
+#### Truthiness Rules
+
+| Value Type | Truthy | Falsy |
+|------------|--------|-------|
+| `Boolean` | `true` | `false` |
+| `String` | Non-empty | Empty `""` |
+| `Number` | Non-zero | `0`, `0.0` |
+| `Collection` | Non-empty | Empty |
+| `Map` | Non-empty | Empty |
+| `null` | — | Always falsy |
+| Other objects | Always truthy | — |
+
+### Iteration Blocks (`#each`)
+
+Loop over collections with `{{#each collection}}...{{/each}}`:
+
+```
+{{#each items}}
+  Access current item with: {{this}}
+  Or nested properties: {{this.property}}
+{{/each}}
+```
+
+**Example:**
+```java
+Prompt prompt = Prompt.of("""
+    Shopping List:
+    {{#each items}}- {{this.name}}: ${{this.price}}
+    {{/each}}
+    """);
+
+List<Map<String, Object>> items = List.of(
+    Map.of("name", "Apple", "price", 1.50),
+    Map.of("name", "Banana", "price", 0.75),
+    Map.of("name", "Cherry", "price", 3.00)
+);
+
+Prompt compiled = prompt.compile(Map.of("items", items));
+// Result:
+// Shopping List:
+// - Apple: $1.50
+// - Banana: $0.75
+// - Cherry: $3.00
+```
+
+#### The `this` Keyword
+
+Inside an `#each` block, `{{this}}` refers to the current item:
+
+```java
+// Simple list
+Prompt prompt = Prompt.of("{{#each names}}{{this}}, {{/each}}");
+prompt.compile(Map.of("names", List.of("Alice", "Bob", "Carol")));
+// Result: "Alice, Bob, Carol, "
+
+// Objects with properties
+Prompt prompt = Prompt.of("{{#each users}}{{this.name}} ({{this.email}})\n{{/each}}");
+```
+
+#### Supported Collection Types
+
+The `#each` block works with:
+- `List<T>` and `Collection<T>`
+- `Object[]` arrays
+- `Map<K,V>` (iterates over entries)
+
+### Nested Blocks
+
+Blocks can be nested for complex templates:
+
+```java
+Prompt prompt = Prompt.of("""
+    {{#each categories}}
+    ## {{this.name}}
+    {{#if this.items}}
+    {{#each this.items}}- {{this.title}}
+    {{/each}}
+    {{/if}}
+    {{/each}}
+    """);
+```
+
+### Template Limits
+
+To prevent resource exhaustion:
+- **Maximum nesting depth**: 100 levels
+- **Maximum iterations**: 10,000 items per `#each` block
+
+Exceeding these limits throws a `TemplateException`.
+
+### Quick Reference
+
+| Syntax | Description | Example |
+|--------|-------------|---------|
+| `{{var}}` | Variable | `{{name}}` → `"Alice"` |
+| `{{a.b.c}}` | Nested access | `{{user.profile.name}}` |
+| `{{#if x}}...{{/if}}` | Conditional | Show if truthy |
+| `{{#each list}}...{{/each}}` | Iteration | Loop over collection |
+| `{{this}}` | Current item | Inside `#each` blocks |
+| `{{this.prop}}` | Item property | `{{this.name}}` |
+
+
 ## PromptProvider Interface
 
 ```java
