@@ -445,6 +445,551 @@ public SseEmitter streamTypedArticle(@RequestParam String topic) {
 }
 ```
 
+### Streaming with Tool Calls
+
+Stream AI responses that include function/tool calls in real-time:
+
+```java
+import com.paragon.responses.spec.FunctionTool;
+import com.paragon.responses.spec.FunctionToolStore;
+import com.paragon.responses.annotations.FunctionMetadata;
+
+@RestController
+@RequestMapping("/api/stream")
+public class ToolStreamingController {
+
+    private final Responder responder;
+    private final FunctionToolStore toolStore;
+    private final Agentle4jProperties props;
+
+    public ToolStreamingController(
+            Responder responder,
+            FunctionToolStore toolStore,
+            Agentle4jProperties props) {
+        this.responder = responder;
+        this.toolStore = toolStore;
+        this.props = props;
+    }
+
+    @GetMapping(value = "/assistant", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamWithTools(@RequestParam String message) {
+        SseEmitter emitter = new SseEmitter(120_000L);
+
+        var payload = CreateResponsePayload.builder()
+            .model(props.getModel())
+            .addDeveloperMessage("You are a helpful assistant with access to tools.")
+            .addUserMessage(message)
+            .addTool(toolStore.get("get_weather"))
+            .addTool(toolStore.get("search_products"))
+            .addTool(toolStore.get("get_order_status"))
+            .streaming()
+            .build();
+
+        responder.respond(payload)
+            // Stream text as it's generated
+            .onTextDelta(delta -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("text")
+                        .data(delta));
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            // Notify when a tool is called
+            .onToolCall((toolName, argsJson) -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("tool_call")
+                        .data(Map.of(
+                            "tool", toolName,
+                            "arguments", argsJson,
+                            "status", "executing"
+                        )));
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            // Auto-execute tools and get results
+            .withToolStore(toolStore)
+            .onToolResult((toolName, result) -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("tool_result")
+                        .data(Map.of(
+                            "tool", toolName,
+                            "output", result.output(),
+                            "status", "completed"
+                        )));
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .onComplete(response -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("complete")
+                        .data(Map.of(
+                            "finalText", response.outputText(),
+                            "tokens", response.usage().totalTokens()
+                        )));
+                    emitter.complete();
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .onError(emitter::completeWithError)
+            .start();
+
+        return emitter;
+    }
+}
+```
+
+#### Client-Side: Tool Call Progress UI
+
+```javascript
+const eventSource = new EventSource('/api/stream/assistant?message=What is the weather in Tokyo and find me running shoes');
+
+eventSource.addEventListener('text', (e) => {
+    document.getElementById('response').textContent += e.data;
+});
+
+eventSource.addEventListener('tool_call', (e) => {
+    const data = JSON.parse(e.data);
+    addToolStatus(`🔧 Calling ${data.tool}...`, 'pending');
+});
+
+eventSource.addEventListener('tool_result', (e) => {
+    const data = JSON.parse(e.data);
+    updateToolStatus(data.tool, `✅ ${data.tool}: ${data.output}`, 'success');
+});
+
+eventSource.addEventListener('complete', (e) => {
+    const data = JSON.parse(e.data);
+    console.log('Final response:', data.finalText);
+    console.log('Tokens used:', data.tokens);
+    eventSource.close();
+});
+
+eventSource.onerror = () => {
+    console.error('Stream error');
+    eventSource.close();
+};
+```
+
+---
+
+## Agent Streaming (Multi-Turn with Tools)
+
+Stream full agent interactions with tool execution, handoffs, and guardrails:
+
+```java
+import com.paragon.agents.Agent;
+import com.paragon.agents.AgentResult;
+
+@RestController
+@RequestMapping("/api/agent")
+public class AgentStreamingController {
+
+    private final Agent customerServiceAgent;
+
+    public AgentStreamingController(Agent customerServiceAgent) {
+        this.customerServiceAgent = customerServiceAgent;
+    }
+
+    @GetMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamAgentChat(
+            @RequestParam String message,
+            @RequestParam(required = false) String sessionId) {
+        
+        SseEmitter emitter = new SseEmitter(180_000L); // 3 min for complex interactions
+
+        customerServiceAgent.interactStream(message)
+            // Track multi-turn progress
+            .onTurnStart(turn -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("turn_start")
+                        .data(Map.of("turn", turn)));
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .onTurnComplete(response -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("turn_complete")
+                        .data(Map.of("tokens", response.usage().totalTokens())));
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            // Stream text
+            .onTextDelta(delta -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("text")
+                        .data(delta));
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            // Tool execution events
+            .onToolCall((name, args) -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("tool_call")
+                        .data(Map.of("tool", name, "args", args)));
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .onToolExecuted(exec -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("tool_executed")
+                        .data(Map.of(
+                            "tool", exec.toolName(),
+                            "output", exec.output().toString(),
+                            "durationMs", exec.duration().toMillis()
+                        )));
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            // Handoff events (multi-agent routing)
+            .onHandoff(handoff -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("handoff")
+                        .data(Map.of(
+                            "to", handoff.targetAgent().name(),
+                            "description", handoff.description()
+                        )));
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            // Guardrail events
+            .onGuardrailFailed(failure -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("guardrail_blocked")
+                        .data(Map.of(
+                            "reason", failure.reason()
+                        )));
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            // Completion
+            .onComplete(result -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("complete")
+                        .data(Map.of(
+                            "output", result.output(),
+                            "turnsUsed", result.turnsUsed(),
+                            "status", result.isSuccess() ? "success" : "error"
+                        )));
+                    emitter.complete();
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .onError(error -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("error")
+                        .data(Map.of("message", error.getMessage())));
+                    emitter.completeWithError(error);
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .start();
+
+        return emitter;
+    }
+}
+```
+
+---
+
+## Real-World Streaming Examples
+
+### E-Commerce Order Assistant
+
+A production-ready example combining structured output, tool calls, and streaming:
+
+```java
+@Service
+public class OrderAssistantService {
+
+    private final Agent orderAgent;
+    private final ObjectMapper objectMapper;
+
+    public OrderAssistantService(Responder responder, OrderTools orderTools) {
+        this.objectMapper = new ObjectMapper();
+        this.orderAgent = Agent.builder()
+            .name("OrderAssistant")
+            .model("openai/gpt-4o")
+            .instructions("""
+                You are an e-commerce order assistant. Help customers with:
+                - Checking order status
+                - Processing returns
+                - Tracking shipments
+                - Answering product questions
+                
+                Always verify the order ID before taking actions.
+                Be concise and helpful.
+                """)
+            .responder(responder)
+            .addTool(orderTools.getOrderStatus())
+            .addTool(orderTools.trackShipment())
+            .addTool(orderTools.initiateReturn())
+            .addTool(orderTools.searchProducts())
+            .build();
+    }
+
+    public void streamOrderAssistance(String userId, String message, SseEmitter emitter) {
+        orderAgent.interactStream(message)
+            .onTextDelta(delta -> sendSafe(emitter, "text", delta))
+            .onToolCall((name, args) -> {
+                sendSafe(emitter, "action", Map.of(
+                    "type", "tool_started",
+                    "tool", name,
+                    "message", getToolMessage(name)
+                ));
+            })
+            .onToolExecuted(exec -> {
+                sendSafe(emitter, "action", Map.of(
+                    "type", "tool_completed",
+                    "tool", exec.toolName(),
+                    "success", true
+                ));
+            })
+            .onComplete(result -> {
+                sendSafe(emitter, "complete", Map.of(
+                    "success", result.isSuccess()
+                ));
+                emitter.complete();
+            })
+            .onError(e -> {
+                sendSafe(emitter, "error", Map.of("message", e.getMessage()));
+                emitter.completeWithError(e);
+            })
+            .start();
+    }
+
+    private String getToolMessage(String toolName) {
+        return switch (toolName) {
+            case "get_order_status" -> "Looking up your order...";
+            case "track_shipment" -> "Checking shipment tracking...";
+            case "initiate_return" -> "Processing your return request...";
+            case "search_products" -> "Searching our catalog...";
+            default -> "Processing...";
+        };
+    }
+
+    private void sendSafe(SseEmitter emitter, String event, Object data) {
+        try {
+            emitter.send(SseEmitter.event().name(event).data(data));
+        } catch (Exception ignored) {}
+    }
+}
+```
+
+### Document Analysis with Progress
+
+Stream analysis of documents with detailed progress updates:
+
+```java
+@RestController
+@RequestMapping("/api/analyze")
+public class DocumentAnalysisController {
+
+    private final Responder responder;
+
+    public record AnalysisResult(
+        String summary,
+        List<String> keyFindings,
+        List<String> actionItems,
+        String sentiment,
+        double confidenceScore
+    ) {}
+
+    @PostMapping(value = "/document", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter analyzeDocument(@RequestBody DocumentRequest request) {
+        SseEmitter emitter = new SseEmitter(300_000L); // 5 min for long documents
+
+        var payload = CreateResponsePayload.builder()
+            .model("openai/gpt-4o")
+            .addDeveloperMessage("""
+                Analyze the provided document and extract:
+                - A concise summary
+                - Key findings (up to 5)
+                - Action items if any
+                - Overall sentiment
+                - Confidence score (0-1)
+                """)
+            .addUserMessage("Document to analyze:\n\n" + request.content())
+            .withStructuredOutput(AnalysisResult.class)
+            .streaming()
+            .build();
+
+        // Track which fields have been seen for progress
+        Set<String> seenFields = ConcurrentHashMap.newKeySet();
+
+        responder.respond(payload)
+            .onPartialJson(fields -> {
+                try {
+                    // Send progress updates as new fields appear
+                    for (String field : fields.keySet()) {
+                        if (seenFields.add(field)) {
+                            emitter.send(SseEmitter.event()
+                                .name("progress")
+                                .data(Map.of(
+                                    "step", getProgressStep(field),
+                                    "message", getProgressMessage(field)
+                                )));
+                        }
+                    }
+                    // Send partial data
+                    emitter.send(SseEmitter.event()
+                        .name("partial")
+                        .data(fields));
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .onParsedComplete(response -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("complete")
+                        .data(response.outputParsed()));
+                    emitter.complete();
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .onError(emitter::completeWithError)
+            .start();
+
+        return emitter;
+    }
+
+    private int getProgressStep(String field) {
+        return switch (field) {
+            case "summary" -> 1;
+            case "keyFindings" -> 2;
+            case "actionItems" -> 3;
+            case "sentiment" -> 4;
+            case "confidenceScore" -> 5;
+            default -> 0;
+        };
+    }
+
+    private String getProgressMessage(String field) {
+        return switch (field) {
+            case "summary" -> "Generating summary...";
+            case "keyFindings" -> "Identifying key findings...";
+            case "actionItems" -> "Extracting action items...";
+            case "sentiment" -> "Analyzing sentiment...";
+            case "confidenceScore" -> "Calculating confidence...";
+            default -> "Processing...";
+        };
+    }
+
+    public record DocumentRequest(String content) {}
+}
+```
+
+### Real-Time Translation with Streaming
+
+Stream translations as they're generated for long texts:
+
+```java
+@RestController
+@RequestMapping("/api/translate")
+public class TranslationStreamController {
+
+    private final Responder responder;
+
+    public record Translation(
+        String translatedText,
+        String detectedSourceLanguage,
+        List<String> alternatives
+    ) {}
+
+    @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamTranslation(
+            @RequestBody TranslationRequest request) {
+        
+        SseEmitter emitter = new SseEmitter(120_000L);
+
+        var payload = CreateResponsePayload.builder()
+            .model("openai/gpt-4o")
+            .addDeveloperMessage(String.format(
+                "Translate the following text to %s. Detect the source language. " +
+                "Provide 2-3 alternative translations if applicable.",
+                request.targetLanguage()))
+            .addUserMessage(request.text())
+            .withStructuredOutput(Translation.class)
+            .streaming()
+            .build();
+
+        StringBuilder translationBuffer = new StringBuilder();
+
+        responder.respond(payload)
+            .onPartialJson(fields -> {
+                try {
+                    // Stream the translation text progressively
+                    if (fields.containsKey("translatedText")) {
+                        String current = fields.get("translatedText").toString();
+                        String newChunk = current.substring(translationBuffer.length());
+                        translationBuffer.setLength(0);
+                        translationBuffer.append(current);
+                        
+                        if (!newChunk.isEmpty()) {
+                            emitter.send(SseEmitter.event()
+                                .name("translation_chunk")
+                                .data(newChunk));
+                        }
+                    }
+                    
+                    // Send detected language when available
+                    if (fields.containsKey("detectedSourceLanguage")) {
+                        emitter.send(SseEmitter.event()
+                            .name("language_detected")
+                            .data(fields.get("detectedSourceLanguage")));
+                    }
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .onParsedComplete(response -> {
+                try {
+                    Translation result = response.outputParsed();
+                    emitter.send(SseEmitter.event()
+                        .name("complete")
+                        .data(result));
+                    emitter.complete();
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .onError(emitter::completeWithError)
+            .start();
+
+        return emitter;
+    }
+
+    public record TranslationRequest(String text, String targetLanguage) {}
+}
+```
+
 ---
 
 ## WebSocket Chat
