@@ -258,8 +258,18 @@ RouterAgent router = RouterAgent.builder()
     .fallback(techSupport)
     .build();
 
+// Classify only (doesn't execute)
 Agent selected = router.classify("My app keeps crashing").join();
-// selected == techSupport
+
+// Route and execute
+AgentResult result = router.route("I need help with billing").join();
+
+// Streaming
+router.routeStream("Help with my invoice")
+    .onRouteSelected(agent -> System.out.println("Routed to: " + agent.name()))
+    .onTextDelta(System.out::print)
+    .onComplete(r -> System.out.println("\nDone!"))
+    .start();
 ```
 
 ### Parallel execution
@@ -271,13 +281,20 @@ Run multiple agents concurrently:
 ```java
 ParallelAgents team = ParallelAgents.of(researcher, analyst);
 
-List<AgentResult> results = team.run("Analyze market trends");
+// Run all agents
+List<AgentResult> results = team.run("Analyze market trends").join();
 
 // Or get just the first to complete
-AgentResult fastest = team.runFirst("Quick analysis needed");
+AgentResult fastest = team.runFirst("Quick analysis needed").join();
 
 // Or combine outputs with a synthesizer agent
-AgentResult combined = team.runAndSynthesize("What's the outlook?", writerAgent);
+AgentResult combined = team.runAndSynthesize("What's the outlook?", writerAgent).join();
+
+// Streaming
+team.runStream("Analyze trends")
+    .onAgentTextDelta((agent, delta) -> System.out.print("[" + agent.name() + "] " + delta))
+    .onComplete(r -> System.out.println("Done!"))
+    .start();
 ```
 
 ## Guardrails

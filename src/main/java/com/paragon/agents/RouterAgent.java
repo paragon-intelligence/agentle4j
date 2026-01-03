@@ -3,6 +3,8 @@ package com.paragon.agents;
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.CreateResponsePayload;
 import com.paragon.responses.spec.Message;
+import com.paragon.responses.spec.ResponseInputItem;
+import com.paragon.responses.spec.Text;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -41,6 +43,12 @@ import org.jspecify.annotations.Nullable;
  * // Or just classify without executing
  * router.classify("My app keeps crashing")
  *     .thenAccept(agent -> System.out.println("Would route to: " + agent.name()));
+ *
+ * // Streaming support
+ * router.routeStream("Help me with billing")
+ *     .onTextDelta(System.out::print)
+ *     .onComplete(result -> System.out.println("\nDone!"))
+ *     .start();
  * }</pre>
  *
  * @since 1.0
@@ -71,6 +79,8 @@ public final class RouterAgent {
     return new Builder();
   }
 
+  // ===== Route Methods (All Async) =====
+
   /**
    * Routes the input to the most appropriate agent and executes it.
    *
@@ -78,22 +88,60 @@ public final class RouterAgent {
    * @return future completing with the result from the selected agent
    */
   public @NonNull CompletableFuture<AgentResult> route(@NonNull String input) {
-    return route(input, AgentContext.create());
+    Objects.requireNonNull(input, "input cannot be null");
+    AgentContext context = AgentContext.create();
+    context.addInput(Message.user(input));
+    return route(context);
   }
 
   /**
-   * Routes the input to the most appropriate agent and executes it.
+   * Routes the Text content to the most appropriate agent and executes it.
    *
-   * @param input the user input to route
-   * @param context the agent context
+   * @param text the text content to route
    * @return future completing with the result from the selected agent
    */
-  public @NonNull CompletableFuture<AgentResult> route(
-      @NonNull String input, @NonNull AgentContext context) {
-    Objects.requireNonNull(input, "input cannot be null");
+  public @NonNull CompletableFuture<AgentResult> route(@NonNull Text text) {
+    Objects.requireNonNull(text, "text cannot be null");
+    AgentContext context = AgentContext.create();
+    context.addInput(Message.user(text));
+    return route(context);
+  }
+
+  /**
+   * Routes the Message to the most appropriate agent and executes it.
+   *
+   * @param message the message to route
+   * @return future completing with the result from the selected agent
+   */
+  public @NonNull CompletableFuture<AgentResult> route(@NonNull Message message) {
+    Objects.requireNonNull(message, "message cannot be null");
+    AgentContext context = AgentContext.create();
+    context.addInput(message);
+    return route(context);
+  }
+
+  /**
+   * Routes using an existing context. Extracts the last user message for classification.
+   *
+   * <p>This is the core routing method. All other route overloads delegate here.
+   *
+   * @param context the conversation context
+   * @return future completing with the result from the selected agent
+   */
+  public @NonNull CompletableFuture<AgentResult> route(@NonNull AgentContext context) {
     Objects.requireNonNull(context, "context cannot be null");
 
-    return classify(input)
+    // Extract the last user message text for classification
+    String inputText = extractLastUserMessage(context);
+    if (inputText == null || inputText.isBlank()) {
+      return CompletableFuture.completedFuture(
+          AgentResult.error(
+              new IllegalStateException("No user message found in context for routing"),
+              context,
+              0));
+    }
+
+    return classify(inputText)
         .thenCompose(
             selected -> {
               if (selected == null) {
@@ -104,11 +152,37 @@ public final class RouterAgent {
                         0));
               }
 
-              context.addInput(Message.user(input));
               return selected
                   .interact(context)
                   .thenApply(result -> AgentResult.handoff(selected, result, context));
             });
+  }
+
+  // ===== Streaming Route Methods =====
+
+  /**
+   * Routes the input to the most appropriate agent and executes it with streaming.
+   *
+   * @param input the user input to route
+   * @return a RouterStream for processing streaming events
+   */
+  public @NonNull RouterStream routeStream(@NonNull String input) {
+    Objects.requireNonNull(input, "input cannot be null");
+    AgentContext context = AgentContext.create();
+    context.addInput(Message.user(input));
+    return routeStream(context);
+  }
+
+  /**
+   * Routes using an existing context with streaming. Extracts the last user message for
+   * classification.
+   *
+   * @param context the conversation context
+   * @return a RouterStream for processing streaming events
+   */
+  public @NonNull RouterStream routeStream(@NonNull AgentContext context) {
+    Objects.requireNonNull(context, "context cannot be null");
+    return new RouterStream(this, context, responder);
   }
 
   /**
@@ -169,6 +243,47 @@ public final class RouterAgent {
    */
   public @NonNull List<Route> routes() {
     return routes;
+  }
+
+  // ===== Helper Methods =====
+
+  /**
+   * Extracts the last user message text from context.
+   */
+  private String extractLastUserMessage(AgentContext context) {
+    List<ResponseInputItem> history = context.getHistory();
+    for (int i = history.size() - 1; i >= 0; i--) {
+      ResponseInputItem item = history.get(i);
+      if (item instanceof Message msg && "user".equals(msg.role())) {
+        // Extract text from message content
+        if (msg.content() != null) {
+          for (var content : msg.content()) {
+            if (content instanceof Text text) {
+              return text.text();
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  // ===== Package-private accessors for RouterStream =====
+
+  @NonNull List<Route> getRoutes() {
+    return routes;
+  }
+
+  @Nullable Agent getFallbackAgent() {
+    return fallbackAgent;
+  }
+
+  @NonNull String getModel() {
+    return model;
+  }
+
+  @NonNull Responder getResponder() {
+    return responder;
   }
 
   // ===== Inner Classes =====

@@ -3,6 +3,8 @@ package com.paragon.agents;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.paragon.responses.Responder;
+import com.paragon.responses.spec.Message;
+import com.paragon.responses.spec.Text;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -17,8 +19,8 @@ import org.junit.jupiter.api.Test;
  * Comprehensive tests for ParallelAgents.
  *
  * <p>Tests cover: - Factory methods (of) - Parallel execution (run) - First-to-complete racing
- * (runFirst) - Fan-out/fan-in synthesis (runAndSynthesize) - Context isolation - Error handling -
- * Async behavior
+ * (runFirst) - Fan-out/fan-in synthesis (runAndSynthesize) - Streaming - Error handling - Async
+ * behavior
  */
 @DisplayName("ParallelAgents")
 class ParallelAgentsTest {
@@ -93,11 +95,11 @@ class ParallelAgentsTest {
   }
 
   @Nested
-  @DisplayName("run() - Parallel Execution")
-  class RunParallelExecution {
+  @DisplayName("run(String)")
+  class RunString {
 
     @Test
-    @DisplayName("run() returns CompletableFuture")
+    @DisplayName("run(String) returns CompletableFuture")
     void run_returnsCompletableFuture() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
@@ -110,7 +112,7 @@ class ParallelAgentsTest {
     }
 
     @Test
-    @DisplayName("run() returns result for each agent in order")
+    @DisplayName("run(String) returns result for each agent in order")
     void run_returnsResultsInOrder() throws Exception {
       Agent agent1 = createTestAgent("First");
       Agent agent2 = createTestAgent("Second");
@@ -125,21 +127,103 @@ class ParallelAgentsTest {
     }
 
     @Test
-    @DisplayName("run() throws when input is null")
+    @DisplayName("run(String) throws when input is null")
     void run_throwsWhenInputNull() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
-      assertThrows(NullPointerException.class, () -> orchestrator.run(null));
+      assertThrows(NullPointerException.class, () -> orchestrator.run((String) null));
     }
   }
 
   @Nested
-  @DisplayName("runFirst() - Racing")
-  class RunFirstRacing {
+  @DisplayName("run(Text)")
+  class RunText {
 
     @Test
-    @DisplayName("runFirst() returns CompletableFuture with single result")
+    @DisplayName("run(Text) creates context and runs")
+    void run_text_createsContextAndRuns() {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+      enqueueSuccessResponse("Hello");
+
+      CompletableFuture<List<AgentResult>> future = orchestrator.run(Text.valueOf("Test text"));
+
+      assertNotNull(future);
+    }
+
+    @Test
+    @DisplayName("run(Text) throws when text is null")
+    void run_text_throwsWhenNull() {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+
+      assertThrows(NullPointerException.class, () -> orchestrator.run((Text) null));
+    }
+  }
+
+  @Nested
+  @DisplayName("run(Message)")
+  class RunMessage {
+
+    @Test
+    @DisplayName("run(Message) creates context and runs")
+    void run_message_createsContextAndRuns() {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+      enqueueSuccessResponse("Hello");
+
+      CompletableFuture<List<AgentResult>> future = orchestrator.run(Message.user("Test message"));
+
+      assertNotNull(future);
+    }
+
+    @Test
+    @DisplayName("run(Message) throws when message is null")
+    void run_message_throwsWhenNull() {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+
+      assertThrows(NullPointerException.class, () -> orchestrator.run((Message) null));
+    }
+  }
+
+  @Nested
+  @DisplayName("run(AgentContext)")
+  class RunContext {
+
+    @Test
+    @DisplayName("run(AgentContext) uses context for all agents")
+    void run_context_usesContextForAllAgents() throws Exception {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+
+      AgentContext context = AgentContext.create();
+      context.addInput(Message.user("Context input"));
+      enqueueSuccessResponse("Response");
+
+      List<AgentResult> results = orchestrator.run(context).get(5, TimeUnit.SECONDS);
+
+      assertNotNull(results);
+      assertEquals(1, results.size());
+    }
+
+    @Test
+    @DisplayName("run(AgentContext) throws when context is null")
+    void run_context_throwsWhenNull() {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+
+      assertThrows(NullPointerException.class, () -> orchestrator.run((AgentContext) null));
+    }
+  }
+
+  @Nested
+  @DisplayName("runFirst()")
+  class RunFirst {
+
+    @Test
+    @DisplayName("runFirst(String) returns CompletableFuture with single result")
     void runFirst_returnsFutureWithSingleResult() throws Exception {
       Agent agent1 = createTestAgent("Fast");
       Agent agent2 = createTestAgent("Slow");
@@ -156,21 +240,60 @@ class ParallelAgentsTest {
     }
 
     @Test
-    @DisplayName("runFirst() throws when input is null")
+    @DisplayName("runFirst(String) throws when input is null")
     void runFirst_throwsWhenInputNull() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
-      assertThrows(NullPointerException.class, () -> orchestrator.runFirst(null));
+      assertThrows(NullPointerException.class, () -> orchestrator.runFirst((String) null));
+    }
+
+    @Test
+    @DisplayName("runFirst(Text) creates context and runs")
+    void runFirst_text_createsContextAndRuns() {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+      enqueueSuccessResponse("First!");
+
+      CompletableFuture<AgentResult> future = orchestrator.runFirst(Text.valueOf("Test"));
+
+      assertNotNull(future);
+    }
+
+    @Test
+    @DisplayName("runFirst(Message) creates context and runs")
+    void runFirst_message_createsContextAndRuns() {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+      enqueueSuccessResponse("First!");
+
+      CompletableFuture<AgentResult> future = orchestrator.runFirst(Message.user("Test"));
+
+      assertNotNull(future);
+    }
+
+    @Test
+    @DisplayName("runFirst(AgentContext) uses context and runs")
+    void runFirst_context_usesContextAndRuns() throws Exception {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+
+      AgentContext context = AgentContext.create();
+      context.addInput(Message.user("Context input"));
+      enqueueSuccessResponse("First!");
+
+      AgentResult result = orchestrator.runFirst(context).get(5, TimeUnit.SECONDS);
+
+      assertNotNull(result);
     }
   }
 
   @Nested
-  @DisplayName("runAndSynthesize() - Fan-out/Fan-in")
+  @DisplayName("runAndSynthesize()")
   class RunAndSynthesize {
 
     @Test
-    @DisplayName("runAndSynthesize() returns CompletableFuture")
+    @DisplayName("runAndSynthesize(String, Agent) returns CompletableFuture")
     void runAndSynthesize_returnsCompletableFuture() {
       Agent worker = createTestAgent("Worker");
       Agent synthesizer = createTestAgent("Synthesizer");
@@ -186,61 +309,175 @@ class ParallelAgentsTest {
     }
 
     @Test
-    @DisplayName("runAndSynthesize() throws when input is null")
+    @DisplayName("runAndSynthesize(String, Agent) throws when input is null")
     void runAndSynthesize_throwsWhenInputNull() {
       Agent worker = createTestAgent("Worker");
       Agent synthesizer = createTestAgent("Synthesizer");
       ParallelAgents orchestrator = ParallelAgents.of(worker);
 
       assertThrows(
-          NullPointerException.class, () -> orchestrator.runAndSynthesize(null, synthesizer));
+          NullPointerException.class, () -> orchestrator.runAndSynthesize((String) null, synthesizer));
     }
 
     @Test
-    @DisplayName("runAndSynthesize() throws when synthesizer is null")
+    @DisplayName("runAndSynthesize(String, Agent) throws when synthesizer is null")
     void runAndSynthesize_throwsWhenSynthesizerNull() {
       Agent worker = createTestAgent("Worker");
       ParallelAgents orchestrator = ParallelAgents.of(worker);
 
       assertThrows(NullPointerException.class, () -> orchestrator.runAndSynthesize("Task", null));
     }
-  }
-
-  @Nested
-  @DisplayName("Context Isolation")
-  class ContextIsolation {
 
     @Test
-    @DisplayName("run() uses copy of shared context for each agent")
-    void run_usesContextCopyForEachAgent() throws Exception {
-      Agent agent1 = createTestAgent("Agent1");
-      Agent agent2 = createTestAgent("Agent2");
-      ParallelAgents orchestrator = ParallelAgents.of(agent1, agent2);
+    @DisplayName("runAndSynthesize(Text, Agent) creates context and synthesizes")
+    void runAndSynthesize_text_createsContextAndSynthesizes() {
+      Agent worker = createTestAgent("Worker");
+      Agent synthesizer = createTestAgent("Synthesizer");
+      ParallelAgents orchestrator = ParallelAgents.of(worker);
 
-      AgentContext sharedContext = AgentContext.create();
-      sharedContext.setState("shared", "initial");
+      enqueueSuccessResponse("Worker output");
+      enqueueSuccessResponse("Synthesized result");
 
-      enqueueSuccessResponse("Response 1");
-      enqueueSuccessResponse("Response 2");
+      CompletableFuture<AgentResult> future =
+          orchestrator.runAndSynthesize(Text.valueOf("Task"), synthesizer);
 
-      orchestrator.run("Test", sharedContext).get(5, TimeUnit.SECONDS);
-
-      // Original context unchanged
-      assertEquals("initial", sharedContext.getState("shared"));
+      assertNotNull(future);
     }
 
     @Test
-    @DisplayName("run() without context creates fresh context for each agent")
-    void run_withoutContext_createsFreshContexts() throws Exception {
+    @DisplayName("runAndSynthesize(Message, Agent) creates context and synthesizes")
+    void runAndSynthesize_message_createsContextAndSynthesizes() {
+      Agent worker = createTestAgent("Worker");
+      Agent synthesizer = createTestAgent("Synthesizer");
+      ParallelAgents orchestrator = ParallelAgents.of(worker);
+
+      enqueueSuccessResponse("Worker output");
+      enqueueSuccessResponse("Synthesized result");
+
+      CompletableFuture<AgentResult> future =
+          orchestrator.runAndSynthesize(Message.user("Task"), synthesizer);
+
+      assertNotNull(future);
+    }
+
+    @Test
+    @DisplayName("runAndSynthesize(AgentContext, Agent) uses context and synthesizes")
+    void runAndSynthesize_context_usesContextAndSynthesizes() throws Exception {
+      Agent worker = createTestAgent("Worker");
+      Agent synthesizer = createTestAgent("Synthesizer");
+      ParallelAgents orchestrator = ParallelAgents.of(worker);
+
+      AgentContext context = AgentContext.create();
+      context.addInput(Message.user("Task from context"));
+
+      enqueueSuccessResponse("Worker output");
+      enqueueSuccessResponse("Synthesized result");
+
+      AgentResult result =
+          orchestrator.runAndSynthesize(context, synthesizer).get(5, TimeUnit.SECONDS);
+
+      assertNotNull(result);
+    }
+  }
+
+  @Nested
+  @DisplayName("Streaming Methods")
+  class Streaming {
+
+    @Test
+    @DisplayName("runStream(String) returns ParallelStream")
+    void runStream_string_returnsParallelStream() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
-      enqueueSuccessResponse("Response");
+      ParallelStream stream = orchestrator.runStream("Test");
 
-      List<AgentResult> results = orchestrator.run("Test").get(5, TimeUnit.SECONDS);
+      assertNotNull(stream);
+      assertInstanceOf(ParallelStream.class, stream);
+    }
 
-      assertNotNull(results);
-      assertEquals(1, results.size());
+    @Test
+    @DisplayName("runStream(AgentContext) returns ParallelStream")
+    void runStream_context_returnsParallelStream() {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+
+      AgentContext context = AgentContext.create();
+      context.addInput(Message.user("Test"));
+
+      ParallelStream stream = orchestrator.runStream(context);
+
+      assertNotNull(stream);
+    }
+
+    @Test
+    @DisplayName("runFirstStream(String) returns ParallelStream")
+    void runFirstStream_string_returnsParallelStream() {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+
+      ParallelStream stream = orchestrator.runFirstStream("Test");
+
+      assertNotNull(stream);
+    }
+
+    @Test
+    @DisplayName("runFirstStream(AgentContext) returns ParallelStream")
+    void runFirstStream_context_returnsParallelStream() {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+
+      AgentContext context = AgentContext.create();
+      context.addInput(Message.user("Test"));
+
+      ParallelStream stream = orchestrator.runFirstStream(context);
+
+      assertNotNull(stream);
+    }
+
+    @Test
+    @DisplayName("runAndSynthesizeStream(String, Agent) returns ParallelStream")
+    void runAndSynthesizeStream_string_returnsParallelStream() {
+      Agent worker = createTestAgent("Worker");
+      Agent synthesizer = createTestAgent("Synthesizer");
+      ParallelAgents orchestrator = ParallelAgents.of(worker);
+
+      ParallelStream stream = orchestrator.runAndSynthesizeStream("Task", synthesizer);
+
+      assertNotNull(stream);
+    }
+
+    @Test
+    @DisplayName("runAndSynthesizeStream(AgentContext, Agent) returns ParallelStream")
+    void runAndSynthesizeStream_context_returnsParallelStream() {
+      Agent worker = createTestAgent("Worker");
+      Agent synthesizer = createTestAgent("Synthesizer");
+      ParallelAgents orchestrator = ParallelAgents.of(worker);
+
+      AgentContext context = AgentContext.create();
+      context.addInput(Message.user("Task"));
+
+      ParallelStream stream = orchestrator.runAndSynthesizeStream(context, synthesizer);
+
+      assertNotNull(stream);
+    }
+
+    @Test
+    @DisplayName("runStream(String) throws when input is null")
+    void runStream_throwsWhenInputNull() {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+
+      assertThrows(NullPointerException.class, () -> orchestrator.runStream((String) null));
+    }
+
+    @Test
+    @DisplayName("runStream(AgentContext) throws when context is null")
+    void runStream_throwsWhenContextNull() {
+      Agent agent = createTestAgent("Test");
+      ParallelAgents orchestrator = ParallelAgents.of(agent);
+
+      assertThrows(NullPointerException.class, () -> orchestrator.runStream((AgentContext) null));
     }
   }
 

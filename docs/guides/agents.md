@@ -431,7 +431,23 @@ System.out.println("Handled by: " + result.handoffAgent().name());
 // Option 2: Just classify (don't execute)
 Agent selected = router.classify("My app keeps crashing").join();
 System.out.println("Would route to: " + selected.name());
-// selected == techSupport
+
+// Option 3: Route with existing context
+AgentContext context = AgentContext.create();
+context.addInput(Message.user("Help with billing"));
+AgentResult contextResult = router.route(context).join();
+```
+
+### Streaming Router
+
+```java
+router.routeStream("Help me with my invoice")
+    .onRouteSelected(agent -> System.out.println("→ Routed to: " + agent.name()))
+    .onTextDelta(System.out::print)
+    .onToolExecuted(exec -> System.out.println("Tool: " + exec.toolName()))
+    .onComplete(result -> System.out.println("\nDone!"))
+    .onError(Throwable::printStackTrace)
+    .start();
 ```
 
 ### RouterAgent vs Handoffs
@@ -816,6 +832,11 @@ List<AgentResult> results = team.run("Analyze market trends in AI").join();
 for (AgentResult result : results) {
     System.out.println(result.output());
 }
+
+// With existing context
+AgentContext context = AgentContext.create();
+context.addInput(Message.user("Analyze trends"));
+List<AgentResult> contextResults = team.run(context).join();
 ```
 
 ### Race - First Result Wins
@@ -837,6 +858,23 @@ AgentResult combined = team.runAndSynthesize(
 
 System.out.println(combined.output());
 // Writer produces a unified report from both perspectives
+```
+
+### Streaming Parallel Execution
+
+```java
+// Stream all agents in parallel
+team.runStream("Analyze market trends")
+    .onAgentTextDelta((agent, delta) -> System.out.print("[" + agent.name() + "] " + delta))
+    .onAgentComplete((agent, result) -> System.out.println("\n" + agent.name() + " done!"))
+    .onComplete(results -> System.out.println("All agents completed!"))
+    .start();
+
+// Stream with synthesis
+team.runAndSynthesizeStream("What's the outlook?", writer)
+    .onAgentTextDelta((agent, delta) -> System.out.print(delta))
+    .onSynthesisComplete(result -> System.out.println("Synthesis done: " + result.output()))
+    .start();
 ```
 
 ---

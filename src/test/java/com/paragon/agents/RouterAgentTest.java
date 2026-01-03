@@ -3,6 +3,8 @@ package com.paragon.agents;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.paragon.responses.Responder;
+import com.paragon.responses.spec.Message;
+import com.paragon.responses.spec.Text;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
@@ -16,7 +18,7 @@ import org.junit.jupiter.api.Test;
  * Comprehensive tests for RouterAgent.
  *
  * <p>Tests cover: - Builder pattern - Route configuration - Classification (classify) - Routing
- * with execution (route) - Fallback handling - Async behavior
+ * with execution (route) - Fallback handling - Streaming - Async behavior
  */
 @DisplayName("RouterAgent")
 class RouterAgentTest {
@@ -275,11 +277,11 @@ class RouterAgentTest {
   }
 
   @Nested
-  @DisplayName("route()")
-  class Route {
+  @DisplayName("route(String)")
+  class RouteString {
 
     @Test
-    @DisplayName("route() returns CompletableFuture")
+    @DisplayName("route(String) returns CompletableFuture")
     void route_returnsCompletableFuture() {
       Agent target = createTestAgent("Target");
       RouterAgent router = createRouter(target);
@@ -295,7 +297,7 @@ class RouterAgentTest {
     }
 
     @Test
-    @DisplayName("route() returns error when no agent selected")
+    @DisplayName("route(String) returns error when no agent selected")
     void route_returnsErrorWhenNoAgentSelected() throws Exception {
       Agent target = createTestAgent("Target");
 
@@ -314,21 +316,162 @@ class RouterAgentTest {
     }
 
     @Test
-    @DisplayName("route() throws when input is null")
+    @DisplayName("route(String) throws when input is null")
     void route_throwsWhenInputNull() {
       Agent target = createTestAgent("Target");
       RouterAgent router = createRouter(target);
 
-      assertThrows(NullPointerException.class, () -> router.route(null));
+      assertThrows(NullPointerException.class, () -> router.route((String) null));
     }
+  }
+
+  @Nested
+  @DisplayName("route(Text)")
+  class RouteText {
 
     @Test
-    @DisplayName("route() throws when context is null")
-    void route_throwsWhenContextNull() {
+    @DisplayName("route(Text) creates context and routes")
+    void route_text_createsContextAndRoutes() {
       Agent target = createTestAgent("Target");
       RouterAgent router = createRouter(target);
 
-      assertThrows(NullPointerException.class, () -> router.route("test", null));
+      enqueueResponse("1");
+      enqueueSuccessResponse("Target response");
+
+      CompletableFuture<AgentResult> future = router.route(Text.valueOf("test text input"));
+
+      assertNotNull(future);
+    }
+
+    @Test
+    @DisplayName("route(Text) throws when text is null")
+    void route_text_throwsWhenNull() {
+      Agent target = createTestAgent("Target");
+      RouterAgent router = createRouter(target);
+
+      assertThrows(NullPointerException.class, () -> router.route((Text) null));
+    }
+  }
+
+  @Nested
+  @DisplayName("route(Message)")
+  class RouteMessage {
+
+    @Test
+    @DisplayName("route(Message) creates context and routes")
+    void route_message_createsContextAndRoutes() {
+      Agent target = createTestAgent("Target");
+      RouterAgent router = createRouter(target);
+
+      enqueueResponse("1");
+      enqueueSuccessResponse("Target response");
+
+      CompletableFuture<AgentResult> future = router.route(Message.user("test message input"));
+
+      assertNotNull(future);
+    }
+
+    @Test
+    @DisplayName("route(Message) throws when message is null")
+    void route_message_throwsWhenNull() {
+      Agent target = createTestAgent("Target");
+      RouterAgent router = createRouter(target);
+
+      assertThrows(NullPointerException.class, () -> router.route((Message) null));
+    }
+  }
+
+  @Nested
+  @DisplayName("route(AgentContext)")
+  class RouteContext {
+
+    @Test
+    @DisplayName("route(AgentContext) uses context for routing")
+    void route_context_usesContextForRouting() {
+      Agent target = createTestAgent("Target");
+      RouterAgent router = createRouter(target);
+
+      AgentContext context = AgentContext.create();
+      context.addInput(Message.user("test context input"));
+
+      enqueueResponse("1");
+      enqueueSuccessResponse("Target response");
+
+      CompletableFuture<AgentResult> future = router.route(context);
+
+      assertNotNull(future);
+    }
+
+    @Test
+    @DisplayName("route(AgentContext) returns error when context has no user message")
+    void route_context_returnsErrorWhenNoUserMessage() throws Exception {
+      Agent target = createTestAgent("Target");
+      RouterAgent router = createRouter(target);
+
+      AgentContext context = AgentContext.create(); // Empty context
+
+      AgentResult result = router.route(context).get(5, TimeUnit.SECONDS);
+
+      assertTrue(result.isError());
+    }
+
+    @Test
+    @DisplayName("route(AgentContext) throws when context is null")
+    void route_context_throwsWhenNull() {
+      Agent target = createTestAgent("Target");
+      RouterAgent router = createRouter(target);
+
+      assertThrows(NullPointerException.class, () -> router.route((AgentContext) null));
+    }
+  }
+
+  @Nested
+  @DisplayName("routeStream()")
+  class RouteStream {
+
+    @Test
+    @DisplayName("routeStream(String) returns RouterStream")
+    void routeStream_string_returnsRouterStream() {
+      Agent target = createTestAgent("Target");
+      RouterAgent router = createRouter(target);
+
+      RouterStream stream = router.routeStream("test input");
+
+      assertNotNull(stream);
+      assertInstanceOf(RouterStream.class, stream);
+    }
+
+    @Test
+    @DisplayName("routeStream(AgentContext) returns RouterStream")
+    void routeStream_context_returnsRouterStream() {
+      Agent target = createTestAgent("Target");
+      RouterAgent router = createRouter(target);
+
+      AgentContext context = AgentContext.create();
+      context.addInput(Message.user("test input"));
+
+      RouterStream stream = router.routeStream(context);
+
+      assertNotNull(stream);
+      assertInstanceOf(RouterStream.class, stream);
+    }
+
+    @Test
+    @DisplayName("routeStream(String) throws when input is null")
+    void routeStream_string_throwsWhenNull() {
+      Agent target = createTestAgent("Target");
+      RouterAgent router = createRouter(target);
+
+      assertThrows(NullPointerException.class, () -> router.routeStream((String) null));
+    }
+
+    @Test
+    @DisplayName("routeStream(AgentContext) throws when context is null")
+    void routeStream_context_throwsWhenNull() {
+      Agent target = createTestAgent("Target");
+      RouterAgent router = createRouter(target);
+
+      assertThrows(NullPointerException.class, () -> router.routeStream((AgentContext) null));
     }
   }
 

@@ -144,12 +144,12 @@ class TraceCorrelationIntegrationTest {
 
       AgentContext sharedContext =
           AgentContext.create().withTraceContext(existingTraceId, existingSpanId);
+      sharedContext.addInput(Message.user("Test input"));
 
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
 
-      List<AgentResult> results =
-          parallel.run("Test input", sharedContext).get(5, TimeUnit.SECONDS);
+      List<AgentResult> results = parallel.run(sharedContext).get(5, TimeUnit.SECONDS);
 
       assertEquals(2, results.size());
       // Original context should still have its trace (copy was made)
