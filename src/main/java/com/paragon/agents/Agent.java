@@ -896,65 +896,6 @@ public final class Agent implements Serializable {
     return null;
   }
 
-  private List<ToolExecution> executeTools(List<FunctionToolCall> toolCalls) {
-    List<ToolExecution> executions = new ArrayList<>();
-    for (FunctionToolCall call : toolCalls) {
-      // Skip handoff tools (handled separately)
-      boolean isHandoff = false;
-      for (Handoff handoff : handoffs) {
-        if (handoff.name().equals(call.name())) {
-          isHandoff = true;
-          break;
-        }
-      }
-      if (isHandoff) {
-        continue;
-      }
-
-      Instant start = Instant.now();
-      try {
-        FunctionToolCallOutput output = toolStore.execute(call);
-        Duration duration = Duration.between(start, Instant.now());
-        executions.add(
-            new ToolExecution(call.name(), call.callId(), call.arguments(), output, duration));
-      } catch (JsonProcessingException e) {
-        Duration duration = Duration.between(start, Instant.now());
-        FunctionToolCallOutput errorOutput =
-            FunctionToolCallOutput.error(
-                call.callId(), "Failed to parse arguments: " + e.getMessage());
-        executions.add(
-            new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration));
-      }
-    }
-    return executions;
-  }
-
-  private ToolExecution executeSingleTool(FunctionToolCall call) {
-    // Skip handoff tools (handled separately)
-    for (Handoff handoff : handoffs) {
-      if (handoff.name().equals(call.name())) {
-        FunctionToolCallOutput output =
-            FunctionToolCallOutput.error(
-                call.callId(), "Handoff tool should not be executed directly");
-        return new ToolExecution(
-            call.name(), call.callId(), call.arguments(), output, Duration.ZERO);
-      }
-    }
-
-    Instant start = Instant.now();
-    try {
-      FunctionToolCallOutput output = toolStore.execute(call);
-      Duration duration = Duration.between(start, Instant.now());
-      return new ToolExecution(call.name(), call.callId(), call.arguments(), output, duration);
-    } catch (JsonProcessingException e) {
-      Duration duration = Duration.between(start, Instant.now());
-      FunctionToolCallOutput errorOutput =
-          FunctionToolCallOutput.error(
-              call.callId(), "Failed to parse arguments: " + e.getMessage());
-      return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
-    }
-  }
-
   /**
    * Executes a single tool with proper error handling and telemetry. Wraps errors in
    * ToolExecutionException for better diagnostics.
