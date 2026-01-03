@@ -278,6 +278,173 @@ eventSource.addEventListener('complete', (e) => {
 eventSource.onerror = () => eventSource.close();
 ```
 
+### Streaming Structured Outputs (Partial JSON)
+
+Stream structured data with partial JSON updates as fields are generated:
+
+```java
+import org.springframework.http.MediaType;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+@RestController
+@RequestMapping("/api/stream")
+public class StructuredStreamingController {
+
+    private final Responder responder;
+    private final Agentle4jProperties props;
+
+    public StructuredStreamingController(Responder responder, Agentle4jProperties props) {
+        this.responder = responder;
+        this.props = props;
+    }
+
+    // Define your structured output type
+    public record Article(
+        String title,
+        String summary,
+        List<String> keyPoints,
+        String author
+    ) {}
+
+    @GetMapping(value = "/article", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamStructuredArticle(@RequestParam String topic) {
+        SseEmitter emitter = new SseEmitter(120_000L); // 2 min timeout for longer content
+
+        var payload = CreateResponsePayload.builder()
+            .model(props.getModel())
+            .addUserMessage("Write an article about: " + topic)
+            .withStructuredOutput(Article.class)
+            .streaming()
+            .build();
+
+        responder.respond(payload)
+            // Stream partial JSON as fields are generated
+            .onPartialJson(fields -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                        .name("partial")
+                        .data(fields));  // Send Map<String, Object> with current fields
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            // Get the final typed object
+            .onParsedComplete(response -> {
+                try {
+                    Article article = response.outputParsed();
+                    emitter.send(SseEmitter.event()
+                        .name("complete")
+                        .data(article));
+                    emitter.complete();
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            })
+            .onError(emitter::completeWithError)
+            .start();
+
+        return emitter;
+    }
+}
+```
+
+!!! info "How Partial JSON Works"
+    The parser auto-completes incomplete JSON. As the LLM generates text, you'll receive progressive updates:
+    
+    - First: `{title: "AI in Healthcare"}`
+    - Then: `{title: "AI in Healthcare", summary: "Artificial intel..."}`
+    - Finally: Complete object with all fields
+
+#### Client-Side JavaScript for Structured Streaming
+
+```javascript
+const eventSource = new EventSource('/api/stream/article?topic=AI%20in%20Healthcare');
+
+eventSource.addEventListener('partial', (e) => {
+    const fields = JSON.parse(e.data);
+    
+    // Update UI fields as they arrive
+    if (fields.title) {
+        document.getElementById('title').textContent = fields.title;
+    }
+    if (fields.summary) {
+        document.getElementById('summary').textContent = fields.summary;
+    }
+    if (fields.keyPoints) {
+        const list = document.getElementById('keyPoints');
+        list.innerHTML = fields.keyPoints.map(p => `<li>${p}</li>`).join('');
+    }
+});
+
+eventSource.addEventListener('complete', (e) => {
+    const article = JSON.parse(e.data);
+    console.log('Final article:', article);
+    eventSource.close();
+});
+
+eventSource.onerror = () => {
+    console.error('Stream error');
+    eventSource.close();
+};
+```
+
+#### Type-Safe Partial Updates
+
+For more robust type safety, use `onPartialParsed` with a nullable mirror class:
+
+```java
+// Nullable mirror class for partial parsing
+public record PartialArticle(
+    @Nullable String title,
+    @Nullable String summary,
+    @Nullable List<String> keyPoints,
+    @Nullable String author
+) {}
+
+@GetMapping(value = "/article/typed", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+public SseEmitter streamTypedArticle(@RequestParam String topic) {
+    SseEmitter emitter = new SseEmitter(120_000L);
+
+    var payload = CreateResponsePayload.builder()
+        .model(props.getModel())
+        .addUserMessage("Write an article about: " + topic)
+        .withStructuredOutput(Article.class)
+        .streaming()
+        .build();
+
+    responder.respond(payload)
+        .onPartialParsed(PartialArticle.class, partial -> {
+            try {
+                // Type-safe access to partial fields
+                emitter.send(SseEmitter.event()
+                    .name("partial")
+                    .data(Map.of(
+                        "title", partial.title() != null ? partial.title() : "",
+                        "summary", partial.summary() != null ? partial.summary() : "",
+                        "keyPoints", partial.keyPoints() != null ? partial.keyPoints() : List.of(),
+                        "author", partial.author() != null ? partial.author() : ""
+                    )));
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+            }
+        })
+        .onParsedComplete(response -> {
+            try {
+                emitter.send(SseEmitter.event()
+                    .name("complete")
+                    .data(response.outputParsed()));
+                emitter.complete();
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+            }
+        })
+        .onError(emitter::completeWithError)
+        .start();
+
+    return emitter;
+}
+```
+
 ---
 
 ## WebSocket Chat
