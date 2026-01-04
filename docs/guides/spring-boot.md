@@ -1800,6 +1800,768 @@ agentle4j:
 
 ---
 
+## Asynchronous Job Patterns
+
+For long-running AI tasks (document analysis, code generation, content creation), use async patterns where clients submit jobs and check status later.
+
+### Job Submission & Status API
+
+A REST API pattern for fire-and-forget job submission with polling:
+
+```java
+import com.paragon.agents.Agent;
+import com.paragon.agents.AgentResult;
+import org.springframework.web.bind.annotation.*;
+import java.util.UUID;
+import java.util.concurrent.*;
+
+@RestController
+@RequestMapping("/api/jobs")
+public class AsyncJobController {
+
+    private final Agent analysisAgent;
+    private final JobStore jobStore;
+    private final ExecutorService executor;
+
+    public AsyncJobController(Agent analysisAgent, JobStore jobStore) {
+        this.analysisAgent = analysisAgent;
+        this.jobStore = jobStore;
+        this.executor = Executors.newVirtualThreadPerTaskExecutor();
+    }
+
+    // Submit a job and return immediately
+    @PostMapping
+    public JobSubmissionResponse submitJob(@RequestBody JobRequest request) {
+        String jobId = UUID.randomUUID().toString();
+        
+        Job job = new Job(jobId, request.input(), JobStatus.PENDING, null, null);
+        jobStore.save(job);
+
+        // Fire and forget - run in background
+        executor.submit(() -> processJob(jobId, request.input()));
+
+        return new JobSubmissionResponse(jobId, JobStatus.PENDING);
+    }
+
+    // Check job status
+    @GetMapping("/{jobId}")
+    public JobStatusResponse getJobStatus(@PathVariable String jobId) {
+        Job job = jobStore.get(jobId)
+            .orElseThrow(() -> new JobNotFoundException(jobId));
+        
+        return new JobStatusResponse(
+            job.id(),
+            job.status(),
+            job.result(),
+            job.error()
+        );
+    }
+
+    // Cancel a pending job
+    @DeleteMapping("/{jobId}")
+    public void cancelJob(@PathVariable String jobId) {
+        Job job = jobStore.get(jobId)
+            .orElseThrow(() -> new JobNotFoundException(jobId));
+        
+        if (job.status() == JobStatus.PENDING || job.status() == JobStatus.RUNNING) {
+            jobStore.save(job.withStatus(JobStatus.CANCELLED));
+        }
+    }
+
+    private void processJob(String jobId, String input) {
+        try {
+            jobStore.save(jobStore.get(jobId).get().withStatus(JobStatus.RUNNING));
+
+            AgentResult result = analysisAgent.interact(input).join();
+
+            if (result.isSuccess()) {
+                jobStore.save(new Job(jobId, input, JobStatus.COMPLETED, result.output(), null));
+            } else {
+                String error = result.error() != null ? result.error().getMessage() : "Unknown error";
+                jobStore.save(new Job(jobId, input, JobStatus.FAILED, null, error));
+            }
+        } catch (Exception e) {
+            jobStore.save(new Job(jobId, input, JobStatus.FAILED, null, e.getMessage()));
+        }
+    }
+
+    // DTOs
+    public record JobRequest(String input) {}
+    public record JobSubmissionResponse(String jobId, JobStatus status) {}
+    public record JobStatusResponse(
+        String jobId, 
+        JobStatus status, 
+        String result, 
+        String error
+    ) {}
+    public record Job(
+        String id, 
+        String input, 
+        JobStatus status, 
+        String result, 
+        String error
+    ) {
+        public Job withStatus(JobStatus newStatus) {
+            return new Job(id, input, newStatus, result, error);
+        }
+    }
+    public enum JobStatus { PENDING, RUNNING, COMPLETED, FAILED, CANCELLED }
+}
+```
+
+### In-Memory Job Store
+
+Simple job store for single-instance applications:
+
+```java
+import org.springframework.stereotype.Component;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Component
+public class JobStore {
+
+    private final ConcurrentHashMap<String, AsyncJobController.Job> jobs = new ConcurrentHashMap<>();
+
+    public void save(AsyncJobController.Job job) {
+        jobs.put(job.id(), job);
+    }
+
+    public Optional<AsyncJobController.Job> get(String jobId) {
+        return Optional.ofNullable(jobs.get(jobId));
+    }
+
+    public void remove(String jobId) {
+        jobs.remove(jobId);
+    }
+}
+```
+
+### Client Usage
+
+```bash
+# Submit a job
+curl -X POST http://localhost:8080/api/jobs \
+  -H "Content-Type: application/json" \
+  -d '{"input": "Analyze this 50-page document..."}' 
+
+# Response: {"jobId": "abc-123", "status": "PENDING"}
+
+# Poll for status
+curl http://localhost:8080/api/jobs/abc-123
+
+# Response (in progress): {"jobId": "abc-123", "status": "RUNNING", "result": null}
+# Response (complete): {"jobId": "abc-123", "status": "COMPLETED", "result": "Analysis: ..."}
+```
+
+---
+
+### RabbitMQ Message Queue Pattern
+
+For distributed systems, use RabbitMQ to decouple job submission from processing:
+
+#### Dependencies
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-amqp</artifactId>
+</dependency>
+```
+
+#### Configuration
+
+```yaml
+# application.yml
+spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+app:
+  queues:
+    ai-jobs: ai-job-queue
+    ai-results: ai-result-queue
+```
+
+#### Queue Configuration
+
+```java
+import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class RabbitMQConfig {
+
+    public static final String JOB_QUEUE = "ai-job-queue";
+    public static final String RESULT_QUEUE = "ai-result-queue";
+
+    @Bean
+    public Queue jobQueue() {
+        return QueueBuilder.durable(JOB_QUEUE).build();
+    }
+
+    @Bean
+    public Queue resultQueue() {
+        return QueueBuilder.durable(RESULT_QUEUE).build();
+    }
+
+    @Bean
+    public Jackson2JsonMessageConverter messageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+        RabbitTemplate template = new RabbitTemplate(connectionFactory);
+        template.setMessageConverter(messageConverter());
+        return template;
+    }
+}
+```
+
+#### Job Publisher (API Service)
+
+```java
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.web.bind.annotation.*;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/jobs")
+public class JobPublisherController {
+
+    private final RabbitTemplate rabbitTemplate;
+    private final JobStore jobStore;
+
+    public JobPublisherController(RabbitTemplate rabbitTemplate, JobStore jobStore) {
+        this.rabbitTemplate = rabbitTemplate;
+        this.jobStore = jobStore;
+    }
+
+    @PostMapping
+    public JobSubmissionResponse submitJob(@RequestBody JobRequest request) {
+        String jobId = UUID.randomUUID().toString();
+        
+        // Save initial job state
+        jobStore.save(new Job(jobId, JobStatus.PENDING, null, null));
+
+        // Publish to queue
+        AIJobMessage message = new AIJobMessage(jobId, request.input(), request.callbackUrl());
+        rabbitTemplate.convertAndSend(RabbitMQConfig.JOB_QUEUE, message);
+
+        return new JobSubmissionResponse(jobId, JobStatus.PENDING);
+    }
+
+    @GetMapping("/{jobId}")
+    public Job getJob(@PathVariable String jobId) {
+        return jobStore.get(jobId)
+            .orElseThrow(() -> new JobNotFoundException(jobId));
+    }
+
+    // DTOs
+    public record JobRequest(String input, String callbackUrl) {}
+    public record JobSubmissionResponse(String jobId, JobStatus status) {}
+    public record AIJobMessage(String jobId, String input, String callbackUrl) {}
+    public record Job(String id, JobStatus status, String result, String error) {}
+    public enum JobStatus { PENDING, RUNNING, COMPLETED, FAILED }
+}
+```
+
+#### Job Consumer (Worker Service)
+
+```java
+import com.paragon.agents.Agent;
+import com.paragon.agents.AgentResult;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+public class AIJobConsumer {
+
+    private final Agent analysisAgent;
+    private final RabbitTemplate rabbitTemplate;
+    private final JobStore jobStore;
+    private final RestTemplate restTemplate;
+
+    public AIJobConsumer(
+            Agent analysisAgent, 
+            RabbitTemplate rabbitTemplate,
+            JobStore jobStore,
+            RestTemplate restTemplate) {
+        this.analysisAgent = analysisAgent;
+        this.rabbitTemplate = rabbitTemplate;
+        this.jobStore = jobStore;
+        this.restTemplate = restTemplate;
+    }
+
+    @RabbitListener(queues = RabbitMQConfig.JOB_QUEUE)
+    public void processJob(JobPublisherController.AIJobMessage message) {
+        String jobId = message.jobId();
+        
+        try {
+            // Update status to RUNNING
+            jobStore.save(new JobPublisherController.Job(
+                jobId, JobPublisherController.JobStatus.RUNNING, null, null));
+
+            // Execute AI task
+            AgentResult result = analysisAgent.interact(message.input()).join();
+
+            JobPublisherController.Job completedJob;
+            if (result.isSuccess()) {
+                completedJob = new JobPublisherController.Job(
+                    jobId, JobPublisherController.JobStatus.COMPLETED, result.output(), null);
+            } else {
+                String error = result.error() != null ? result.error().getMessage() : "Unknown error";
+                completedJob = new JobPublisherController.Job(
+                    jobId, JobPublisherController.JobStatus.FAILED, null, error);
+            }
+
+            jobStore.save(completedJob);
+
+            // Notify via callback if provided
+            if (message.callbackUrl() != null && !message.callbackUrl().isEmpty()) {
+                notifyCallback(message.callbackUrl(), completedJob);
+            }
+
+            // Publish result to result queue (for other consumers)
+            rabbitTemplate.convertAndSend(RabbitMQConfig.RESULT_QUEUE, completedJob);
+
+        } catch (Exception e) {
+            JobPublisherController.Job failedJob = new JobPublisherController.Job(
+                jobId, JobPublisherController.JobStatus.FAILED, null, e.getMessage());
+            jobStore.save(failedJob);
+            
+            if (message.callbackUrl() != null) {
+                notifyCallback(message.callbackUrl(), failedJob);
+            }
+        }
+    }
+
+    private void notifyCallback(String callbackUrl, JobPublisherController.Job job) {
+        try {
+            restTemplate.postForEntity(callbackUrl, job, Void.class);
+        } catch (Exception e) {
+            // Log but don't fail - callback is best-effort
+            System.err.println("Failed to notify callback: " + e.getMessage());
+        }
+    }
+}
+```
+
+---
+
+### Webhook Notification Pattern
+
+Let clients register a callback URL to receive job completion notifications:
+
+```java
+@RestController
+@RequestMapping("/api/jobs")
+public class WebhookJobController {
+
+    private final Agent agent;
+    private final JobStore jobStore;
+    private final RestTemplate restTemplate;
+    private final ExecutorService executor;
+
+    public WebhookJobController(Agent agent, JobStore jobStore, RestTemplate restTemplate) {
+        this.agent = agent;
+        this.jobStore = jobStore;
+        this.restTemplate = restTemplate;
+        this.executor = Executors.newVirtualThreadPerTaskExecutor();
+    }
+
+    @PostMapping
+    public JobResponse submitWithWebhook(@RequestBody WebhookJobRequest request) {
+        String jobId = UUID.randomUUID().toString();
+        
+        jobStore.save(new Job(jobId, JobStatus.PENDING, null));
+
+        executor.submit(() -> {
+            try {
+                jobStore.save(new Job(jobId, JobStatus.RUNNING, null));
+                
+                AgentResult result = agent.interact(request.input()).join();
+                
+                Job completedJob = result.isSuccess()
+                    ? new Job(jobId, JobStatus.COMPLETED, result.output())
+                    : new Job(jobId, JobStatus.FAILED, result.error().getMessage());
+                
+                jobStore.save(completedJob);
+
+                // Send webhook notification
+                if (request.webhookUrl() != null) {
+                    sendWebhook(request.webhookUrl(), completedJob, request.webhookSecret());
+                }
+            } catch (Exception e) {
+                Job failed = new Job(jobId, JobStatus.FAILED, e.getMessage());
+                jobStore.save(failed);
+                if (request.webhookUrl() != null) {
+                    sendWebhook(request.webhookUrl(), failed, request.webhookSecret());
+                }
+            }
+        });
+
+        return new JobResponse(jobId, JobStatus.PENDING);
+    }
+
+    private void sendWebhook(String url, Job job, String secret) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            // Sign the payload with the secret for verification
+            if (secret != null) {
+                String signature = HmacUtils.hmacSha256Hex(secret, job.toString());
+                headers.set("X-Webhook-Signature", signature);
+            }
+
+            HttpEntity<Job> entity = new HttpEntity<>(job, headers);
+            restTemplate.postForEntity(url, entity, Void.class);
+        } catch (Exception e) {
+            System.err.println("Webhook delivery failed: " + e.getMessage());
+            // Consider implementing retry logic with exponential backoff
+        }
+    }
+
+    public record WebhookJobRequest(
+        String input, 
+        String webhookUrl,      // URL to notify on completion
+        String webhookSecret    // Secret for HMAC signing
+    ) {}
+    public record JobResponse(String jobId, JobStatus status) {}
+    public record Job(String id, JobStatus status, String result) {}
+    public enum JobStatus { PENDING, RUNNING, COMPLETED, FAILED }
+}
+```
+
+#### Client Webhook Receiver
+
+```java
+// Client's webhook endpoint
+@RestController
+@RequestMapping("/webhooks")
+public class WebhookReceiverController {
+
+    @PostMapping("/ai-job-complete")
+    public ResponseEntity<Void> handleJobComplete(
+            @RequestHeader("X-Webhook-Signature") String signature,
+            @RequestBody JobResult result) {
+        
+        // Verify signature
+        String expectedSignature = HmacUtils.hmacSha256Hex(
+            System.getenv("WEBHOOK_SECRET"), 
+            result.toString()
+        );
+        
+        if (!signature.equals(expectedSignature)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // Process the result
+        System.out.println("Job " + result.id() + " completed: " + result.status());
+        
+        if (result.status() == JobStatus.COMPLETED) {
+            // Handle successful result
+            saveResultToDatabase(result);
+            notifyUser(result);
+        } else {
+            // Handle failure
+            alertOperations(result);
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
+    public record JobResult(String id, JobStatus status, String result) {}
+}
+```
+
+---
+
+### Database-Backed Job Persistence
+
+For production systems with multiple instances, persist jobs to a database:
+
+```java
+import jakarta.persistence.*;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.time.Instant;
+
+@Entity
+@Table(name = "ai_jobs")
+public class AIJob {
+    
+    @Id
+    private String id;
+    
+    @Column(columnDefinition = "TEXT")
+    private String input;
+    
+    @Enumerated(EnumType.STRING)
+    private JobStatus status;
+    
+    @Column(columnDefinition = "TEXT")
+    private String result;
+    
+    private String error;
+    
+    private String webhookUrl;
+    
+    private Instant createdAt;
+    private Instant startedAt;
+    private Instant completedAt;
+    
+    // Getters, setters, constructors
+    
+    public enum JobStatus { PENDING, RUNNING, COMPLETED, FAILED, CANCELLED }
+}
+```
+
+```java
+public interface AIJobRepository extends JpaRepository<AIJob, String> {
+    
+    List<AIJob> findByStatus(AIJob.JobStatus status);
+    
+    List<AIJob> findByStatusAndCreatedAtBefore(
+        AIJob.JobStatus status, 
+        Instant cutoff
+    );
+}
+```
+
+```java
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class AIJobService {
+
+    private final AIJobRepository jobRepository;
+    private final Agent agent;
+    private final RestTemplate restTemplate;
+
+    public AIJobService(AIJobRepository jobRepository, Agent agent, RestTemplate restTemplate) {
+        this.jobRepository = jobRepository;
+        this.agent = agent;
+        this.restTemplate = restTemplate;
+    }
+
+    @Transactional
+    public AIJob submitJob(String input, String webhookUrl) {
+        AIJob job = new AIJob();
+        job.setId(UUID.randomUUID().toString());
+        job.setInput(input);
+        job.setStatus(AIJob.JobStatus.PENDING);
+        job.setWebhookUrl(webhookUrl);
+        job.setCreatedAt(Instant.now());
+        
+        return jobRepository.save(job);
+    }
+
+    // Scheduled job processor - picks up PENDING jobs
+    @Scheduled(fixedDelay = 5000)  // Every 5 seconds
+    @Transactional
+    public void processPendingJobs() {
+        List<AIJob> pendingJobs = jobRepository.findByStatus(AIJob.JobStatus.PENDING);
+        
+        for (AIJob job : pendingJobs) {
+            processJob(job);
+        }
+    }
+
+    private void processJob(AIJob job) {
+        try {
+            job.setStatus(AIJob.JobStatus.RUNNING);
+            job.setStartedAt(Instant.now());
+            jobRepository.save(job);
+
+            AgentResult result = agent.interact(job.getInput()).join();
+
+            if (result.isSuccess()) {
+                job.setStatus(AIJob.JobStatus.COMPLETED);
+                job.setResult(result.output());
+            } else {
+                job.setStatus(AIJob.JobStatus.FAILED);
+                job.setError(result.error() != null ? result.error().getMessage() : "Unknown error");
+            }
+            
+            job.setCompletedAt(Instant.now());
+            jobRepository.save(job);
+
+            // Send webhook notification
+            if (job.getWebhookUrl() != null) {
+                sendWebhook(job);
+            }
+
+        } catch (Exception e) {
+            job.setStatus(AIJob.JobStatus.FAILED);
+            job.setError(e.getMessage());
+            job.setCompletedAt(Instant.now());
+            jobRepository.save(job);
+        }
+    }
+
+    private void sendWebhook(AIJob job) {
+        try {
+            restTemplate.postForEntity(job.getWebhookUrl(), job, Void.class);
+        } catch (Exception e) {
+            System.err.println("Webhook failed for job " + job.getId() + ": " + e.getMessage());
+        }
+    }
+
+    // Cleanup old completed jobs
+    @Scheduled(cron = "0 0 2 * * ?")  // Daily at 2 AM
+    @Transactional
+    public void cleanupOldJobs() {
+        Instant cutoff = Instant.now().minus(Duration.ofDays(30));
+        List<AIJob> oldJobs = jobRepository.findByStatusAndCreatedAtBefore(
+            AIJob.JobStatus.COMPLETED, cutoff);
+        jobRepository.deleteAll(oldJobs);
+    }
+}
+```
+
+---
+
+### Human-in-the-Loop with Job Persistence
+
+Combine async jobs with human approval for sensitive AI operations:
+
+```java
+@Service
+public class ApprovalJobService {
+
+    private final AIJobRepository jobRepository;
+    private final Agent agent;
+
+    @Transactional
+    public AIJob submitForApproval(String input) {
+        // Run agent - it may pause for approval
+        AgentResult result = agent.interact(input).join();
+
+        AIJob job = new AIJob();
+        job.setId(UUID.randomUUID().toString());
+        job.setInput(input);
+        job.setCreatedAt(Instant.now());
+
+        if (result.isPaused()) {
+            // Store paused state for later resumption
+            job.setStatus(AIJob.JobStatus.AWAITING_APPROVAL);
+            job.setPausedState(serialize(result.pausedState()));
+            job.setPendingToolName(result.pausedState().pendingToolCall().name());
+            job.setPendingToolArgs(result.pausedState().pendingToolCall().arguments());
+        } else if (result.isSuccess()) {
+            job.setStatus(AIJob.JobStatus.COMPLETED);
+            job.setResult(result.output());
+        } else {
+            job.setStatus(AIJob.JobStatus.FAILED);
+            job.setError(result.error().getMessage());
+        }
+
+        return jobRepository.save(job);
+    }
+
+    @Transactional
+    public AIJob approveAndResume(String jobId, String approvalOutput) {
+        AIJob job = jobRepository.findById(jobId)
+            .orElseThrow(() -> new JobNotFoundException(jobId));
+
+        if (job.getStatus() != AIJob.JobStatus.AWAITING_APPROVAL) {
+            throw new IllegalStateException("Job is not awaiting approval");
+        }
+
+        // Restore and resume
+        AgentRunState state = deserialize(job.getPausedState());
+        state.approveToolCall(approvalOutput);
+        
+        AgentResult result = agent.resume(state);
+
+        // May pause again for another tool, or complete
+        if (result.isPaused()) {
+            job.setPausedState(serialize(result.pausedState()));
+            job.setPendingToolName(result.pausedState().pendingToolCall().name());
+        } else if (result.isSuccess()) {
+            job.setStatus(AIJob.JobStatus.COMPLETED);
+            job.setResult(result.output());
+            job.setCompletedAt(Instant.now());
+        } else {
+            job.setStatus(AIJob.JobStatus.FAILED);
+            job.setError(result.error().getMessage());
+        }
+
+        return jobRepository.save(job);
+    }
+
+    @Transactional
+    public AIJob rejectAndResume(String jobId, String reason) {
+        AIJob job = jobRepository.findById(jobId)
+            .orElseThrow(() -> new JobNotFoundException(jobId));
+
+        AgentRunState state = deserialize(job.getPausedState());
+        state.rejectToolCall(reason);
+        
+        AgentResult result = agent.resume(state);
+
+        if (result.isSuccess()) {
+            job.setStatus(AIJob.JobStatus.COMPLETED);
+            job.setResult(result.output());
+        } else {
+            job.setStatus(AIJob.JobStatus.FAILED);
+            job.setError(result.error().getMessage());
+        }
+        
+        job.setCompletedAt(Instant.now());
+        return jobRepository.save(job);
+    }
+}
+```
+
+---
+
+### Production Considerations
+
+!!! warning "Idempotency"
+    Ensure job processing is idempotent. If a worker crashes mid-job, the same job may be retried. Use database transactions and unique constraints.
+
+!!! tip "Timeouts"
+    Set appropriate timeouts for AI operations to prevent hung jobs:
+    
+    ```java
+    AgentResult result = agent.interact(input)
+        .orTimeout(5, TimeUnit.MINUTES)
+        .exceptionally(e -> AgentResult.error(new TimeoutException("Job timed out"), context, 0))
+        .join();
+    ```
+
+!!! note "Scaling Workers"
+    With RabbitMQ, scale workers horizontally by running multiple instances. Each instance will compete for messages from the queue.
+
+!!! important "Dead Letter Queues"
+    Configure RabbitMQ dead letter queues for failed messages:
+    
+    ```java
+    @Bean
+    public Queue jobQueue() {
+        return QueueBuilder.durable(JOB_QUEUE)
+            .withArgument("x-dead-letter-exchange", "")
+            .withArgument("x-dead-letter-routing-key", "ai-job-dlq")
+            .build();
+    }
+    ```
+
+---
+
 ## Next Steps
 
 - [Agents Guide](agents.md) - Advanced agent patterns
