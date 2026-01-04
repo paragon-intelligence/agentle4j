@@ -15,12 +15,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Comprehensive tests for SubAgentTool.
  *
- * <p>Tests cover:
- * - Tool metadata (name, description, parameters schema)
- * - Config builder options
- * - Context propagation modes
- * - Error handling
- * - Integration with Agent Builder
+ * <p>Tests cover: - Tool metadata (name, description, parameters schema) - Config builder options -
+ * Context propagation modes - Error handling - Integration with Agent Builder
  */
 @DisplayName("SubAgentTool")
 class SubAgentToolTest {
@@ -202,7 +198,8 @@ class SubAgentToolTest {
 
       SubAgentTool toolNoState =
           new SubAgentTool(
-              subAgent, SubAgentTool.Config.builder().description("Desc").shareState(false).build());
+              subAgent,
+              SubAgentTool.Config.builder().description("Desc").shareState(false).build());
       assertFalse(toolNoState.sharesState());
     }
 
