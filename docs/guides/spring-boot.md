@@ -1821,12 +1821,10 @@ public class AsyncJobController {
 
     private final Agent analysisAgent;
     private final JobStore jobStore;
-    private final ExecutorService executor;
 
     public AsyncJobController(Agent analysisAgent, JobStore jobStore) {
         this.analysisAgent = analysisAgent;
         this.jobStore = jobStore;
-        this.executor = Executors.newVirtualThreadPerTaskExecutor();
     }
 
     // Submit a job and return immediately
@@ -1837,8 +1835,8 @@ public class AsyncJobController {
         Job job = new Job(jobId, request.input(), JobStatus.PENDING, null, null);
         jobStore.save(job);
 
-        // Fire and forget - run in background
-        executor.submit(() -> processJob(jobId, request.input()));
+        // Fire and forget - fully async, no blocking
+        processJobAsync(jobId, request.input());
 
         return new JobSubmissionResponse(jobId, JobStatus.PENDING);
     }
@@ -1868,21 +1866,25 @@ public class AsyncJobController {
         }
     }
 
-    private void processJob(String jobId, String input) {
-        try {
-            jobStore.save(jobStore.get(jobId).get().withStatus(JobStatus.RUNNING));
+    private void processJobAsync(String jobId, String input) {
+        // Update to RUNNING
+        jobStore.get(jobId).ifPresent(job -> 
+            jobStore.save(job.withStatus(JobStatus.RUNNING)));
 
-            AgentResult result = analysisAgent.interact(input).join();
-
-            if (result.isSuccess()) {
-                jobStore.save(new Job(jobId, input, JobStatus.COMPLETED, result.output(), null));
-            } else {
-                String error = result.error() != null ? result.error().getMessage() : "Unknown error";
-                jobStore.save(new Job(jobId, input, JobStatus.FAILED, null, error));
-            }
-        } catch (Exception e) {
-            jobStore.save(new Job(jobId, input, JobStatus.FAILED, null, e.getMessage()));
-        }
+        // Fully async - no .join() blocking
+        analysisAgent.interact(input)
+            .thenAccept(result -> {
+                if (result.isSuccess()) {
+                    jobStore.save(new Job(jobId, input, JobStatus.COMPLETED, result.output(), null));
+                } else {
+                    String error = result.error() != null ? result.error().getMessage() : "Unknown error";
+                    jobStore.save(new Job(jobId, input, JobStatus.FAILED, null, error));
+                }
+            })
+            .exceptionally(e -> {
+                jobStore.save(new Job(jobId, input, JobStatus.FAILED, null, e.getMessage()));
+                return null;
+            });
     }
 
     // DTOs
@@ -2107,43 +2109,43 @@ public class AIJobConsumer {
     public void processJob(JobPublisherController.AIJobMessage message) {
         String jobId = message.jobId();
         
-        try {
-            // Update status to RUNNING
-            jobStore.save(new JobPublisherController.Job(
-                jobId, JobPublisherController.JobStatus.RUNNING, null, null));
+        // Update status to RUNNING
+        jobStore.save(new JobPublisherController.Job(
+            jobId, JobPublisherController.JobStatus.RUNNING, null, null));
 
-            // Execute AI task
-            AgentResult result = analysisAgent.interact(message.input()).join();
+        // Execute AI task - fully async
+        analysisAgent.interact(message.input())
+            .thenAccept(result -> {
+                JobPublisherController.Job completedJob;
+                if (result.isSuccess()) {
+                    completedJob = new JobPublisherController.Job(
+                        jobId, JobPublisherController.JobStatus.COMPLETED, result.output(), null);
+                } else {
+                    String error = result.error() != null ? result.error().getMessage() : "Unknown error";
+                    completedJob = new JobPublisherController.Job(
+                        jobId, JobPublisherController.JobStatus.FAILED, null, error);
+                }
 
-            JobPublisherController.Job completedJob;
-            if (result.isSuccess()) {
-                completedJob = new JobPublisherController.Job(
-                    jobId, JobPublisherController.JobStatus.COMPLETED, result.output(), null);
-            } else {
-                String error = result.error() != null ? result.error().getMessage() : "Unknown error";
-                completedJob = new JobPublisherController.Job(
-                    jobId, JobPublisherController.JobStatus.FAILED, null, error);
-            }
+                jobStore.save(completedJob);
 
-            jobStore.save(completedJob);
+                // Notify via callback if provided
+                if (message.callbackUrl() != null && !message.callbackUrl().isEmpty()) {
+                    notifyCallback(message.callbackUrl(), completedJob);
+                }
 
-            // Notify via callback if provided
-            if (message.callbackUrl() != null && !message.callbackUrl().isEmpty()) {
-                notifyCallback(message.callbackUrl(), completedJob);
-            }
-
-            // Publish result to result queue (for other consumers)
-            rabbitTemplate.convertAndSend(RabbitMQConfig.RESULT_QUEUE, completedJob);
-
-        } catch (Exception e) {
-            JobPublisherController.Job failedJob = new JobPublisherController.Job(
-                jobId, JobPublisherController.JobStatus.FAILED, null, e.getMessage());
-            jobStore.save(failedJob);
-            
-            if (message.callbackUrl() != null) {
-                notifyCallback(message.callbackUrl(), failedJob);
-            }
-        }
+                // Publish result to result queue
+                rabbitTemplate.convertAndSend(RabbitMQConfig.RESULT_QUEUE, completedJob);
+            })
+            .exceptionally(e -> {
+                JobPublisherController.Job failedJob = new JobPublisherController.Job(
+                    jobId, JobPublisherController.JobStatus.FAILED, null, e.getMessage());
+                jobStore.save(failedJob);
+                
+                if (message.callbackUrl() != null) {
+                    notifyCallback(message.callbackUrl(), failedJob);
+                }
+                return null;
+            });
     }
 
     private void notifyCallback(String callbackUrl, JobPublisherController.Job job) {
@@ -2171,13 +2173,11 @@ public class WebhookJobController {
     private final Agent agent;
     private final JobStore jobStore;
     private final RestTemplate restTemplate;
-    private final ExecutorService executor;
 
     public WebhookJobController(Agent agent, JobStore jobStore, RestTemplate restTemplate) {
         this.agent = agent;
         this.jobStore = jobStore;
         this.restTemplate = restTemplate;
-        this.executor = Executors.newVirtualThreadPerTaskExecutor();
     }
 
     @PostMapping
@@ -2185,13 +2185,11 @@ public class WebhookJobController {
         String jobId = UUID.randomUUID().toString();
         
         jobStore.save(new Job(jobId, JobStatus.PENDING, null));
+        jobStore.save(new Job(jobId, JobStatus.RUNNING, null));
 
-        executor.submit(() -> {
-            try {
-                jobStore.save(new Job(jobId, JobStatus.RUNNING, null));
-                
-                AgentResult result = agent.interact(request.input()).join();
-                
+        // Fully async - no executor needed, CompletableFuture handles it
+        agent.interact(request.input())
+            .thenAccept(result -> {
                 Job completedJob = result.isSuccess()
                     ? new Job(jobId, JobStatus.COMPLETED, result.output())
                     : new Job(jobId, JobStatus.FAILED, result.error().getMessage());
@@ -2202,14 +2200,15 @@ public class WebhookJobController {
                 if (request.webhookUrl() != null) {
                     sendWebhook(request.webhookUrl(), completedJob, request.webhookSecret());
                 }
-            } catch (Exception e) {
+            })
+            .exceptionally(e -> {
                 Job failed = new Job(jobId, JobStatus.FAILED, e.getMessage());
                 jobStore.save(failed);
                 if (request.webhookUrl() != null) {
                     sendWebhook(request.webhookUrl(), failed, request.webhookSecret());
                 }
-            }
-        });
+                return null;
+            });
 
         return new JobResponse(jobId, JobStatus.PENDING);
     }
@@ -2381,35 +2380,36 @@ public class AIJobService {
     }
 
     private void processJob(AIJob job) {
-        try {
-            job.setStatus(AIJob.JobStatus.RUNNING);
-            job.setStartedAt(Instant.now());
-            jobRepository.save(job);
+        job.setStatus(AIJob.JobStatus.RUNNING);
+        job.setStartedAt(Instant.now());
+        jobRepository.save(job);
 
-            AgentResult result = agent.interact(job.getInput()).join();
+        // Fully async processing
+        agent.interact(job.getInput())
+            .thenAccept(result -> {
+                if (result.isSuccess()) {
+                    job.setStatus(AIJob.JobStatus.COMPLETED);
+                    job.setResult(result.output());
+                } else {
+                    job.setStatus(AIJob.JobStatus.FAILED);
+                    job.setError(result.error() != null ? result.error().getMessage() : "Unknown error");
+                }
+                
+                job.setCompletedAt(Instant.now());
+                jobRepository.save(job);
 
-            if (result.isSuccess()) {
-                job.setStatus(AIJob.JobStatus.COMPLETED);
-                job.setResult(result.output());
-            } else {
+                // Send webhook notification
+                if (job.getWebhookUrl() != null) {
+                    sendWebhook(job);
+                }
+            })
+            .exceptionally(e -> {
                 job.setStatus(AIJob.JobStatus.FAILED);
-                job.setError(result.error() != null ? result.error().getMessage() : "Unknown error");
-            }
-            
-            job.setCompletedAt(Instant.now());
-            jobRepository.save(job);
-
-            // Send webhook notification
-            if (job.getWebhookUrl() != null) {
-                sendWebhook(job);
-            }
-
-        } catch (Exception e) {
-            job.setStatus(AIJob.JobStatus.FAILED);
-            job.setError(e.getMessage());
-            job.setCompletedAt(Instant.now());
-            jobRepository.save(job);
-        }
+                job.setError(e.getMessage());
+                job.setCompletedAt(Instant.now());
+                jobRepository.save(job);
+                return null;
+            });
     }
 
     private void sendWebhook(AIJob job) {
@@ -2445,31 +2445,44 @@ public class ApprovalJobService {
     private final AIJobRepository jobRepository;
     private final Agent agent;
 
-    @Transactional
+    /**
+     * Submits a job that may require human approval.
+     * Returns immediately with PENDING status; use getJob() to check for AWAITING_APPROVAL.
+     */
     public AIJob submitForApproval(String input) {
-        // Run agent - it may pause for approval
-        AgentResult result = agent.interact(input).join();
-
         AIJob job = new AIJob();
         job.setId(UUID.randomUUID().toString());
         job.setInput(input);
+        job.setStatus(AIJob.JobStatus.PENDING);
         job.setCreatedAt(Instant.now());
+        jobRepository.save(job);
 
-        if (result.isPaused()) {
-            // Store paused state for later resumption
-            job.setStatus(AIJob.JobStatus.AWAITING_APPROVAL);
-            job.setPausedState(serialize(result.pausedState()));
-            job.setPendingToolName(result.pausedState().pendingToolCall().name());
-            job.setPendingToolArgs(result.pausedState().pendingToolCall().arguments());
-        } else if (result.isSuccess()) {
-            job.setStatus(AIJob.JobStatus.COMPLETED);
-            job.setResult(result.output());
-        } else {
-            job.setStatus(AIJob.JobStatus.FAILED);
-            job.setError(result.error().getMessage());
-        }
+        // Fully async - may pause for approval
+        agent.interact(input)
+            .thenAccept(result -> {
+                if (result.isPaused()) {
+                    // Store paused state for later resumption
+                    job.setStatus(AIJob.JobStatus.AWAITING_APPROVAL);
+                    job.setPausedState(serialize(result.pausedState()));
+                    job.setPendingToolName(result.pausedState().pendingToolCall().name());
+                    job.setPendingToolArgs(result.pausedState().pendingToolCall().arguments());
+                } else if (result.isSuccess()) {
+                    job.setStatus(AIJob.JobStatus.COMPLETED);
+                    job.setResult(result.output());
+                } else {
+                    job.setStatus(AIJob.JobStatus.FAILED);
+                    job.setError(result.error().getMessage());
+                }
+                jobRepository.save(job);
+            })
+            .exceptionally(e -> {
+                job.setStatus(AIJob.JobStatus.FAILED);
+                job.setError(e.getMessage());
+                jobRepository.save(job);
+                return null;
+            });
 
-        return jobRepository.save(job);
+        return job;  // Returns immediately with PENDING status
     }
 
     @Transactional
@@ -2538,10 +2551,17 @@ public class ApprovalJobService {
     Set appropriate timeouts for AI operations to prevent hung jobs:
     
     ```java
-    AgentResult result = agent.interact(input)
+    agent.interact(input)
         .orTimeout(5, TimeUnit.MINUTES)
-        .exceptionally(e -> AgentResult.error(new TimeoutException("Job timed out"), context, 0))
-        .join();
+        .thenAccept(result -> {
+            // Handle success
+        })
+        .exceptionally(e -> {
+            if (e.getCause() instanceof TimeoutException) {
+                // Handle timeout specifically
+            }
+            return null;
+        });
     ```
 
 !!! note "Scaling Workers"
