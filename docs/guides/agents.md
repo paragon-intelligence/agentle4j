@@ -153,10 +153,10 @@ context.setState("userId", "user-123");
 context.setState("orderId", 42);
 context.setState("isPremium", true);
 
-// Retrieve typed values
-String userId = context.getState("userId", String.class);
-Integer orderId = context.getState("orderId", Integer.class);
-Boolean isPremium = context.getState("isPremium", Boolean.class);
+// Retrieve typed values (returns Optional<T>)
+String userId = context.getState("userId", String.class).orElse(null);
+Integer orderId = context.getState("orderId", Integer.class).orElse(0);
+Boolean isPremium = context.getState("isPremium", Boolean.class).orElse(false);
 
 // Check existence
 if (context.hasState("userId")) {
@@ -219,8 +219,8 @@ AgentContext context = AgentContext.create()
 
 // Check if trace is set
 if (context.hasTraceContext()) {
-    System.out.println("Trace: " + context.parentTraceId());
-    System.out.println("Span: " + context.parentSpanId());
+    System.out.println("Trace: " + context.parentTraceId().orElse("unknown"));
+    System.out.println("Span: " + context.parentSpanId().orElse("unknown"));
 }
 ```
 
@@ -254,7 +254,7 @@ context.clear();
 | `addToolResult(output)` | Add tool execution result |
 | `getHistory()` | Get immutable history view |
 | `setState(key, value)` | Store custom state |
-| `getState(key, type)` | Retrieve typed state |
+| `getState(key, type)` | Retrieve typed state (returns `Optional<T>`) |
 | `hasState(key)` | Check if state exists |
 | `getTurnCount()` | Get number of LLM calls |
 | `copy()` | Create independent clone |
@@ -428,8 +428,9 @@ RouterAgent router = RouterAgent.builder()
 AgentResult result = router.route("I have a question about my invoice").join();
 System.out.println("Handled by: " + result.handoffAgent().name());
 
-// Option 2: Just classify (don't execute)
-Agent selected = router.classify("My app keeps crashing").join();
+// Option 2: Just classify (don't execute) - returns Optional<Agent>
+Agent selected = router.classify("My app keeps crashing").join()
+    .orElse(techSupport);  // Use fallback if classification fails
 System.out.println("Would route to: " + selected.name());
 
 // Option 3: Route with existing context

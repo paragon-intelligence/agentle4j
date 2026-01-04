@@ -409,7 +409,7 @@ Both providers throw `PromptProviderException` on failure:
 try {
     Prompt prompt = provider.providePrompt("missing-prompt");
 } catch (PromptProviderException e) {
-    System.err.println("Prompt ID: " + e.promptId());
+    System.err.println("Prompt ID: " + e.promptId().orElse("unknown"));
     System.err.println("Error: " + e.getMessage());
     
     if (e.isRetryable()) {
@@ -422,7 +422,7 @@ try {
 
 | Property | Description |
 |----------|-------------|
-| `promptId()` | The ID of the prompt that failed |
+| `promptId()` | The ID of the prompt that failed (returns `Optional<String>`) |
 | `isRetryable()` | Whether the error is transient |
 | `getCause()` | Underlying exception |
 

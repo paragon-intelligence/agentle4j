@@ -144,8 +144,8 @@ agent.interact(context).join();
 context.addInput(Message.user("What's my name?"));
 agent.interact(context).join();  // -> "Your name is Alice"
 
-// Retrieve state
-String userId = context.getState("userId", String.class);
+// Retrieve state (returns Optional)
+String userId = context.getState("userId", String.class).orElse(null);
 ```
 
 **Key features:**
@@ -260,8 +260,9 @@ RouterAgent router = RouterAgent.builder()
     .fallback(techSupport)
     .build();
 
-// Classify only (doesn't execute)
-Agent selected = router.classify("My app keeps crashing").join();
+// Classify only (doesn't execute) - returns Optional<Agent>
+Agent selected = router.classify("My app keeps crashing").join()
+    .orElse(techSupport);  // Use fallback if classification fails
 
 // Route and execute
 AgentResult result = router.route("I need help with billing").join();
