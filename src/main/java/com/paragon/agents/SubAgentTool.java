@@ -86,7 +86,11 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
             "properties",
             Map.of(
                 "request",
-                Map.of("type", "string", "description", "The message/request to send to the sub-agent")),
+                Map.of(
+                    "type",
+                    "string",
+                    "description",
+                    "The message/request to send to the sub-agent")),
             "required",
             java.util.List.of("request"),
             "additionalProperties",

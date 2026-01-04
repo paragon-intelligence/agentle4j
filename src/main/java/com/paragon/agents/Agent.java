@@ -1487,12 +1487,14 @@ public final class Agent implements Serializable {
       return this;
     }
 
-    public @NonNull StructuredBuilder<T> addSubAgent(@NonNull Agent subAgent, @NonNull String description) {
+    public @NonNull StructuredBuilder<T> addSubAgent(
+        @NonNull Agent subAgent, @NonNull String description) {
       parentBuilder.addSubAgent(subAgent, description);
       return this;
     }
 
-    public @NonNull StructuredBuilder<T> addSubAgent(@NonNull Agent subAgent, SubAgentTool.Config config) {
+    public @NonNull StructuredBuilder<T> addSubAgent(
+        @NonNull Agent subAgent, SubAgentTool.Config config) {
       parentBuilder.addSubAgent(subAgent, config);
       return this;
     }
