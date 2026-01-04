@@ -884,6 +884,8 @@ public final class Agent implements Serializable {
 
     Instant start = Instant.now();
     try {
+      // Set current context for SubAgentTool context propagation
+      SubAgentTool.setCurrentContext(context);
       FunctionToolCallOutput output = toolStore.execute(call);
       Duration duration = Duration.between(start, Instant.now());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), output, duration);
@@ -923,6 +925,9 @@ public final class Agent implements Serializable {
       FunctionToolCallOutput errorOutput =
           FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + e.getMessage());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
+    } finally {
+      // Clear context after tool execution
+      SubAgentTool.setCurrentContext(null);
     }
   }
 
@@ -1159,6 +1164,59 @@ public final class Agent implements Serializable {
      */
     public @NonNull Builder addHandoff(@NonNull Handoff handoff) {
       this.handoffs.add(Objects.requireNonNull(handoff));
+      return this;
+    }
+
+    /**
+     * Adds a sub-agent that can be invoked as a tool during execution.
+     *
+     * <p>Unlike handoffs which transfer control permanently, sub-agents are invoked like tools: the
+     * parent agent calls the sub-agent, receives its output, and continues processing.
+     *
+     * <p>By default, the sub-agent inherits custom state (userId, sessionId, etc.) but starts with
+     * a fresh conversation history.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * Agent orchestrator = Agent.builder()
+     *     .name("Orchestrator")
+     *     .addSubAgent(dataAnalyst, "For data analysis and statistical insights")
+     *     .build();
+     * }</pre>
+     *
+     * @param subAgent the agent to add as a callable tool
+     * @param description describes when to use this sub-agent
+     * @return this builder
+     * @see SubAgentTool
+     */
+    public @NonNull Builder addSubAgent(@NonNull Agent subAgent, @NonNull String description) {
+      this.tools.add(new SubAgentTool(subAgent, description));
+      return this;
+    }
+
+    /**
+     * Adds a sub-agent with custom configuration.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * Agent orchestrator = Agent.builder()
+     *     .name("Orchestrator")
+     *     .addSubAgent(dataAnalyst, SubAgentTool.Config.builder()
+     *         .description("For data analysis")
+     *         .shareHistory(true)  // Include full conversation context
+     *         .build())
+     *     .build();
+     * }</pre>
+     *
+     * @param subAgent the agent to add as a callable tool
+     * @param config configuration for context sharing and description
+     * @return this builder
+     * @see SubAgentTool.Config
+     */
+    public @NonNull Builder addSubAgent(@NonNull Agent subAgent, SubAgentTool.Config config) {
+      this.tools.add(new SubAgentTool(subAgent, config));
       return this;
     }
 
@@ -1426,6 +1484,16 @@ public final class Agent implements Serializable {
 
     public @NonNull StructuredBuilder<T> addHandoff(@NonNull Handoff handoff) {
       parentBuilder.addHandoff(handoff);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> addSubAgent(@NonNull Agent subAgent, @NonNull String description) {
+      parentBuilder.addSubAgent(subAgent, description);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> addSubAgent(@NonNull Agent subAgent, SubAgentTool.Config config) {
+      parentBuilder.addSubAgent(subAgent, config);
       return this;
     }
 

@@ -299,6 +299,53 @@ team.runStream("Analyze trends")
     .start();
 ```
 
+### Sub-agents (Agent-as-Tool)
+
+Invoke specialized agents as tools within a parent agent's loop:
+
+```java
+Agent dataAnalyst = Agent.builder()
+    .name("DataAnalyst")
+    .instructions("You analyze data and return statistical insights.")
+    .responder(responder)
+    .build();
+
+Agent orchestrator = Agent.builder()
+    .name("Orchestrator")
+    .instructions("Use the data analyst when you need deep analysis.")
+    .addSubAgent(dataAnalyst, "For data analysis and statistical insights")
+    .responder(responder)
+    .build();
+
+// Orchestrator can call dataAnalyst like a tool, receive output, and continue
+AgentResult result = orchestrator.interact("Analyze these sales figures...").join();
+```
+
+**Context Sharing Options**:
+
+```java
+// Default: Share state (userId, etc.) but fresh conversation
+.addSubAgent(analyst, "For analysis")
+
+// Full context fork: Include entire conversation history
+.addSubAgent(analyst, SubAgentTool.Config.builder()
+    .description("For analysis with full context")
+    .shareHistory(true)
+    .build())
+
+// Isolated: Completely independent sub-agent
+.addSubAgent(analyst, SubAgentTool.Config.builder()
+    .description("Independent analysis")
+    .shareState(false)
+    .build())
+```
+
+| Pattern | Control Flow | Use Case |
+|---------|--------------|----------|
+| **Sub-agent** | Delegate → Return → Continue | Need output to continue processing |
+| **Handoff** | Transfer → End | Permanently route to specialist |
+| **Parallel** | Run concurrently | Get multiple perspectives |
+
 ## Guardrails
 
 ![Guardrails](docs/media/guardrails.png)

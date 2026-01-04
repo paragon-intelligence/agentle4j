@@ -879,6 +879,136 @@ team.runAndSynthesizeStream("What's the outlook?", writer)
 
 ---
 
+## 🔧 Sub-Agents (Agent-as-Tool)
+
+Invoke specialized agents as tools within a parent agent's execution loop. Unlike handoffs which transfer control permanently, sub-agents are called like tools: the parent agent invokes them, receives their output, and continues processing.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant O as Orchestrator
+    participant S as SubAgent (DataAnalyst)
+    
+    U->>O: "Analyze trends and recommend"
+    O->>O: Decides to call sub-agent
+    O->>S: invoke_data_analyst("trends")
+    S->>S: Process request
+    S->>O: "Positive trend in Q3..."
+    O->>O: Uses output to continue
+    O->>U: "Based on analysis, I recommend..."
+```
+
+### Basic Usage
+
+```java
+// Create a specialized sub-agent
+Agent dataAnalyst = Agent.builder()
+    .name("DataAnalyst")
+    .model("openai/gpt-4o")
+    .instructions("You analyze data and return statistical insights.")
+    .responder(responder)
+    .build();
+
+// Create orchestrator with sub-agent
+Agent orchestrator = Agent.builder()
+    .name("Orchestrator")
+    .model("openai/gpt-4o")
+    .instructions("""
+        You coordinate analysis tasks.
+        Use the data analyst when you need deep statistical analysis.
+        Synthesize the analyst's findings into actionable recommendations.
+        """)
+    .addSubAgent(dataAnalyst, "For data analysis and statistical insights")
+    .responder(responder)
+    .build();
+
+// Orchestrator can call dataAnalyst, receive output, and continue
+AgentResult result = orchestrator.interact("Analyze sales and recommend strategy").join();
+```
+
+### Context Sharing
+
+By default, sub-agents inherit custom state (userId, sessionId) but start with a fresh conversation:
+
+```java
+// Default behavior: share state, fresh history
+.addSubAgent(analyst, "For analysis")
+
+// Full context fork: include entire conversation history
+.addSubAgent(analyst, SubAgentTool.Config.builder()
+    .description("For analysis with full context")
+    .shareHistory(true)  // Sub-agent sees full conversation
+    .build())
+
+// Completely isolated: no state sharing
+.addSubAgent(analyst, SubAgentTool.Config.builder()
+    .description("Independent analysis")
+    .shareState(false)  // Sub-agent has no access to parent's state
+    .build())
+```
+
+| Mode | State (userId, etc.) | History | Use Case |
+|------|---------------------|---------|----------|
+| **Default** | ✅ Inherited | ❌ Fresh | Most use cases |
+| **shareHistory=true** | ✅ Inherited | ✅ Forked | Sub-agent needs conversation context |
+| **shareState=false** | ❌ Isolated | ❌ Fresh | Completely independent processing |
+
+### Multiple Sub-Agents
+
+```java
+Agent researcher = Agent.builder()
+    .name("Researcher")
+    .instructions("Research topics and find facts.")
+    .responder(responder)
+    .build();
+
+Agent analyst = Agent.builder()
+    .name("Analyst")
+    .instructions("Analyze data and identify patterns.")
+    .responder(responder)
+    .build();
+
+Agent orchestrator = Agent.builder()
+    .name("ProjectManager")
+    .instructions("""
+        Coordinate research and analysis.
+        Use researcher for fact-finding, analyst for data analysis.
+        Combine findings into comprehensive reports.
+        """)
+    .addSubAgent(researcher, "For research and fact-finding")
+    .addSubAgent(analyst, "For data analysis and pattern recognition")
+    .responder(responder)
+    .build();
+```
+
+### Sub-Agent vs Handoff vs Parallel
+
+| Feature | Sub-Agent | Handoff | Parallel |
+|---------|-----------|---------|----------|
+| **Control Flow** | Delegate → Return → Continue | Transfer → End | Run Concurrently |
+| **Parent Continues** | ✅ Yes | ❌ No | ✅ Yes (after all complete) |
+| **Use Case** | Need output mid-execution | Route to specialist permanently | Get multiple perspectives |
+| **Context** | Configurable | Forked | Copied |
+
+### Error Handling
+
+Sub-agent errors are captured and returned as tool errors:
+
+```java
+// If the sub-agent fails, the parent receives an error tool output
+// and can decide how to proceed
+
+Agent orchestrator = Agent.builder()
+    .name("Orchestrator")
+    .instructions("""
+        If the analyst fails, fall back to your own analysis.
+        """)
+    .addSubAgent(analyst, "For analysis")
+    .build();
+```
+
+---
+
 ## 🌊 AgentStream
 
 Full agentic loop with streaming and real-time events:
