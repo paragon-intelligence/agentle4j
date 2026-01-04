@@ -5,6 +5,46 @@ All notable changes to Agentle4j will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-01-04
+
+### Added
+
+- **SupervisorAgent** - Central coordinator pattern for complex task orchestration
+  - Manages multiple worker agents with task decomposition
+  - `orchestrate()` and `orchestrateStream()` methods
+  - Worker agents accessed as sub-agent tools automatically
+  - Configurable max turns for supervision loop
+
+- **AgentNetwork** - Decentralized peer-to-peer agent communication
+  - Sequential discussion rounds where agents build on each other's ideas
+  - `discuss()` for multi-round conversations
+  - `broadcast()` for parallel message dissemination
+  - Optional synthesizer agent to combine all contributions
+  - `NetworkResult` with contribution filtering by agent/round
+
+- **HierarchicalAgents** - Multi-layered organizational structure
+  - Executive → Manager → Worker hierarchy
+  - `addDepartment()` to create organizational units
+  - `execute()` flows tasks through the hierarchy
+  - `sendToDepartment()` for direct department routing
+  - Streaming support with `executeStream()`
+
+### Improved
+
+- **Test Coverage** - New patterns achieve 100% line and branch coverage
+  - `SupervisorAgentTest` - 26 tests
+  - `AgentNetworkTest` - 28 tests
+  - `HierarchicalAgentsTest` - 23 tests
+
+### Documentation
+
+- Added "Multiagent Interaction Patterns - A wide overview" section to README
+- Added pattern comparison table with 6 patterns
+- Added SupervisorAgent, AgentNetwork, HierarchicalAgents guides to agents.md
+- Included multiagent.png diagram in README
+
+---
+
 ## [0.3.0] - 2026-01-04
 
 ### Added
@@ -48,4 +88,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[0.4.0]: https://github.com/paragon-intelligence/agentle4j/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/paragon-intelligence/agentle4j/releases/tag/v0.3.0

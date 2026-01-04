@@ -621,6 +621,105 @@ Pick based on what matters for your use case.
 - Document loaders
 - Chat Completions API fallback
 
+## Multiagent Interaction Patterns - A wide overview
+
+![Multi-agent patterns overview](docs/media/multiagent.png)
+
+Agentle supports a comprehensive set of multi-agent collaboration patterns for building sophisticated AI systems:
+
+| Pattern | Implementation | Description |
+|---------|---------------|-------------|
+| **Single Agent** | `Agent` | Autonomous agent operating independently with tools |
+| **Network** | `AgentNetwork` | Decentralized peer-to-peer communication between agents |
+| **Supervisor** | `SupervisorAgent` | Central coordinator delegating to worker agents |
+| **Supervisor (as Tools)** | `SubAgentTool` | Sub-agents invoked as tools within a parent's loop |
+| **Hierarchical** | `HierarchicalAgents` | Multi-layered structure with managers and workers |
+| **Custom** | Composition | Combine patterns for domain-specific workflows |
+
+### Single Agent
+
+The foundational pattern - an autonomous agent with tools:
+
+```java
+Agent agent = Agent.builder()
+    .name("Assistant")
+    .model("openai/gpt-4o")
+    .instructions("You are a helpful assistant.")
+    .addTool(weatherTool)
+    .responder(responder)
+    .build();
+
+AgentResult result = agent.interact("What's the weather?").join();
+```
+
+### Network Pattern
+
+Peer-to-peer agents discussing and building on each other's ideas:
+
+```java
+AgentNetwork network = AgentNetwork.builder()
+    .addPeer(optimist)    // Argues positive aspects
+    .addPeer(pessimist)   // Argues negative aspects  
+    .addPeer(moderate)    // Finds middle ground
+    .maxRounds(3)
+    .synthesizer(summarizer)  // Optional: combines viewpoints
+    .build();
+
+NetworkResult result = network.discuss("Should we adopt AI widely?").join();
+result.contributions().forEach(c -> 
+    System.out.println(c.agent().name() + ": " + c.output()));
+```
+
+### Supervisor Pattern
+
+Central coordinator with explicit task delegation to workers:
+
+```java
+SupervisorAgent supervisor = SupervisorAgent.builder()
+    .name("ProjectManager")
+    .model("openai/gpt-4o")
+    .instructions("Coordinate workers to complete projects")
+    .addWorker(researcher, "research and gather facts")
+    .addWorker(writer, "write and format content")
+    .addWorker(reviewer, "review and suggest improvements")
+    .responder(responder)
+    .build();
+
+AgentResult result = supervisor.orchestrate("Create a market analysis report").join();
+```
+
+### Hierarchical Pattern
+
+Multi-level organizational structure with executives, managers, and workers:
+
+```java
+HierarchicalAgents hierarchy = HierarchicalAgents.builder()
+    .executive(ceoAgent)
+    .addDepartment("Engineering", techManager, developer, qaEngineer)
+    .addDepartment("Sales", salesManager, salesRep)
+    .build();
+
+// Task flows: Executive → Managers → Workers
+AgentResult result = hierarchy.execute("Launch new product").join();
+
+// Or bypass executive and send directly to a department
+hierarchy.sendToDepartment("Engineering", "Fix the bug").join();
+```
+
+### Pattern Selection Guide
+
+| Use Case | Recommended Pattern |
+|----------|-------------------|
+| Single task with tools | Single Agent |
+| Need multiple perspectives | Network |
+| Complex task decomposition | Supervisor |
+| Organizational workflows | Hierarchical |
+| Dynamic delegation during execution | Sub-agent (as Tool) |
+| Quick routing to specialists | RouterAgent + Handoffs |
+| Concurrent independent work | ParallelAgents |
+
+All patterns support **streaming**, **trace correlation**, and **context sharing** for production use.
+
 ## Development
 
 ```bash

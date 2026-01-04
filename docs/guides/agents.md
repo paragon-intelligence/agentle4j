@@ -1247,6 +1247,134 @@ Responder responder = Responder.builder()
 
 ---
 
+## 🎯 SupervisorAgent
+
+Central coordinator that manages worker agents for complex task decomposition:
+
+```java
+// Create worker agents
+Agent researcher = Agent.builder().name("Researcher")
+    .instructions("Research topics thoroughly").responder(responder).build();
+Agent writer = Agent.builder().name("Writer")
+    .instructions("Write clear, engaging content").responder(responder).build();
+
+// Create supervisor
+SupervisorAgent supervisor = SupervisorAgent.builder()
+    .name("ProjectManager")
+    .model("openai/gpt-4o")
+    .instructions("Coordinate workers to complete projects efficiently")
+    .addWorker(researcher, "research and gather facts")
+    .addWorker(writer, "write and format content")
+    .responder(responder)
+    .build();
+
+// Supervisor orchestrates workers
+AgentResult result = supervisor.orchestrate("Write a report on AI trends").join();
+```
+
+### Streaming Support
+
+```java
+supervisor.orchestrateStream("Complex task")
+    .onTextDelta(System.out::print)
+    .onToolExecuted(exec -> System.out.println("Worker: " + exec.toolName()))
+    .onComplete(result -> System.out.println("Done!"))
+    .start();
+```
+
+---
+
+## 🌐 AgentNetwork
+
+Decentralized peer-to-peer communication where agents discuss and build on each other's ideas:
+
+```java
+// Create peer agents
+Agent optimist = Agent.builder().name("Optimist")
+    .instructions("Argue positive aspects").responder(responder).build();
+Agent pessimist = Agent.builder().name("Pessimist")
+    .instructions("Argue negative aspects").responder(responder).build();
+Agent moderate = Agent.builder().name("Moderate")
+    .instructions("Find balanced middle ground").responder(responder).build();
+
+// Create network
+AgentNetwork network = AgentNetwork.builder()
+    .addPeer(optimist)
+    .addPeer(pessimist)
+    .addPeer(moderate)
+    .maxRounds(3)
+    .synthesizer(summarizerAgent)  // Optional
+    .build();
+
+// Agents discuss in rounds
+NetworkResult result = network.discuss("Should AI be regulated?").join();
+
+// Access contributions
+result.contributions().forEach(c -> 
+    System.out.println(c.agent().name() + " (Round " + c.round() + "): " + c.output()));
+
+// If synthesizer was set
+System.out.println("Summary: " + result.synthesis());
+```
+
+### Broadcast Mode
+
+Send a message to all peers simultaneously without sequential visibility:
+
+```java
+List<AgentNetwork.Contribution> responses = network.broadcast("Quick opinion?").join();
+```
+
+---
+
+## 🏛️ HierarchicalAgents
+
+Multi-layered organizational structure with executives, managers, and workers:
+
+```java
+// Workers
+Agent developer = Agent.builder().name("Developer")
+    .instructions("Implement features").responder(responder).build();
+Agent qaEngineer = Agent.builder().name("QA")
+    .instructions("Test and verify quality").responder(responder).build();
+Agent salesRep = Agent.builder().name("SalesRep")
+    .instructions("Handle sales inquiries").responder(responder).build();
+
+// Managers
+Agent techManager = Agent.builder().name("TechManager")
+    .instructions("Lead the engineering team").responder(responder).build();
+Agent salesManager = Agent.builder().name("SalesManager")
+    .instructions("Lead the sales team").responder(responder).build();
+
+// Executive
+Agent ceo = Agent.builder().name("CEO")
+    .instructions("Make strategic decisions").responder(responder).build();
+
+// Build hierarchy
+HierarchicalAgents hierarchy = HierarchicalAgents.builder()
+    .executive(ceo)
+    .addDepartment("Engineering", techManager, developer, qaEngineer)
+    .addDepartment("Sales", salesManager, salesRep)
+    .build();
+
+// Task flows through hierarchy
+AgentResult result = hierarchy.execute("Launch new product").join();
+
+// Or send directly to a department
+hierarchy.sendToDepartment("Engineering", "Fix critical bug").join();
+```
+
+### Streaming
+
+```java
+hierarchy.executeStream("Company initiative")
+    .onTextDelta(System.out::print)
+    .onComplete(result -> System.out.println("Done!"))
+    .start();
+```
+
+---
+
 ## Best Practices
 
 ### ✅ Do
