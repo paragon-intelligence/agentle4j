@@ -301,6 +301,8 @@ team.runStream("Analyze trends")
 
 ### Sub-agents (Agent-as-Tool)
 
+![Sub-agents](docs/media/subagents.png)
+
 Invoke specialized agents as tools within a parent agent's loop:
 
 ```java
