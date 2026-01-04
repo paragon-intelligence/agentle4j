@@ -12,13 +12,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * Tests for {@link FilesystemPromptProvider}.
- */
+/** Tests for {@link FilesystemPromptProvider}. */
 class FilesystemPromptProviderTest {
 
-  @TempDir
-  Path tempDir;
+  @TempDir Path tempDir;
 
   private FilesystemPromptProvider provider;
 
@@ -48,14 +45,13 @@ class FilesystemPromptProviderTest {
 
     @Test
     void create_nullPath_throwsNullPointerException() {
-      assertThrows(NullPointerException.class, () -> 
-          FilesystemPromptProvider.create((Path) null));
+      assertThrows(NullPointerException.class, () -> FilesystemPromptProvider.create((Path) null));
     }
 
     @Test
     void create_nullString_throwsNullPointerException() {
-      assertThrows(NullPointerException.class, () -> 
-          FilesystemPromptProvider.create((String) null));
+      assertThrows(
+          NullPointerException.class, () -> FilesystemPromptProvider.create((String) null));
     }
   }
 
@@ -123,8 +119,9 @@ class FilesystemPromptProviderTest {
 
     @Test
     void providePrompt_nonExistentFile_throwsException() {
-      PromptProviderException ex = assertThrows(PromptProviderException.class, () ->
-          provider.providePrompt("nonexistent.txt", null));
+      PromptProviderException ex =
+          assertThrows(
+              PromptProviderException.class, () -> provider.providePrompt("nonexistent.txt", null));
 
       assertEquals("nonexistent.txt", ex.promptId());
       assertTrue(ex.getMessage().contains("not found"));
@@ -133,30 +130,32 @@ class FilesystemPromptProviderTest {
 
     @Test
     void providePrompt_nullPromptId_throwsNullPointerException() {
-      assertThrows(NullPointerException.class, () ->
-          provider.providePrompt(null, null));
+      assertThrows(NullPointerException.class, () -> provider.providePrompt(null, null));
     }
 
     @Test
     void providePrompt_emptyPromptId_throwsException() {
-      PromptProviderException ex = assertThrows(PromptProviderException.class, () ->
-          provider.providePrompt("", null));
+      PromptProviderException ex =
+          assertThrows(PromptProviderException.class, () -> provider.providePrompt("", null));
 
       assertTrue(ex.getMessage().contains("empty"));
     }
 
     @Test
     void providePrompt_pathTraversal_throwsException() {
-      PromptProviderException ex = assertThrows(PromptProviderException.class, () ->
-          provider.providePrompt("../../../etc/passwd", null));
+      PromptProviderException ex =
+          assertThrows(
+              PromptProviderException.class,
+              () -> provider.providePrompt("../../../etc/passwd", null));
 
       assertTrue(ex.getMessage().contains("traversal"));
     }
 
     @Test
     void providePrompt_absolutePathOutsideBase_throwsException() {
-      PromptProviderException ex = assertThrows(PromptProviderException.class, () ->
-          provider.providePrompt("/../outside.txt", null));
+      PromptProviderException ex =
+          assertThrows(
+              PromptProviderException.class, () -> provider.providePrompt("/../outside.txt", null));
 
       assertTrue(ex.getMessage().contains("traversal"));
     }
@@ -191,8 +190,10 @@ class FilesystemPromptProviderTest {
 
     @Test
     void providePrompt_nonExistentSubdirectory_throwsException() {
-      PromptProviderException ex = assertThrows(PromptProviderException.class, () ->
-          provider.providePrompt("nonexistent/file.txt", null));
+      PromptProviderException ex =
+          assertThrows(
+              PromptProviderException.class,
+              () -> provider.providePrompt("nonexistent/file.txt", null));
 
       assertTrue(ex.getMessage().contains("not found"));
     }
@@ -208,8 +209,8 @@ class FilesystemPromptProviderTest {
       Files.writeString(tempDir.resolve("test.txt"), "Content", StandardCharsets.UTF_8);
 
       // Filters should be ignored by filesystem provider
-      Prompt prompt = provider.providePrompt("test.txt", 
-          Map.of("version", "2", "label", "production"));
+      Prompt prompt =
+          provider.providePrompt("test.txt", Map.of("version", "2", "label", "production"));
 
       assertEquals("Content", prompt.content());
     }

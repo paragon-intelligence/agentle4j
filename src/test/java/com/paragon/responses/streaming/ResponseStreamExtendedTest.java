@@ -9,9 +9,6 @@ import com.paragon.responses.Responder;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.*;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
@@ -19,13 +16,9 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
 
 /**
- * Extended tests for ResponseStream.java covering:
- * - toFuture() and toParsedFuture() execution paths
- * - collectText() method
- * - onPartialParsed() with partial JSON parsing
- * - onPartialJson() map-based parsing
- * - withToolStore() and onToolResult()
- * - Error handling paths
+ * Extended tests for ResponseStream.java covering: - toFuture() and toParsedFuture() execution
+ * paths - collectText() method - onPartialParsed() with partial JSON parsing - onPartialJson()
+ * map-based parsing - withToolStore() and onToolResult() - Error handling paths
  */
 @DisplayName("ResponseStream Extended Tests")
 class ResponseStreamExtendedTest {
@@ -40,10 +33,11 @@ class ResponseStreamExtendedTest {
   void setUp() throws IOException {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
-    responder = Responder.builder()
-        .apiKey(TEST_API_KEY)
-        .baseUrl(mockWebServer.url("/v1/responses"))
-        .build();
+    responder =
+        Responder.builder()
+            .apiKey(TEST_API_KEY)
+            .baseUrl(mockWebServer.url("/v1/responses"))
+            .build();
   }
 
   @AfterEach
@@ -62,7 +56,8 @@ class ResponseStreamExtendedTest {
     @Test
     @DisplayName("toFuture returns completed response")
     void toFutureReturnsCompletedResponse() throws Exception {
-      String sseResponse = """
+      String sseResponse =
+          """
           data: {"type":"response.output_text.delta","item_id":"msg-1","output_index":0,"content_index":0,"delta":"Hello","sequence_number":1}
 
           data: {"type":"response.completed","response":{"id":"resp-1","object":"response","created_at":1234567890,"status":"completed","status_details":null,"output":[{"type":"message","id":"msg-1","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Hello","annotations":[]}]}],"error":null,"metadata":null,"usage":null,"incomplete_details":null,"model":"gpt-4o","output_text":"Hello"},"sequence_number":2}
@@ -70,16 +65,18 @@ class ResponseStreamExtendedTest {
           data: [DONE]
           """;
 
-      mockWebServer.enqueue(new MockResponse()
-          .setBody(sseResponse)
-          .addHeader("Content-Type", "text/event-stream")
-          .setResponseCode(200));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setBody(sseResponse)
+              .addHeader("Content-Type", "text/event-stream")
+              .setResponseCode(200));
 
-      var payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Say Hello")
-          .streaming()
-          .build();
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Say Hello")
+              .streaming()
+              .build();
 
       Response response = responder.respond(payload).toFuture().get(5, TimeUnit.SECONDS);
 
@@ -90,25 +87,30 @@ class ResponseStreamExtendedTest {
     @Test
     @DisplayName("toFuture completes exceptionally on error")
     void toFutureCompletesExceptionallyOnError() throws Exception {
-      String sseResponse = """
+      String sseResponse =
+          """
           data: {"type":"error","code":"rate_limit_exceeded","message":"Too many requests","param":null,"sequence_number":1}
           """;
 
-      mockWebServer.enqueue(new MockResponse()
-          .setBody(sseResponse)
-          .addHeader("Content-Type", "text/event-stream")
-          .setResponseCode(200));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setBody(sseResponse)
+              .addHeader("Content-Type", "text/event-stream")
+              .setResponseCode(200));
 
-      var payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Test")
-          .streaming()
-          .build();
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Test")
+              .streaming()
+              .build();
 
       CompletableFuture<Response> future = responder.respond(payload).toFuture();
 
       Exception ex = assertThrows(Exception.class, () -> future.get(5, TimeUnit.SECONDS));
-      assertTrue(ex.getMessage().contains("rate_limit") || ex.getCause().getMessage().contains("rate_limit"));
+      assertTrue(
+          ex.getMessage().contains("rate_limit")
+              || ex.getCause().getMessage().contains("rate_limit"));
     }
   }
 
@@ -123,7 +125,8 @@ class ResponseStreamExtendedTest {
     @Test
     @DisplayName("collectText concatenates all deltas")
     void collectTextConcatenatesDeltas() throws Exception {
-      String sseResponse = """
+      String sseResponse =
+          """
           data: {"type":"response.output_text.delta","item_id":"msg-1","output_index":0,"content_index":0,"delta":"Hello","sequence_number":1}
 
           data: {"type":"response.output_text.delta","item_id":"msg-1","output_index":0,"content_index":0,"delta":" ","sequence_number":2}
@@ -135,16 +138,18 @@ class ResponseStreamExtendedTest {
           data: [DONE]
           """;
 
-      mockWebServer.enqueue(new MockResponse()
-          .setBody(sseResponse)
-          .addHeader("Content-Type", "text/event-stream")
-          .setResponseCode(200));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setBody(sseResponse)
+              .addHeader("Content-Type", "text/event-stream")
+              .setResponseCode(200));
 
-      var payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Test")
-          .streaming()
-          .build();
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Test")
+              .streaming()
+              .build();
 
       String text = responder.respond(payload).collectText().get(5, TimeUnit.SECONDS);
 
@@ -154,22 +159,25 @@ class ResponseStreamExtendedTest {
     @Test
     @DisplayName("collectText handles empty response")
     void collectTextHandlesEmptyResponse() throws Exception {
-      String sseResponse = """
+      String sseResponse =
+          """
           data: {"type":"response.completed","response":{"id":"resp-1","object":"response","created_at":1234567890,"status":"completed","status_details":null,"output":[],"error":null,"metadata":null,"usage":null,"incomplete_details":null,"model":"gpt-4o","output_text":""},"sequence_number":1}
 
           data: [DONE]
           """;
 
-      mockWebServer.enqueue(new MockResponse()
-          .setBody(sseResponse)
-          .addHeader("Content-Type", "text/event-stream")
-          .setResponseCode(200));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setBody(sseResponse)
+              .addHeader("Content-Type", "text/event-stream")
+              .setResponseCode(200));
 
-      var payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Test")
-          .streaming()
-          .build();
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Test")
+              .streaming()
+              .build();
 
       String text = responder.respond(payload).collectText().get(5, TimeUnit.SECONDS);
 
@@ -188,11 +196,12 @@ class ResponseStreamExtendedTest {
     @Test
     @DisplayName("toParsedFuture throws for non-structured stream")
     void toParsedFutureThrowsForNonStructuredStream() {
-      var payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Test")
-          .streaming()
-          .build();
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Test")
+              .streaming()
+              .build();
 
       ResponseStream<Void> stream = responder.respond(payload);
 
@@ -202,7 +211,8 @@ class ResponseStreamExtendedTest {
     @Test
     @DisplayName("toParsedFuture parses structured response")
     void toParsedFutureParsesStructuredResponse() throws Exception {
-      String sseResponse = """
+      String sseResponse =
+          """
           data: {"type":"response.output_text.delta","item_id":"msg-1","output_index":0,"content_index":0,"delta":"{\\"name\\":\\"Alice\\",\\"age\\":30}","sequence_number":1}
 
           data: {"type":"response.completed","response":{"id":"resp-1","object":"response","created_at":1234567890,"status":"completed","status_details":null,"output":[{"type":"message","id":"msg-1","status":"completed","role":"assistant","content":[{"type":"output_text","text":"{\\"name\\":\\"Alice\\",\\"age\\":30}","annotations":[]}]}],"error":null,"metadata":null,"usage":null,"incomplete_details":null,"model":"gpt-4o","output_text":"{\\"name\\":\\"Alice\\",\\"age\\":30}"},"sequence_number":2}
@@ -210,21 +220,22 @@ class ResponseStreamExtendedTest {
           data: [DONE]
           """;
 
-      mockWebServer.enqueue(new MockResponse()
-          .setBody(sseResponse)
-          .addHeader("Content-Type", "text/event-stream")
-          .setResponseCode(200));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setBody(sseResponse)
+              .addHeader("Content-Type", "text/event-stream")
+              .setResponseCode(200));
 
-      var payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Generate person")
-          .withStructuredOutput(TestPerson.class)
-          .streaming()
-          .build();
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Generate person")
+              .withStructuredOutput(TestPerson.class)
+              .streaming()
+              .build();
 
-      ParsedResponse<TestPerson> parsed = responder.respond(payload)
-          .toParsedFuture()
-          .get(5, TimeUnit.SECONDS);
+      ParsedResponse<TestPerson> parsed =
+          responder.respond(payload).toParsedFuture().get(5, TimeUnit.SECONDS);
 
       assertNotNull(parsed);
       assertEquals("Alice", parsed.outputParsed().name());
@@ -243,15 +254,17 @@ class ResponseStreamExtendedTest {
     @Test
     @DisplayName("onPartialParsed throws for non-structured stream")
     void onPartialParsedThrowsForNonStructuredStream() {
-      var payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Test")
-          .streaming()
-          .build();
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Test")
+              .streaming()
+              .build();
 
       ResponseStream<Void> stream = responder.respond(payload);
 
-      assertThrows(IllegalStateException.class, 
+      assertThrows(
+          IllegalStateException.class,
           () -> stream.onPartialParsed(TestPartialPerson.class, p -> {}));
     }
   }
@@ -267,11 +280,12 @@ class ResponseStreamExtendedTest {
     @Test
     @DisplayName("onPartialJson throws for non-structured stream")
     void onPartialJsonThrowsForNonStructuredStream() {
-      var payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Test")
-          .streaming()
-          .build();
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Test")
+              .streaming()
+              .build();
 
       ResponseStream<Void> stream = responder.respond(payload);
 
@@ -290,11 +304,12 @@ class ResponseStreamExtendedTest {
     @Test
     @DisplayName("onParsedComplete throws for non-structured stream")
     void onParsedCompleteThrowsForNonStructuredStream() {
-      var payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Test")
-          .streaming()
-          .build();
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Test")
+              .streaming()
+              .build();
 
       ResponseStream<Void> stream = responder.respond(payload);
 
@@ -313,26 +328,27 @@ class ResponseStreamExtendedTest {
     @Test
     @DisplayName("handles response.failed event")
     void handlesResponseFailedEvent() throws Exception {
-      String sseResponse = """
+      String sseResponse =
+          """
           data: {"type":"response.failed","response":{"id":"resp-1","object":"response","created_at":1234567890,"status":"failed","status_details":null,"output":[],"error":{"type":"server_error","message":"Internal error"},"metadata":null,"usage":null,"incomplete_details":null,"model":"gpt-4o","output_text":null},"sequence_number":1}
           """;
 
-      mockWebServer.enqueue(new MockResponse()
-          .setBody(sseResponse)
-          .addHeader("Content-Type", "text/event-stream")
-          .setResponseCode(200));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setBody(sseResponse)
+              .addHeader("Content-Type", "text/event-stream")
+              .setResponseCode(200));
 
-      var payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Test")
-          .streaming()
-          .build();
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Test")
+              .streaming()
+              .build();
 
       CompletableFuture<Throwable> error = new CompletableFuture<>();
 
-      responder.respond(payload)
-          .onError(error::complete)
-          .start();
+      responder.respond(payload).onError(error::complete).start();
 
       Throwable ex = error.get(5, TimeUnit.SECONDS);
       assertNotNull(ex);
@@ -351,11 +367,12 @@ class ResponseStreamExtendedTest {
     @Test
     @DisplayName("cancel before start works")
     void cancelBeforeStartWorks() {
-      var payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Test")
-          .streaming()
-          .build();
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Test")
+              .streaming()
+              .build();
 
       ResponseStream<Void> stream = responder.respond(payload);
       stream.cancel();
@@ -366,11 +383,12 @@ class ResponseStreamExtendedTest {
     @Test
     @DisplayName("cancel is idempotent")
     void cancelIsIdempotent() {
-      var payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Test")
-          .streaming()
-          .build();
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Test")
+              .streaming()
+              .build();
 
       ResponseStream<Void> stream = responder.respond(payload);
       stream.cancel();
@@ -388,8 +406,7 @@ class ResponseStreamExtendedTest {
   public record TestPerson(String name, int age) {}
 
   public record TestPartialPerson(
-      @JsonProperty("name") String name, 
-      @JsonProperty("age") Integer age) {
+      @JsonProperty("name") String name, @JsonProperty("age") Integer age) {
     @JsonCreator
     public TestPartialPerson {}
   }

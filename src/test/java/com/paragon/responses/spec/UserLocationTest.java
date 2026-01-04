@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for UserLocation DTO (19 missed lines).
- */
+/** Tests for UserLocation DTO (19 missed lines). */
 @DisplayName("UserLocation DTO")
 class UserLocationTest {
 
@@ -19,12 +17,8 @@ class UserLocationTest {
     @Test
     @DisplayName("constructor creates instance with all fields")
     void constructorCreatesInstance() {
-      UserLocation loc = new UserLocation(
-          "San Francisco",
-          "US",
-          "California",
-          "America/Los_Angeles"
-      );
+      UserLocation loc =
+          new UserLocation("San Francisco", "US", "California", "America/Los_Angeles");
 
       assertEquals("San Francisco", loc.city());
       assertEquals("US", loc.country());
@@ -146,11 +140,6 @@ class UserLocationTest {
   }
 
   private UserLocation createUserLocation() {
-    return new UserLocation(
-        "San Francisco",
-        "US",
-        "California",
-        "America/Los_Angeles"
-    );
+    return new UserLocation("San Francisco", "US", "California", "America/Los_Angeles");
   }
 }

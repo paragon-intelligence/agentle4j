@@ -8,12 +8,9 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Comprehensive tests for Scroll action.
- * 
- * Tests cover:
- * - Factory methods (of, down, up, left, right)
- * - Amount validation
- * - Record accessors
- * - Direction values
+ *
+ * <p>Tests cover: - Factory methods (of, down, up, left, right) - Amount validation - Record
+ * accessors - Direction values
  */
 @DisplayName("Scroll")
 class ScrollTest {
@@ -88,15 +85,15 @@ class ScrollTest {
     @Test
     @DisplayName("rejects negative amount")
     void rejectsNegativeAmount() {
-      assertThrows(IllegalArgumentException.class, 
-          () -> Scroll.of("body", ScrollDirection.DOWN, -1));
+      assertThrows(
+          IllegalArgumentException.class, () -> Scroll.of("body", ScrollDirection.DOWN, -1));
     }
 
     @Test
     @DisplayName("rejects amount over 1000")
     void rejectsAmountOver1000() {
-      assertThrows(IllegalArgumentException.class, 
-          () -> Scroll.of("body", ScrollDirection.DOWN, 1001));
+      assertThrows(
+          IllegalArgumentException.class, () -> Scroll.of("body", ScrollDirection.DOWN, 1001));
     }
 
     @Test

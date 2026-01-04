@@ -25,10 +25,8 @@ class AgentStructuredTest {
   void setUp() throws Exception {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
-    responder = Responder.builder()
-        .baseUrl(mockWebServer.url("/v1/responses"))
-        .apiKey("test-key")
-        .build();
+    responder =
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -45,13 +43,14 @@ class AgentStructuredTest {
     @Test
     @DisplayName("creates structured agent with required fields")
     void createsStructuredAgentWithRequiredFields() {
-      Agent.Structured<TestPerson> agent = Agent.builder()
-          .name("PersonExtractor")
-          .model("test-model")
-          .instructions("Extract person info")
-          .responder(responder)
-          .structured(TestPerson.class)
-          .build();
+      Agent.Structured<TestPerson> agent =
+          Agent.builder()
+              .name("PersonExtractor")
+              .model("test-model")
+              .instructions("Extract person info")
+              .responder(responder)
+              .structured(TestPerson.class)
+              .build();
 
       assertNotNull(agent);
       assertEquals("PersonExtractor", agent.name());
@@ -61,14 +60,15 @@ class AgentStructuredTest {
     @Test
     @DisplayName("temperature can be configured via StructuredBuilder")
     void temperatureCanBeConfigured() {
-      Agent.Structured<TestPerson> agent = Agent.builder()
-          .name("Test")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(TestPerson.class)
-          .temperature(0.5)
-          .build();
+      Agent.Structured<TestPerson> agent =
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(TestPerson.class)
+              .temperature(0.5)
+              .build();
 
       assertNotNull(agent);
     }
@@ -76,14 +76,15 @@ class AgentStructuredTest {
     @Test
     @DisplayName("maxTurns can be configured via StructuredBuilder")
     void maxTurnsCanBeConfigured() {
-      Agent.Structured<TestPerson> agent = Agent.builder()
-          .name("Test")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(TestPerson.class)
-          .maxTurns(5)
-          .build();
+      Agent.Structured<TestPerson> agent =
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(TestPerson.class)
+              .maxTurns(5)
+              .build();
 
       assertNotNull(agent);
     }
@@ -91,14 +92,15 @@ class AgentStructuredTest {
     @Test
     @DisplayName("objectMapper can be configured via StructuredBuilder")
     void objectMapperCanBeConfigured() {
-      Agent.Structured<TestPerson> agent = Agent.builder()
-          .name("Test")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(TestPerson.class)
-          .objectMapper(new com.fasterxml.jackson.databind.ObjectMapper())
-          .build();
+      Agent.Structured<TestPerson> agent =
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(TestPerson.class)
+              .objectMapper(new com.fasterxml.jackson.databind.ObjectMapper())
+              .build();
 
       assertNotNull(agent);
     }
@@ -106,14 +108,15 @@ class AgentStructuredTest {
     @Test
     @DisplayName("addInputGuardrail works via StructuredBuilder")
     void addInputGuardrailWorks() {
-      Agent.Structured<TestPerson> agent = Agent.builder()
-          .name("Test")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(TestPerson.class)
-          .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
-          .build();
+      Agent.Structured<TestPerson> agent =
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(TestPerson.class)
+              .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
+              .build();
 
       assertNotNull(agent);
     }
@@ -121,14 +124,15 @@ class AgentStructuredTest {
     @Test
     @DisplayName("addOutputGuardrail works via StructuredBuilder")
     void addOutputGuardrailWorks() {
-      Agent.Structured<TestPerson> agent = Agent.builder()
-          .name("Test")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(TestPerson.class)
-          .addOutputGuardrail((output, ctx) -> GuardrailResult.passed())
-          .build();
+      Agent.Structured<TestPerson> agent =
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(TestPerson.class)
+              .addOutputGuardrail((output, ctx) -> GuardrailResult.passed())
+              .build();
 
       assertNotNull(agent);
     }
@@ -136,14 +140,15 @@ class AgentStructuredTest {
     @Test
     @DisplayName("telemetryContext can be configured via StructuredBuilder")
     void telemetryContextCanBeConfigured() {
-      Agent.Structured<TestPerson> agent = Agent.builder()
-          .name("Test")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(TestPerson.class)
-          .telemetryContext(com.paragon.telemetry.TelemetryContext.builder().build())
-          .build();
+      Agent.Structured<TestPerson> agent =
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(TestPerson.class)
+              .telemetryContext(com.paragon.telemetry.TelemetryContext.builder().build())
+              .build();
 
       assertNotNull(agent);
     }
@@ -174,7 +179,7 @@ class AgentStructuredTest {
       AgentContext context = AgentContext.create();
       enqueueStructuredResponse("{\"name\":\"Jane\",\"age\":25}");
 
-      CompletableFuture<StructuredAgentResult<TestPerson>> future = 
+      CompletableFuture<StructuredAgentResult<TestPerson>> future =
           agent.interact("Extract Jane", context);
 
       assertNotNull(future);
@@ -199,7 +204,7 @@ class AgentStructuredTest {
       Agent.Structured<TestPerson> agent = createTestStructuredAgent();
       enqueueStructuredResponse("{\"name\":\"Alice\",\"age\":28}");
 
-      StructuredAgentResult<TestPerson> result = 
+      StructuredAgentResult<TestPerson> result =
           agent.interact("Extract Alice").get(5, TimeUnit.SECONDS);
 
       assertNotNull(result);
@@ -219,7 +224,8 @@ class AgentStructuredTest {
   }
 
   private void enqueueStructuredResponse(String jsonOutput) {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -245,7 +251,8 @@ class AgentStructuredTest {
             "total_tokens": 30
           }
         }
-        """.formatted(jsonOutput.replace("\"", "\\\""));
+        """
+            .formatted(jsonOutput.replace("\"", "\\\""));
 
     mockWebServer.enqueue(
         new MockResponse()

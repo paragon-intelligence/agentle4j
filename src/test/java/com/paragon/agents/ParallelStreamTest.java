@@ -169,14 +169,16 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      ParallelStream stream = parallel.runStream(context)
-          .onAgentTextDelta((agent, delta) -> {})
-          .onAgentComplete((agent, result) -> {})
-          .onComplete(results -> {})
-          .onFirstComplete(result -> {})
-          .onSynthesisComplete(result -> {})
-          .onError(error -> {})
-          .onAgentTurnStart((agent, turn) -> {});
+      ParallelStream stream =
+          parallel
+              .runStream(context)
+              .onAgentTextDelta((agent, delta) -> {})
+              .onAgentComplete((agent, result) -> {})
+              .onComplete(results -> {})
+              .onFirstComplete(result -> {})
+              .onSynthesisComplete(result -> {})
+              .onError(error -> {})
+              .onAgentTurnStart((agent, turn) -> {});
 
       assertNotNull(stream);
     }
@@ -213,19 +215,18 @@ class ParallelStreamTest {
 
       List<AgentResult> collectedResults = new ArrayList<>();
 
-      ParallelAgents parallel = ParallelAgents.of(
-          createTestAgent("Agent1", "First agent"),
-          createTestAgent("Agent2", "Second agent"));
+      ParallelAgents parallel =
+          ParallelAgents.of(
+              createTestAgent("Agent1", "First agent"), createTestAgent("Agent2", "Second agent"));
 
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello all"));
 
-      CompletableFuture<?> future = parallel.runStream(context)
-          .onComplete(collectedResults::addAll)
-          .start();
+      CompletableFuture<?> future =
+          parallel.runStream(context).onComplete(collectedResults::addAll).start();
 
       future.get(10, TimeUnit.SECONDS);
-      
+
       // In ALL mode, both agents should complete
       assertTrue(collectedResults.size() >= 1);
     }
@@ -239,24 +240,28 @@ class ParallelStreamTest {
       AtomicReference<AgentResult> firstResult = new AtomicReference<>();
       AtomicBoolean completed = new AtomicBoolean(false);
 
-      ParallelAgents parallel = ParallelAgents.of(
-          createTestAgent("Agent1", "First agent"),
-          createTestAgent("Agent2", "Second agent"));
+      ParallelAgents parallel =
+          ParallelAgents.of(
+              createTestAgent("Agent1", "First agent"), createTestAgent("Agent2", "Second agent"));
 
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello first"));
 
-      CompletableFuture<?> future = parallel.runStream(context)
-          .onFirstComplete(r -> {
-            firstResult.set(r);
-            completed.set(true);
-          })
-          .onAgentComplete((a, r) -> {
-            // Also capture via onAgentComplete if onFirstComplete isn't called
-            if (firstResult.get() == null) firstResult.set(r);
-            completed.set(true);
-          })
-          .start();
+      CompletableFuture<?> future =
+          parallel
+              .runStream(context)
+              .onFirstComplete(
+                  r -> {
+                    firstResult.set(r);
+                    completed.set(true);
+                  })
+              .onAgentComplete(
+                  (a, r) -> {
+                    // Also capture via onAgentComplete if onFirstComplete isn't called
+                    if (firstResult.get() == null) firstResult.set(r);
+                    completed.set(true);
+                  })
+              .start();
 
       future.get(10, TimeUnit.SECONDS);
 
@@ -288,9 +293,7 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      parallel.runStream(context)
-          .onError(errorRef::set)
-          .start();
+      parallel.runStream(context).onError(errorRef::set).start();
 
       // Give it time to process
       Thread.sleep(2000);
@@ -316,16 +319,18 @@ class ParallelStreamTest {
 
       List<String> completedAgents = new ArrayList<>();
 
-      ParallelAgents parallel = ParallelAgents.of(
-          createTestAgent("Agent1", "First"),
-          createTestAgent("Agent2", "Second"));
+      ParallelAgents parallel =
+          ParallelAgents.of(
+              createTestAgent("Agent1", "First"), createTestAgent("Agent2", "Second"));
 
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      CompletableFuture<?> future = parallel.runStream(context)
-          .onAgentComplete((agent, result) -> completedAgents.add(agent.name()))
-          .start();
+      CompletableFuture<?> future =
+          parallel
+              .runStream(context)
+              .onAgentComplete((agent, result) -> completedAgents.add(agent.name()))
+              .start();
 
       future.get(10, TimeUnit.SECONDS);
 
@@ -339,15 +344,13 @@ class ParallelStreamTest {
 
       List<Integer> turns = new ArrayList<>();
 
-      ParallelAgents parallel = ParallelAgents.of(
-          createTestAgent("Agent1", "Agent"));
+      ParallelAgents parallel = ParallelAgents.of(createTestAgent("Agent1", "Agent"));
 
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      CompletableFuture<?> future = parallel.runStream(context)
-          .onAgentTurnStart((agent, turn) -> turns.add(turn))
-          .start();
+      CompletableFuture<?> future =
+          parallel.runStream(context).onAgentTurnStart((agent, turn) -> turns.add(turn)).start();
 
       future.get(10, TimeUnit.SECONDS);
 
@@ -407,8 +410,7 @@ class ParallelStreamTest {
 
   private ParallelAgents createSimpleParallel() {
     return ParallelAgents.of(
-        createTestAgent("Agent1", "Test agent 1"),
-        createTestAgent("Agent2", "Test agent 2"));
+        createTestAgent("Agent1", "Test agent 1"), createTestAgent("Agent2", "Test agent 2"));
   }
 
   private Agent createTestAgent(String name, String instructions) {
@@ -421,7 +423,8 @@ class ParallelStreamTest {
   }
 
   private void enqueueSuccessResponse(String text) {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -443,7 +446,8 @@ class ParallelStreamTest {
           ],
           "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
         }
-        """.formatted(text);
+        """
+            .formatted(text);
 
     mockWebServer.enqueue(
         new MockResponse()

@@ -6,9 +6,7 @@ import java.io.IOException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for {@link PromptProviderException}.
- */
+/** Tests for {@link PromptProviderException}. */
 class PromptProviderExceptionTest {
 
   @Nested
@@ -17,7 +15,7 @@ class PromptProviderExceptionTest {
     @Test
     void constructor_messageAndPromptId_setsFields() {
       PromptProviderException ex = new PromptProviderException("Error message", "my-prompt");
-      
+
       assertEquals("Error message", ex.getMessage());
       assertEquals("my-prompt", ex.promptId());
       assertNull(ex.getCause());
@@ -28,7 +26,7 @@ class PromptProviderExceptionTest {
     void constructor_messagePromptIdAndCause_setsFields() {
       RuntimeException cause = new RuntimeException("Root cause");
       PromptProviderException ex = new PromptProviderException("Error message", "my-prompt", cause);
-      
+
       assertEquals("Error message", ex.getMessage());
       assertEquals("my-prompt", ex.promptId());
       assertEquals(cause, ex.getCause());
@@ -37,33 +35,33 @@ class PromptProviderExceptionTest {
 
     @Test
     void constructor_withRetryable_setsRetryable() {
-      PromptProviderException ex = new PromptProviderException(
-          "Rate limited", "my-prompt", null, true);
-      
+      PromptProviderException ex =
+          new PromptProviderException("Rate limited", "my-prompt", null, true);
+
       assertTrue(ex.isRetryable());
     }
 
     @Test
     void constructor_withNonRetryable_setsNotRetryable() {
-      PromptProviderException ex = new PromptProviderException(
-          "Not found", "my-prompt", null, false);
-      
+      PromptProviderException ex =
+          new PromptProviderException("Not found", "my-prompt", null, false);
+
       assertFalse(ex.isRetryable());
     }
 
     @Test
     void constructor_nullPromptId_allowsNull() {
       PromptProviderException ex = new PromptProviderException("Error", null);
-      
+
       assertNull(ex.promptId());
     }
 
     @Test
     void constructor_allParameters_setsAllFields() {
       IOException cause = new java.io.IOException("Network error");
-      PromptProviderException ex = new PromptProviderException(
-          "Failed to connect", "prompt-123", cause, true);
-      
+      PromptProviderException ex =
+          new PromptProviderException("Failed to connect", "prompt-123", cause, true);
+
       assertEquals("Failed to connect", ex.getMessage());
       assertEquals("prompt-123", ex.promptId());
       assertEquals(cause, ex.getCause());
@@ -104,9 +102,11 @@ class PromptProviderExceptionTest {
 
     @Test
     void canBeCaughtAsRuntimeException() {
-      assertThrows(RuntimeException.class, () -> {
-        throw new PromptProviderException("Error", "id");
-      });
+      assertThrows(
+          RuntimeException.class,
+          () -> {
+            throw new PromptProviderException("Error", "id");
+          });
     }
 
     @Test

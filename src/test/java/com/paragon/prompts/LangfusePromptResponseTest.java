@@ -7,9 +7,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for {@link LangfusePromptResponse}.
- */
+/** Tests for {@link LangfusePromptResponse}. */
 class LangfusePromptResponseTest {
 
   // ===== Type Detection Tests =====
@@ -19,8 +17,9 @@ class LangfusePromptResponseTest {
 
     @Test
     void isTextPrompt_textType_returnsTrue() {
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "text", "my-prompt", 1, "Hello world", null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "text", "my-prompt", 1, "Hello world", null, null, null, null, null);
 
       assertTrue(response.isTextPrompt());
       assertFalse(response.isChatPrompt());
@@ -28,8 +27,9 @@ class LangfusePromptResponseTest {
 
     @Test
     void isChatPrompt_chatType_returnsTrue() {
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "chat", "my-prompt", 1, List.of(), null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "chat", "my-prompt", 1, List.of(), null, null, null, null, null);
 
       assertTrue(response.isChatPrompt());
       assertFalse(response.isTextPrompt());
@@ -37,8 +37,9 @@ class LangfusePromptResponseTest {
 
     @Test
     void isTextPrompt_unknownType_returnsFalse() {
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "unknown", "my-prompt", 1, "content", null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "unknown", "my-prompt", 1, "content", null, null, null, null, null);
 
       assertFalse(response.isTextPrompt());
       assertFalse(response.isChatPrompt());
@@ -52,29 +53,31 @@ class LangfusePromptResponseTest {
 
     @Test
     void getPromptContent_textPrompt_returnsText() {
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "text", "my-prompt", 1, "Hello, {{name}}!", null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "text", "my-prompt", 1, "Hello, {{name}}!", null, null, null, null, null);
 
       assertEquals("Hello, {{name}}!", response.getPromptContent());
     }
 
     @Test
     void getPromptContent_nullPrompt_returnsEmpty() {
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "text", "my-prompt", 1, null, null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse("text", "my-prompt", 1, null, null, null, null, null, null);
 
       assertEquals("", response.getPromptContent());
     }
 
     @Test
     void getPromptContent_chatPrompt_concatenatesMessages() {
-      List<Map<String, Object>> messages = List.of(
-          Map.of("role", "system", "content", "You are a helpful assistant."),
-          Map.of("role", "user", "content", "Hello!")
-      );
+      List<Map<String, Object>> messages =
+          List.of(
+              Map.of("role", "system", "content", "You are a helpful assistant."),
+              Map.of("role", "user", "content", "Hello!"));
 
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "chat", "my-prompt", 1, messages, null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "chat", "my-prompt", 1, messages, null, null, null, null, null);
 
       String content = response.getPromptContent();
       assertTrue(content.contains("system: You are a helpful assistant."));
@@ -83,40 +86,40 @@ class LangfusePromptResponseTest {
 
     @Test
     void getPromptContent_chatPromptSingleMessage_noLeadingNewline() {
-      List<Map<String, Object>> messages = List.of(
-          Map.of("role", "user", "content", "Hello!")
-      );
+      List<Map<String, Object>> messages = List.of(Map.of("role", "user", "content", "Hello!"));
 
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "chat", "my-prompt", 1, messages, null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "chat", "my-prompt", 1, messages, null, null, null, null, null);
 
       assertEquals("user: Hello!", response.getPromptContent());
     }
 
     @Test
     void getPromptContent_chatPromptEmptyMessages_returnsEmpty() {
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "chat", "my-prompt", 1, List.of(), null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "chat", "my-prompt", 1, List.of(), null, null, null, null, null);
 
       assertEquals("", response.getPromptContent());
     }
 
     @Test
     void getPromptContent_chatPromptWithPlaceholder_includesPlaceholder() {
-      List<Map<String, Object>> messages = List.of(
-          Map.of("role", "user", "content", "Hello, {{name}}!")
-      );
+      List<Map<String, Object>> messages =
+          List.of(Map.of("role", "user", "content", "Hello, {{name}}!"));
 
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "chat", "my-prompt", 1, messages, null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "chat", "my-prompt", 1, messages, null, null, null, null, null);
 
       assertTrue(response.getPromptContent().contains("{{name}}"));
     }
 
     @Test
     void getPromptContent_unknownType_returnsToString() {
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "other", "my-prompt", 1, 12345, null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse("other", "my-prompt", 1, 12345, null, null, null, null, null);
 
       assertEquals("12345", response.getPromptContent());
     }
@@ -129,13 +132,14 @@ class LangfusePromptResponseTest {
 
     @Test
     void getChatMessages_chatPrompt_returnsMessages() {
-      List<Map<String, Object>> messages = List.of(
-          Map.of("type", "chatmessage", "role", "system", "content", "Be helpful"),
-          Map.of("type", "chatmessage", "role", "user", "content", "Hi")
-      );
+      List<Map<String, Object>> messages =
+          List.of(
+              Map.of("type", "chatmessage", "role", "system", "content", "Be helpful"),
+              Map.of("type", "chatmessage", "role", "user", "content", "Hi"));
 
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "chat", "my-prompt", 1, messages, null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "chat", "my-prompt", 1, messages, null, null, null, null, null);
 
       List<LangfusePromptResponse.ChatMessage> chatMessages = response.getChatMessages();
 
@@ -148,36 +152,36 @@ class LangfusePromptResponseTest {
 
     @Test
     void getChatMessages_textPrompt_returnsEmptyList() {
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "text", "my-prompt", 1, "Hello", null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse("text", "my-prompt", 1, "Hello", null, null, null, null, null);
 
       assertTrue(response.getChatMessages().isEmpty());
     }
 
     @Test
     void getChatMessages_nullPrompt_returnsEmptyList() {
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "chat", "my-prompt", 1, null, null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse("chat", "my-prompt", 1, null, null, null, null, null, null);
 
       assertTrue(response.getChatMessages().isEmpty());
     }
 
     @Test
     void getChatMessages_nonListPrompt_returnsEmptyList() {
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "chat", "my-prompt", 1, "not a list", null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "chat", "my-prompt", 1, "not a list", null, null, null, null, null);
 
       assertTrue(response.getChatMessages().isEmpty());
     }
 
     @Test
     void getChatMessages_withMissingType_defaultsToChatMessage() {
-      List<Map<String, Object>> messages = List.of(
-          Map.of("role", "user", "content", "Hello")
-      );
+      List<Map<String, Object>> messages = List.of(Map.of("role", "user", "content", "Hello"));
 
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "chat", "my-prompt", 1, messages, null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "chat", "my-prompt", 1, messages, null, null, null, null, null);
 
       List<LangfusePromptResponse.ChatMessage> chatMessages = response.getChatMessages();
       assertEquals("chatmessage", chatMessages.get(0).type());
@@ -185,12 +189,11 @@ class LangfusePromptResponseTest {
 
     @Test
     void getChatMessages_withNullRole_defaultsToEmpty() {
-      List<Map<String, Object>> messages = List.of(
-          Map.of("content", "Hello")
-      );
+      List<Map<String, Object>> messages = List.of(Map.of("content", "Hello"));
 
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "chat", "my-prompt", 1, messages, null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "chat", "my-prompt", 1, messages, null, null, null, null, null);
 
       List<LangfusePromptResponse.ChatMessage> chatMessages = response.getChatMessages();
       assertEquals("", chatMessages.get(0).role());
@@ -198,12 +201,11 @@ class LangfusePromptResponseTest {
 
     @Test
     void getChatMessages_withNullContent_defaultsToEmpty() {
-      List<Map<String, Object>> messages = List.of(
-          Map.of("role", "user")
-      );
+      List<Map<String, Object>> messages = List.of(Map.of("role", "user"));
 
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "chat", "my-prompt", 1, messages, null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "chat", "my-prompt", 1, messages, null, null, null, null, null);
 
       List<LangfusePromptResponse.ChatMessage> chatMessages = response.getChatMessages();
       assertEquals("", chatMessages.get(0).content());
@@ -211,14 +213,11 @@ class LangfusePromptResponseTest {
 
     @Test
     void getChatMessages_filtersNonMapElements() {
-      List<Object> messages = List.of(
-          Map.of("role", "user", "content", "Hello"),
-          "not a map",
-          123
-      );
+      List<Object> messages = List.of(Map.of("role", "user", "content", "Hello"), "not a map", 123);
 
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "chat", "my-prompt", 1, messages, null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "chat", "my-prompt", 1, messages, null, null, null, null, null);
 
       List<LangfusePromptResponse.ChatMessage> chatMessages = response.getChatMessages();
       assertEquals(1, chatMessages.size());
@@ -232,7 +231,7 @@ class LangfusePromptResponseTest {
 
     @Test
     void isPlaceholder_placeholderType_returnsTrue() {
-      LangfusePromptResponse.ChatMessage msg = 
+      LangfusePromptResponse.ChatMessage msg =
           new LangfusePromptResponse.ChatMessage("", "{{messages}}", "placeholder");
 
       assertTrue(msg.isPlaceholder());
@@ -240,7 +239,7 @@ class LangfusePromptResponseTest {
 
     @Test
     void isPlaceholder_chatMessageType_returnsFalse() {
-      LangfusePromptResponse.ChatMessage msg = 
+      LangfusePromptResponse.ChatMessage msg =
           new LangfusePromptResponse.ChatMessage("user", "Hello", "chatmessage");
 
       assertFalse(msg.isPlaceholder());
@@ -248,7 +247,7 @@ class LangfusePromptResponseTest {
 
     @Test
     void chatMessage_accessors() {
-      LangfusePromptResponse.ChatMessage msg = 
+      LangfusePromptResponse.ChatMessage msg =
           new LangfusePromptResponse.ChatMessage("assistant", "Hi there!", "chatmessage");
 
       assertEquals("assistant", msg.role());
@@ -264,13 +263,17 @@ class LangfusePromptResponseTest {
 
     @Test
     void accessors_returnCorrectValues() {
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "text", "my-prompt", 5, "Content", 
-          Map.of("key", "value"),
-          List.of("production", "latest"),
-          List.of("tag1", "tag2"),
-          "Initial commit",
-          Map.of("dep1", "v1"));
+      LangfusePromptResponse response =
+          new LangfusePromptResponse(
+              "text",
+              "my-prompt",
+              5,
+              "Content",
+              Map.of("key", "value"),
+              List.of("production", "latest"),
+              List.of("tag1", "tag2"),
+              "Initial commit",
+              Map.of("dep1", "v1"));
 
       assertEquals("text", response.type());
       assertEquals("my-prompt", response.name());
@@ -285,8 +288,8 @@ class LangfusePromptResponseTest {
 
     @Test
     void accessors_nullableFieldsCanBeNull() {
-      LangfusePromptResponse response = new LangfusePromptResponse(
-          "text", "my-prompt", 1, null, null, null, null, null, null);
+      LangfusePromptResponse response =
+          new LangfusePromptResponse("text", "my-prompt", 1, null, null, null, null, null, null);
 
       assertNull(response.prompt());
       assertNull(response.config());

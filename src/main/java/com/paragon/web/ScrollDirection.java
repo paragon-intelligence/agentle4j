@@ -2,9 +2,7 @@ package com.paragon.web;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-/**
- * Direction to scroll in.
- */
+/** Direction to scroll in. */
 public enum ScrollDirection {
   UP("up"),
   DOWN("down"),

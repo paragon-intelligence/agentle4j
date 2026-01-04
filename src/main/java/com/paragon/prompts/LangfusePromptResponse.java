@@ -27,14 +27,10 @@ public record LangfusePromptResponse(
     @JsonProperty("commitMessage") @Nullable String commitMessage,
     @JsonProperty("resolutionGraph") @Nullable Map<String, Object> resolutionGraph) {
 
-  /**
-   * Constant for text prompt type.
-   */
+  /** Constant for text prompt type. */
   public static final String TYPE_TEXT = "text";
 
-  /**
-   * Constant for chat prompt type.
-   */
+  /** Constant for chat prompt type. */
   public static final String TYPE_CHAT = "chat";
 
   /**
@@ -58,8 +54,8 @@ public record LangfusePromptResponse(
   /**
    * Returns the prompt content as a string.
    *
-   * <p>For text prompts, returns the prompt string directly.
-   * For chat prompts, concatenates all message contents with newlines.
+   * <p>For text prompts, returns the prompt string directly. For chat prompts, concatenates all
+   * message contents with newlines.
    *
    * @return the prompt content as a string
    */
@@ -106,13 +102,14 @@ public record LangfusePromptResponse(
 
     return messages.stream()
         .filter(msg -> msg instanceof Map<?, ?>)
-        .map(msg -> {
-          Map<String, Object> map = (Map<String, Object>) msg;
-          String role = map.get("role") != null ? map.get("role").toString() : "";
-          String content = map.get("content") != null ? map.get("content").toString() : "";
-          String msgType = map.get("type") != null ? map.get("type").toString() : "chatmessage";
-          return new ChatMessage(role, content, msgType);
-        })
+        .map(
+            msg -> {
+              Map<String, Object> map = (Map<String, Object>) msg;
+              String role = map.get("role") != null ? map.get("role").toString() : "";
+              String content = map.get("content") != null ? map.get("content").toString() : "";
+              String msgType = map.get("type") != null ? map.get("type").toString() : "chatmessage";
+              return new ChatMessage(role, content, msgType);
+            })
         .toList();
   }
 
@@ -123,10 +120,7 @@ public record LangfusePromptResponse(
    * @param content the message content
    * @param type the message type (e.g., "chatmessage", "placeholder")
    */
-  public record ChatMessage(
-      @NonNull String role,
-      @NonNull String content,
-      @NonNull String type) {
+  public record ChatMessage(@NonNull String role, @NonNull String content, @NonNull String type) {
 
     /**
      * Returns whether this is a placeholder message.

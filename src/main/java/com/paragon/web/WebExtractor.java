@@ -6,15 +6,6 @@ import com.paragon.responses.Responder;
 import com.paragon.responses.spec.CreateResponsePayload;
 import com.paragon.responses.spec.ParsedResponse;
 import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,12 +16,21 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Pattern;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Extracts structured data from web pages using Playwright for rendering
- * and an LLM for intelligent data extraction.
+ * Extracts structured data from web pages using Playwright for rendering and an LLM for intelligent
+ * data extraction.
  *
  * <p>Example usage:
+ *
  * <pre>{@code
  * WebExtractor extractor = WebExtractor.create(responder);
  *
@@ -64,36 +64,39 @@ public final class WebExtractor {
 
   private static final Logger log = LoggerFactory.getLogger(WebExtractor.class);
 
-  private static final String DEFAULT_SYSTEM_PROMPT = """
-          <role>
-          You are a precise data extraction specialist that converts web content into structured JSON.
-          </role>
-          
-          <task>
-          Extract the information specified in `user_instructions` from the Markdown content provided in `<markdown>` tags. Return the extracted data as a single valid JSON object matching the provided schema.
-          </task>
-          
-          <rules>
-          1. Extract only information explicitly present in the text content
-          2. Return `null` for fields where information cannot be found
-          3. Match the output schema exactly - include all required fields
-          4. Output only the JSON object, starting with `{` and ending with `}`
-          5. Do not include any explanation, preamble, or markdown formatting
-          </rules>
-          """;
+  private static final String DEFAULT_SYSTEM_PROMPT =
+      """
+      <role>
+      You are a precise data extraction specialist that converts web content into structured JSON.
+      </role>
 
-  private static final String USER_PROMPT_TEMPLATE = """
-          <user_instructions>
-          %s
-          </user_instructions>
-          
-          <markdown>
-          %s
-          </markdown>
-          """;
+      <task>
+      Extract the information specified in `user_instructions` from the Markdown content provided in `<markdown>` tags. Return the extracted data as a single valid JSON object matching the provided schema.
+      </task>
+
+      <rules>
+      1. Extract only information explicitly present in the text content
+      2. Return `null` for fields where information cannot be found
+      3. Match the output schema exactly - include all required fields
+      4. Output only the JSON object, starting with `{` and ending with `}`
+      5. Do not include any explanation, preamble, or markdown formatting
+      </rules>
+      """;
+
+  private static final String USER_PROMPT_TEMPLATE =
+      """
+      <user_instructions>
+      %s
+      </user_instructions>
+
+      <markdown>
+      %s
+      </markdown>
+      """;
 
   private static final Pattern BASE64_DATA_URI_PATTERN = Pattern.compile("data:image/[^\"')\\s]+");
-  private static final Set<String> AD_DOMAINS = Set.of(
+  private static final Set<String> AD_DOMAINS =
+      Set.of(
           "doubleclick.net",
           "googlesyndication.com",
           "adservice.google.com",
@@ -101,11 +104,10 @@ public final class WebExtractor {
           "analytics.",
           "tracking.",
           "facebook.com/tr",
-          "googletagmanager.com"
-  );
+          "googletagmanager.com");
 
   private static final String MOBILE_USER_AGENT =
-          "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15";
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15";
   private static final int MOBILE_VIEWPORT_WIDTH = 375;
   private static final int MOBILE_VIEWPORT_HEIGHT = 667;
 
@@ -115,44 +117,32 @@ public final class WebExtractor {
   private final @NonNull FlexmarkHtmlConverter htmlConverter;
 
   private WebExtractor(
-          @NonNull Responder responder,
-          @Nullable String model,
-          @NonNull Executor executor
-  ) {
+      @NonNull Responder responder, @Nullable String model, @NonNull Executor executor) {
     this.responder = Objects.requireNonNull(responder, "responder cannot be null");
     this.model = model;
     this.executor = Objects.requireNonNull(executor, "executor cannot be null");
     this.htmlConverter = FlexmarkHtmlConverter.builder().build();
   }
 
-  /**
-   * Creates a new WebExtractor with default settings.
-   */
+  /** Creates a new WebExtractor with default settings. */
   public static @NonNull WebExtractor create(@NonNull Responder responder) {
     return new WebExtractor(responder, null, ForkJoinPool.commonPool());
   }
 
-  /**
-   * Creates a new WebExtractor with a specific model.
-   */
+  /** Creates a new WebExtractor with a specific model. */
   public static @NonNull WebExtractor create(@NonNull Responder responder, @NonNull String model) {
     return new WebExtractor(responder, model, ForkJoinPool.commonPool());
   }
 
-  /**
-   * Creates a new WebExtractor with custom executor.
-   */
+  /** Creates a new WebExtractor with custom executor. */
   public static @NonNull WebExtractor create(
-          @NonNull Responder responder,
-          @Nullable String model,
-          @NonNull Executor executor
-  ) {
+      @NonNull Responder responder, @Nullable String model, @NonNull Executor executor) {
     return new WebExtractor(responder, model, executor);
   }
 
   /**
-   * Extracts content from web pages without structured output parsing.
-   * Returns HTML and Markdown content for all URLs.
+   * Extracts content from web pages without structured output parsing. Returns HTML and Markdown
+   * content for all URLs.
    *
    * @param payload the extraction configuration
    * @return a future containing the extraction result
@@ -160,37 +150,40 @@ public final class WebExtractor {
   public @NonNull CompletableFuture<ExtractionResult> extract(@NonNull ExtractPayload payload) {
     Objects.requireNonNull(payload, "payload cannot be null");
 
-    return CompletableFuture.supplyAsync(() -> {
-      try {
-        return extractSync(payload);
-      } catch (Exception e) {
-        log.error("Extraction failed", e);
-        throw new CompletionException("Extraction failed: " + e.getMessage(), e);
-      }
-    }, executor);
+    return CompletableFuture.supplyAsync(
+        () -> {
+          try {
+            return extractSync(payload);
+          } catch (Exception e) {
+            log.error("Extraction failed", e);
+            throw new CompletionException("Extraction failed: " + e.getMessage(), e);
+          }
+        },
+        executor);
   }
 
   /**
-   * Extracts structured data from web pages using LLM processing.
-   * The extracted content is parsed into the specified output type.
+   * Extracts structured data from web pages using LLM processing. The extracted content is parsed
+   * into the specified output type.
    *
    * @param payload the structured extraction configuration
-   * @param <T>     the output type
+   * @param <T> the output type
    * @return a future containing the structured extraction result
    */
   public <T> @NonNull CompletableFuture<ExtractionResult.Structured<T>> extract(
-          ExtractPayload.@NonNull Structured<T> payload
-  ) {
+      ExtractPayload.@NonNull Structured<T> payload) {
     Objects.requireNonNull(payload, "payload cannot be null");
 
-    return CompletableFuture.supplyAsync(() -> {
-      try {
-        return extractStructuredSync(payload);
-      } catch (Exception e) {
-        log.error("Structured extraction failed", e);
-        throw new CompletionException("Structured extraction failed: " + e.getMessage(), e);
-      }
-    }, executor);
+    return CompletableFuture.supplyAsync(
+        () -> {
+          try {
+            return extractStructuredSync(payload);
+          } catch (Exception e) {
+            log.error("Structured extraction failed", e);
+            throw new CompletionException("Structured extraction failed: " + e.getMessage(), e);
+          }
+        },
+        executor);
   }
 
   // ========== Internal Implementation ==========
@@ -222,21 +215,19 @@ public final class WebExtractor {
       String combinedMarkdown = String.join("\n\n---\n\n", markdownList);
 
       return new ExtractionResult(
-              payload.urls(),
-              htmlList,
-              markdownList,
-              combinedMarkdown,
-              payload.extractionPreferences(),
-              errors
-      );
+          payload.urls(),
+          htmlList,
+          markdownList,
+          combinedMarkdown,
+          payload.extractionPreferences(),
+          errors);
     } finally {
       closeQuietly(context);
     }
   }
 
   private <T> ExtractionResult.@NonNull Structured<T> extractStructuredSync(
-          ExtractPayload.@NonNull Structured<T> payload
-  ) {
+      ExtractPayload.@NonNull Structured<T> payload) {
     // First extract the raw content
     ExtractionResult rawResult = extractSync(payload);
 
@@ -245,38 +236,31 @@ public final class WebExtractor {
 
     if (!rawResult.combinedMarkdown().isBlank()) {
       try {
-        output = processWithLlm(
-                rawResult.combinedMarkdown(),
-                payload.prompt(),
-                payload.outputType()
-        );
+        output =
+            processWithLlm(rawResult.combinedMarkdown(), payload.prompt(), payload.outputType());
       } catch (Exception e) {
         log.error("LLM processing failed", e);
-        URI firstUrl = payload.urls().isEmpty() ? URI.create("unknown://") : payload.urls().getFirst();
-        errors.add(ExtractionResult.ExtractionError.llm(
-                firstUrl,
-                "LLM processing failed: " + e.getMessage(),
-                e
-        ));
+        URI firstUrl =
+            payload.urls().isEmpty() ? URI.create("unknown://") : payload.urls().getFirst();
+        errors.add(
+            ExtractionResult.ExtractionError.llm(
+                firstUrl, "LLM processing failed: " + e.getMessage(), e));
       }
     }
 
     return new ExtractionResult.Structured<>(
-            payload.urls(),
-            rawResult.html(),
-            rawResult.markdown(),
-            rawResult.combinedMarkdown(),
-            payload.extractionPreferences(),
-            errors,
-            output,
-            payload.outputType()
-    );
+        payload.urls(),
+        rawResult.html(),
+        rawResult.markdown(),
+        rawResult.combinedMarkdown(),
+        payload.extractionPreferences(),
+        errors,
+        output,
+        payload.outputType());
   }
 
   private @NonNull BrowserContext createBrowserContext(
-          @NonNull Browser browser,
-          @NonNull ExtractionPreferences preferences
-  ) {
+      @NonNull Browser browser, @NonNull ExtractionPreferences preferences) {
     Browser.NewContextOptions options = new Browser.NewContextOptions();
 
     // Configure viewport and user agent for mobile
@@ -298,10 +282,8 @@ public final class WebExtractor {
 
     // Configure geolocation
     if (preferences.location() != null) {
-      options.setGeolocation(new Geolocation(
-              preferences.location().latitude(),
-              preferences.location().longitude()
-      ));
+      options.setGeolocation(
+          new Geolocation(preferences.location().latitude(), preferences.location().longitude()));
       options.setPermissions(List.of("geolocation"));
     }
 
@@ -309,34 +291,34 @@ public final class WebExtractor {
 
     // Configure ad blocking
     if (preferences.blockAds()) {
-      context.route("**/*", route -> {
-        String url = route.request().url().toLowerCase();
-        String resourceType = route.request().resourceType();
+      context.route(
+          "**/*",
+          route -> {
+            String url = route.request().url().toLowerCase();
+            String resourceType = route.request().resourceType();
 
-        boolean isBlockedResource = ("image".equals(resourceType) ||
-                "media".equals(resourceType) ||
-                "font".equals(resourceType)) &&
-                AD_DOMAINS.stream().anyMatch(url::contains);
+            boolean isBlockedResource =
+                ("image".equals(resourceType)
+                        || "media".equals(resourceType)
+                        || "font".equals(resourceType))
+                    && AD_DOMAINS.stream().anyMatch(url::contains);
 
-        if (isBlockedResource) {
-          route.abort();
-        } else {
-          route.resume();
-        }
-      });
+            if (isBlockedResource) {
+              route.abort();
+            } else {
+              route.resume();
+            }
+          });
     }
 
     return context;
   }
 
   private @NonNull ContentResult extractContentFromUrl(
-          @NonNull Page page,
-          @NonNull URI url,
-          @NonNull ExtractionPreferences preferences
-  ) {
+      @NonNull Page page, @NonNull URI url, @NonNull ExtractionPreferences preferences) {
     // Navigate to URL with timeout
-    Page.NavigateOptions navOptions = new Page.NavigateOptions()
-            .setTimeout(preferences.timeoutMs());
+    Page.NavigateOptions navOptions =
+        new Page.NavigateOptions().setTimeout(preferences.timeoutMs());
 
     page.navigate(url.toString(), navOptions);
 
@@ -363,9 +345,7 @@ public final class WebExtractor {
   }
 
   private @NonNull String processHtml(
-          @NonNull String html,
-          @NonNull ExtractionPreferences preferences
-  ) {
+      @NonNull String html, @NonNull ExtractionPreferences preferences) {
     if (!needsHtmlProcessing(preferences)) {
       return html;
     }
@@ -405,10 +385,10 @@ public final class WebExtractor {
   }
 
   private boolean needsHtmlProcessing(@NonNull ExtractionPreferences preferences) {
-    return preferences.removeBase64Images() ||
-            preferences.onlyMainContent() ||
-            (preferences.includeTags() != null && !preferences.includeTags().isEmpty()) ||
-            (preferences.excludeTags() != null && !preferences.excludeTags().isEmpty());
+    return preferences.removeBase64Images()
+        || preferences.onlyMainContent()
+        || (preferences.includeTags() != null && !preferences.includeTags().isEmpty())
+        || (preferences.excludeTags() != null && !preferences.excludeTags().isEmpty());
   }
 
   private void removeBase64Images(@NonNull Document doc) {
@@ -472,25 +452,25 @@ public final class WebExtractor {
   }
 
   private <T> @NonNull T processWithLlm(
-          @NonNull String markdown,
-          @NonNull String prompt,
-          @NonNull Class<T> outputType
-  ) {
+      @NonNull String markdown, @NonNull String prompt, @NonNull Class<T> outputType) {
     String userPrompt = String.format(USER_PROMPT_TEMPLATE, prompt, markdown);
 
-    ParsedResponse<T> response = responder.<T>respond(
-            CreateResponsePayload.<T>builder()
+    ParsedResponse<T> response =
+        responder
+            .<T>respond(
+                CreateResponsePayload.<T>builder()
                     .addDeveloperMessage(DEFAULT_SYSTEM_PROMPT)
                     .addUserMessage(userPrompt)
                     .model(model)
                     .withStructuredOutput(outputType)
-                    .build()
-    ).join();
+                    .build())
+            .join();
 
     return response.outputParsed();
   }
 
-  private ExtractionResult.@NonNull ExtractionError categorizeError(@NonNull URI url, @NonNull Exception e) {
+  private ExtractionResult.@NonNull ExtractionError categorizeError(
+      @NonNull URI url, @NonNull Exception e) {
     String message = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
 
     if (e instanceof TimeoutError) {
@@ -502,11 +482,7 @@ public final class WebExtractor {
       return ExtractionResult.ExtractionError.navigation(url, message, e);
     } else {
       return new ExtractionResult.ExtractionError(
-              url,
-              ExtractionResult.ErrorType.UNKNOWN,
-              message,
-              e
-      );
+          url, ExtractionResult.ErrorType.UNKNOWN, message, e);
     }
   }
 
@@ -520,6 +496,5 @@ public final class WebExtractor {
     }
   }
 
-  private record ContentResult(@NonNull String html, @NonNull String markdown) {
-  }
+  private record ContentResult(@NonNull String html, @NonNull String markdown) {}
 }

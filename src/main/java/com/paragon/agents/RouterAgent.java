@@ -247,9 +247,7 @@ public final class RouterAgent {
 
   // ===== Helper Methods =====
 
-  /**
-   * Extracts the last user message text from context.
-   */
+  /** Extracts the last user message text from context. */
   private String extractLastUserMessage(AgentContext context) {
     List<ResponseInputItem> history = context.getHistory();
     for (int i = history.size() - 1; i >= 0; i--) {

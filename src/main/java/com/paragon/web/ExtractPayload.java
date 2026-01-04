@@ -1,18 +1,14 @@
 package com.paragon.web;
 
 import com.microsoft.playwright.Browser;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
-/**
- * Payload for web content extraction operations.
- * Use {@link #builder()} to construct instances.
- */
+/** Payload for web content extraction operations. Use {@link #builder()} to construct instances. */
 public class ExtractPayload {
 
   private final @NonNull Browser browser;
@@ -22,16 +18,16 @@ public class ExtractPayload {
   private final boolean ignoreInvalidUrls;
 
   protected ExtractPayload(
-          @NonNull Browser browser,
-          @NonNull List<URI> urls,
-          @NonNull String prompt,
-          @NonNull ExtractionPreferences extractionPreferences,
-          boolean ignoreInvalidUrls
-  ) {
+      @NonNull Browser browser,
+      @NonNull List<URI> urls,
+      @NonNull String prompt,
+      @NonNull ExtractionPreferences extractionPreferences,
+      boolean ignoreInvalidUrls) {
     this.browser = Objects.requireNonNull(browser, "browser cannot be null");
     this.urls = List.copyOf(Objects.requireNonNull(urls, "urls cannot be null"));
     this.prompt = Objects.requireNonNull(prompt, "prompt cannot be null");
-    this.extractionPreferences = Objects.requireNonNull(extractionPreferences, "extractionPreferences cannot be null");
+    this.extractionPreferences =
+        Objects.requireNonNull(extractionPreferences, "extractionPreferences cannot be null");
     this.ignoreInvalidUrls = ignoreInvalidUrls;
 
     if (urls.isEmpty()) {
@@ -71,11 +67,11 @@ public class ExtractPayload {
   public boolean equals(Object obj) {
     if (obj == this) return true;
     if (!(obj instanceof ExtractPayload that)) return false;
-    return Objects.equals(browser, that.browser) &&
-            Objects.equals(urls, that.urls) &&
-            Objects.equals(prompt, that.prompt) &&
-            Objects.equals(extractionPreferences, that.extractionPreferences) &&
-            ignoreInvalidUrls == that.ignoreInvalidUrls;
+    return Objects.equals(browser, that.browser)
+        && Objects.equals(urls, that.urls)
+        && Objects.equals(prompt, that.prompt)
+        && Objects.equals(extractionPreferences, that.extractionPreferences)
+        && ignoreInvalidUrls == that.ignoreInvalidUrls;
   }
 
   @Override
@@ -85,30 +81,33 @@ public class ExtractPayload {
 
   @Override
   public String toString() {
-    return "ExtractPayload{" +
-            "browser=" + browser +
-            ", urls=" + urls +
-            ", prompt='" + prompt + '\'' +
-            ", extractionPreferences=" + extractionPreferences +
-            ", ignoreInvalidUrls=" + ignoreInvalidUrls +
-            '}';
+    return "ExtractPayload{"
+        + "browser="
+        + browser
+        + ", urls="
+        + urls
+        + ", prompt='"
+        + prompt
+        + '\''
+        + ", extractionPreferences="
+        + extractionPreferences
+        + ", ignoreInvalidUrls="
+        + ignoreInvalidUrls
+        + '}';
   }
 
-  /**
-   * Structured extraction payload that includes output type information.
-   */
+  /** Structured extraction payload that includes output type information. */
   public static final class Structured<T> extends ExtractPayload {
 
     private final @NonNull Class<T> outputType;
 
     Structured(
-            @NonNull Browser browser,
-            @NonNull List<URI> urls,
-            @NonNull String prompt,
-            @NonNull ExtractionPreferences extractionPreferences,
-            boolean ignoreInvalidUrls,
-            @NonNull Class<T> outputType
-    ) {
+        @NonNull Browser browser,
+        @NonNull List<URI> urls,
+        @NonNull String prompt,
+        @NonNull ExtractionPreferences extractionPreferences,
+        boolean ignoreInvalidUrls,
+        @NonNull Class<T> outputType) {
       super(browser, urls, prompt, extractionPreferences, ignoreInvalidUrls);
       this.outputType = Objects.requireNonNull(outputType, "outputType cannot be null");
     }
@@ -131,20 +130,25 @@ public class ExtractPayload {
 
     @Override
     public String toString() {
-      return "Structured{" +
-              "outputType=" + outputType +
-              ", browser=" + browser() +
-              ", urls=" + urls() +
-              ", prompt='" + prompt() + '\'' +
-              ", extractionPreferences=" + extractionPreferences() +
-              ", ignoreInvalidUrls=" + ignoreInvalidUrls() +
-              '}';
+      return "Structured{"
+          + "outputType="
+          + outputType
+          + ", browser="
+          + browser()
+          + ", urls="
+          + urls()
+          + ", prompt='"
+          + prompt()
+          + '\''
+          + ", extractionPreferences="
+          + extractionPreferences()
+          + ", ignoreInvalidUrls="
+          + ignoreInvalidUrls()
+          + '}';
     }
   }
 
-  /**
-   * Builder for unstructured extraction payloads.
-   */
+  /** Builder for unstructured extraction payloads. */
   public static class Builder {
     protected @Nullable Browser browser;
     protected @Nullable List<URI> urls;
@@ -152,8 +156,7 @@ public class ExtractPayload {
     protected @Nullable ExtractionPreferences extractionPreferences;
     protected boolean ignoreInvalidUrls = true;
 
-    protected Builder() {
-    }
+    protected Builder() {}
 
     public @NonNull Builder browser(@NonNull Browser browser) {
       this.browser = browser;
@@ -211,12 +214,9 @@ public class ExtractPayload {
       return this;
     }
 
-    /**
-     * Configure extraction preferences using a builder callback.
-     */
+    /** Configure extraction preferences using a builder callback. */
     public @NonNull Builder withPreferences(
-            java.util.function.@NonNull Consumer<ExtractionPreferences.Builder> configurator
-    ) {
+        java.util.function.@NonNull Consumer<ExtractionPreferences.Builder> configurator) {
       ExtractionPreferences.Builder prefBuilder = ExtractionPreferences.builder();
       configurator.accept(prefBuilder);
       this.extractionPreferences = prefBuilder.build();
@@ -226,12 +226,11 @@ public class ExtractPayload {
     public @NonNull ExtractPayload build() {
       validate();
       return new ExtractPayload(
-              browser,
-              urls,
-              prompt != null ? prompt : "Extract all relevant information from the page.",
-              extractionPreferences != null ? extractionPreferences : ExtractionPreferences.defaults(),
-              ignoreInvalidUrls
-      );
+          browser,
+          urls,
+          prompt != null ? prompt : "Extract all relevant information from the page.",
+          extractionPreferences != null ? extractionPreferences : ExtractionPreferences.defaults(),
+          ignoreInvalidUrls);
     }
 
     protected void validate() {
@@ -244,9 +243,7 @@ public class ExtractPayload {
     }
   }
 
-  /**
-   * Builder for structured extraction payloads with type information.
-   */
+  /** Builder for structured extraction payloads with type information. */
   public static final class StructuredBuilder<T> extends Builder {
 
     private final @NonNull Class<T> outputType;
@@ -304,7 +301,8 @@ public class ExtractPayload {
     }
 
     @Override
-    public @NonNull StructuredBuilder<T> extractionPreferences(@NonNull ExtractionPreferences preferences) {
+    public @NonNull StructuredBuilder<T> extractionPreferences(
+        @NonNull ExtractionPreferences preferences) {
       super.extractionPreferences(preferences);
       return this;
     }
@@ -317,8 +315,7 @@ public class ExtractPayload {
 
     @Override
     public @NonNull StructuredBuilder<T> withPreferences(
-            java.util.function.@NonNull Consumer<ExtractionPreferences.Builder> configurator
-    ) {
+        java.util.function.@NonNull Consumer<ExtractionPreferences.Builder> configurator) {
       super.withPreferences(configurator);
       return this;
     }
@@ -327,13 +324,12 @@ public class ExtractPayload {
     public @NonNull Structured<T> build() {
       validate();
       return new Structured<>(
-              browser,
-              urls,
-              prompt != null ? prompt : "Extract all relevant information from the page.",
-              extractionPreferences != null ? extractionPreferences : ExtractionPreferences.defaults(),
-              ignoreInvalidUrls,
-              outputType
-      );
+          browser,
+          urls,
+          prompt != null ? prompt : "Extract all relevant information from the page.",
+          extractionPreferences != null ? extractionPreferences : ExtractionPreferences.defaults(),
+          ignoreInvalidUrls,
+          outputType);
     }
   }
 }

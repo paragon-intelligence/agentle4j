@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link HttpRequest}. */
@@ -121,10 +120,7 @@ class HttpRequestTest {
   @Test
   void queryParam_supportsMultipleValues() {
     HttpRequest request =
-        HttpRequest.get("/filter")
-            .queryParam("tag", "java")
-            .queryParam("tag", "maven")
-            .build();
+        HttpRequest.get("/filter").queryParam("tag", "java").queryParam("tag", "maven").build();
 
     assertTrue(request.url().contains("tag=java"));
     assertTrue(request.url().contains("tag=maven"));
@@ -181,11 +177,15 @@ class HttpRequestTest {
 
   @Test
   void jsonBody_throwsOnSerializationFailure() {
-    Object unserializable = new Object() {
-      public Object getSelf() { return this; }  // Circular reference
-    };
+    Object unserializable =
+        new Object() {
+          public Object getSelf() {
+            return this;
+          } // Circular reference
+        };
 
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(
+        IllegalArgumentException.class,
         () -> HttpRequest.post("/test").jsonBody(unserializable).build());
   }
 

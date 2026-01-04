@@ -1,15 +1,13 @@
 package com.paragon.web;
 
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
- * Configuration options for web content extraction.
- * Use the builder pattern to construct instances.
+ * Configuration options for web content extraction. Use the builder pattern to construct instances.
  */
 public final class ExtractionPreferences {
 
@@ -102,43 +100,65 @@ public final class ExtractionPreferences {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof ExtractionPreferences that)) return false;
-    return mobile == that.mobile &&
-            blockAds == that.blockAds &&
-            removeBase64Images == that.removeBase64Images &&
-            onlyMainContent == that.onlyMainContent &&
-            skipTlsVerification == that.skipTlsVerification &&
-            timeoutMs == that.timeoutMs &&
-            waitForMs == that.waitForMs &&
-            Objects.equals(location, that.location) &&
-            Objects.equals(headers, that.headers) &&
-            Objects.equals(includeTags, that.includeTags) &&
-            Objects.equals(excludeTags, that.excludeTags) &&
-            proxy == that.proxy;
+    return mobile == that.mobile
+        && blockAds == that.blockAds
+        && removeBase64Images == that.removeBase64Images
+        && onlyMainContent == that.onlyMainContent
+        && skipTlsVerification == that.skipTlsVerification
+        && timeoutMs == that.timeoutMs
+        && waitForMs == that.waitForMs
+        && Objects.equals(location, that.location)
+        && Objects.equals(headers, that.headers)
+        && Objects.equals(includeTags, that.includeTags)
+        && Objects.equals(excludeTags, that.excludeTags)
+        && proxy == that.proxy;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(mobile, blockAds, removeBase64Images, onlyMainContent,
-            skipTlsVerification, timeoutMs, waitForMs, location, headers,
-            includeTags, excludeTags, proxy);
+    return Objects.hash(
+        mobile,
+        blockAds,
+        removeBase64Images,
+        onlyMainContent,
+        skipTlsVerification,
+        timeoutMs,
+        waitForMs,
+        location,
+        headers,
+        includeTags,
+        excludeTags,
+        proxy);
   }
 
   @Override
   public String toString() {
-    return "ExtractionPreferences{" +
-            "mobile=" + mobile +
-            ", blockAds=" + blockAds +
-            ", removeBase64Images=" + removeBase64Images +
-            ", onlyMainContent=" + onlyMainContent +
-            ", skipTlsVerification=" + skipTlsVerification +
-            ", timeoutMs=" + timeoutMs +
-            ", waitForMs=" + waitForMs +
-            ", location=" + location +
-            ", headers=" + headers +
-            ", includeTags=" + includeTags +
-            ", excludeTags=" + excludeTags +
-            ", proxy=" + proxy +
-            '}';
+    return "ExtractionPreferences{"
+        + "mobile="
+        + mobile
+        + ", blockAds="
+        + blockAds
+        + ", removeBase64Images="
+        + removeBase64Images
+        + ", onlyMainContent="
+        + onlyMainContent
+        + ", skipTlsVerification="
+        + skipTlsVerification
+        + ", timeoutMs="
+        + timeoutMs
+        + ", waitForMs="
+        + waitForMs
+        + ", location="
+        + location
+        + ", headers="
+        + headers
+        + ", includeTags="
+        + includeTags
+        + ", excludeTags="
+        + excludeTags
+        + ", proxy="
+        + proxy
+        + '}';
   }
 
   public enum ProxyMode {
@@ -146,8 +166,7 @@ public final class ExtractionPreferences {
     STEALTH
   }
 
-  public record GeoLocation(double latitude, double longitude) {
-  }
+  public record GeoLocation(double latitude, double longitude) {}
 
   public static final class Builder {
     private boolean mobile = false;
@@ -163,8 +182,7 @@ public final class ExtractionPreferences {
     private @Nullable List<String> excludeTags;
     private @Nullable ProxyMode proxy;
 
-    private Builder() {
-    }
+    private Builder() {}
 
     public @NonNull Builder mobile(boolean mobile) {
       this.mobile = mobile;

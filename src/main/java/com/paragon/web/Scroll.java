@@ -3,38 +3,34 @@ package com.paragon.web;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.microsoft.playwright.Page;
-import org.jspecify.annotations.NonNull;
-
 import java.util.Map;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Action to scroll the page or a specific element.
  *
  * @param direction The direction to scroll (up, down, left, right)
- * @param amount    The amount to scroll in pixels (0-1000)
- * @param selector  Query selector for the element to scroll
+ * @param amount The amount to scroll in pixels (0-1000)
+ * @param selector Query selector for the element to scroll
  */
 public record Scroll(
-    @JsonProperty("direction")
-    @JsonPropertyDescription("The direction to scroll.")
-    @NonNull ScrollDirection direction,
-    @JsonProperty("amount")
-    @JsonPropertyDescription("The amount to scroll in pixels.")
-    int amount,
-    @JsonProperty("selector")
-    @JsonPropertyDescription("Query selector for the element to scroll.")
-    @NonNull String selector)
+    @JsonProperty("direction") @JsonPropertyDescription("The direction to scroll.")
+        @NonNull ScrollDirection direction,
+    @JsonProperty("amount") @JsonPropertyDescription("The amount to scroll in pixels.") int amount,
+    @JsonProperty("selector") @JsonPropertyDescription("Query selector for the element to scroll.")
+        @NonNull String selector)
     implements Action {
 
   /**
    * Creates a Scroll action.
    *
-   * @param selector  Query selector for the element to scroll
+   * @param selector Query selector for the element to scroll
    * @param direction The direction to scroll
-   * @param amount    The amount to scroll in pixels (0-1000)
+   * @param amount The amount to scroll in pixels (0-1000)
    * @return A new Scroll instance
    */
-  public static Scroll of(@NonNull String selector, @NonNull ScrollDirection direction, int amount) {
+  public static Scroll of(
+      @NonNull String selector, @NonNull ScrollDirection direction, int amount) {
     validateAmount(amount);
     return new Scroll(direction, amount, selector);
   }
@@ -43,7 +39,7 @@ public record Scroll(
    * Creates a Scroll action that scrolls down.
    *
    * @param selector Query selector for the element to scroll
-   * @param amount   The amount to scroll in pixels
+   * @param amount The amount to scroll in pixels
    * @return A new Scroll instance that scrolls down
    */
   public static Scroll down(@NonNull String selector, int amount) {
@@ -54,7 +50,7 @@ public record Scroll(
    * Creates a Scroll action that scrolls up.
    *
    * @param selector Query selector for the element to scroll
-   * @param amount   The amount to scroll in pixels
+   * @param amount The amount to scroll in pixels
    * @return A new Scroll instance that scrolls up
    */
   public static Scroll up(@NonNull String selector, int amount) {
@@ -65,7 +61,7 @@ public record Scroll(
    * Creates a Scroll action that scrolls left.
    *
    * @param selector Query selector for the element to scroll
-   * @param amount   The amount to scroll in pixels
+   * @param amount The amount to scroll in pixels
    * @return A new Scroll instance that scrolls left
    */
   public static Scroll left(@NonNull String selector, int amount) {
@@ -76,7 +72,7 @@ public record Scroll(
    * Creates a Scroll action that scrolls right.
    *
    * @param selector Query selector for the element to scroll
-   * @param amount   The amount to scroll in pixels
+   * @param amount The amount to scroll in pixels
    * @return A new Scroll instance that scrolls right
    */
   public static Scroll right(@NonNull String selector, int amount) {
@@ -101,13 +97,15 @@ public record Scroll(
       case LEFT -> deltaX = -amount;
     }
 
-    page.evaluate("""
+    page.evaluate(
+        """
         (args) => {
             const element = document.querySelector(args.selector);
             if (element) {
                 element.scrollBy(args.deltaX, args.deltaY);
             }
         }
-        """, Map.of("selector", selector, "deltaX", deltaX, "deltaY", deltaY));
+        """,
+        Map.of("selector", selector, "deltaX", deltaX, "deltaY", deltaY));
   }
 }

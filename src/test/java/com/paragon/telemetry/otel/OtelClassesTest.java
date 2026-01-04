@@ -242,10 +242,7 @@ class OtelClassesTest {
       List<OtelAttribute> attrs = List.of(OtelAttribute.ofString("key", "value"));
       OtelMetric metric =
           OtelMetric.gauge(
-              "test.metric",
-              "A test metric",
-              "ms",
-              List.of(OtelDataPoint.gaugeInt(100, attrs)));
+              "test.metric", "A test metric", "ms", List.of(OtelDataPoint.gaugeInt(100, attrs)));
 
       assertEquals("test.metric", metric.name());
       assertEquals("A test metric", metric.description());

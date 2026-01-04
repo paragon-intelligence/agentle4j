@@ -1,7 +1,6 @@
 package com.paragon.agents;
 
 import com.paragon.responses.Responder;
-import com.paragon.responses.spec.CreateResponsePayload;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
@@ -103,7 +102,6 @@ public final class RouterStream {
     return this;
   }
 
-
   /**
    * Called when a tool execution completes.
    *
@@ -156,9 +154,7 @@ public final class RouterStream {
               if (selectedAgent == null) {
                 AgentResult errorResult =
                     AgentResult.error(
-                        new IllegalStateException("No suitable agent found for input"),
-                        context,
-                        0);
+                        new IllegalStateException("No suitable agent found for input"), context, 0);
                 if (onError != null) {
                   onError.accept(errorResult.error());
                 }
@@ -200,8 +196,7 @@ public final class RouterStream {
 
               agentStream.onComplete(
                   innerResult -> {
-                    AgentResult handoffResult =
-                        AgentResult.handoff(selected, innerResult, context);
+                    AgentResult handoffResult = AgentResult.handoff(selected, innerResult, context);
                     if (onComplete != null) {
                       onComplete.accept(handoffResult);
                     }

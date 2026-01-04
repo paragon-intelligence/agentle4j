@@ -135,19 +135,22 @@ class TraceIdGeneratorTest {
     @Test
     @DisplayName("rejects trace ID that is too long")
     void rejectsTraceIdTooLong() {
-      assertFalse(TraceIdGenerator.isValidTraceId("0123456789abcdef0123456789abcdef0000")); // 36 chars
+      assertFalse(
+          TraceIdGenerator.isValidTraceId("0123456789abcdef0123456789abcdef0000")); // 36 chars
     }
 
     @Test
     @DisplayName("rejects trace ID with non-hex characters")
     void rejectsTraceIdWithNonHexCharacters() {
-      assertFalse(TraceIdGenerator.isValidTraceId("0123456789abcdefghijklmnopqrstuv")); // g-v not hex
+      assertFalse(
+          TraceIdGenerator.isValidTraceId("0123456789abcdefghijklmnopqrstuv")); // g-v not hex
     }
 
     @Test
     @DisplayName("rejects trace ID with spaces")
     void rejectsTraceIdWithSpaces() {
-      assertFalse(TraceIdGenerator.isValidTraceId("0123456789abcdef 123456789abcdef")); // space in middle
+      assertFalse(
+          TraceIdGenerator.isValidTraceId("0123456789abcdef 123456789abcdef")); // space in middle
     }
 
     @Test

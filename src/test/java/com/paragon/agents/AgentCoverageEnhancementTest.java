@@ -2,19 +2,15 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.agents.context.*;
 import com.paragon.http.RetryPolicy;
 import com.paragon.responses.Responder;
 import com.paragon.responses.annotations.FunctionMetadata;
 import com.paragon.responses.exception.AgentExecutionException;
-import com.paragon.responses.exception.GuardrailException;
 import com.paragon.responses.spec.*;
-import com.paragon.telemetry.events.TelemetryEvent;
 import com.paragon.telemetry.TelemetryContext;
+import com.paragon.telemetry.events.TelemetryEvent;
 import com.paragon.telemetry.processors.TelemetryProcessor;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -24,8 +20,8 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
 
 /**
- * Comprehensive coverage enhancement tests for Agent.java.
- * Targets specific uncovered lines to achieve 99%+ coverage.
+ * Comprehensive coverage enhancement tests for Agent.java. Targets specific uncovered lines to
+ * achieve 99%+ coverage.
  */
 @DisplayName("Agent Coverage Enhancement Tests")
 class AgentCoverageEnhancementTest {
@@ -37,10 +33,8 @@ class AgentCoverageEnhancementTest {
   void setUp() throws Exception {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
-    responder = Responder.builder()
-        .baseUrl(mockWebServer.url("/v1/responses"))
-        .apiKey("test-key")
-        .build();
+    responder =
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -61,7 +55,7 @@ class AgentCoverageEnhancementTest {
     void defaultOnTurnStartDoesNothing() {
       // Create an anonymous implementation to test default method
       Agent.LoopCallbacks callbacks = new Agent.LoopCallbacks() {};
-      
+
       // Should not throw and do nothing
       assertDoesNotThrow(() -> callbacks.onTurnStart(1));
     }
@@ -70,7 +64,7 @@ class AgentCoverageEnhancementTest {
     @DisplayName("Default onTurnComplete does nothing")
     void defaultOnTurnCompleteDoesNothing() {
       Agent.LoopCallbacks callbacks = new Agent.LoopCallbacks() {};
-      
+
       assertDoesNotThrow(() -> callbacks.onTurnComplete(null));
     }
 
@@ -78,9 +72,9 @@ class AgentCoverageEnhancementTest {
     @DisplayName("Default onToolCall returns true")
     void defaultOnToolCallReturnsTrue() {
       Agent.LoopCallbacks callbacks = new Agent.LoopCallbacks() {};
-      
+
       boolean result = callbacks.onToolCall(null);
-      
+
       assertTrue(result, "Default onToolCall should return true");
     }
 
@@ -88,7 +82,7 @@ class AgentCoverageEnhancementTest {
     @DisplayName("Default onToolExecuted does nothing")
     void defaultOnToolExecutedDoesNothing() {
       Agent.LoopCallbacks callbacks = new Agent.LoopCallbacks() {};
-      
+
       assertDoesNotThrow(() -> callbacks.onToolExecuted(null));
     }
 
@@ -96,7 +90,7 @@ class AgentCoverageEnhancementTest {
     @DisplayName("Default onHandoff does nothing")
     void defaultOnHandoffDoesNothing() {
       Agent.LoopCallbacks callbacks = new Agent.LoopCallbacks() {};
-      
+
       assertDoesNotThrow(() -> callbacks.onHandoff(null));
     }
 
@@ -104,7 +98,7 @@ class AgentCoverageEnhancementTest {
     @DisplayName("Default onGuardrailFailed does nothing")
     void defaultOnGuardrailFailedDoesNothing() {
       Agent.LoopCallbacks callbacks = new Agent.LoopCallbacks() {};
-      
+
       assertDoesNotThrow(() -> callbacks.onGuardrailFailed(null));
     }
 
@@ -112,9 +106,9 @@ class AgentCoverageEnhancementTest {
     @DisplayName("Default onPauseRequested returns null")
     void defaultOnPauseRequestedReturnsNull() {
       Agent.LoopCallbacks callbacks = new Agent.LoopCallbacks() {};
-      
+
       AgentRunState result = callbacks.onPauseRequested(null, null, null, null);
-      
+
       assertNull(result, "Default onPauseRequested should return null");
     }
   }
@@ -133,31 +127,34 @@ class AgentCoverageEnhancementTest {
       // Create a mock server that will fail for the target agent
       MockWebServer failingServer = new MockWebServer();
       failingServer.start();
-      
+
       try {
         // Configure failing responder with no retries to speed up test
-        Responder failingResponder = Responder.builder()
-            .baseUrl(failingServer.url("/v1/responses"))
-            .apiKey("test-key")
-            .maxRetries(0) // No retries for faster test
-            .build();
+        Responder failingResponder =
+            Responder.builder()
+                .baseUrl(failingServer.url("/v1/responses"))
+                .apiKey("test-key")
+                .maxRetries(0) // No retries for faster test
+                .build();
 
         // Target agent that will fail
-        Agent targetAgent = Agent.builder()
-            .name("FailingAgent")
-            .model("test-model")
-            .instructions("Will fail")
-            .responder(failingResponder)
-            .build();
+        Agent targetAgent =
+            Agent.builder()
+                .name("FailingAgent")
+                .model("test-model")
+                .instructions("Will fail")
+                .responder(failingResponder)
+                .build();
 
         // Main agent with handoff to failing agent
-        Agent mainAgent = Agent.builder()
-            .name("MainAgent")
-            .model("test-model")
-            .instructions("Route to target")
-            .responder(responder)
-            .addHandoff(Handoff.to(targetAgent).build())
-            .build();
+        Agent mainAgent =
+            Agent.builder()
+                .name("MainAgent")
+                .model("test-model")
+                .instructions("Route to target")
+                .responder(responder)
+                .addHandoff(Handoff.to(targetAgent).build())
+                .build();
 
         // Main agent triggers handoff
         enqueueHandoffResponse("transfer_to_failing_agent", "{\"message\": \"help\"}");
@@ -169,7 +166,10 @@ class AgentCoverageEnhancementTest {
         // Should complete (either with error or handoff failure)
         assertNotNull(result, "Result should not be null");
       } finally {
-        try { failingServer.shutdown(); } catch (Exception ignored) {}
+        try {
+          failingServer.shutdown();
+        } catch (Exception ignored) {
+        }
       }
     }
   }
@@ -188,18 +188,19 @@ class AgentCoverageEnhancementTest {
       // Test the non-streaming pause path (lines 676-683)
       FunctionTool<TestArgs> tool = new ConfirmationTool();
 
-      Agent agent = Agent.builder()
-          .name("PauseAgent")
-          .model("test-model")
-          .instructions("Use tools")
-          .responder(responder)
-          .addTool(tool)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("PauseAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(tool)
+              .build();
 
       enqueueToolCallResponse("confirmation_tool", "{\"query\": \"test\"}");
 
       AgentResult result = agent.interact("Do something").join();
-      
+
       // Non-streaming should pause when tool requires confirmation
       assertTrue(result.isPaused(), "Result should be paused for confirmation tool");
       assertNotNull(result.pausedState(), "Paused state should be available");
@@ -223,26 +224,30 @@ class AgentCoverageEnhancementTest {
 
       FunctionTool<TestArgs> tool = new SimpleTool();
 
-      Agent agent = Agent.builder()
-          .name("RejectAgent")
-          .model("test-model")
-          .instructions("Use tools")
-          .responder(responder)
-          .addTool(tool)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("RejectAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(tool)
+              .build();
 
       enqueueToolCallResponse("simple_tool", "{\"query\": \"test\"}");
       enqueueSuccessResponse("Done after rejection");
 
-      agent.interactStream("Do something")
-          .onToolCallPending((call, approve) -> {
-            toolCallCaptured.set(true);
-            approve.accept(false); // Reject the tool call
-          })
-          .onComplete(result -> {
-            capturedResult.set(result);
-            latch.countDown();
-          })
+      agent
+          .interactStream("Do something")
+          .onToolCallPending(
+              (call, approve) -> {
+                toolCallCaptured.set(true);
+                approve.accept(false); // Reject the tool call
+              })
+          .onComplete(
+              result -> {
+                capturedResult.set(result);
+                latch.countDown();
+              })
           .onError(e -> latch.countDown())
           .start();
 
@@ -266,13 +271,14 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("Structured output parsing with outputType returns parsed object")
     void structuredOutputParsingSuccessWithOutputType() throws Exception {
-      Agent agent = Agent.builder()
-          .name("StructuredAgent")
-          .model("test-model")
-          .instructions("Extract person info")
-          .responder(responder)
-          .outputType(Person.class)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("StructuredAgent")
+              .model("test-model")
+              .instructions("Extract person info")
+              .responder(responder)
+              .outputType(Person.class)
+              .build();
 
       // Enqueue valid JSON response
       String validJson = "{\"name\":\"John\",\"age\":30}";
@@ -281,7 +287,8 @@ class AgentCoverageEnhancementTest {
       AgentResult result = agent.interact("John is 30").join();
 
       // The result should complete successfully
-      // parsed() may return the raw ParsedResponse or the actual typed object depending on Response.parse()
+      // parsed() may return the raw ParsedResponse or the actual typed object depending on
+      // Response.parse()
       assertNotNull(result, "Result should not be null");
       assertTrue(result.isSuccess(), "Result should be success");
     }
@@ -289,13 +296,14 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("Structured output parsing failure returns error")
     void structuredOutputParsingFailureReturnsError() throws Exception {
-      Agent agent = Agent.builder()
-          .name("StructuredAgent")
-          .model("test-model")
-          .instructions("Extract person info")
-          .responder(responder)
-          .outputType(Person.class)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("StructuredAgent")
+              .model("test-model")
+              .instructions("Extract person info")
+              .responder(responder)
+              .outputType(Person.class)
+              .build();
 
       // Enqueue invalid JSON that cannot be parsed as Person
       enqueueSuccessResponse("This is not valid JSON for Person class");
@@ -319,20 +327,22 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("Handoff with invalid JSON arguments gracefully handles error")
     void handoffWithInvalidJsonArgumentsHandlesError() throws Exception {
-      Agent targetAgent = Agent.builder()
-          .name("TargetAgent")
-          .model("test-model")
-          .instructions("Target")
-          .responder(responder)
-          .build();
+      Agent targetAgent =
+          Agent.builder()
+              .name("TargetAgent")
+              .model("test-model")
+              .instructions("Target")
+              .responder(responder)
+              .build();
 
-      Agent mainAgent = Agent.builder()
-          .name("MainAgent")
-          .model("test-model")
-          .instructions("Route")
-          .responder(responder)
-          .addHandoff(Handoff.to(targetAgent).build())
-          .build();
+      Agent mainAgent =
+          Agent.builder()
+              .name("MainAgent")
+              .model("test-model")
+              .instructions("Route")
+              .responder(responder)
+              .addHandoff(Handoff.to(targetAgent).build())
+              .build();
 
       // Enqueue handoff with malformed JSON arguments
       enqueueHandoffResponse("transfer_to_target_agent", "not valid json at all {{{");
@@ -342,26 +352,29 @@ class AgentCoverageEnhancementTest {
       AgentResult result = mainAgent.interact("Route me").join();
 
       // Should still complete (message extraction returns null gracefully)
-      assertFalse(result.isError(), "Should not fail on invalid JSON - falls back to empty message");
+      assertFalse(
+          result.isError(), "Should not fail on invalid JSON - falls back to empty message");
     }
 
     @Test
     @DisplayName("Handoff with empty message falls back to null")
     void handoffWithEmptyMessageFallsBackToNull() throws Exception {
-      Agent targetAgent = Agent.builder()
-          .name("TargetAgent")
-          .model("test-model")
-          .instructions("Target")
-          .responder(responder)
-          .build();
+      Agent targetAgent =
+          Agent.builder()
+              .name("TargetAgent")
+              .model("test-model")
+              .instructions("Target")
+              .responder(responder)
+              .build();
 
-      Agent mainAgent = Agent.builder()
-          .name("MainAgent")
-          .model("test-model")
-          .instructions("Route")
-          .responder(responder)
-          .addHandoff(Handoff.to(targetAgent).build())
-          .build();
+      Agent mainAgent =
+          Agent.builder()
+              .name("MainAgent")
+              .model("test-model")
+              .instructions("Route")
+              .responder(responder)
+              .addHandoff(Handoff.to(targetAgent).build())
+              .build();
 
       // Enqueue handoff with valid JSON but missing message field
       enqueueHandoffResponse("transfer_to_target_agent", "{}");
@@ -385,13 +398,14 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("outputType builder method works")
     void outputTypeBuilderMethodWorks() {
-      Agent agent = Agent.builder()
-          .name("TestAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .outputType(String.class)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("TestAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .outputType(String.class)
+              .build();
 
       assertNotNull(agent);
     }
@@ -399,41 +413,46 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("maxOutputTokens rejects negative value")
     void maxOutputTokensRejectsNegativeValue() {
-      assertThrows(IllegalArgumentException.class, () -> 
-          Agent.builder()
-              .name("TestAgent")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .maxOutputTokens(-1)
-              .build());
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              Agent.builder()
+                  .name("TestAgent")
+                  .model("test-model")
+                  .instructions("Test")
+                  .responder(responder)
+                  .maxOutputTokens(-1)
+                  .build());
     }
 
     @Test
     @DisplayName("maxOutputTokens rejects zero")
     void maxOutputTokensRejectsZero() {
-      assertThrows(IllegalArgumentException.class, () -> 
-          Agent.builder()
-              .name("TestAgent")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .maxOutputTokens(0)
-              .build());
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              Agent.builder()
+                  .name("TestAgent")
+                  .model("test-model")
+                  .instructions("Test")
+                  .responder(responder)
+                  .maxOutputTokens(0)
+                  .build());
     }
 
     @Test
     @DisplayName("addMemoryTools adds memory tools")
     void addMemoryToolsAddsTools() {
       Memory memory = InMemoryMemory.create();
-      
-      Agent agent = Agent.builder()
-          .name("MemoryAgent")
-          .model("test-model")
-          .instructions("Use memory")
-          .responder(responder)
-          .addMemoryTools(memory)
-          .build();
+
+      Agent agent =
+          Agent.builder()
+              .name("MemoryAgent")
+              .model("test-model")
+              .instructions("Use memory")
+              .responder(responder)
+              .addMemoryTools(memory)
+              .build();
 
       assertNotNull(agent);
     }
@@ -441,18 +460,20 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("addTelemetryProcessor adds processor")
     void addTelemetryProcessorAddsProcessor() {
-      TelemetryProcessor processor = new TelemetryProcessor("test-proc") {
-        @Override
-        protected void doProcess(TelemetryEvent event) {}
-      };
+      TelemetryProcessor processor =
+          new TelemetryProcessor("test-proc") {
+            @Override
+            protected void doProcess(TelemetryEvent event) {}
+          };
 
-      Agent agent = Agent.builder()
-          .name("TelemetryAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .addTelemetryProcessor(processor)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("TelemetryAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addTelemetryProcessor(processor)
+              .build();
 
       assertNotNull(agent);
       processor.shutdown();
@@ -463,13 +484,14 @@ class AgentCoverageEnhancementTest {
     void retryPolicyBuilderMethodWorks() {
       RetryPolicy policy = RetryPolicy.builder().maxRetries(3).build();
 
-      Agent agent = Agent.builder()
-          .name("RetryAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .retryPolicy(policy)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("RetryAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .retryPolicy(policy)
+              .build();
 
       assertNotNull(agent);
     }
@@ -477,13 +499,14 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("maxRetries builder method works")
     void maxRetriesBuilderMethodWorks() {
-      Agent agent = Agent.builder()
-          .name("RetryAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .maxRetries(5)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("RetryAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .maxRetries(5)
+              .build();
 
       assertNotNull(agent);
     }
@@ -504,14 +527,15 @@ class AgentCoverageEnhancementTest {
     void structuredBuilderForwardsAddTool() {
       FunctionTool<TestArgs> tool = new SimpleTool();
 
-      Agent.Structured<Person> agent = Agent.builder()
-          .name("StructuredAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(Person.class)
-          .addTool(tool)
-          .build();
+      Agent.Structured<Person> agent =
+          Agent.builder()
+              .name("StructuredAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(Person.class)
+              .addTool(tool)
+              .build();
 
       assertNotNull(agent);
     }
@@ -521,14 +545,15 @@ class AgentCoverageEnhancementTest {
     void structuredBuilderForwardsAddMemoryTools() {
       Memory memory = InMemoryMemory.create();
 
-      Agent.Structured<Person> agent = Agent.builder()
-          .name("StructuredAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(Person.class)
-          .addMemoryTools(memory)
-          .build();
+      Agent.Structured<Person> agent =
+          Agent.builder()
+              .name("StructuredAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(Person.class)
+              .addMemoryTools(memory)
+              .build();
 
       assertNotNull(agent);
     }
@@ -536,21 +561,23 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("StructuredBuilder forwards addHandoff")
     void structuredBuilderForwardsAddHandoff() {
-      Agent targetAgent = Agent.builder()
-          .name("Target")
-          .model("test-model")
-          .instructions("Target")
-          .responder(responder)
-          .build();
+      Agent targetAgent =
+          Agent.builder()
+              .name("Target")
+              .model("test-model")
+              .instructions("Target")
+              .responder(responder)
+              .build();
 
-      Agent.Structured<Person> agent = Agent.builder()
-          .name("StructuredAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(Person.class)
-          .addHandoff(Handoff.to(targetAgent).build())
-          .build();
+      Agent.Structured<Person> agent =
+          Agent.builder()
+              .name("StructuredAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(Person.class)
+              .addHandoff(Handoff.to(targetAgent).build())
+              .build();
 
       assertNotNull(agent);
     }
@@ -558,19 +585,21 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("StructuredBuilder forwards addTelemetryProcessor")
     void structuredBuilderForwardsAddTelemetryProcessor() {
-      TelemetryProcessor processor = new TelemetryProcessor("test-proc") {
-        @Override
-        protected void doProcess(TelemetryEvent event) {}
-      };
+      TelemetryProcessor processor =
+          new TelemetryProcessor("test-proc") {
+            @Override
+            protected void doProcess(TelemetryEvent event) {}
+          };
 
-      Agent.Structured<Person> agent = Agent.builder()
-          .name("StructuredAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(Person.class)
-          .addTelemetryProcessor(processor)
-          .build();
+      Agent.Structured<Person> agent =
+          Agent.builder()
+              .name("StructuredAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(Person.class)
+              .addTelemetryProcessor(processor)
+              .build();
 
       assertNotNull(agent);
       processor.shutdown();
@@ -581,14 +610,15 @@ class AgentCoverageEnhancementTest {
     void structuredBuilderForwardsRetryPolicy() {
       RetryPolicy policy = RetryPolicy.builder().maxRetries(3).build();
 
-      Agent.Structured<Person> agent = Agent.builder()
-          .name("StructuredAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(Person.class)
-          .retryPolicy(policy)
-          .build();
+      Agent.Structured<Person> agent =
+          Agent.builder()
+              .name("StructuredAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(Person.class)
+              .retryPolicy(policy)
+              .build();
 
       assertNotNull(agent);
     }
@@ -596,14 +626,15 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("StructuredBuilder forwards maxRetries")
     void structuredBuilderForwardsMaxRetries() {
-      Agent.Structured<Person> agent = Agent.builder()
-          .name("StructuredAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(Person.class)
-          .maxRetries(3)
-          .build();
+      Agent.Structured<Person> agent =
+          Agent.builder()
+              .name("StructuredAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(Person.class)
+              .maxRetries(3)
+              .build();
 
       assertNotNull(agent);
     }
@@ -624,23 +655,26 @@ class AgentCoverageEnhancementTest {
       AtomicReference<AgentResult> capturedResult = new AtomicReference<>();
       CountDownLatch latch = new CountDownLatch(1);
 
-      Agent agent = Agent.builder()
-          .name("GuardrailAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .addOutputGuardrail((output, ctx) -> 
-              GuardrailResult.failed("Output blocked for test"))
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("GuardrailAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addOutputGuardrail(
+                  (output, ctx) -> GuardrailResult.failed("Output blocked for test"))
+              .build();
 
       enqueueSuccessResponse("Some response that will be blocked");
 
-      agent.interactStream("Test input")
+      agent
+          .interactStream("Test input")
           .onGuardrailFailed(failed -> guardrailFailedCalled.set(true))
-          .onComplete(result -> {
-            capturedResult.set(result);
-            latch.countDown();
-          })
+          .onComplete(
+              result -> {
+                capturedResult.set(result);
+                latch.countDown();
+              })
           .onError(e -> latch.countDown())
           .start();
 
@@ -663,17 +697,16 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("TelemetryContext userId is merged")
     void telemetryContextUserIdIsMerged() {
-      TelemetryContext ctx = TelemetryContext.builder()
-          .userId("user-123")
-          .build();
+      TelemetryContext ctx = TelemetryContext.builder().userId("user-123").build();
 
-      Agent agent = Agent.builder()
-          .name("TelemetryAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .telemetryContext(ctx)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("TelemetryAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .telemetryContext(ctx)
+              .build();
 
       assertNotNull(agent);
     }
@@ -681,12 +714,13 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("Agent with empty response output")
     void agentWithEmptyResponseOutput() throws Exception {
-      Agent agent = Agent.builder()
-          .name("EmptyAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("EmptyAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .build();
 
       enqueueEmptyOutputResponse();
 
@@ -700,13 +734,14 @@ class AgentCoverageEnhancementTest {
     @DisplayName("Agent handles null tool call in list")
     void agentHandlesNullToolCallInList() throws Exception {
       // This tests the `if (call == null) continue;` path at line 673
-      Agent agent = Agent.builder()
-          .name("NullCheckAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .addTool(new SimpleTool())
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("NullCheckAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addTool(new SimpleTool())
+              .build();
 
       enqueueSuccessResponse("Normal response");
 
@@ -744,7 +779,8 @@ class AgentCoverageEnhancementTest {
   }
 
   private void enqueueSuccessResponse(String text) {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -770,7 +806,8 @@ class AgentCoverageEnhancementTest {
             "total_tokens": 15
           }
         }
-        """.formatted(text.replace("\"", "\\\""));
+        """
+            .formatted(text.replace("\"", "\\\""));
 
     mockWebServer.enqueue(
         new MockResponse()
@@ -780,7 +817,8 @@ class AgentCoverageEnhancementTest {
   }
 
   private void enqueueStructuredResponse(String structuredJson) {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -806,7 +844,8 @@ class AgentCoverageEnhancementTest {
             "total_tokens": 15
           }
         }
-        """.formatted(structuredJson.replace("\"", "\\\""));
+        """
+            .formatted(structuredJson.replace("\"", "\\\""));
 
     mockWebServer.enqueue(
         new MockResponse()
@@ -816,7 +855,8 @@ class AgentCoverageEnhancementTest {
   }
 
   private void enqueueEmptyOutputResponse() {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -840,7 +880,8 @@ class AgentCoverageEnhancementTest {
   }
 
   private void enqueueToolCallResponse(String toolName, String arguments) {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -862,7 +903,8 @@ class AgentCoverageEnhancementTest {
             "total_tokens": 15
           }
         }
-        """.formatted(toolName, arguments.replace("\"", "\\\""));
+        """
+            .formatted(toolName, arguments.replace("\"", "\\\""));
 
     mockWebServer.enqueue(
         new MockResponse()
@@ -872,7 +914,8 @@ class AgentCoverageEnhancementTest {
   }
 
   private void enqueueHandoffResponse(String handoffName, String arguments) {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -894,7 +937,8 @@ class AgentCoverageEnhancementTest {
             "total_tokens": 15
           }
         }
-        """.formatted(handoffName, arguments.replace("\"", "\\\""));
+        """
+            .formatted(handoffName, arguments.replace("\"", "\\\""));
 
     mockWebServer.enqueue(
         new MockResponse()
@@ -920,26 +964,30 @@ class AgentCoverageEnhancementTest {
 
       FunctionTool<TestArgs> tool = new ConfirmationTool();
 
-      Agent agent = Agent.builder()
-          .name("RejectStreamAgent")
-          .model("test-model")
-          .instructions("Use tools")
-          .responder(responder)
-          .addTool(tool)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("RejectStreamAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(tool)
+              .build();
 
       enqueueToolCallResponse("confirmation_tool", "{\"query\": \"test\"}");
       enqueueSuccessResponse("After rejection");
 
-      agent.interactStream("Do something")
-          .onToolCallPending((call, approve) -> {
-            toolRejected.set(true);
-            approve.accept(false); // Reject
-          })
-          .onComplete(result -> {
-            capturedResult.set(result);
-            latch.countDown();
-          })
+      agent
+          .interactStream("Do something")
+          .onToolCallPending(
+              (call, approve) -> {
+                toolRejected.set(true);
+                approve.accept(false); // Reject
+              })
+          .onComplete(
+              result -> {
+                capturedResult.set(result);
+                latch.countDown();
+              })
           .onError(e -> latch.countDown())
           .start();
 
@@ -964,13 +1012,14 @@ class AgentCoverageEnhancementTest {
       // Test the pause path through non-streaming - more reliable than streaming
       FunctionTool<TestArgs> tool = new ConfirmationTool();
 
-      Agent agent = Agent.builder()
-          .name("PauseCallbackAgent")
-          .model("test-model")
-          .instructions("Use tools")
-          .responder(responder)
-          .addTool(tool)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("PauseCallbackAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(tool)
+              .build();
 
       enqueueToolCallResponse("confirmation_tool", "{\"query\": \"test\"}");
 
@@ -995,14 +1044,15 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("Structured agent handles input guardrail failure")
     void structuredAgentHandlesInputGuardrailFailure() throws Exception {
-      Agent.Structured<Person> agent = Agent.builder()
-          .name("StructuredGuardrailAgent")
-          .model("test-model")
-          .instructions("Extract person info")
-          .responder(responder)
-          .structured(Person.class)
-          .addInputGuardrail((input, ctx) -> GuardrailResult.failed("Blocked"))
-          .build();
+      Agent.Structured<Person> agent =
+          Agent.builder()
+              .name("StructuredGuardrailAgent")
+              .model("test-model")
+              .instructions("Extract person info")
+              .responder(responder)
+              .structured(Person.class)
+              .addInputGuardrail((input, ctx) -> GuardrailResult.failed("Blocked"))
+              .build();
 
       StructuredAgentResult<Person> result = agent.interact("Blocked input").join();
 
@@ -1014,13 +1064,14 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("Structured agent handles parsing failure")
     void structuredAgentHandlesParsingFailure() throws Exception {
-      Agent.Structured<Person> agent = Agent.builder()
-          .name("StructuredParseFailAgent")
-          .model("test-model")
-          .instructions("Extract person info")
-          .responder(responder)
-          .structured(Person.class)
-          .build();
+      Agent.Structured<Person> agent =
+          Agent.builder()
+              .name("StructuredParseFailAgent")
+              .model("test-model")
+              .instructions("Extract person info")
+              .responder(responder)
+              .structured(Person.class)
+              .build();
 
       // Enqueue response that is not valid JSON for Person
       enqueueSuccessResponse("This is plain text, not JSON");
@@ -1034,13 +1085,14 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("Structured agent interact with context works")
     void structuredAgentInteractWithContextWorks() throws Exception {
-      Agent.Structured<Person> agent = Agent.builder()
-          .name("StructuredCtxAgent")
-          .model("test-model")
-          .instructions("Extract person info")
-          .responder(responder)
-          .structured(Person.class)
-          .build();
+      Agent.Structured<Person> agent =
+          Agent.builder()
+              .name("StructuredCtxAgent")
+              .model("test-model")
+              .instructions("Extract person info")
+              .responder(responder)
+              .structured(Person.class)
+              .build();
 
       AgentContext context = AgentContext.create();
       enqueueStructuredResponse("{\"name\":\"Jane\",\"age\":25}");
@@ -1064,15 +1116,17 @@ class AgentCoverageEnhancementTest {
     @DisplayName("extractFunctionToolCalls handles response with null output")
     void extractFunctionToolCallsHandlesNullOutput() throws Exception {
       // Test where response has null output (line 862)
-      Agent agent = Agent.builder()
-          .name("NullOutputAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("NullOutputAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .build();
 
       // Response with null output
-      String json = """
+      String json =
+          """
           {
             "id": "resp_001",
             "object": "response",
@@ -1087,11 +1141,14 @@ class AgentCoverageEnhancementTest {
             }
           }
           """;
-      mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(json)
-          .addHeader("Content-Type", "application/json"));
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .addHeader("Content-Type", "application/json"));
 
       AgentResult result = agent.interact("Test").join();
-      
+
       assertNotNull(result);
     }
 
@@ -1100,13 +1157,14 @@ class AgentCoverageEnhancementTest {
     void structuredAgentOutputTypeAccessorReturnsCorrectType() {
       record TestRecord(String value) {}
 
-      Agent.Structured<TestRecord> agent = Agent.builder()
-          .name("TypeAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(TestRecord.class)
-          .build();
+      Agent.Structured<TestRecord> agent =
+          Agent.builder()
+              .name("TypeAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(TestRecord.class)
+              .build();
 
       assertEquals(TestRecord.class, agent.outputType());
     }
@@ -1114,13 +1172,14 @@ class AgentCoverageEnhancementTest {
     @Test
     @DisplayName("Structured agent name accessor returns agent name")
     void structuredAgentNameAccessorReturnsAgentName() {
-      Agent.Structured<String> agent = Agent.builder()
-          .name("NamedAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .structured(String.class)
-          .build();
+      Agent.Structured<String> agent =
+          Agent.builder()
+              .name("NamedAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .structured(String.class)
+              .build();
 
       assertEquals("NamedAgent", agent.name());
     }

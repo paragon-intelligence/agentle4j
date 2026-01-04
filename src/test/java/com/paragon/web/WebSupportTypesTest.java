@@ -7,13 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for supporting types in the web package:
- * - Viewport
- * - Location
- * - ProxyMode
- * - PdfFormat
- * - ScrollDirection
- * - ScrapeResult
+ * Tests for supporting types in the web package: - Viewport - Location - ProxyMode - PdfFormat -
+ * ScrollDirection - ScrapeResult
  */
 class WebSupportTypesTest {
 
@@ -221,7 +216,8 @@ class WebSupportTypesTest {
 
   @Test
   void scrapeResult_storesUrlAndHtml() {
-    ScrapeResult result = new ScrapeResult("https://example.com", "<html><body>Hello</body></html>");
+    ScrapeResult result =
+        new ScrapeResult("https://example.com", "<html><body>Hello</body></html>");
 
     assertEquals("https://example.com", result.url());
     assertEquals("<html><body>Hello</body></html>", result.html());

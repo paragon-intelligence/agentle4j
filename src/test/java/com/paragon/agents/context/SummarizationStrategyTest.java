@@ -24,10 +24,8 @@ class SummarizationStrategyTest {
   void setUp() throws Exception {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
-    responder = Responder.builder()
-        .baseUrl(mockWebServer.url("/v1/responses"))
-        .apiKey("test-key")
-        .build();
+    responder =
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -46,8 +44,8 @@ class SummarizationStrategyTest {
     @Test
     @DisplayName("withResponder creates strategy with defaults")
     void withResponderCreatesStrategy() {
-      SummarizationStrategy strategy = SummarizationStrategy.withResponder(
-          responder, "gpt-4o-mini");
+      SummarizationStrategy strategy =
+          SummarizationStrategy.withResponder(responder, "gpt-4o-mini");
 
       assertNotNull(strategy);
       assertEquals("gpt-4o-mini", strategy.model());
@@ -73,12 +71,13 @@ class SummarizationStrategyTest {
     @Test
     @DisplayName("build creates strategy with all fields")
     void buildCreatesStrategy() {
-      SummarizationStrategy strategy = SummarizationStrategy.builder()
-          .responder(responder)
-          .model("gpt-4o-mini")
-          .keepRecentMessages(10)
-          .summarizationPrompt("Summarize: %s")
-          .build();
+      SummarizationStrategy strategy =
+          SummarizationStrategy.builder()
+              .responder(responder)
+              .model("gpt-4o-mini")
+              .keepRecentMessages(10)
+              .summarizationPrompt("Summarize: %s")
+              .build();
 
       assertNotNull(strategy);
       assertEquals("gpt-4o-mini", strategy.model());
@@ -88,30 +87,24 @@ class SummarizationStrategyTest {
     @Test
     @DisplayName("responder is required")
     void responderIsRequired() {
-      assertThrows(NullPointerException.class, () ->
-          SummarizationStrategy.builder()
-              .model("gpt-4o-mini")
-              .build()
-      );
+      assertThrows(
+          NullPointerException.class,
+          () -> SummarizationStrategy.builder().model("gpt-4o-mini").build());
     }
 
     @Test
     @DisplayName("model is required")
     void modelIsRequired() {
-      assertThrows(NullPointerException.class, () ->
-          SummarizationStrategy.builder()
-              .responder(responder)
-              .build()
-      );
+      assertThrows(
+          NullPointerException.class,
+          () -> SummarizationStrategy.builder().responder(responder).build());
     }
 
     @Test
     @DisplayName("keepRecentMessages defaults to 5")
     void keepRecentMessagesDefaultsTo5() {
-      SummarizationStrategy strategy = SummarizationStrategy.builder()
-          .responder(responder)
-          .model("gpt-4o-mini")
-          .build();
+      SummarizationStrategy strategy =
+          SummarizationStrategy.builder().responder(responder).model("gpt-4o-mini").build();
 
       assertEquals(5, strategy.keepRecentMessages());
     }
@@ -119,11 +112,12 @@ class SummarizationStrategyTest {
     @Test
     @DisplayName("keepRecentMessages can be customized")
     void keepRecentMessagesCanBeCustomized() {
-      SummarizationStrategy strategy = SummarizationStrategy.builder()
-          .responder(responder)
-          .model("gpt-4o-mini")
-          .keepRecentMessages(3)
-          .build();
+      SummarizationStrategy strategy =
+          SummarizationStrategy.builder()
+              .responder(responder)
+              .model("gpt-4o-mini")
+              .keepRecentMessages(3)
+              .build();
 
       assertEquals(3, strategy.keepRecentMessages());
     }
@@ -131,11 +125,12 @@ class SummarizationStrategyTest {
     @Test
     @DisplayName("summarizationPrompt can be customized")
     void summarizationPromptCanBeCustomized() {
-      SummarizationStrategy strategy = SummarizationStrategy.builder()
-          .responder(responder)
-          .model("gpt-4o-mini")
-          .summarizationPrompt("Custom prompt: %s")
-          .build();
+      SummarizationStrategy strategy =
+          SummarizationStrategy.builder()
+              .responder(responder)
+              .model("gpt-4o-mini")
+              .summarizationPrompt("Custom prompt: %s")
+              .build();
 
       assertNotNull(strategy);
     }
@@ -152,8 +147,8 @@ class SummarizationStrategyTest {
     @Test
     @DisplayName("model returns configured model")
     void modelReturnsValue() {
-      SummarizationStrategy strategy = SummarizationStrategy.withResponder(
-          responder, "gpt-3.5-turbo");
+      SummarizationStrategy strategy =
+          SummarizationStrategy.withResponder(responder, "gpt-3.5-turbo");
 
       assertEquals("gpt-3.5-turbo", strategy.model());
     }
@@ -161,11 +156,12 @@ class SummarizationStrategyTest {
     @Test
     @DisplayName("keepRecentMessages returns configured count")
     void keepRecentMessagesReturnsValue() {
-      SummarizationStrategy strategy = SummarizationStrategy.builder()
-          .responder(responder)
-          .model("gpt-4o-mini")
-          .keepRecentMessages(7)
-          .build();
+      SummarizationStrategy strategy =
+          SummarizationStrategy.builder()
+              .responder(responder)
+              .model("gpt-4o-mini")
+              .keepRecentMessages(7)
+              .build();
 
       assertEquals(7, strategy.keepRecentMessages());
     }
@@ -184,10 +180,7 @@ class SummarizationStrategyTest {
 
     @BeforeEach
     void setUpManage() {
-      strategy = SummarizationStrategy.builder()
-          .responder(responder)
-          .model("gpt-4o-mini")
-          .build();
+      strategy = SummarizationStrategy.builder().responder(responder).model("gpt-4o-mini").build();
       counter = new SimpleTokenCounter();
     }
 
@@ -226,16 +219,14 @@ class SummarizationStrategyTest {
     @Test
     @DisplayName("manage throws on null history")
     void throwsOnNullHistory() {
-      assertThrows(NullPointerException.class, () ->
-          strategy.manage(null, 1000, counter));
+      assertThrows(NullPointerException.class, () -> strategy.manage(null, 1000, counter));
     }
 
     @Test
     @DisplayName("manage throws on null counter")
     void throwsOnNullCounter() {
       List<ResponseInputItem> history = new ArrayList<>();
-      assertThrows(NullPointerException.class, () ->
-          strategy.manage(history, 1000, null));
+      assertThrows(NullPointerException.class, () -> strategy.manage(history, 1000, null));
     }
   }
 
@@ -251,11 +242,12 @@ class SummarizationStrategyTest {
     @DisplayName("returns recent messages when history matches keepRecentMessages")
     void returnsRecentMessagesWhenHistoryMatchesKeepRecent() {
       // Use a very small keepRecentMessages with a limited token budget
-      SummarizationStrategy strategy = SummarizationStrategy.builder()
-          .responder(responder)
-          .model("gpt-4o-mini")
-          .keepRecentMessages(2)
-          .build();
+      SummarizationStrategy strategy =
+          SummarizationStrategy.builder()
+              .responder(responder)
+              .model("gpt-4o-mini")
+              .keepRecentMessages(2)
+              .build();
 
       // This is really a test of the keep-recent logic
       List<ResponseInputItem> history = new ArrayList<>();
@@ -264,7 +256,7 @@ class SummarizationStrategyTest {
 
       TokenCounter counter = new SimpleTokenCounter();
       List<ResponseInputItem> result = strategy.manage(history, 10000, counter);
-      
+
       // When within limits, returns unchanged
       assertEquals(2, result.size());
     }
@@ -273,23 +265,25 @@ class SummarizationStrategyTest {
     @DisplayName("summarization with API failure falls back gracefully")
     void summarizationWithApiFailureFallsBackGracefully() {
       // Set up a strategy with small keepRecentMessages
-      SummarizationStrategy strategy = SummarizationStrategy.builder()
-          .responder(responder)
-          .model("gpt-4o-mini")
-          .keepRecentMessages(1)
-          .build();
+      SummarizationStrategy strategy =
+          SummarizationStrategy.builder()
+              .responder(responder)
+              .model("gpt-4o-mini")
+              .keepRecentMessages(1)
+              .build();
 
       // Create large history that will trigger summarization attempt
       List<ResponseInputItem> history = new ArrayList<>();
       for (int i = 0; i < 10; i++) {
-        history.add(Message.user("Very long message number " + i + " with lots of words to count."));
+        history.add(
+            Message.user("Very long message number " + i + " with lots of words to count."));
       }
 
-      // The API will fail since we don't enqueue a response, 
+      // The API will fail since we don't enqueue a response,
       // but the strategy should handle it gracefully
       TokenCounter counter = new LimitedTokenCounter(50);
       List<ResponseInputItem> result = strategy.manage(history, 50, counter);
-      
+
       // Should return something valid (either fallback summary or sliding window)
       assertNotNull(result);
       assertFalse(result.isEmpty());
@@ -307,11 +301,12 @@ class SummarizationStrategyTest {
     @Test
     @DisplayName("handles mixed message types")
     void handlesMixedMessageTypes() {
-      SummarizationStrategy strategy = SummarizationStrategy.builder()
-          .responder(responder)
-          .model("gpt-4o-mini")
-          .keepRecentMessages(5)
-          .build();
+      SummarizationStrategy strategy =
+          SummarizationStrategy.builder()
+              .responder(responder)
+              .model("gpt-4o-mini")
+              .keepRecentMessages(5)
+              .build();
 
       List<ResponseInputItem> history = new ArrayList<>();
       history.add(Message.user("Question about weather"));
@@ -328,11 +323,12 @@ class SummarizationStrategyTest {
     @Test
     @DisplayName("handles developer messages")
     void handlesDeveloperMessages() {
-      SummarizationStrategy strategy = SummarizationStrategy.builder()
-          .responder(responder)
-          .model("gpt-4o-mini")
-          .keepRecentMessages(5)
-          .build();
+      SummarizationStrategy strategy =
+          SummarizationStrategy.builder()
+              .responder(responder)
+              .model("gpt-4o-mini")
+              .keepRecentMessages(5)
+              .build();
 
       List<ResponseInputItem> history = new ArrayList<>();
       history.add(Message.developer("You are a helpful assistant."));

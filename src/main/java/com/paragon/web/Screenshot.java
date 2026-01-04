@@ -9,18 +9,18 @@ import org.jspecify.annotations.Nullable;
  * Action to capture a screenshot of the current page or a specific element.
  *
  * @param fullPage Whether to capture a full-page screenshot or limit to the current viewport
- * @param quality  The quality of the screenshot, from 1 to 100. 100 is the highest quality.
+ * @param quality The quality of the screenshot, from 1 to 100. 100 is the highest quality.
  * @param viewport Optional viewport configuration to set before taking the screenshot
  */
 public record Screenshot(
     @JsonProperty("full_page")
-    @JsonPropertyDescription(
-        "Whether to capture a full-page screenshot or limit to the current viewport.")
-    boolean fullPage,
+        @JsonPropertyDescription(
+            "Whether to capture a full-page screenshot or limit to the current viewport.")
+        boolean fullPage,
     @JsonProperty("quality")
-    @JsonPropertyDescription(
-        "The quality of the screenshot, from 1 to 100. 100 is the highest quality.")
-    int quality,
+        @JsonPropertyDescription(
+            "The quality of the screenshot, from 1 to 100. 100 is the highest quality.")
+        int quality,
     @JsonProperty("viewport") @Nullable Viewport viewport)
     implements Action {
 
@@ -67,15 +67,14 @@ public record Screenshot(
       page.setViewportSize(viewport.width(), viewport.height());
     }
 
-    page.screenshot(new Page.ScreenshotOptions()
-        .setFullPage(fullPage)
-        .setQuality(quality)
-        .setType(com.microsoft.playwright.options.ScreenshotType.JPEG));
+    page.screenshot(
+        new Page.ScreenshotOptions()
+            .setFullPage(fullPage)
+            .setQuality(quality)
+            .setType(com.microsoft.playwright.options.ScreenshotType.JPEG));
   }
 
-  /**
-   * Builder for Screenshot.
-   */
+  /** Builder for Screenshot. */
   public static class Builder {
     private boolean fullPage = false;
     private int quality = 80;

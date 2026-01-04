@@ -3,7 +3,6 @@ package com.paragon.web;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.microsoft.playwright.Page;
-import com.microsoft.playwright.options.Media;
 import org.jspecify.annotations.NonNull;
 
 /**
@@ -11,20 +10,18 @@ import org.jspecify.annotations.NonNull;
  *
  * <p>The PDF will be returned as a byte array.
  *
- * @param format    The format of the PDF to generate
+ * @param format The format of the PDF to generate
  * @param landscape Whether to generate the PDF in landscape orientation
- * @param scale     The scale multiplier of the resulting PDF (0.1 to 10.0)
+ * @param scale The scale multiplier of the resulting PDF (0.1 to 10.0)
  */
 public record GeneratePdf(
-    @JsonProperty("format")
-    @JsonPropertyDescription("The format of the PDF to generate.")
-    @NonNull PdfFormat format,
+    @JsonProperty("format") @JsonPropertyDescription("The format of the PDF to generate.")
+        @NonNull PdfFormat format,
     @JsonProperty("landscape")
-    @JsonPropertyDescription("Whether to generate the PDF in landscape orientation.")
-    boolean landscape,
-    @JsonProperty("scale")
-    @JsonPropertyDescription("The scale multiplier of the resulting PDF.")
-    double scale)
+        @JsonPropertyDescription("Whether to generate the PDF in landscape orientation.")
+        boolean landscape,
+    @JsonProperty("scale") @JsonPropertyDescription("The scale multiplier of the resulting PDF.")
+        double scale)
     implements Action {
 
   /**
@@ -57,15 +54,11 @@ public record GeneratePdf(
 
   @Override
   public void execute(Page page) {
-    page.pdf(new Page.PdfOptions()
-        .setFormat(format.getValue())
-        .setLandscape(landscape)
-        .setScale(scale));
+    page.pdf(
+        new Page.PdfOptions().setFormat(format.getValue()).setLandscape(landscape).setScale(scale));
   }
 
-  /**
-   * Builder for GeneratePdf.
-   */
+  /** Builder for GeneratePdf. */
   public static class Builder {
     private PdfFormat format = PdfFormat.LETTER;
     private boolean landscape = false;

@@ -2,14 +2,11 @@ package com.paragon.http;
 
 import org.jspecify.annotations.Nullable;
 
-/**
- * Listener for HTTP client events (logging, metrics).
- */
+/** Listener for HTTP client events (logging, metrics). */
 public interface HttpEventListener {
 
   static HttpEventListener noop() {
-    return new HttpEventListener() {
-    };
+    return new HttpEventListener() {};
   }
 
   static HttpEventListener composite(HttpEventListener... listeners) {
@@ -54,24 +51,18 @@ public interface HttpEventListener {
     };
   }
 
-  default void onRequestStart(HttpRequest request) {
-  }
+  default void onRequestStart(HttpRequest request) {}
 
-  default void onResponse(HttpRequest request, HttpResponse response) {
-  }
+  default void onResponse(HttpRequest request, HttpResponse response) {}
 
-  default void onError(HttpRequest request, Throwable error) {
-  }
+  default void onError(HttpRequest request, Throwable error) {}
 
-  default void onRetry(HttpRequest request, int attempt, long delayMs, @Nullable Throwable lastError) {
-  }
+  default void onRetry(
+      HttpRequest request, int attempt, long delayMs, @Nullable Throwable lastError) {}
 
-  default void onStreamStart(HttpRequest request) {
-  }
+  default void onStreamStart(HttpRequest request) {}
 
-  default void onStreamEvent(HttpRequest request, String data) {
-  }
+  default void onStreamEvent(HttpRequest request, String data) {}
 
-  default void onStreamEnd(HttpRequest request, int eventCount, @Nullable Throwable error) {
-  }
+  default void onStreamEnd(HttpRequest request, int eventCount, @Nullable Throwable error) {}
 }

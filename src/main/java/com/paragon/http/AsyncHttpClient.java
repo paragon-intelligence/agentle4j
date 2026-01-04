@@ -4,9 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.paragon.http.RetryPolicy;
-import okhttp3.*;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -19,6 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import okhttp3.*;
 
 /**
  * Async HTTP client with JSON support and SSE streaming.
@@ -61,28 +59,30 @@ public final class AsyncHttpClient implements AutoCloseable {
     this.defaultHeaders = Map.copyOf(builder.defaultHeaders);
     this.retryPolicy = builder.retryPolicy;
     this.listener = builder.listener;
-    this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-      var t = new Thread(r, "http-retry");
-      t.setDaemon(true);
-      return t;
-    });
+    this.scheduler =
+        Executors.newSingleThreadScheduledExecutor(
+            r -> {
+              var t = new Thread(r, "http-retry");
+              t.setDaemon(true);
+              return t;
+            });
   }
 
   private static OkHttpClient buildOkHttp(Builder b) {
     return new OkHttpClient.Builder()
-            .connectTimeout(b.connectTimeoutMs, TimeUnit.MILLISECONDS)
-            .readTimeout(b.readTimeoutMs, TimeUnit.MILLISECONDS)
-            .writeTimeout(b.writeTimeoutMs, TimeUnit.MILLISECONDS)
-            .connectionPool(new ConnectionPool(5, 5, TimeUnit.MINUTES))
-            .followRedirects(true)
-            .build();
+        .connectTimeout(b.connectTimeoutMs, TimeUnit.MILLISECONDS)
+        .readTimeout(b.readTimeoutMs, TimeUnit.MILLISECONDS)
+        .writeTimeout(b.writeTimeoutMs, TimeUnit.MILLISECONDS)
+        .connectionPool(new ConnectionPool(5, 5, TimeUnit.MINUTES))
+        .followRedirects(true)
+        .build();
   }
 
   private static ObjectMapper buildMapper() {
     return new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        .registerModule(new JavaTimeModule())
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
   }
 
   // ==================== Public API ====================
@@ -95,47 +95,41 @@ public final class AsyncHttpClient implements AutoCloseable {
     return builder().build();
   }
 
-  /**
-   * Executes request and deserializes response.
-   */
+  /** Executes request and deserializes response. */
   public <T> CompletableFuture<T> execute(HttpRequest request, Class<T> responseType) {
-    return execute(request).thenApply(response -> {
-      try {
-        if (response.body() == null) {
-          throw new IllegalStateException("Response has no body");
-        }
-        return mapper.readValue(response.body(), responseType);
-      } catch (IOException e) {
-        throw HttpException.deserializationFailed(response.statusCode(), response.bodyAsString(), e);
-      }
-    });
+    return execute(request)
+        .thenApply(
+            response -> {
+              try {
+                if (response.body() == null) {
+                  throw new IllegalStateException("Response has no body");
+                }
+                return mapper.readValue(response.body(), responseType);
+              } catch (IOException e) {
+                throw HttpException.deserializationFailed(
+                    response.statusCode(), response.bodyAsString(), e);
+              }
+            });
   }
 
-  /**
-   * Executes request and returns raw response.
-   */
+  /** Executes request and returns raw response. */
   public CompletableFuture<HttpResponse> execute(HttpRequest request) {
     return executeWithRetry(request, 1);
   }
 
-  /**
-   * Executes streaming request (SSE).
-   */
+  /** Executes streaming request (SSE). */
   public <T> CompletableFuture<Void> stream(
-          HttpRequest request,
-          Class<T> eventType,
-          Consumer<T> onEvent,
-          Consumer<Throwable> onError,
-          Runnable onComplete
-  ) {
+      HttpRequest request,
+      Class<T> eventType,
+      Consumer<T> onEvent,
+      Consumer<Throwable> onError,
+      Runnable onComplete) {
     return stream(request, StreamConsumer.of(eventType, onEvent, onError, onComplete));
   }
 
   // ==================== Internal ====================
 
-  /**
-   * Executes streaming request with fine-grained control.
-   */
+  /** Executes streaming request with fine-grained control. */
   public <T> CompletableFuture<Void> stream(HttpRequest request, StreamConsumer<T> consumer) {
     var future = new CompletableFuture<Void>();
     var okRequest = buildRequest(request);
@@ -143,24 +137,27 @@ public final class AsyncHttpClient implements AutoCloseable {
     listener.onRequestStart(request);
     listener.onStreamStart(request);
 
-    okHttp.newCall(okRequest).enqueue(new Callback() {
-      @Override
-      public void onFailure(Call call, IOException e) {
-        var ex = HttpException.networkFailure("Stream failed", e);
-        listener.onStreamEnd(request, 0, ex);
-        consumer.onError(ex);
-        future.completeExceptionally(ex);
-      }
+    okHttp
+        .newCall(okRequest)
+        .enqueue(
+            new Callback() {
+              @Override
+              public void onFailure(Call call, IOException e) {
+                var ex = HttpException.networkFailure("Stream failed", e);
+                listener.onStreamEnd(request, 0, ex);
+                consumer.onError(ex);
+                future.completeExceptionally(ex);
+              }
 
-      @Override
-      public void onResponse(Call call, Response response) {
-        if (!response.isSuccessful()) {
-          handleStreamError(request, response, consumer, future);
-          return;
-        }
-        processStream(request, response, consumer, future);
-      }
-    });
+              @Override
+              public void onResponse(Call call, Response response) {
+                if (!response.isSuccessful()) {
+                  handleStreamError(request, response, consumer, future);
+                  return;
+                }
+                processStream(request, response, consumer, future);
+              }
+            });
 
     return future;
   }
@@ -187,59 +184,73 @@ public final class AsyncHttpClient implements AutoCloseable {
 
     listener.onRequestStart(request);
 
-    okHttp.newCall(okRequest).enqueue(new Callback() {
-      @Override
-      public void onFailure(Call call, IOException e) {
-        handleFailure(request, HttpException.networkFailure(e.getMessage(), e), attempt, future);
-      }
+    okHttp
+        .newCall(okRequest)
+        .enqueue(
+            new Callback() {
+              @Override
+              public void onFailure(Call call, IOException e) {
+                handleFailure(
+                    request, HttpException.networkFailure(e.getMessage(), e), attempt, future);
+              }
 
-      @Override
-      public void onResponse(Call call, Response response) {
-        try (response) {
-          var httpResponse = toHttpResponse(response, startTime);
+              @Override
+              public void onResponse(Call call, Response response) {
+                try (response) {
+                  var httpResponse = toHttpResponse(response, startTime);
 
-          if (httpResponse.isSuccessful()) {
-            listener.onResponse(request, httpResponse);
-            future.complete(httpResponse);
-          } else {
-            var ex = HttpException.fromResponse(
-                    httpResponse.statusCode(),
-                    httpResponse.bodyAsString(),
-                    request.method(),
-                    request.url()
-            );
-            handleFailure(request, ex, attempt, future);
-          }
-        } catch (Exception e) {
-          handleFailure(request, HttpException.networkFailure(e.getMessage(), e), attempt, future);
-        }
-      }
-    });
+                  if (httpResponse.isSuccessful()) {
+                    listener.onResponse(request, httpResponse);
+                    future.complete(httpResponse);
+                  } else {
+                    var ex =
+                        HttpException.fromResponse(
+                            httpResponse.statusCode(),
+                            httpResponse.bodyAsString(),
+                            request.method(),
+                            request.url());
+                    handleFailure(request, ex, attempt, future);
+                  }
+                } catch (Exception e) {
+                  handleFailure(
+                      request, HttpException.networkFailure(e.getMessage(), e), attempt, future);
+                }
+              }
+            });
 
     return future;
   }
 
-  private void handleFailure(HttpRequest request, HttpException error, int attempt, CompletableFuture<HttpResponse> future) {
+  private void handleFailure(
+      HttpRequest request,
+      HttpException error,
+      int attempt,
+      CompletableFuture<HttpResponse> future) {
     if (retryPolicy.shouldRetry(error, attempt)) {
       var delay = retryPolicy.delayForAttempt(attempt);
       listener.onRetry(request, attempt + 1, delay, error);
 
       scheduler.schedule(
-              () -> executeWithRetry(request, attempt + 1)
-                      .whenComplete((res, ex) -> {
+          () ->
+              executeWithRetry(request, attempt + 1)
+                  .whenComplete(
+                      (res, ex) -> {
                         if (ex != null) future.completeExceptionally(ex);
                         else future.complete(res);
                       }),
-              delay,
-              TimeUnit.MILLISECONDS
-      );
+          delay,
+          TimeUnit.MILLISECONDS);
     } else {
       listener.onError(request, error);
       future.completeExceptionally(error);
     }
   }
 
-  private <T> void handleStreamError(HttpRequest request, Response response, StreamConsumer<T> consumer, CompletableFuture<Void> future) {
+  private <T> void handleStreamError(
+      HttpRequest request,
+      Response response,
+      StreamConsumer<T> consumer,
+      CompletableFuture<Void> future) {
     String body = null;
     try (response) {
       var responseBody = response.body();
@@ -253,11 +264,18 @@ public final class AsyncHttpClient implements AutoCloseable {
     future.completeExceptionally(ex);
   }
 
-  private <T> void processStream(HttpRequest request, Response response, StreamConsumer<T> consumer, CompletableFuture<Void> future) {
+  private <T> void processStream(
+      HttpRequest request,
+      Response response,
+      StreamConsumer<T> consumer,
+      CompletableFuture<Void> future) {
     var eventCount = 0;
     var dataBuffer = new StringBuilder();
 
-    try (response; var reader = new BufferedReader(new InputStreamReader(response.body().byteStream(), StandardCharsets.UTF_8))) {
+    try (response;
+        var reader =
+            new BufferedReader(
+                new InputStreamReader(response.body().byteStream(), StandardCharsets.UTF_8))) {
       String line;
       while ((line = reader.readLine()) != null) {
         if (consumer.shouldCancel() || future.isCancelled()) break;
@@ -302,7 +320,9 @@ public final class AsyncHttpClient implements AutoCloseable {
     var url = new StringBuilder();
     var requestUrl = request.url();
 
-    if (baseUrl != null && !requestUrl.startsWith("http://") && !requestUrl.startsWith("https://")) {
+    if (baseUrl != null
+        && !requestUrl.startsWith("http://")
+        && !requestUrl.startsWith("https://")) {
       url.append(baseUrl);
       if (!requestUrl.startsWith("/")) url.append("/");
     }
@@ -315,9 +335,8 @@ public final class AsyncHttpClient implements AutoCloseable {
 
     RequestBody body = null;
     if (request.body() != null) {
-      var contentType = request.contentType() != null
-              ? MediaType.parse(request.contentType())
-              : JSON;
+      var contentType =
+          request.contentType() != null ? MediaType.parse(request.contentType()) : JSON;
       body = RequestBody.create(request.body(), contentType);
     }
 
@@ -336,12 +355,7 @@ public final class AsyncHttpClient implements AutoCloseable {
     }
 
     return HttpResponse.of(
-            response.code(),
-            response.message(),
-            headers,
-            body,
-            System.currentTimeMillis() - startTime
-    );
+        response.code(), response.message(), headers, body, System.currentTimeMillis() - startTime);
   }
 
   public static final class Builder {
@@ -355,8 +369,7 @@ public final class AsyncHttpClient implements AutoCloseable {
     private OkHttpClient okHttp;
     private ObjectMapper mapper;
 
-    private Builder() {
-    }
+    private Builder() {}
 
     public Builder baseUrl(String baseUrl) {
       this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;

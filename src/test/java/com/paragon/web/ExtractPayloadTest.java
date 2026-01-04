@@ -5,19 +5,18 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Playwright;
+import java.net.URI;
+import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 
-import java.net.URI;
-import java.util.List;
-
 /**
  * Tests for ExtractPayload and ExtractPayload.Structured classes.
- * 
- * Note: Some tests require Playwright to be installed. Tests that require
- * a real browser are skipped if Playwright is not available.
+ *
+ * <p>Note: Some tests require Playwright to be installed. Tests that require a real browser are
+ * skipped if Playwright is not available.
  */
 class ExtractPayloadTest {
 
@@ -56,10 +55,8 @@ class ExtractPayloadTest {
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void builder_withRequiredFields_createsPayload() {
-    ExtractPayload payload = ExtractPayload.builder()
-        .browser(browser)
-        .url("https://example.com")
-        .build();
+    ExtractPayload payload =
+        ExtractPayload.builder().browser(browser).url("https://example.com").build();
 
     assertNotNull(payload);
     assertEquals(browser, payload.browser());
@@ -73,17 +70,16 @@ class ExtractPayloadTest {
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void builder_withAllFields_createsPayload() {
-    ExtractionPreferences prefs = ExtractionPreferences.builder()
-        .mobile(true)
-        .build();
+    ExtractionPreferences prefs = ExtractionPreferences.builder().mobile(true).build();
 
-    ExtractPayload payload = ExtractPayload.builder()
-        .browser(browser)
-        .url("https://example.com")
-        .prompt("Extract article content")
-        .extractionPreferences(prefs)
-        .ignoreInvalidUrls(false)
-        .build();
+    ExtractPayload payload =
+        ExtractPayload.builder()
+            .browser(browser)
+            .url("https://example.com")
+            .prompt("Extract article content")
+            .extractionPreferences(prefs)
+            .ignoreInvalidUrls(false)
+            .build();
 
     assertEquals("Extract article content", payload.prompt());
     assertEquals(prefs, payload.extractionPreferences());
@@ -93,10 +89,11 @@ class ExtractPayloadTest {
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void builder_withMultipleUrls_createsPayload() {
-    ExtractPayload payload = ExtractPayload.builder()
-        .browser(browser)
-        .urls("https://example.com", "https://test.com")
-        .build();
+    ExtractPayload payload =
+        ExtractPayload.builder()
+            .browser(browser)
+            .urls("https://example.com", "https://test.com")
+            .build();
 
     assertEquals(2, payload.urls().size());
     assertEquals(URI.create("https://example.com"), payload.urls().get(0));
@@ -108,11 +105,12 @@ class ExtractPayloadTest {
   void builder_addUrl_appendsToList() {
     // Note: addUrl creates an ArrayList internally, but url() creates an immutable list
     // So we need to start with addUrl or use multiple URLs via urls()
-    ExtractPayload payload = ExtractPayload.builder()
-        .browser(browser)
-        .addUrl("https://example.com")
-        .addUrl("https://test.com")
-        .build();
+    ExtractPayload payload =
+        ExtractPayload.builder()
+            .browser(browser)
+            .addUrl("https://example.com")
+            .addUrl("https://test.com")
+            .build();
 
     assertEquals(2, payload.urls().size());
   }
@@ -120,15 +118,9 @@ class ExtractPayloadTest {
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void builder_withUriList_acceptsURIs() {
-    List<URI> urls = List.of(
-        URI.create("https://example.com"),
-        URI.create("https://test.com")
-    );
+    List<URI> urls = List.of(URI.create("https://example.com"), URI.create("https://test.com"));
 
-    ExtractPayload payload = ExtractPayload.builder()
-        .browser(browser)
-        .urls(urls)
-        .build();
+    ExtractPayload payload = ExtractPayload.builder().browser(browser).urls(urls).build();
 
     assertEquals(2, payload.urls().size());
   }
@@ -136,14 +128,12 @@ class ExtractPayloadTest {
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void builder_withPreferencesCallback_configuresPreferences() {
-    ExtractPayload payload = ExtractPayload.builder()
-        .browser(browser)
-        .url("https://example.com")
-        .withPreferences(prefs -> prefs
-            .mobile(true)
-            .blockAds(true)
-            .timeoutMs(60_000))
-        .build();
+    ExtractPayload payload =
+        ExtractPayload.builder()
+            .browser(browser)
+            .url("https://example.com")
+            .withPreferences(prefs -> prefs.mobile(true).blockAds(true).timeoutMs(60_000))
+            .build();
 
     assertTrue(payload.extractionPreferences().mobile());
     assertTrue(payload.extractionPreferences().blockAds());
@@ -154,33 +144,25 @@ class ExtractPayloadTest {
 
   @Test
   void builder_withoutBrowser_throwsException() {
-    assertThrows(IllegalStateException.class, () ->
-        ExtractPayload.builder()
-            .url("https://example.com")
-            .build()
-    );
+    assertThrows(
+        IllegalStateException.class,
+        () -> ExtractPayload.builder().url("https://example.com").build());
   }
 
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void builder_withoutUrls_throwsException() {
-    assertThrows(IllegalStateException.class, () ->
-        ExtractPayload.builder()
-            .browser(browser)
-            .build()
-    );
+    assertThrows(
+        IllegalStateException.class, () -> ExtractPayload.builder().browser(browser).build());
   }
 
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void constructor_withEmptyUrls_throwsException() {
     // Builder.validate() throws IllegalStateException when urls is empty
-    assertThrows(IllegalStateException.class, () ->
-        ExtractPayload.builder()
-            .browser(browser)
-            .urls(List.of())
-            .build()
-    );
+    assertThrows(
+        IllegalStateException.class,
+        () -> ExtractPayload.builder().browser(browser).urls(List.of()).build());
   }
 
   // ===== Structured Builder Tests =====
@@ -188,11 +170,12 @@ class ExtractPayloadTest {
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void structuredBuilder_createsStructuredPayload() {
-    ExtractPayload.Structured<TestData> payload = ExtractPayload.structuredBuilder(TestData.class)
-        .browser(browser)
-        .url("https://example.com")
-        .prompt("Extract test data")
-        .build();
+    ExtractPayload.Structured<TestData> payload =
+        ExtractPayload.structuredBuilder(TestData.class)
+            .browser(browser)
+            .url("https://example.com")
+            .prompt("Extract test data")
+            .build();
 
     assertNotNull(payload);
     assertEquals(TestData.class, payload.outputType());
@@ -202,10 +185,11 @@ class ExtractPayloadTest {
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void structuredBuilder_build_returnsStructuredPayload() {
-    ExtractPayload.Structured<TestData> payload = ExtractPayload.structuredBuilder(TestData.class)
-        .browser(browser)
-        .url("https://example.com")
-        .build();
+    ExtractPayload.Structured<TestData> payload =
+        ExtractPayload.structuredBuilder(TestData.class)
+            .browser(browser)
+            .url("https://example.com")
+            .build();
 
     assertInstanceOf(ExtractPayload.Structured.class, payload);
   }
@@ -215,17 +199,11 @@ class ExtractPayloadTest {
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void equals_sameValues_returnsTrue() {
-    ExtractPayload payload1 = ExtractPayload.builder()
-        .browser(browser)
-        .url("https://example.com")
-        .prompt("test")
-        .build();
+    ExtractPayload payload1 =
+        ExtractPayload.builder().browser(browser).url("https://example.com").prompt("test").build();
 
-    ExtractPayload payload2 = ExtractPayload.builder()
-        .browser(browser)
-        .url("https://example.com")
-        .prompt("test")
-        .build();
+    ExtractPayload payload2 =
+        ExtractPayload.builder().browser(browser).url("https://example.com").prompt("test").build();
 
     assertEquals(payload1, payload2);
     assertEquals(payload1.hashCode(), payload2.hashCode());
@@ -234,15 +212,11 @@ class ExtractPayloadTest {
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void equals_differentUrls_returnsFalse() {
-    ExtractPayload payload1 = ExtractPayload.builder()
-        .browser(browser)
-        .url("https://example.com")
-        .build();
+    ExtractPayload payload1 =
+        ExtractPayload.builder().browser(browser).url("https://example.com").build();
 
-    ExtractPayload payload2 = ExtractPayload.builder()
-        .browser(browser)
-        .url("https://other.com")
-        .build();
+    ExtractPayload payload2 =
+        ExtractPayload.builder().browser(browser).url("https://other.com").build();
 
     assertNotEquals(payload1, payload2);
   }
@@ -250,10 +224,8 @@ class ExtractPayloadTest {
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void equals_sameInstance_returnsTrue() {
-    ExtractPayload payload = ExtractPayload.builder()
-        .browser(browser)
-        .url("https://example.com")
-        .build();
+    ExtractPayload payload =
+        ExtractPayload.builder().browser(browser).url("https://example.com").build();
 
     assertEquals(payload, payload);
   }
@@ -261,11 +233,12 @@ class ExtractPayloadTest {
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void toString_containsRelevantInfo() {
-    ExtractPayload payload = ExtractPayload.builder()
-        .browser(browser)
-        .url("https://example.com")
-        .prompt("Extract content")
-        .build();
+    ExtractPayload payload =
+        ExtractPayload.builder()
+            .browser(browser)
+            .url("https://example.com")
+            .prompt("Extract content")
+            .build();
 
     String str = payload.toString();
 
@@ -276,10 +249,11 @@ class ExtractPayloadTest {
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void structured_toString_containsOutputType() {
-    ExtractPayload.Structured<TestData> payload = ExtractPayload.structuredBuilder(TestData.class)
-        .browser(browser)
-        .url("https://example.com")
-        .build();
+    ExtractPayload.Structured<TestData> payload =
+        ExtractPayload.structuredBuilder(TestData.class)
+            .browser(browser)
+            .url("https://example.com")
+            .build();
 
     String str = payload.toString();
 
@@ -291,15 +265,17 @@ class ExtractPayloadTest {
   @Test
   @EnabledIf("isPlaywrightAvailable")
   void structured_equals_includesOutputType() {
-    ExtractPayload.Structured<TestData> payload1 = ExtractPayload.structuredBuilder(TestData.class)
-        .browser(browser)
-        .url("https://example.com")
-        .build();
+    ExtractPayload.Structured<TestData> payload1 =
+        ExtractPayload.structuredBuilder(TestData.class)
+            .browser(browser)
+            .url("https://example.com")
+            .build();
 
-    ExtractPayload.Structured<TestData> payload2 = ExtractPayload.structuredBuilder(TestData.class)
-        .browser(browser)
-        .url("https://example.com")
-        .build();
+    ExtractPayload.Structured<TestData> payload2 =
+        ExtractPayload.structuredBuilder(TestData.class)
+            .browser(browser)
+            .url("https://example.com")
+            .build();
 
     assertEquals(payload1, payload2);
     assertEquals(payload1.hashCode(), payload2.hashCode());

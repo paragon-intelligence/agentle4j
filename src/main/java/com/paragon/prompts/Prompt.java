@@ -7,23 +7,24 @@ import java.util.regex.Pattern;
 /**
  * Represents an immutable text prompt that can contain template expressions.
  *
- * <p>A Prompt instance manages text content that can include various template
- * features like variable placeholders ({@code {{variable_name}}}), conditional blocks
- * ({@code {{#if condition}}...{{/if}}}), and iteration blocks
- * ({@code {{#each items}}...{{/each}}}).
+ * <p>A Prompt instance manages text content that can include various template features like
+ * variable placeholders ({@code {{variable_name}}}), conditional blocks ({@code {{#if
+ * condition}}...{{/if}}}), and iteration blocks ({@code {{#each items}}...{{/each}}}).
  *
- * <p>This class is immutable and thread-safe. All template processing methods
- * return new Prompt instances.
+ * <p>This class is immutable and thread-safe. All template processing methods return new Prompt
+ * instances.
  *
  * <h2>Template Syntax</h2>
+ *
  * <ul>
- *   <li>Variable interpolation: {@code {{variable_name}}}</li>
- *   <li>Nested property access: {@code {{object.property}}}</li>
- *   <li>Conditional blocks: {@code {{#if condition}}content{{/if}}}</li>
- *   <li>Iteration blocks: {@code {{#each items}}{{this.property}}{{/each}}}</li>
+ *   <li>Variable interpolation: {@code {{variable_name}}}
+ *   <li>Nested property access: {@code {{object.property}}}
+ *   <li>Conditional blocks: {@code {{#if condition}}content{{/if}}}
+ *   <li>Iteration blocks: {@code {{#each items}}{{this.property}}{{/each}}}
  * </ul>
  *
  * <h2>Usage Examples</h2>
+ *
  * <pre>{@code
  * // Simple variable replacement
  * Prompt prompt = Prompt.of("Hello, {{name}}!");
@@ -51,14 +52,13 @@ import java.util.regex.Pattern;
 public final class Prompt {
 
   // Precompiled patterns for better performance and security (avoid ReDoS)
-  private static final Pattern VARIABLE_PATTERN =
-          Pattern.compile("\\{\\{([^#/}][^}]*?)\\}\\}");
+  private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{\\{([^#/}][^}]*?)\\}\\}");
 
   private static final Pattern CONDITIONAL_PATTERN =
-          Pattern.compile("\\{\\{#if\\s+([^}]+)\\}\\}(.*?)\\{\\{/if\\}\\}", Pattern.DOTALL);
+      Pattern.compile("\\{\\{#if\\s+([^}]+)\\}\\}(.*?)\\{\\{/if\\}\\}", Pattern.DOTALL);
 
   private static final Pattern EACH_PATTERN =
-          Pattern.compile("\\{\\{#each\\s+([^}]+)\\}\\}(.*?)\\{\\{/each\\}\\}", Pattern.DOTALL);
+      Pattern.compile("\\{\\{#each\\s+([^}]+)\\}\\}(.*?)\\{\\{/each\\}\\}", Pattern.DOTALL);
 
   private static final Pattern IF_MARKER = Pattern.compile("\\{\\{#if");
   private static final Pattern EACH_MARKER = Pattern.compile("\\{\\{#each");
@@ -72,7 +72,7 @@ public final class Prompt {
   /**
    * Private constructor - use factory methods instead.
    *
-   * @param content  the prompt content
+   * @param content the prompt content
    * @param compiled whether this prompt has been compiled
    */
   private Prompt(String content, boolean compiled) {
@@ -188,17 +188,18 @@ public final class Prompt {
    * Compiles this prompt by processing all template expressions.
    *
    * <p>This method supports a Handlebars-like templating system with:
+   *
    * <ul>
-   *   <li>Variable interpolation: {@code {{variable_name}}}</li>
-   *   <li>Conditional blocks: {@code {{#if condition}}...{{/if}}}</li>
-   *   <li>Iteration blocks: {@code {{#each items}}...{{/each}}}</li>
-   *   <li>Nested property access: {@code {{object.property}}}</li>
+   *   <li>Variable interpolation: {@code {{variable_name}}}
+   *   <li>Conditional blocks: {@code {{#if condition}}...{{/if}}}
+   *   <li>Iteration blocks: {@code {{#each items}}...{{/each}}}
+   *   <li>Nested property access: {@code {{object.property}}}
    * </ul>
    *
    * @param context a map with values for template variables
    * @return a new compiled Prompt instance
    * @throws NullPointerException if context is null
-   * @throws TemplateException    if the template syntax is invalid or processing fails
+   * @throws TemplateException if the template syntax is invalid or processing fails
    */
   public Prompt compile(Map<String, Object> context) {
     Objects.requireNonNull(context, "context must not be null");
@@ -229,10 +230,11 @@ public final class Prompt {
   /**
    * Compiles this prompt with variable key-value pairs.
    *
-   * <p>This is a convenience method that accepts alternating keys and values,
-   * providing a cleaner syntax for simple cases.
+   * <p>This is a convenience method that accepts alternating keys and values, providing a cleaner
+   * syntax for simple cases.
    *
    * <p>Example usage:
+   *
    * <pre>{@code
    * Prompt result = prompt.compile("name", "Alice", "age", 30, "active", true);
    * }</pre>
@@ -241,13 +243,13 @@ public final class Prompt {
    * @param firstValue the first variable value
    * @param rest additional alternating keys (String) and values (Object)
    * @return a new compiled Prompt instance
-   * @throws IllegalArgumentException if rest has an odd number of arguments
-   *                                  or if a key is not a String
+   * @throws IllegalArgumentException if rest has an odd number of arguments or if a key is not a
+   *     String
    * @throws TemplateException if the template syntax is invalid or processing fails
    */
   public Prompt compile(String firstKey, Object firstValue, Object... rest) {
     Objects.requireNonNull(firstKey, "firstKey must not be null");
-    
+
     if (rest.length % 2 != 0) {
       throw new IllegalArgumentException(
           "Must provide an even number of additional arguments as key-value pairs");
@@ -255,7 +257,7 @@ public final class Prompt {
 
     Map<String, Object> context = new HashMap<>();
     context.put(firstKey, firstValue);
-    
+
     for (int i = 0; i < rest.length; i += 2) {
       Object key = rest[i];
       if (!(key instanceof String)) {
@@ -271,6 +273,7 @@ public final class Prompt {
    * Compiles this prompt using a fluent builder for the context.
    *
    * <p>Example usage:
+   *
    * <pre>{@code
    * Prompt result = prompt.compile()
    *     .with("name", "World")
@@ -287,9 +290,8 @@ public final class Prompt {
   /**
    * Compiles only template variables that exist in the prompt content.
    *
-   * <p>Variables in the context that don't have corresponding placeholders
-   * in the prompt are ignored. This is useful when you have a large context
-   * but want to only apply relevant values.
+   * <p>Variables in the context that don't have corresponding placeholders in the prompt are
+   * ignored. This is useful when you have a large context but want to only apply relevant values.
    *
    * @param context a map with values for template variables
    * @return a new compiled Prompt instance
@@ -371,7 +373,7 @@ public final class Prompt {
    * Returns a substring of this prompt's content.
    *
    * @param beginIndex the beginning index, inclusive
-   * @param endIndex   the ending index, exclusive
+   * @param endIndex the ending index, exclusive
    * @return a new Prompt with the substring
    * @throws IndexOutOfBoundsException if indices are invalid
    */
@@ -441,14 +443,14 @@ public final class Prompt {
     while (matcher.find()) {
       String varName = matcher.group(1).trim();
       Object value = getNestedValue(varName, context);
-      String replacement = value != null ? escapeReplacement(String.valueOf(value)) : matcher.group(0);
+      String replacement =
+          value != null ? escapeReplacement(String.valueOf(value)) : matcher.group(0);
       matcher.appendReplacement(result, replacement);
     }
     matcher.appendTail(result);
 
     return new Prompt(result.toString(), true);
   }
-
 
   private String processConditionals(String template, Map<String, Object> context, int depth) {
     if (depth > MAX_TEMPLATE_DEPTH) {
@@ -553,7 +555,7 @@ public final class Prompt {
 
   /**
    * Finds the matching closing tag for a block, handling nested blocks.
-   * 
+   *
    * @param template the template string
    * @param startPos position after the opening tag
    * @param blockType "if" or "each"
@@ -562,18 +564,18 @@ public final class Prompt {
   private int[] findMatchingBlock(String template, int startPos, String blockType) {
     String openTag = "{{#" + blockType;
     String closeTag = "{{/" + blockType + "}}";
-    
+
     int nestLevel = 1;
     int pos = startPos;
-    
+
     while (pos < template.length() && nestLevel > 0) {
       int nextOpen = template.indexOf(openTag, pos);
       int nextClose = template.indexOf(closeTag, pos);
-      
+
       if (nextClose == -1) {
         return null; // No matching close tag
       }
-      
+
       if (nextOpen != -1 && nextOpen < nextClose) {
         // Found another opening tag before the close
         nestLevel++;
@@ -582,12 +584,12 @@ public final class Prompt {
         // Found a close tag
         nestLevel--;
         if (nestLevel == 0) {
-          return new int[] { nextClose, nextClose + closeTag.length() };
+          return new int[] {nextClose, nextClose + closeTag.length()};
         }
         pos = nextClose + closeTag.length();
       }
     }
-    
+
     return null;
   }
 
@@ -615,7 +617,7 @@ public final class Prompt {
 
       // Process nested each blocks first
       String processed = processIterations(itemTemplate, tempContext, 0);
-      
+
       // Then process variables
       processed = processVariables(processed, tempContext);
       result.append(processed);
@@ -686,7 +688,8 @@ public final class Prompt {
 
     try {
       // Try getter method first (getProperty or isProperty for booleans)
-      String capitalizedName = Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
+      String capitalizedName =
+          Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
 
       // Try getProperty()
       try {
@@ -739,9 +742,7 @@ public final class Prompt {
 
   // ========== Nested Classes ==========
 
-  /**
-   * Fluent builder for compiling prompts with context values.
-   */
+  /** Fluent builder for compiling prompts with context values. */
   public static final class CompileBuilder {
     private final Prompt prompt;
     private final Map<String, Object> context;
@@ -754,7 +755,7 @@ public final class Prompt {
     /**
      * Adds a variable to the compilation context.
      *
-     * @param key   the variable name
+     * @param key the variable name
      * @param value the variable value
      * @return this builder for chaining
      */
@@ -793,9 +794,7 @@ public final class Prompt {
     }
   }
 
-  /**
-   * Exception thrown when template processing fails.
-   */
+  /** Exception thrown when template processing fails. */
   public static class TemplateException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;

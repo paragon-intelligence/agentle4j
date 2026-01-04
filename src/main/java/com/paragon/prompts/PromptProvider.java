@@ -7,11 +7,12 @@ import org.jspecify.annotations.Nullable;
 /**
  * Provider interface for retrieving prompts from various sources.
  *
- * <p>Implementations may fetch prompts from local files, remote services (e.g., Langfuse), 
- * databases, or any other storage mechanism. This abstraction allows applications to 
- * centralize prompt management and version control.
+ * <p>Implementations may fetch prompts from local files, remote services (e.g., Langfuse),
+ * databases, or any other storage mechanism. This abstraction allows applications to centralize
+ * prompt management and version control.
  *
  * <h2>Usage Examples</h2>
+ *
  * <pre>{@code
  * // Filesystem provider
  * PromptProvider fileProvider = FilesystemPromptProvider.create(Path.of("./prompts"));
@@ -35,14 +36,13 @@ public interface PromptProvider {
    * Retrieves a prompt by its identifier.
    *
    * @param promptId the unique identifier for the prompt (e.g., file path, prompt name)
-   * @param filters optional key-value pairs to filter the prompt (e.g., version, label).
-   *                Supported filters depend on the implementation.
+   * @param filters optional key-value pairs to filter the prompt (e.g., version, label). Supported
+   *     filters depend on the implementation.
    * @return the retrieved {@link Prompt}
    * @throws NullPointerException if promptId is null
    * @throws PromptProviderException if the prompt cannot be retrieved
    */
-  @NonNull
-  Prompt providePrompt(@NonNull String promptId, @Nullable Map<String, String> filters);
+  @NonNull Prompt providePrompt(@NonNull String promptId, @Nullable Map<String, String> filters);
 
   /**
    * Retrieves a prompt by its identifier without filters.

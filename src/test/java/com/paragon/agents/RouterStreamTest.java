@@ -169,14 +169,16 @@ class RouterStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      RouterStream stream = router.routeStream(context)
-          .onRouteSelected(agent -> {})
-          .onTextDelta(delta -> {})
-          .onComplete(result -> {})
-          .onError(error -> {})
-          .onTurnStart(turn -> {})
-          .onToolExecuted(exec -> {})
-          .onHandoff(handoff -> {});
+      RouterStream stream =
+          router
+              .routeStream(context)
+              .onRouteSelected(agent -> {})
+              .onTextDelta(delta -> {})
+              .onComplete(result -> {})
+              .onError(error -> {})
+              .onTurnStart(turn -> {})
+              .onToolExecuted(exec -> {})
+              .onHandoff(handoff -> {});
 
       assertNotNull(stream);
     }
@@ -200,10 +202,8 @@ class RouterStreamTest {
       AtomicReference<Throwable> errorRef = new AtomicReference<>();
       AtomicReference<AgentResult> resultRef = new AtomicReference<>();
 
-      CompletableFuture<AgentResult> future = router.routeStream(context)
-          .onError(errorRef::set)
-          .onComplete(resultRef::set)
-          .start();
+      CompletableFuture<AgentResult> future =
+          router.routeStream(context).onError(errorRef::set).onComplete(resultRef::set).start();
 
       AgentResult result = future.get(5, TimeUnit.SECONDS);
 
@@ -221,9 +221,8 @@ class RouterStreamTest {
 
       AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
-      CompletableFuture<AgentResult> future = router.routeStream(context)
-          .onError(errorRef::set)
-          .start();
+      CompletableFuture<AgentResult> future =
+          router.routeStream(context).onError(errorRef::set).start();
 
       AgentResult result = future.get(5, TimeUnit.SECONDS);
 
@@ -250,21 +249,21 @@ class RouterStreamTest {
       Agent salesAgent = createTestAgent("Sales", "Handle sales inquiries");
       Agent supportAgent = createTestAgent("Support", "Handle support issues");
 
-      RouterAgent router = RouterAgent.builder()
-          .model("test-model")
-          .responder(responder)
-          .addRoute(salesAgent, "Sales inquiries")
-          .addRoute(supportAgent, "Support issues")
-          .build();
+      RouterAgent router =
+          RouterAgent.builder()
+              .model("test-model")
+              .responder(responder)
+              .addRoute(salesAgent, "Sales inquiries")
+              .addRoute(supportAgent, "Support issues")
+              .build();
 
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("I want to buy something"));
 
       AtomicBoolean completed = new AtomicBoolean(false);
 
-      CompletableFuture<AgentResult> future = router.routeStream(context)
-          .onComplete(r -> completed.set(true))
-          .start();
+      CompletableFuture<AgentResult> future =
+          router.routeStream(context).onComplete(r -> completed.set(true)).start();
 
       AgentResult result = future.get(5, TimeUnit.SECONDS);
 
@@ -282,20 +281,20 @@ class RouterStreamTest {
 
       Agent salesAgent = createTestAgent("Sales", "Sales");
 
-      RouterAgent router = RouterAgent.builder()
-          .model("test-model")
-          .responder(responder)
-          .addRoute(salesAgent, "Sales")
-          .build();
+      RouterAgent router =
+          RouterAgent.builder()
+              .model("test-model")
+              .responder(responder)
+              .addRoute(salesAgent, "Sales")
+              .build();
 
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Buy something"));
 
       List<String> deltas = new ArrayList<>();
 
-      CompletableFuture<AgentResult> future = router.routeStream(context)
-          .onTextDelta(deltas::add)
-          .start();
+      CompletableFuture<AgentResult> future =
+          router.routeStream(context).onTextDelta(deltas::add).start();
 
       future.get(5, TimeUnit.SECONDS);
 
@@ -327,7 +326,8 @@ class RouterStreamTest {
 
   private void enqueueRouteClassificationResponse(String agentName) {
     // Classification response that includes the agent name
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -349,7 +349,8 @@ class RouterStreamTest {
           ],
           "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
         }
-        """.formatted(agentName);
+        """
+            .formatted(agentName);
 
     mockWebServer.enqueue(
         new MockResponse()
@@ -359,7 +360,8 @@ class RouterStreamTest {
   }
 
   private void enqueueSuccessResponse(String text) {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -381,7 +383,8 @@ class RouterStreamTest {
           ],
           "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
         }
-        """.formatted(text);
+        """
+            .formatted(text);
 
     mockWebServer.enqueue(
         new MockResponse()

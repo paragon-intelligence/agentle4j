@@ -12,12 +12,9 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Comprehensive tests for McpTool.
- * 
- * Tests cover:
- * - Record construction with all fields
- * - toToolChoice() serialization
- * - toString() formatting
- * - Record equality
+ *
+ * <p>Tests cover: - Record construction with all fields - toToolChoice() serialization - toString()
+ * formatting - Record equality
  */
 @DisplayName("McpTool")
 class McpToolTest {
@@ -35,10 +32,7 @@ class McpToolTest {
     @Test
     @DisplayName("creates with required fields only")
     void createsWithRequiredFieldsOnly() {
-      McpTool tool = new McpTool(
-          "my-server",
-          null, null, null, null, null, null, null
-      );
+      McpTool tool = new McpTool("my-server", null, null, null, null, null, null, null);
 
       assertNotNull(tool);
       assertEquals("my-server", tool.serverLabel());
@@ -50,16 +44,16 @@ class McpToolTest {
       McpToolFilter allowedTools = new McpToolFilter(true, List.of("tool1", "tool2"));
       Map<String, String> headers = Map.of("Authorization", "Bearer token");
 
-      McpTool tool = new McpTool(
-          "my-server",
-          allowedTools,
-          "access-token",
-          "connector_gmail",
-          headers,
-          null,
-          "Test server",
-          "https://mcp.example.com"
-      );
+      McpTool tool =
+          new McpTool(
+              "my-server",
+              allowedTools,
+              "access-token",
+              "connector_gmail",
+              headers,
+              null,
+              "Test server",
+              "https://mcp.example.com");
 
       assertNotNull(tool);
       assertEquals("my-server", tool.serverLabel());
@@ -126,7 +120,8 @@ class McpToolTest {
     @Test
     @DisplayName("serverUrl returns value when set")
     void serverUrlReturnsValueWhenSet() {
-      McpTool tool = new McpTool("server", null, null, null, null, null, null, "https://mcp.test.com");
+      McpTool tool =
+          new McpTool("server", null, null, null, null, null, null, "https://mcp.test.com");
       assertEquals("https://mcp.test.com", tool.serverUrl());
     }
   }

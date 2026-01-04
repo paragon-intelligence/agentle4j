@@ -8,8 +8,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for Action interface and all action implementations.
- * Tests focus on factory methods, Jackson polymorphic serialization, and record behavior.
+ * Tests for Action interface and all action implementations. Tests focus on factory methods,
+ * Jackson polymorphic serialization, and record behavior.
  */
 class ActionTest {
 
@@ -109,11 +109,8 @@ class ActionTest {
 
   @Test
   void generatePdf_builder_setsAllProperties() {
-    GeneratePdf pdf = GeneratePdf.builder()
-        .format(PdfFormat.LEGAL)
-        .landscape(true)
-        .scale(2.0)
-        .build();
+    GeneratePdf pdf =
+        GeneratePdf.builder().format(PdfFormat.LEGAL).landscape(true).scale(2.0).build();
 
     assertEquals(PdfFormat.LEGAL, pdf.format());
     assertTrue(pdf.landscape());
@@ -122,12 +119,8 @@ class ActionTest {
 
   @Test
   void generatePdf_builder_invalidScale_throwsException() {
-    assertThrows(IllegalArgumentException.class, () ->
-        GeneratePdf.builder().scale(0.05).build()
-    );
-    assertThrows(IllegalArgumentException.class, () ->
-        GeneratePdf.builder().scale(11.0).build()
-    );
+    assertThrows(IllegalArgumentException.class, () -> GeneratePdf.builder().scale(0.05).build());
+    assertThrows(IllegalArgumentException.class, () -> GeneratePdf.builder().scale(11.0).build());
   }
 
   @Test
@@ -215,11 +208,8 @@ class ActionTest {
 
   @Test
   void screenshot_builder_setsAllProperties() {
-    Screenshot screenshot = Screenshot.builder()
-        .fullPage(true)
-        .quality(95)
-        .viewport(1920, 1080)
-        .build();
+    Screenshot screenshot =
+        Screenshot.builder().fullPage(true).quality(95).viewport(1920, 1080).build();
 
     assertTrue(screenshot.fullPage());
     assertEquals(95, screenshot.quality());
@@ -267,17 +257,15 @@ class ActionTest {
 
   @Test
   void scroll_invalidAmount_throwsException() {
-    assertThrows(IllegalArgumentException.class, () ->
-        Scroll.of("#el", ScrollDirection.DOWN, -1)
-    );
-    assertThrows(IllegalArgumentException.class, () ->
-        Scroll.of("#el", ScrollDirection.DOWN, 1001)
-    );
+    assertThrows(IllegalArgumentException.class, () -> Scroll.of("#el", ScrollDirection.DOWN, -1));
+    assertThrows(
+        IllegalArgumentException.class, () -> Scroll.of("#el", ScrollDirection.DOWN, 1001));
   }
 
   @Test
   void scroll_deserialization_fromJson() throws JsonProcessingException {
-    String json = "{\"type\":\"scroll\",\"direction\":\"up\",\"amount\":200,\"selector\":\"#content\"}";
+    String json =
+        "{\"type\":\"scroll\",\"direction\":\"up\",\"amount\":200,\"selector\":\"#content\"}";
 
     Action action = objectMapper.readValue(json, Action.class);
 
@@ -342,27 +330,27 @@ class ActionTest {
   @Test
   void polymorphicDeserialization_allTypes() throws JsonProcessingException {
     String[] jsons = {
-        "{\"type\":\"click\",\"selector\":\"#btn\",\"all\":false}",
-        "{\"type\":\"execute_javascript\",\"script\":\"test\"}",
-        "{\"type\":\"pdf\",\"format\":\"Letter\",\"landscape\":false,\"scale\":1.0}",
-        "{\"type\":\"press\",\"key\":\"Enter\"}",
-        "{\"type\":\"scrape\"}",
-        "{\"type\":\"screenshot\",\"full_page\":false,\"quality\":80,\"viewport\":null}",
-        "{\"type\":\"scroll\",\"direction\":\"down\",\"amount\":100,\"selector\":\"#s\"}",
-        "{\"type\":\"wait\",\"milliseconds\":1000,\"selector\":\"#w\"}",
-        "{\"type\":\"write\",\"text\":\"text\"}"
+      "{\"type\":\"click\",\"selector\":\"#btn\",\"all\":false}",
+      "{\"type\":\"execute_javascript\",\"script\":\"test\"}",
+      "{\"type\":\"pdf\",\"format\":\"Letter\",\"landscape\":false,\"scale\":1.0}",
+      "{\"type\":\"press\",\"key\":\"Enter\"}",
+      "{\"type\":\"scrape\"}",
+      "{\"type\":\"screenshot\",\"full_page\":false,\"quality\":80,\"viewport\":null}",
+      "{\"type\":\"scroll\",\"direction\":\"down\",\"amount\":100,\"selector\":\"#s\"}",
+      "{\"type\":\"wait\",\"milliseconds\":1000,\"selector\":\"#w\"}",
+      "{\"type\":\"write\",\"text\":\"text\"}"
     };
 
     Class<?>[] expectedTypes = {
-        Click.class,
-        ExecuteJavascript.class,
-        GeneratePdf.class,
-        PressAKey.class,
-        Scrape.class,
-        Screenshot.class,
-        Scroll.class,
-        Wait.class,
-        WriteText.class
+      Click.class,
+      ExecuteJavascript.class,
+      GeneratePdf.class,
+      PressAKey.class,
+      Scrape.class,
+      Screenshot.class,
+      Scroll.class,
+      Wait.class,
+      WriteText.class
     };
 
     for (int i = 0; i < jsons.length; i++) {

@@ -46,8 +46,7 @@ public class OpenRouterEmbeddingProvider implements EmbeddingProvider {
   private final boolean allowFallbacks;
 
   private OpenRouterEmbeddingProvider(Builder builder) {
-    this.objectMapper =
-        builder.objectMapper != null ? builder.objectMapper : new ObjectMapper();
+    this.objectMapper = builder.objectMapper != null ? builder.objectMapper : new ObjectMapper();
 
     this.allowFallbacks = builder.allowFallbacks;
 
@@ -141,8 +140,7 @@ public class OpenRouterEmbeddingProvider implements EmbeddingProvider {
     /**
      * Sets the retry policy for handling transient failures.
      *
-     * <p>Default: {@link RetryPolicy#defaults()} which retries 3 times on 429, 529, and 5xx
-     * errors.
+     * <p>Default: {@link RetryPolicy#defaults()} which retries 3 times on 429, 529, and 5xx errors.
      *
      * @param retryPolicy the retry policy
      * @return this builder

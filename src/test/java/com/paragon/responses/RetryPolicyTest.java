@@ -2,9 +2,9 @@ package com.paragon.responses;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.paragon.http.RetryPolicy;
 import java.time.Duration;
 import java.util.Set;
-import com.paragon.http.RetryPolicy;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link RetryPolicy}. */

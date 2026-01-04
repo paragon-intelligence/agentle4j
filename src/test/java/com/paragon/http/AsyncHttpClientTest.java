@@ -343,8 +343,7 @@ class AsyncHttpClientTest {
     CountDownLatch latch = new CountDownLatch(1);
     AtomicReference<Throwable> error = new AtomicReference<>();
 
-    client
-        .stream(
+    client.stream(
             HttpRequest.post("/stream").jsonBody("{}").build(),
             TestData.class,
             events::add,
@@ -369,8 +368,7 @@ class AsyncHttpClientTest {
     CountDownLatch latch = new CountDownLatch(1);
 
     try {
-      client
-          .stream(
+      client.stream(
               HttpRequest.post("/stream").jsonBody("{}").build(),
               TestData.class,
               event -> {},
@@ -402,8 +400,7 @@ class AsyncHttpClientTest {
     AtomicInteger completeCount = new AtomicInteger(0);
     CountDownLatch latch = new CountDownLatch(1);
 
-    client
-        .stream(
+    client.stream(
             HttpRequest.post("/stream").jsonBody("{}").build(),
             TestData.class,
             event -> {},

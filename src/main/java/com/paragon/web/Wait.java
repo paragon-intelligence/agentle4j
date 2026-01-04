@@ -9,21 +9,19 @@ import org.jspecify.annotations.NonNull;
  * Action to wait for an element to be visible.
  *
  * @param milliseconds Number of milliseconds to wait (timeout)
- * @param selector     Query selector to find the element by
+ * @param selector Query selector to find the element by
  */
 public record Wait(
-    @JsonProperty("milliseconds")
-    @JsonPropertyDescription("Number of milliseconds to wait")
-    int milliseconds,
-    @JsonProperty("selector")
-    @JsonPropertyDescription("Query selector to find the element by")
-    @NonNull String selector)
+    @JsonProperty("milliseconds") @JsonPropertyDescription("Number of milliseconds to wait")
+        int milliseconds,
+    @JsonProperty("selector") @JsonPropertyDescription("Query selector to find the element by")
+        @NonNull String selector)
     implements Action {
 
   /**
    * Creates a Wait action.
    *
-   * @param selector     Query selector for the element to wait for
+   * @param selector Query selector for the element to wait for
    * @param milliseconds Timeout in milliseconds
    * @return A new Wait instance
    */

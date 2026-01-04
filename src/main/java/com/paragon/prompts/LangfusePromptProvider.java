@@ -6,7 +6,6 @@ import com.paragon.http.RetryPolicy;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
@@ -25,11 +24,12 @@ import org.jspecify.annotations.Nullable;
 /**
  * A {@link PromptProvider} that retrieves prompts from the Langfuse API.
  *
- * <p>This provider fetches prompts from Langfuse's prompt management service, supporting
- * versioned prompts, labels, and both text and chat prompt types. It includes automatic
- * retry with exponential backoff for transient failures.
+ * <p>This provider fetches prompts from Langfuse's prompt management service, supporting versioned
+ * prompts, labels, and both text and chat prompt types. It includes automatic retry with
+ * exponential backoff for transient failures.
  *
  * <h2>Usage Example</h2>
+ *
  * <pre>{@code
  * // Create provider with builder
  * PromptProvider provider = LangfusePromptProvider.builder()
@@ -49,9 +49,10 @@ import org.jspecify.annotations.Nullable;
  * }</pre>
  *
  * <h2>Supported Filters</h2>
+ *
  * <ul>
- *   <li>{@code version} - Retrieve a specific prompt version (integer)</li>
- *   <li>{@code label} - Retrieve prompt by label (e.g., "production", "staging")</li>
+ *   <li>{@code version} - Retrieve a specific prompt version (integer)
+ *   <li>{@code label} - Retrieve prompt by label (e.g., "production", "staging")
  * </ul>
  *
  * @author Agentle Framework
@@ -71,26 +72,22 @@ public final class LangfusePromptProvider implements PromptProvider {
   private LangfusePromptProvider(Builder builder) {
     this.httpClient = Objects.requireNonNull(builder.httpClient, "httpClient must not be null");
     this.baseUrl = builder.baseUrl != null ? builder.baseUrl : DEFAULT_BASE_URL;
-    
+
     Objects.requireNonNull(builder.publicKey, "publicKey must not be null");
     Objects.requireNonNull(builder.secretKey, "secretKey must not be null");
-    
+
     String credentials = builder.publicKey + ":" + builder.secretKey;
-    this.authHeader = "Basic " + Base64.getEncoder().encodeToString(
-        credentials.getBytes(StandardCharsets.UTF_8));
-    
-    this.retryPolicy = builder.retryPolicy != null 
-        ? builder.retryPolicy 
-        : RetryPolicy.defaults();
-    
-    this.objectMapper = builder.objectMapper != null 
-        ? builder.objectMapper 
-        : createDefaultObjectMapper();
+    this.authHeader =
+        "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+
+    this.retryPolicy = builder.retryPolicy != null ? builder.retryPolicy : RetryPolicy.defaults();
+
+    this.objectMapper =
+        builder.objectMapper != null ? builder.objectMapper : createDefaultObjectMapper();
   }
 
   private static ObjectMapper createDefaultObjectMapper() {
-    return new ObjectMapper()
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    return new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
   /**
@@ -103,7 +100,8 @@ public final class LangfusePromptProvider implements PromptProvider {
   }
 
   @Override
-  public @NonNull Prompt providePrompt(@NonNull String promptId, @Nullable Map<String, String> filters) {
+  public @NonNull Prompt providePrompt(
+      @NonNull String promptId, @Nullable Map<String, String> filters) {
     Objects.requireNonNull(promptId, "promptId must not be null");
 
     if (promptId.isEmpty()) {
@@ -117,23 +115,18 @@ public final class LangfusePromptProvider implements PromptProvider {
       throw e;
     } catch (Exception e) {
       throw new PromptProviderException(
-          "Failed to fetch prompt from Langfuse: " + e.getMessage(), 
-          promptId, 
-          e, 
-          isRetryable(e));
+          "Failed to fetch prompt from Langfuse: " + e.getMessage(), promptId, e, isRetryable(e));
     }
   }
 
   private LangfusePromptResponse fetchPromptWithRetry(
-      String promptId, 
-      @Nullable Map<String, String> filters, 
-      int attempt) {
-    
+      String promptId, @Nullable Map<String, String> filters, int attempt) {
+
     try {
       return fetchPrompt(promptId, filters).join();
     } catch (CompletionException e) {
       Throwable cause = e.getCause();
-      
+
       if (cause instanceof PromptProviderException ppe) {
         if (ppe.isRetryable() && attempt < retryPolicy.maxRetries()) {
           sleepForRetry(attempt + 1);
@@ -141,18 +134,15 @@ public final class LangfusePromptProvider implements PromptProvider {
         }
         throw ppe;
       }
-      
+
       // Check if we should retry based on the error
       if (isRetryable(cause) && attempt < retryPolicy.maxRetries()) {
         sleepForRetry(attempt + 1);
         return fetchPromptWithRetry(promptId, filters, attempt + 1);
       }
-      
+
       throw new PromptProviderException(
-          "Failed to fetch prompt: " + cause.getMessage(),
-          promptId,
-          cause,
-          false);
+          "Failed to fetch prompt: " + cause.getMessage(), promptId, cause, false);
     }
   }
 
@@ -177,14 +167,13 @@ public final class LangfusePromptProvider implements PromptProvider {
   }
 
   private CompletableFuture<LangfusePromptResponse> fetchPrompt(
-      String promptId, 
-      @Nullable Map<String, String> filters) {
-    
+      String promptId, @Nullable Map<String, String> filters) {
+
     CompletableFuture<LangfusePromptResponse> future = new CompletableFuture<>();
 
     String encodedPromptId = URLEncoder.encode(promptId, StandardCharsets.UTF_8);
-    HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl + "/api/public/v2/prompts/" + encodedPromptId)
-        .newBuilder();
+    HttpUrl.Builder urlBuilder =
+        HttpUrl.parse(baseUrl + "/api/public/v2/prompts/" + encodedPromptId).newBuilder();
 
     // Add filters as query parameters
     if (filters != null) {
@@ -192,71 +181,73 @@ public final class LangfusePromptProvider implements PromptProvider {
       if (version != null && !version.isEmpty()) {
         urlBuilder.addQueryParameter("version", version);
       }
-      
+
       String label = filters.get("label");
       if (label != null && !label.isEmpty()) {
         urlBuilder.addQueryParameter("label", label);
       }
     }
 
-    Request request = new Request.Builder()
-        .url(urlBuilder.build())
-        .header("Authorization", authHeader)
-        .header("Accept", "application/json")
-        .get()
-        .build();
+    Request request =
+        new Request.Builder()
+            .url(urlBuilder.build())
+            .header("Authorization", authHeader)
+            .header("Accept", "application/json")
+            .get()
+            .build();
 
-    httpClient.newCall(request).enqueue(new Callback() {
-      @Override
-      public void onFailure(@NonNull Call call, @NonNull IOException e) {
-        future.completeExceptionally(
-            new PromptProviderException(
-                "Network error fetching prompt: " + e.getMessage(),
-                promptId,
-                e,
-                true));
-      }
+    httpClient
+        .newCall(request)
+        .enqueue(
+            new Callback() {
+              @Override
+              public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                future.completeExceptionally(
+                    new PromptProviderException(
+                        "Network error fetching prompt: " + e.getMessage(), promptId, e, true));
+              }
 
-      @Override
-      public void onResponse(@NonNull Call call, @NonNull Response response) {
-        try (ResponseBody body = response.body()) {
-          int code = response.code();
-          
-          if (!response.isSuccessful()) {
-            String errorBody = body != null ? body.string() : "";
-            boolean retryable = retryPolicy.isRetryable(code);
-            
-            String message = switch (code) {
-              case 401 -> "Unauthorized: Invalid Langfuse credentials";
-              case 403 -> "Forbidden: Access denied to prompt '" + promptId + "'";
-              case 404 -> "Prompt not found: '" + promptId + "'";
-              case 429 -> "Rate limited by Langfuse API";
-              default -> "HTTP " + code + ": " + errorBody;
-            };
-            
-            future.completeExceptionally(
-                new PromptProviderException(message, promptId, null, retryable));
-            return;
-          }
+              @Override
+              public void onResponse(@NonNull Call call, @NonNull Response response) {
+                try (ResponseBody body = response.body()) {
+                  int code = response.code();
 
-          if (body == null) {
-            future.completeExceptionally(
-                new PromptProviderException("Empty response body", promptId));
-            return;
-          }
+                  if (!response.isSuccessful()) {
+                    String errorBody = body != null ? body.string() : "";
+                    boolean retryable = retryPolicy.isRetryable(code);
 
-          String json = body.string();
-          LangfusePromptResponse promptResponse = objectMapper.readValue(
-              json, LangfusePromptResponse.class);
-          
-          future.complete(promptResponse);
-        } catch (IOException e) {
-          future.completeExceptionally(
-              new PromptProviderException(
-                  "Failed to parse response: " + e.getMessage(), promptId, e));
-        }
-      }
-    });
+                    String message =
+                        switch (code) {
+                          case 401 -> "Unauthorized: Invalid Langfuse credentials";
+                          case 403 -> "Forbidden: Access denied to prompt '" + promptId + "'";
+                          case 404 -> "Prompt not found: '" + promptId + "'";
+                          case 429 -> "Rate limited by Langfuse API";
+                          default -> "HTTP " + code + ": " + errorBody;
+                        };
+
+                    future.completeExceptionally(
+                        new PromptProviderException(message, promptId, null, retryable));
+                    return;
+                  }
+
+                  if (body == null) {
+                    future.completeExceptionally(
+                        new PromptProviderException("Empty response body", promptId));
+                    return;
+                  }
+
+                  String json = body.string();
+                  LangfusePromptResponse promptResponse =
+                      objectMapper.readValue(json, LangfusePromptResponse.class);
+
+                  future.complete(promptResponse);
+                } catch (IOException e) {
+                  future.completeExceptionally(
+                      new PromptProviderException(
+                          "Failed to parse response: " + e.getMessage(), promptId, e));
+                }
+              }
+            });
 
     return future;
   }
@@ -279,9 +270,7 @@ public final class LangfusePromptProvider implements PromptProvider {
     return retryPolicy;
   }
 
-  /**
-   * Builder for creating {@link LangfusePromptProvider} instances.
-   */
+  /** Builder for creating {@link LangfusePromptProvider} instances. */
   public static final class Builder {
     private OkHttpClient httpClient;
     private String publicKey;
@@ -365,8 +354,8 @@ public final class LangfusePromptProvider implements PromptProvider {
     /**
      * Creates a provider using environment variables.
      *
-     * <p>Reads {@code LANGFUSE_PUBLIC_KEY}, {@code LANGFUSE_SECRET_KEY}, 
-     * and optionally {@code LANGFUSE_HOST}.
+     * <p>Reads {@code LANGFUSE_PUBLIC_KEY}, {@code LANGFUSE_SECRET_KEY}, and optionally {@code
+     * LANGFUSE_HOST}.
      *
      * @return this builder with environment configuration
      */

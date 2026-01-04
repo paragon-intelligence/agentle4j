@@ -2,14 +2,11 @@ package com.paragon.http;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Immutable HTTP response.
- */
+/** Immutable HTTP response. */
 public final class HttpResponse {
 
   private final int statusCode;
@@ -18,7 +15,12 @@ public final class HttpResponse {
   private final byte[] body;
   private final long latencyMs;
 
-  private HttpResponse(int statusCode, String statusMessage, Map<String, List<String>> headers, byte[] body, long latencyMs) {
+  private HttpResponse(
+      int statusCode,
+      String statusMessage,
+      Map<String, List<String>> headers,
+      byte[] body,
+      long latencyMs) {
     this.statusCode = statusCode;
     this.statusMessage = statusMessage;
     this.headers = Map.copyOf(headers);
@@ -26,7 +28,8 @@ public final class HttpResponse {
     this.latencyMs = latencyMs;
   }
 
-  public static HttpResponse of(int status, String message, Map<String, List<String>> headers, byte[] body, long latencyMs) {
+  public static HttpResponse of(
+      int status, String message, Map<String, List<String>> headers, byte[] body, long latencyMs) {
     return new HttpResponse(status, message, headers, body, latencyMs);
   }
 
@@ -91,8 +94,7 @@ public final class HttpResponse {
 
   @Override
   public String toString() {
-    return "HttpResponse{status=%d, body=%s, latency=%dms}".formatted(
-            statusCode, body != null ? body.length + "B" : "null", latencyMs
-    );
+    return "HttpResponse{status=%d, body=%s, latency=%dms}"
+        .formatted(statusCode, body != null ? body.length + "B" : "null", latencyMs);
   }
 }

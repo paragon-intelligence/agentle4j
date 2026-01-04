@@ -4,26 +4,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.microsoft.playwright.ElementHandle;
 import com.microsoft.playwright.Page;
-import org.jspecify.annotations.NonNull;
-
 import java.util.List;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Action to click on an element identified by a CSS selector.
  *
  * @param selector Query selector to find the element by
- * @param all      If true, clicks all elements matched by the selector, not just the first one.
- *                 Does not throw an error if no elements match the selector.
+ * @param all If true, clicks all elements matched by the selector, not just the first one. Does not
+ *     throw an error if no elements match the selector.
  */
 public record Click(
-    @JsonProperty("selector")
-    @JsonPropertyDescription("Query selector to find the element by")
-    @NonNull String selector,
+    @JsonProperty("selector") @JsonPropertyDescription("Query selector to find the element by")
+        @NonNull String selector,
     @JsonProperty("all")
-    @JsonPropertyDescription(
-        "Clicks all elements matched by the selector, not just the first one. "
-            + "Does not throw an error if no elements match the selector.")
-    boolean all)
+        @JsonPropertyDescription(
+            "Clicks all elements matched by the selector, not just the first one. "
+                + "Does not throw an error if no elements match the selector.")
+        boolean all)
     implements Action {
 
   /**

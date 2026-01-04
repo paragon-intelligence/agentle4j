@@ -8,12 +8,11 @@ import org.jspecify.annotations.NonNull;
 /**
  * Action to press a key on the keyboard.
  *
- * @param key The key to press (e.g., "Enter", "Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight")
+ * @param key The key to press (e.g., "Enter", "Space", "ArrowUp", "ArrowDown", "ArrowLeft",
+ *     "ArrowRight")
  */
 public record PressAKey(
-    @JsonProperty("key")
-    @JsonPropertyDescription("The key to press.")
-    @NonNull String key)
+    @JsonProperty("key") @JsonPropertyDescription("The key to press.") @NonNull String key)
     implements Action {
 
   /**

@@ -16,9 +16,9 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
 
 /**
- * Comprehensive tests for AgentStream callbacks and lifecycle.
- * Tests cover: onTurnStart, onTurnComplete, onTextDelta, onToolExecuted,
- * onToolCallPending, onGuardrailFailed, onHandoff, onComplete, onError.
+ * Comprehensive tests for AgentStream callbacks and lifecycle. Tests cover: onTurnStart,
+ * onTurnComplete, onTextDelta, onToolExecuted, onToolCallPending, onGuardrailFailed, onHandoff,
+ * onComplete, onError.
  */
 @DisplayName("AgentStream Callback Tests")
 class AgentStreamCallbackTest {
@@ -31,7 +31,8 @@ class AgentStreamCallbackTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
     String baseUrl = mockWebServer.url("/").toString();
-    responder = Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+    responder =
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -57,11 +58,13 @@ class AgentStreamCallbackTest {
       Agent agent = createTestAgent();
       enqueueSuccessResponse("Hello!");
 
-      agent.interactStream("Hi")
-          .onTurnStart(turn -> {
-            turnStartCount.incrementAndGet();
-            capturedTurn.set(turn);
-          })
+      agent
+          .interactStream("Hi")
+          .onTurnStart(
+              turn -> {
+                turnStartCount.incrementAndGet();
+                capturedTurn.set(turn);
+              })
           .onComplete(result -> latch.countDown())
           .onError(e -> latch.countDown())
           .start();
@@ -80,7 +83,8 @@ class AgentStreamCallbackTest {
       Agent agent = createTestAgent();
       enqueueSuccessResponse("Response");
 
-      agent.interactStream("Hi")
+      agent
+          .interactStream("Hi")
           .onTurnComplete(response -> turnCompleted.set(true))
           .onComplete(result -> latch.countDown())
           .onError(e -> latch.countDown())
@@ -105,7 +109,8 @@ class AgentStreamCallbackTest {
       Agent agent = createTestAgent();
       enqueueSuccessResponse("Hello World");
 
-      agent.interactStream("Hi")
+      agent
+          .interactStream("Hi")
           .onTextDelta(chunk -> capturedText.append(chunk))
           .onComplete(result -> latch.countDown())
           .onError(e -> latch.countDown())
@@ -131,22 +136,25 @@ class AgentStreamCallbackTest {
 
       FunctionTool<TestArgs> tool = new SimpleTool();
 
-      Agent agent = Agent.builder()
-          .name("ToolAgent")
-          .model("test-model")
-          .instructions("Use tools")
-          .responder(responder)
-          .addTool(tool)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("ToolAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(tool)
+              .build();
 
       enqueueToolCallResponse("simple_tool", "{\"query\": \"test\"}");
       enqueueSuccessResponse("Done");
 
-      agent.interactStream("Test")
-          .onToolExecuted(exec -> {
-            toolExecuted.set(true);
-            capturedToolName.set(exec.toolName());
-          })
+      agent
+          .interactStream("Test")
+          .onToolExecuted(
+              exec -> {
+                toolExecuted.set(true);
+                capturedToolName.set(exec.toolName());
+              })
           .onComplete(result -> latch.countDown())
           .onError(e -> latch.countDown())
           .start();
@@ -165,22 +173,25 @@ class AgentStreamCallbackTest {
 
       FunctionTool<TestArgs> tool = new ConfirmationTool();
 
-      Agent agent = Agent.builder()
-          .name("ConfirmAgent")
-          .model("test-model")
-          .instructions("Use tools")
-          .responder(responder)
-          .addTool(tool)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("ConfirmAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(tool)
+              .build();
 
       enqueueToolCallResponse("confirmation_tool", "{\"query\": \"delete\"}");
       enqueueSuccessResponse("Done");
 
-      agent.interactStream("Delete stuff")
-          .onToolCallPending((call, approve) -> {
-            pendingCalled.set(true);
-            approve.accept(true); // Approve the tool call
-          })
+      agent
+          .interactStream("Delete stuff")
+          .onToolCallPending(
+              (call, approve) -> {
+                pendingCalled.set(true);
+                approve.accept(true); // Approve the tool call
+              })
           .onComplete(result -> latch.countDown())
           .onError(e -> latch.countDown())
           .start();
@@ -205,12 +216,14 @@ class AgentStreamCallbackTest {
       Agent agent = createTestAgent();
       enqueueSuccessResponse("Done");
 
-      agent.interactStream("Hi")
-          .onComplete(result -> {
-            completed.set(true);
-            capturedResult.set(result);
-            latch.countDown();
-          })
+      agent
+          .interactStream("Hi")
+          .onComplete(
+              result -> {
+                completed.set(true);
+                capturedResult.set(result);
+                latch.countDown();
+              })
           .onError(e -> latch.countDown())
           .start();
 
@@ -229,12 +242,14 @@ class AgentStreamCallbackTest {
       Agent agent = createTestAgent();
       // No response enqueued - will fail
 
-      agent.interactStream("Hi")
+      agent
+          .interactStream("Hi")
           .onComplete(result -> latch.countDown())
-          .onError(e -> {
-            errorCalled.set(true);
-            latch.countDown();
-          })
+          .onError(
+              e -> {
+                errorCalled.set(true);
+                latch.countDown();
+              })
           .start();
 
       latch.await(10, TimeUnit.SECONDS);
@@ -253,20 +268,22 @@ class AgentStreamCallbackTest {
       AtomicReference<AgentResult> capturedResult = new AtomicReference<>();
       CountDownLatch latch = new CountDownLatch(1);
 
-      Agent agent = Agent.builder()
-          .name("GuardrailAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .addInputGuardrail((inputText, ctx) -> 
-              GuardrailResult.failed("Blocked for test"))
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("GuardrailAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addInputGuardrail((inputText, ctx) -> GuardrailResult.failed("Blocked for test"))
+              .build();
 
-      agent.interactStream("Any input")
-          .onComplete(result -> {
-            capturedResult.set(result);
-            latch.countDown();
-          })
+      agent
+          .interactStream("Any input")
+          .onComplete(
+              result -> {
+                capturedResult.set(result);
+                latch.countDown();
+              })
           .onError(e -> latch.countDown())
           .start();
 
@@ -288,31 +305,35 @@ class AgentStreamCallbackTest {
       AtomicReference<String> capturedAgentName = new AtomicReference<>();
       CountDownLatch latch = new CountDownLatch(1);
 
-      Agent targetAgent = Agent.builder()
-          .name("SupportAgent")
-          .model("test-model")
-          .instructions("Support")
-          .responder(responder)
-          .build();
+      Agent targetAgent =
+          Agent.builder()
+              .name("SupportAgent")
+              .model("test-model")
+              .instructions("Support")
+              .responder(responder)
+              .build();
 
-      Agent mainAgent = Agent.builder()
-          .name("Router")
-          .model("test-model")
-          .instructions("Route")
-          .responder(responder)
-          .addHandoff(Handoff.to(targetAgent).build())
-          .build();
+      Agent mainAgent =
+          Agent.builder()
+              .name("Router")
+              .model("test-model")
+              .instructions("Route")
+              .responder(responder)
+              .addHandoff(Handoff.to(targetAgent).build())
+              .build();
 
       // Main agent triggers handoff
       enqueueHandoffResponse("transfer_to_support_agent", "{\"message\": \"help\"}");
       // Target agent responds
       enqueueSuccessResponse("Support here");
 
-      mainAgent.interactStream("Need support")
-          .onHandoff(handoff -> {
-            handoffCalled.set(true);
-            capturedAgentName.set(handoff.targetAgent().name());
-          })
+      mainAgent
+          .interactStream("Need support")
+          .onHandoff(
+              handoff -> {
+                handoffCalled.set(true);
+                capturedAgentName.set(handoff.targetAgent().name());
+              })
           .onComplete(result -> latch.countDown())
           .onError(e -> latch.countDown())
           .start();
@@ -361,7 +382,8 @@ class AgentStreamCallbackTest {
   }
 
   private void enqueueSuccessResponse(String text) {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -387,7 +409,8 @@ class AgentStreamCallbackTest {
             "total_tokens": 15
           }
         }
-        """.formatted(text);
+        """
+            .formatted(text);
 
     mockWebServer.enqueue(
         new MockResponse()
@@ -397,7 +420,8 @@ class AgentStreamCallbackTest {
   }
 
   private void enqueueToolCallResponse(String toolName, String arguments) {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -419,7 +443,8 @@ class AgentStreamCallbackTest {
             "total_tokens": 15
           }
         }
-        """.formatted(toolName, arguments.replace("\"", "\\\""));
+        """
+            .formatted(toolName, arguments.replace("\"", "\\\""));
 
     mockWebServer.enqueue(
         new MockResponse()
@@ -429,7 +454,8 @@ class AgentStreamCallbackTest {
   }
 
   private void enqueueHandoffResponse(String handoffName, String arguments) {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -451,7 +477,8 @@ class AgentStreamCallbackTest {
             "total_tokens": 15
           }
         }
-        """.formatted(handoffName, arguments.replace("\"", "\\\""));
+        """
+            .formatted(handoffName, arguments.replace("\"", "\\\""));
 
     mockWebServer.enqueue(
         new MockResponse()

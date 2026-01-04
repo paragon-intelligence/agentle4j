@@ -25,10 +25,8 @@ class AgentAgenticLoopTest {
   void setUp() throws Exception {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
-    responder = Responder.builder()
-        .baseUrl(mockWebServer.url("/v1/responses"))
-        .apiKey("test-key")
-        .build();
+    responder =
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -47,18 +45,20 @@ class AgentAgenticLoopTest {
     @Test
     @DisplayName("input guardrail failure returns error result")
     void inputGuardrailFailureReturnsError() throws Exception {
-      Agent agent = Agent.builder()
-          .name("GuardrailAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .addInputGuardrail((input, ctx) -> {
-            if (input.contains("blocked")) {
-              return GuardrailResult.failed("Blocked content detected");
-            }
-            return GuardrailResult.passed();
-          })
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("GuardrailAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addInputGuardrail(
+                  (input, ctx) -> {
+                    if (input.contains("blocked")) {
+                      return GuardrailResult.failed("Blocked content detected");
+                    }
+                    return GuardrailResult.passed();
+                  })
+              .build();
 
       AgentResult result = agent.interact("This contains blocked content").get(5, TimeUnit.SECONDS);
 
@@ -71,13 +71,14 @@ class AgentAgenticLoopTest {
     @Test
     @DisplayName("input guardrail passing allows execution")
     void inputGuardrailPassingAllowsExecution() throws Exception {
-      Agent agent = Agent.builder()
-          .name("GuardrailAgent")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("GuardrailAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
+              .build();
 
       enqueueSuccessResponse("Hello!");
 
@@ -98,18 +99,20 @@ class AgentAgenticLoopTest {
     @Test
     @DisplayName("output guardrail failure returns error")
     void outputGuardrailFailureReturnsError() throws Exception {
-      Agent agent = Agent.builder()
-          .name("OutputGuard")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .addOutputGuardrail((output, ctx) -> {
-            if (output.contains("forbidden")) {
-              return GuardrailResult.failed("Forbidden output detected");
-            }
-            return GuardrailResult.passed();
-          })
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("OutputGuard")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addOutputGuardrail(
+                  (output, ctx) -> {
+                    if (output.contains("forbidden")) {
+                      return GuardrailResult.failed("Forbidden output detected");
+                    }
+                    return GuardrailResult.passed();
+                  })
+              .build();
 
       enqueueSuccessResponse("This is forbidden output");
 
@@ -123,13 +126,14 @@ class AgentAgenticLoopTest {
     @Test
     @DisplayName("output guardrail passing returns success")
     void outputGuardrailPassingReturnsSuccess() throws Exception {
-      Agent agent = Agent.builder()
-          .name("OutputGuard")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .addOutputGuardrail((output, ctx) -> GuardrailResult.passed())
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("OutputGuard")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addOutputGuardrail((output, ctx) -> GuardrailResult.passed())
+              .build();
 
       enqueueSuccessResponse("Safe output");
 
@@ -234,9 +238,9 @@ class AgentAgenticLoopTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
       context.withTraceContext("custom-trace-id", "custom-span-id");
-      
+
       assertTrue(context.hasTraceContext());
-      
+
       enqueueSuccessResponse("Response");
       agent.interact(context).get(5, TimeUnit.SECONDS);
 
@@ -259,7 +263,8 @@ class AgentAgenticLoopTest {
   }
 
   private void enqueueSuccessResponse(String text) {
-    String json = """
+    String json =
+        """
         {
           "id": "resp_001",
           "object": "response",
@@ -285,7 +290,8 @@ class AgentAgenticLoopTest {
             "total_tokens": 15
           }
         }
-        """.formatted(text);
+        """
+            .formatted(text);
 
     mockWebServer.enqueue(
         new MockResponse()

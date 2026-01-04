@@ -242,8 +242,7 @@ class LangfuseProcessorTest {
 
       ResponseStartedEvent started =
           ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
-      ResponseCompletedEvent completed =
-          ResponseCompletedEvent.from(started, 100, 200, 300, 0.01);
+      ResponseCompletedEvent completed = ResponseCompletedEvent.from(started, 100, 200, 300, 0.01);
 
       processor.process(completed);
 
@@ -484,8 +483,7 @@ class LangfuseProcessorTest {
 
       ResponseStartedEvent started =
           ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
-      ResponseCompletedEvent completed =
-          ResponseCompletedEvent.from(started, 150, 250, 400, 0.025);
+      ResponseCompletedEvent completed = ResponseCompletedEvent.from(started, 150, 250, 400, 0.025);
 
       processor.process(completed);
 

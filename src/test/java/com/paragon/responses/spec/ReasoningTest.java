@@ -9,12 +9,9 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Comprehensive tests for Reasoning record.
- * 
- * Tests cover:
- * - Record creation and accessors
- * - toString() formatting
- * - Nullable fields handling
- * - Record equality
+ *
+ * <p>Tests cover: - Record creation and accessors - toString() formatting - Nullable fields
+ * handling - Record equality
  */
 @DisplayName("Reasoning")
 class ReasoningTest {
@@ -30,13 +27,7 @@ class ReasoningTest {
     @Test
     @DisplayName("creates with all required fields")
     void createsWithAllRequiredFields() {
-      Reasoning reasoning = new Reasoning(
-          "reasoning-123",
-          List.of(),
-          null,
-          null,
-          null
-      );
+      Reasoning reasoning = new Reasoning("reasoning-123", List.of(), null, null, null);
 
       assertNotNull(reasoning);
       assertEquals("reasoning-123", reasoning.id());
@@ -46,18 +37,18 @@ class ReasoningTest {
     @Test
     @DisplayName("creates with all fields populated")
     void createsWithAllFieldsPopulated() {
-      Reasoning reasoning = new Reasoning(
-          "reasoning-456",
-          List.of(),
-          List.of(),
-          "encrypted-content-xyz",
-                    ReasoningStatus.COMPLETED
-      );
+      Reasoning reasoning =
+          new Reasoning(
+              "reasoning-456",
+              List.of(),
+              List.of(),
+              "encrypted-content-xyz",
+              ReasoningStatus.COMPLETED);
 
       assertNotNull(reasoning);
       assertEquals("reasoning-456", reasoning.id());
       assertEquals("encrypted-content-xyz", reasoning.encryptedContent());
-      assertEquals(          ReasoningStatus.COMPLETED, reasoning.status());
+      assertEquals(ReasoningStatus.COMPLETED, reasoning.status());
     }
   }
 
@@ -122,15 +113,15 @@ class ReasoningTest {
     @Test
     @DisplayName("status() returns in_progress when set")
     void statusReturnsInProgressWhenSet() {
-      Reasoning reasoning = new Reasoning("id", List.of(), null, null,           ReasoningStatus.IN_PROGRESS);
-      assertEquals(          ReasoningStatus.IN_PROGRESS, reasoning.status());
+      Reasoning reasoning = new Reasoning("id", List.of(), null, null, ReasoningStatus.IN_PROGRESS);
+      assertEquals(ReasoningStatus.IN_PROGRESS, reasoning.status());
     }
 
     @Test
     @DisplayName("status() returns incomplete when set")
     void statusReturnsIncompleteWhenSet() {
-      Reasoning reasoning = new Reasoning("id", List.of(), null, null,           ReasoningStatus.INCOMPLETE);
-      assertEquals(          ReasoningStatus.INCOMPLETE, reasoning.status());
+      Reasoning reasoning = new Reasoning("id", List.of(), null, null, ReasoningStatus.INCOMPLETE);
+      assertEquals(ReasoningStatus.INCOMPLETE, reasoning.status());
     }
   }
 

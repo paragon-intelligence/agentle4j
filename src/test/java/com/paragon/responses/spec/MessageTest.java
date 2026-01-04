@@ -288,7 +288,8 @@ class MessageTest {
     @Test
     @DisplayName("developer with content list and status")
     void developerWithContentListAndStatus() {
-      List<MessageContent> content = List.of(Text.valueOf("Instruction 1"), Text.valueOf("Instruction 2"));
+      List<MessageContent> content =
+          List.of(Text.valueOf("Instruction 1"), Text.valueOf("Instruction 2"));
       DeveloperMessage msg = Message.developer(content, InputMessageStatus.COMPLETED);
 
       assertEquals(2, msg.content().size());
@@ -298,7 +299,8 @@ class MessageTest {
     @Test
     @DisplayName("user with content list and status")
     void userWithContentListAndStatus() {
-      List<MessageContent> content = List.of(Text.valueOf("User input 1"), Text.valueOf("User input 2"));
+      List<MessageContent> content =
+          List.of(Text.valueOf("User input 1"), Text.valueOf("User input 2"));
       UserMessage msg = Message.user(content, InputMessageStatus.IN_PROGRESS);
 
       assertEquals(2, msg.content().size());
@@ -308,7 +310,8 @@ class MessageTest {
     @Test
     @DisplayName("assistant with content list and status")
     void assistantWithContentListAndStatus() {
-      List<MessageContent> content = List.of(Text.valueOf("Response 1"), Text.valueOf("Response 2"));
+      List<MessageContent> content =
+          List.of(Text.valueOf("Response 1"), Text.valueOf("Response 2"));
       AssistantMessage msg = Message.assistant(content, InputMessageStatus.COMPLETED);
 
       assertEquals(2, msg.content().size());

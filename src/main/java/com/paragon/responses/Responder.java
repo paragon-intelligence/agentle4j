@@ -2,6 +2,7 @@ package com.paragon.responses;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paragon.http.RetryPolicy;
 import com.paragon.responses.json.JacksonJsonSchemaProducer;
 import com.paragon.responses.json.JsonSchemaProducer;
 import com.paragon.responses.openrouter.OpenRouterModelRegistry;
@@ -23,7 +24,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import com.paragon.http.RetryPolicy;
 import okhttp3.*;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;

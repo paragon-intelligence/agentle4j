@@ -5,8 +5,6 @@ import com.paragon.responses.spec.CreateResponsePayload;
 import com.paragon.responses.spec.File;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ParsedResponse;
-import org.jspecify.annotations.NonNull;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
@@ -14,13 +12,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
+import org.jspecify.annotations.NonNull;
 
 @SuppressWarnings("ClassCanBeRecord")
 public class AgenticFileParser {
   @NonNull
-  private static final String INSTRUCTIONS = "Convert the document to markdown format, with each page as a separate markdown string. Preserve all structure (headings, lists, tables, formatting) and ensure clean, readable output. For images, replace with a descriptive paragraph explaining the image content in detail.";
-  @NonNull
-  private final Responder responder;
+  private static final String INSTRUCTIONS =
+      "Convert the document to markdown format, with each page as a separate markdown string."
+          + " Preserve all structure (headings, lists, tables, formatting) and ensure clean,"
+          + " readable output. For images, replace with a descriptive paragraph explaining the"
+          + " image content in detail.";
+
+  @NonNull private final Responder responder;
 
   public AgenticFileParser(@NonNull Responder responder) {
     this.responder = responder;
@@ -48,19 +51,20 @@ public class AgenticFileParser {
   }
 
   public @NonNull CompletableFuture<MarkdownResult> parse(@NonNull String base64)
-          throws IOException {
+      throws IOException {
     File file = File.fromBase64(base64);
     return parse(file);
   }
 
   public @NonNull CompletableFuture<MarkdownResult> parse(@NonNull File file) throws IOException {
-    return responder.respond(
-                    CreateResponsePayload.builder()
-                            .addDeveloperMessage(Message.developer(INSTRUCTIONS))
-                            .addUserMessage(Message.builder().addContent(file).asUser())
-                            .withStructuredOutput(MarkdownResult.class)
-                            .build())
-            .thenApply(ParsedResponse::outputParsed);
+    return responder
+        .respond(
+            CreateResponsePayload.builder()
+                .addDeveloperMessage(Message.developer(INSTRUCTIONS))
+                .addUserMessage(Message.builder().addContent(file).asUser())
+                .withStructuredOutput(MarkdownResult.class)
+                .build())
+        .thenApply(ParsedResponse::outputParsed);
   }
 
   private boolean seemsLikeFile(URI uri) {

@@ -57,8 +57,7 @@ class TelemetryEventsTest {
     void createWithParentSetsParentSpanId() {
       String parentSpanId = "parent-span-789";
       ResponseStartedEvent event =
-          ResponseStartedEvent.createWithParent(
-              SESSION_ID, TRACE_ID, SPAN_ID, parentSpanId, MODEL);
+          ResponseStartedEvent.createWithParent(SESSION_ID, TRACE_ID, SPAN_ID, parentSpanId, MODEL);
 
       assertEquals(SESSION_ID, event.sessionId());
       assertEquals(parentSpanId, event.parentSpanId());
@@ -280,14 +279,7 @@ class TelemetryEventsTest {
       RuntimeException error = new RuntimeException("Agent failed");
 
       AgentFailedEvent event =
-          AgentFailedEvent.from(
-              "TestAgent", 
-              3, 
-              error, 
-              SESSION_ID, 
-              TRACE_ID, 
-              SPAN_ID, 
-              null);
+          AgentFailedEvent.from("TestAgent", 3, error, SESSION_ID, TRACE_ID, SPAN_ID, null);
 
       assertEquals("TestAgent", event.agentName());
       assertEquals(SESSION_ID, event.sessionId());
@@ -348,7 +340,8 @@ class TelemetryEventsTest {
     @DisplayName("implements TelemetryEvent")
     void implementsTelemetryEvent() {
       AgentFailedEvent event =
-          AgentFailedEvent.from("Agent", 0, new RuntimeException(), SESSION_ID, TRACE_ID, null, null);
+          AgentFailedEvent.from(
+              "Agent", 0, new RuntimeException(), SESSION_ID, TRACE_ID, null, null);
 
       assertInstanceOf(TelemetryEvent.class, event);
     }

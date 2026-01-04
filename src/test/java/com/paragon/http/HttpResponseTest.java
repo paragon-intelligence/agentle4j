@@ -121,7 +121,8 @@ class HttpResponseTest {
     Map<String, List<String>> headers = Map.of("key", List.of("value"));
     HttpResponse response = HttpResponse.of(200, "OK", headers, null, 0);
 
-    assertThrows(UnsupportedOperationException.class, () -> response.headers().put("new", List.of()));
+    assertThrows(
+        UnsupportedOperationException.class, () -> response.headers().put("new", List.of()));
   }
 
   // ==================== Body Tests ====================

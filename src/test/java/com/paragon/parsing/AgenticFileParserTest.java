@@ -19,8 +19,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -82,7 +82,8 @@ class AgenticFileParserTest {
 
     @Test
     @DisplayName("successfully parses an existing file")
-    void successfullyParsesExistingFile() throws IOException, ExecutionException, InterruptedException {
+    void successfullyParsesExistingFile()
+        throws IOException, ExecutionException, InterruptedException {
       // Create a temporary file
       Path testFile = tempDir.resolve("test.pdf");
       Files.writeString(testFile, "Test document content");
@@ -253,7 +254,8 @@ class AgenticFileParserTest {
 
     @Test
     @DisplayName("successfully parses File object created from URL")
-    void successfullyParsesFileFromUrl() throws IOException, ExecutionException, InterruptedException {
+    void successfullyParsesFileFromUrl()
+        throws IOException, ExecutionException, InterruptedException {
       com.paragon.responses.spec.File file =
           com.paragon.responses.spec.File.fromUrl("https://example.com/doc.pdf");
 

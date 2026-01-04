@@ -5,22 +5,18 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.responses.annotations.FunctionMetadata;
+import java.util.Map;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.jspecify.annotations.Nullable;
-import java.util.Map;
 
 /**
  * Comprehensive tests for FunctionTool.
- * 
- * Tests cover:
- * - Construction with and without @FunctionMetadata
- * - Name derivation from class name (snake_case conversion)
- * - Manual parameter specification
- * - Getters for all properties
- * - toToolChoice() serialization
- * - requiresConfirmation() behavior
+ *
+ * <p>Tests cover: - Construction with and without @FunctionMetadata - Name derivation from class
+ * name (snake_case conversion) - Manual parameter specification - Getters for all properties -
+ * toToolChoice() serialization - requiresConfirmation() behavior
  */
 @DisplayName("FunctionTool Tests")
 class FunctionToolTest {
@@ -41,7 +37,10 @@ class FunctionToolTest {
   }
 
   // Tool with annotation including requiresConfirmation
-  @FunctionMetadata(name = "risky_action", description = "A risky action", requiresConfirmation = true)
+  @FunctionMetadata(
+      name = "risky_action",
+      description = "A risky action",
+      requiresConfirmation = true)
   static class RiskyActionTool extends FunctionTool<EmptyParams> {
     @Override
     public @Nullable FunctionToolCallOutput call(@Nullable EmptyParams params) {
@@ -67,6 +66,7 @@ class FunctionToolTest {
 
   // Parameter records
   public record WeatherParams(String location, String unit) {}
+
   public record EmptyParams() {}
 
   // ═══════════════════════════════════════════════════════════════════════════

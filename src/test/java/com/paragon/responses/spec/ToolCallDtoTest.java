@@ -31,13 +31,13 @@ class ToolCallDtoTest {
       ClickAction action = new ClickAction(ClickButton.LEFT, coord);
       List<PendingSafetyCheck> safetyChecks = List.of();
 
-      ComputerToolCall call = new ComputerToolCall(
-          action,
-          "id-456",     // id comes before callId
-          "call-123",   // callId comes after id
-          safetyChecks,
-          ComputerToolCallStatus.COMPLETED
-      );
+      ComputerToolCall call =
+          new ComputerToolCall(
+              action,
+              "id-456", // id comes before callId
+              "call-123", // callId comes after id
+              safetyChecks,
+              ComputerToolCallStatus.COMPLETED);
 
       assertEquals(action, call.action());
       assertEquals("call-123", call.callId());
@@ -53,8 +53,12 @@ class ToolCallDtoTest {
       ClickAction action = new ClickAction(ClickButton.LEFT, coord);
       List<PendingSafetyCheck> safetyChecks = List.of();
 
-      ComputerToolCall call1 = new ComputerToolCall(action, "id-456", "call-123", safetyChecks, ComputerToolCallStatus.COMPLETED);
-      ComputerToolCall call2 = new ComputerToolCall(action, "id-456", "call-123", safetyChecks, ComputerToolCallStatus.COMPLETED);
+      ComputerToolCall call1 =
+          new ComputerToolCall(
+              action, "id-456", "call-123", safetyChecks, ComputerToolCallStatus.COMPLETED);
+      ComputerToolCall call2 =
+          new ComputerToolCall(
+              action, "id-456", "call-123", safetyChecks, ComputerToolCallStatus.COMPLETED);
 
       assertEquals(call1, call2);
       assertEquals(call1.hashCode(), call2.hashCode());
@@ -67,8 +71,12 @@ class ToolCallDtoTest {
       ClickAction action = new ClickAction(ClickButton.LEFT, coord);
       List<PendingSafetyCheck> safetyChecks = List.of();
 
-      ComputerToolCall call1 = new ComputerToolCall(action, "id-456", "call-123", safetyChecks, ComputerToolCallStatus.COMPLETED);
-      ComputerToolCall call2 = new ComputerToolCall(action, "id-456", "call-999", safetyChecks, ComputerToolCallStatus.COMPLETED);
+      ComputerToolCall call1 =
+          new ComputerToolCall(
+              action, "id-456", "call-123", safetyChecks, ComputerToolCallStatus.COMPLETED);
+      ComputerToolCall call2 =
+          new ComputerToolCall(
+              action, "id-456", "call-999", safetyChecks, ComputerToolCallStatus.COMPLETED);
 
       assertNotEquals(call1, call2);
     }
@@ -78,11 +86,13 @@ class ToolCallDtoTest {
     void equals_handlesNullAndDifferentTypes() {
       Coordinate coord = new Coordinate(100, 200);
       ClickAction action = new ClickAction(ClickButton.LEFT, coord);
-      ComputerToolCall call = new ComputerToolCall(action, "id-456", "call-123", List.of(), ComputerToolCallStatus.COMPLETED);
+      ComputerToolCall call =
+          new ComputerToolCall(
+              action, "id-456", "call-123", List.of(), ComputerToolCallStatus.COMPLETED);
 
       assertNotEquals(null, call);
       assertNotEquals("string", call);
-      assertEquals(call, call);  // Same instance
+      assertEquals(call, call); // Same instance
     }
 
     @Test
@@ -90,7 +100,9 @@ class ToolCallDtoTest {
     void toString_returnsFormattedString() {
       Coordinate coord = new Coordinate(100, 200);
       ClickAction action = new ClickAction(ClickButton.LEFT, coord);
-      ComputerToolCall call = new ComputerToolCall(action, "id-456", "call-123", List.of(), ComputerToolCallStatus.COMPLETED);
+      ComputerToolCall call =
+          new ComputerToolCall(
+              action, "id-456", "call-123", List.of(), ComputerToolCallStatus.COMPLETED);
 
       String result = call.toString();
 
@@ -111,7 +123,8 @@ class ToolCallDtoTest {
     @Test
     @DisplayName("constructor sets all fields correctly")
     void constructor_setsAllFields() {
-      LocalShellExecAction action = new LocalShellExecAction(List.of("ls", "-la"), null, null, null, null);
+      LocalShellExecAction action =
+          new LocalShellExecAction(List.of("ls", "-la"), null, null, null, null);
       LocalShellCall call = new LocalShellCall(action, "call-123", "id-456", "completed");
 
       assertEquals(action, call.action());
@@ -123,7 +136,8 @@ class ToolCallDtoTest {
     @Test
     @DisplayName("equals returns true for identical objects")
     void equals_returnsTrueForIdentical() {
-      LocalShellExecAction action = new LocalShellExecAction(List.of("echo", "hello"), null, null, null, null);
+      LocalShellExecAction action =
+          new LocalShellExecAction(List.of("echo", "hello"), null, null, null, null);
       LocalShellCall call1 = new LocalShellCall(action, "call-1", "id-1", "completed");
       LocalShellCall call2 = new LocalShellCall(action, "call-1", "id-1", "completed");
 
@@ -134,7 +148,8 @@ class ToolCallDtoTest {
     @Test
     @DisplayName("equals returns false for different objects")
     void equals_returnsFalseForDifferent() {
-      LocalShellExecAction action = new LocalShellExecAction(List.of("pwd"), null, null, null, null);
+      LocalShellExecAction action =
+          new LocalShellExecAction(List.of("pwd"), null, null, null, null);
       LocalShellCall call1 = new LocalShellCall(action, "call-1", "id-1", "completed");
       LocalShellCall call2 = new LocalShellCall(action, "call-2", "id-1", "completed");
 
@@ -179,7 +194,9 @@ class ToolCallDtoTest {
     @DisplayName("constructor sets all fields correctly")
     void constructor_setsAllFields() {
       FunctionShellAction action = new FunctionShellAction(List.of("echo hello"), 1000, 5000);
-      FunctionShellToolCall call = new FunctionShellToolCall(action, "call-123", "id-456", FunctionShellToolCallStatus.COMPLETED);
+      FunctionShellToolCall call =
+          new FunctionShellToolCall(
+              action, "call-123", "id-456", FunctionShellToolCallStatus.COMPLETED);
 
       assertEquals(action, call.action());
       assertEquals("call-123", call.callId());
@@ -203,8 +220,12 @@ class ToolCallDtoTest {
     @DisplayName("equals returns true for identical objects")
     void equals_returnsTrueForIdentical() {
       FunctionShellAction action = new FunctionShellAction(List.of("ls"), 500, 3000);
-      FunctionShellToolCall call1 = new FunctionShellToolCall(action, "call-1", "id-1", FunctionShellToolCallStatus.IN_PROGRESS);
-      FunctionShellToolCall call2 = new FunctionShellToolCall(action, "call-1", "id-1", FunctionShellToolCallStatus.IN_PROGRESS);
+      FunctionShellToolCall call1 =
+          new FunctionShellToolCall(
+              action, "call-1", "id-1", FunctionShellToolCallStatus.IN_PROGRESS);
+      FunctionShellToolCall call2 =
+          new FunctionShellToolCall(
+              action, "call-1", "id-1", FunctionShellToolCallStatus.IN_PROGRESS);
 
       assertEquals(call1, call2);
       assertEquals(call1.hashCode(), call2.hashCode());
@@ -214,8 +235,12 @@ class ToolCallDtoTest {
     @DisplayName("equals returns false for different objects")
     void equals_returnsFalseForDifferent() {
       FunctionShellAction action = new FunctionShellAction(List.of("ls"), 500, 3000);
-      FunctionShellToolCall call1 = new FunctionShellToolCall(action, "call-1", "id-1", FunctionShellToolCallStatus.COMPLETED);
-      FunctionShellToolCall call2 = new FunctionShellToolCall(action, "call-1", "id-1", FunctionShellToolCallStatus.INCOMPLETE);
+      FunctionShellToolCall call1 =
+          new FunctionShellToolCall(
+              action, "call-1", "id-1", FunctionShellToolCallStatus.COMPLETED);
+      FunctionShellToolCall call2 =
+          new FunctionShellToolCall(
+              action, "call-1", "id-1", FunctionShellToolCallStatus.INCOMPLETE);
 
       assertNotEquals(call1, call2);
     }
@@ -224,7 +249,9 @@ class ToolCallDtoTest {
     @DisplayName("equals handles null and different types")
     void equals_handlesNullAndDifferentTypes() {
       FunctionShellAction action = new FunctionShellAction(List.of("ls"), 500, 3000);
-      FunctionShellToolCall call = new FunctionShellToolCall(action, "call-1", "id-1", FunctionShellToolCallStatus.COMPLETED);
+      FunctionShellToolCall call =
+          new FunctionShellToolCall(
+              action, "call-1", "id-1", FunctionShellToolCallStatus.COMPLETED);
 
       assertNotEquals(null, call);
       assertNotEquals("string", call);
@@ -235,7 +262,9 @@ class ToolCallDtoTest {
     @DisplayName("toString returns formatted string")
     void toString_returnsFormattedString() {
       FunctionShellAction action = new FunctionShellAction(List.of("echo test"), 1000, 5000);
-      FunctionShellToolCall call = new FunctionShellToolCall(action, "call-123", "id-456", FunctionShellToolCallStatus.COMPLETED);
+      FunctionShellToolCall call =
+          new FunctionShellToolCall(
+              action, "call-123", "id-456", FunctionShellToolCallStatus.COMPLETED);
 
       String result = call.toString();
 
@@ -255,7 +284,8 @@ class ToolCallDtoTest {
     @Test
     @DisplayName("constructor sets all fields correctly")
     void constructor_setsAllFields() {
-      CustomToolCall call = new CustomToolCall("call-123", "{\"query\": \"test\"}", "my_tool", "id-456");
+      CustomToolCall call =
+          new CustomToolCall("call-123", "{\"query\": \"test\"}", "my_tool", "id-456");
 
       assertEquals("call-123", call.callId());
       assertEquals("{\"query\": \"test\"}", call.input());
@@ -413,7 +443,8 @@ class ToolCallDtoTest {
     @Test
     @DisplayName("constructor sets all fields correctly")
     void constructor_setsAllFields() {
-      ImageGenerationCall call = new ImageGenerationCall("id-123", "base64encodedimage", "completed");
+      ImageGenerationCall call =
+          new ImageGenerationCall("id-123", "base64encodedimage", "completed");
 
       assertEquals("id-123", call.id());
       assertEquals("base64encodedimage", call.result());
@@ -568,11 +599,8 @@ class ToolCallDtoTest {
     @Test
     @DisplayName("FunctionShellAction record accessors work")
     void functionShellAction_accessorsWork() {
-      FunctionShellAction action = new FunctionShellAction(
-          List.of("echo hello", "ls -la"),
-          1000,
-          5000
-      );
+      FunctionShellAction action =
+          new FunctionShellAction(List.of("echo hello", "ls -la"), 1000, 5000);
 
       assertEquals(List.of("echo hello", "ls -la"), action.commands());
       assertEquals(1000, action.maxOutputLength());
@@ -592,7 +620,8 @@ class ToolCallDtoTest {
     @Test
     @DisplayName("LocalShellExecAction can be instantiated")
     void localShellExecAction_canBeInstantiated() {
-      LocalShellExecAction action = new LocalShellExecAction(List.of("ls", "-la", "/tmp"), null, null, null, null);
+      LocalShellExecAction action =
+          new LocalShellExecAction(List.of("ls", "-la", "/tmp"), null, null, null, null);
       assertEquals(List.of("ls", "-la", "/tmp"), action.command());
     }
   }

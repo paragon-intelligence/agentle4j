@@ -316,7 +316,8 @@ class ParallelAgentsTest {
       ParallelAgents orchestrator = ParallelAgents.of(worker);
 
       assertThrows(
-          NullPointerException.class, () -> orchestrator.runAndSynthesize((String) null, synthesizer));
+          NullPointerException.class,
+          () -> orchestrator.runAndSynthesize((String) null, synthesizer));
     }
 
     @Test

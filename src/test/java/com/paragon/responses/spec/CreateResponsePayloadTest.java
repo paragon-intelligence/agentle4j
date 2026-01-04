@@ -340,10 +340,8 @@ class CreateResponsePayloadTest {
     @Test
     @DisplayName("addUserMessage adds user message string")
     void addUserMessageAddsString() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Hello from user")
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").addUserMessage("Hello from user").build();
 
       assertNotNull(payload.input());
       assertFalse(payload.input().isEmpty());
@@ -352,11 +350,12 @@ class CreateResponsePayloadTest {
     @Test
     @DisplayName("addDeveloperMessage adds developer message")
     void addDeveloperMessageAdds() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addDeveloperMessage("Developer instructions")
-          .addUserMessage("Hello")
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addDeveloperMessage("Developer instructions")
+              .addUserMessage("Hello")
+              .build();
 
       assertNotNull(payload.input());
       assertEquals(2, payload.input().size());
@@ -366,12 +365,13 @@ class CreateResponsePayloadTest {
     @DisplayName("addDeveloperMessage with DeveloperMessage object")
     void addDeveloperMessageWithMessage() {
       DeveloperMessage devMsg = Message.developer("System instructions");
-      
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addDeveloperMessage(devMsg)
-          .addUserMessage("Hello")
-          .build();
+
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addDeveloperMessage(devMsg)
+              .addUserMessage("Hello")
+              .build();
 
       assertNotNull(payload.input());
       assertEquals(2, payload.input().size());
@@ -381,11 +381,9 @@ class CreateResponsePayloadTest {
     @DisplayName("addUserMessage with UserMessage object")
     void addUserMessageWithUserMessage() {
       UserMessage userMsg = Message.user("Hello message");
-      
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage(userMsg)
-          .build();
+
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").addUserMessage(userMsg).build();
 
       assertNotNull(payload.input());
       assertEquals(1, payload.input().size());
@@ -394,12 +392,13 @@ class CreateResponsePayloadTest {
     @Test
     @DisplayName("multiple add methods can be chained")
     void multipleAddMethodsCanBeChained() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addDeveloperMessage("Be helpful")
-          .addUserMessage("Hello")
-          .addUserMessage("Another message")
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addDeveloperMessage("Be helpful")
+              .addUserMessage("Hello")
+              .addUserMessage("Another message")
+              .build();
 
       assertNotNull(payload.input());
       assertEquals(3, payload.input().size());
@@ -417,11 +416,12 @@ class CreateResponsePayloadTest {
     @Test
     @DisplayName("withStructuredOutput sets output type")
     void withStructuredOutputSetsType() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Extract person")
-          .withStructuredOutput(TestRecord.class)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Extract person")
+              .withStructuredOutput(TestRecord.class)
+              .build();
 
       assertNotNull(payload);
     }
@@ -429,5 +429,3 @@ class CreateResponsePayloadTest {
     record TestRecord(String name, int value) {}
   }
 }
-
-

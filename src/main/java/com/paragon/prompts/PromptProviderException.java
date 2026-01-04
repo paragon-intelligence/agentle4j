@@ -6,8 +6,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Exception thrown when a prompt cannot be retrieved from a {@link PromptProvider}.
  *
- * <p>This exception wraps underlying failures such as IO errors, network failures,
- * or API errors, providing a consistent exception type for prompt retrieval operations.
+ * <p>This exception wraps underlying failures such as IO errors, network failures, or API errors,
+ * providing a consistent exception type for prompt retrieval operations.
  *
  * @author Agentle Framework
  * @since 1.0
@@ -38,7 +38,8 @@ public class PromptProviderException extends RuntimeException {
    * @param promptId the ID of the prompt that failed to load
    * @param cause the underlying cause
    */
-  public PromptProviderException(@NonNull String message, @Nullable String promptId, @Nullable Throwable cause) {
+  public PromptProviderException(
+      @NonNull String message, @Nullable String promptId, @Nullable Throwable cause) {
     super(message, cause);
     this.promptId = promptId;
     this.retryable = false;
@@ -53,9 +54,9 @@ public class PromptProviderException extends RuntimeException {
    * @param retryable whether the operation can be retried
    */
   public PromptProviderException(
-      @NonNull String message, 
-      @Nullable String promptId, 
-      @Nullable Throwable cause, 
+      @NonNull String message,
+      @Nullable String promptId,
+      @Nullable Throwable cause,
       boolean retryable) {
     super(message, cause);
     this.promptId = promptId;
@@ -75,8 +76,8 @@ public class PromptProviderException extends RuntimeException {
   /**
    * Returns whether the operation can be retried.
    *
-   * <p>This is typically true for transient failures such as network timeouts
-   * or rate limiting, and false for permanent failures like missing prompts.
+   * <p>This is typically true for transient failures such as network timeouts or rate limiting, and
+   * false for permanent failures like missing prompts.
    *
    * @return true if retryable, false otherwise
    */

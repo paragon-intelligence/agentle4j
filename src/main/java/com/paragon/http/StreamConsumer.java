@@ -2,17 +2,11 @@ package com.paragon.http;
 
 import java.util.function.Consumer;
 
-/**
- * Consumer for SSE streaming responses.
- */
+/** Consumer for SSE streaming responses. */
 public interface StreamConsumer<T> {
 
   static <T> StreamConsumer<T> of(
-          Class<T> type,
-          Consumer<T> onEvent,
-          Consumer<Throwable> onError,
-          Runnable onComplete
-  ) {
+      Class<T> type, Consumer<T> onEvent, Consumer<Throwable> onError, Runnable onComplete) {
     return new StreamConsumer<>() {
       @Override
       public Class<T> eventType() {
@@ -44,8 +38,7 @@ public interface StreamConsumer<T> {
 
   void onComplete();
 
-  default void onRawLine(String line) {
-  }
+  default void onRawLine(String line) {}
 
   default boolean shouldCancel() {
     return false;

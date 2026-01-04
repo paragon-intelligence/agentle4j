@@ -485,11 +485,11 @@ class GrafanaProcessorTest {
       mockWebServer.enqueue(new MockResponse().setResponseCode(200));
       processor = createProcessor(true, false, false);
 
-      ResponseStartedEvent event = ResponseStartedEvent.create(
-          "session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseStartedEvent event =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
 
       processor.process(event);
-      
+
       // Wait for async processing
       Thread.sleep(100);
 
@@ -506,13 +506,12 @@ class GrafanaProcessorTest {
       mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // metrics
       processor = createProcessor(true, true, false);
 
-      ResponseStartedEvent started = ResponseStartedEvent.create(
-          "session-1", "trace-123", "span-456", "gpt-4o");
-      ResponseCompletedEvent completed = ResponseCompletedEvent.from(
-          started, 100, 200, 300, 0.01);
+      ResponseStartedEvent started =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseCompletedEvent completed = ResponseCompletedEvent.from(started, 100, 200, 300, 0.01);
 
       processor.process(completed);
-      
+
       Thread.sleep(100);
 
       RecordedRequest traceRequest = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
@@ -531,11 +530,11 @@ class GrafanaProcessorTest {
       mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // second request
       processor = createProcessor(true, false, true);
 
-      ResponseStartedEvent event = ResponseStartedEvent.create(
-          "session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseStartedEvent event =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
 
       processor.process(event);
-      
+
       Thread.sleep(100);
 
       // Get both requests - order is not guaranteed due to async processing
@@ -543,10 +542,13 @@ class GrafanaProcessorTest {
       RecordedRequest request2 = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
       assertNotNull(request1);
       assertNotNull(request2);
-      
+
       // Verify that we got both traces and logs (in either order)
-      boolean hasTraces = request1.getPath().equals("/otlp/v1/traces") || request2.getPath().equals("/otlp/v1/traces");
-      boolean hasLogs = request1.getPath().equals("/otlp/v1/logs") || request2.getPath().equals("/otlp/v1/logs");
+      boolean hasTraces =
+          request1.getPath().equals("/otlp/v1/traces")
+              || request2.getPath().equals("/otlp/v1/traces");
+      boolean hasLogs =
+          request1.getPath().equals("/otlp/v1/logs") || request2.getPath().equals("/otlp/v1/logs");
       assertTrue(hasTraces, "Expected a trace request");
       assertTrue(hasLogs, "Expected a log request");
     }
@@ -558,18 +560,18 @@ class GrafanaProcessorTest {
       mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // log
       processor = createProcessor(true, false, true);
 
-      ResponseStartedEvent started = ResponseStartedEvent.create(
-          "session-1", "trace-123", "span-456", "gpt-4o");
-      ResponseFailedEvent failed = ResponseFailedEvent.from(
-          started, new RuntimeException("Test error"));
+      ResponseStartedEvent started =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseFailedEvent failed =
+          ResponseFailedEvent.from(started, new RuntimeException("Test error"));
 
       processor.process(failed);
-      
+
       Thread.sleep(100);
 
       RecordedRequest request1 = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
       assertNotNull(request1);
-      
+
       RecordedRequest request2 = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
       assertNotNull(request2);
     }
@@ -580,12 +582,18 @@ class GrafanaProcessorTest {
       mockWebServer.enqueue(new MockResponse().setResponseCode(200));
       processor = createProcessor(true, false, false);
 
-      AgentFailedEvent event = AgentFailedEvent.from(
-          "TestAgent", 3, new RuntimeException("Error"),
-          "session-1", "trace-123", "span-456", null);
+      AgentFailedEvent event =
+          AgentFailedEvent.from(
+              "TestAgent",
+              3,
+              new RuntimeException("Error"),
+              "session-1",
+              "trace-123",
+              "span-456",
+              null);
 
       processor.process(event);
-      
+
       Thread.sleep(100);
 
       RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
@@ -599,11 +607,11 @@ class GrafanaProcessorTest {
       mockWebServer.enqueue(new MockResponse().setResponseCode(200));
       processor = createProcessor(true, false, false);
 
-      ResponseStartedEvent event = ResponseStartedEvent.create(
-          "session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseStartedEvent event =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
 
       processor.process(event);
-      
+
       Thread.sleep(100);
 
       RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
@@ -618,11 +626,11 @@ class GrafanaProcessorTest {
     void noRequestWhenAllSignalsDisabled() throws Exception {
       processor = createProcessor(false, false, false);
 
-      ResponseStartedEvent event = ResponseStartedEvent.create(
-          "session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseStartedEvent event =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
 
       processor.process(event);
-      
+
       Thread.sleep(100);
 
       RecordedRequest request = mockWebServer.takeRequest(100, TimeUnit.MILLISECONDS);
@@ -637,13 +645,12 @@ class GrafanaProcessorTest {
       mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // log
       processor = createProcessor(true, true, true);
 
-      ResponseStartedEvent started = ResponseStartedEvent.create(
-          "session-1", "trace-123", "span-456", "gpt-4o");
-      ResponseCompletedEvent completed = ResponseCompletedEvent.from(
-          started, 100, 200, 300, 0.01);
+      ResponseStartedEvent started =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseCompletedEvent completed = ResponseCompletedEvent.from(started, 100, 200, 300, 0.01);
 
       processor.process(completed);
-      
+
       Thread.sleep(150);
 
       // Should get 3 requests: trace, metrics, log
@@ -661,12 +668,18 @@ class GrafanaProcessorTest {
       mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // log
       processor = createProcessor(true, false, true);
 
-      AgentFailedEvent event = AgentFailedEvent.from(
-          "TestAgent", 3, new RuntimeException("Error"),
-          "session-1", "trace-123", "span-456", "Try using a different model");
+      AgentFailedEvent event =
+          AgentFailedEvent.from(
+              "TestAgent",
+              3,
+              new RuntimeException("Error"),
+              "session-1",
+              "trace-123",
+              "span-456",
+              "Try using a different model");
 
       processor.process(event);
-      
+
       Thread.sleep(100);
 
       RecordedRequest request1 = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
@@ -681,11 +694,11 @@ class GrafanaProcessorTest {
       mockWebServer.enqueue(new MockResponse().setResponseCode(200));
       processor = createProcessor(true, false, false);
 
-      ResponseStartedEvent event = ResponseStartedEvent.create(
-          "session-1", "trace-123", "span-456", null);
+      ResponseStartedEvent event =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", null);
 
       processor.process(event);
-      
+
       Thread.sleep(100);
 
       RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
@@ -696,17 +709,19 @@ class GrafanaProcessorTest {
     @Test
     @DisplayName("handles server error response gracefully")
     void handlesServerErrorResponseGracefully() throws Exception {
-      mockWebServer.enqueue(new MockResponse().setResponseCode(500).setBody("Internal Server Error"));
+      mockWebServer.enqueue(
+          new MockResponse().setResponseCode(500).setBody("Internal Server Error"));
       processor = createProcessor(true, false, false);
 
-      ResponseStartedEvent event = ResponseStartedEvent.create(
-          "session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseStartedEvent event =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
 
       // Should not throw
-      assertDoesNotThrow(() -> {
-        processor.process(event);
-        Thread.sleep(100);
-      });
+      assertDoesNotThrow(
+          () -> {
+            processor.process(event);
+            Thread.sleep(100);
+          });
     }
 
     @Test
@@ -715,13 +730,12 @@ class GrafanaProcessorTest {
       mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // metrics only
       processor = createProcessor(false, true, false);
 
-      ResponseStartedEvent started = ResponseStartedEvent.create(
-          "session-1", "trace-123", "span-456", "gpt-4o");
-      ResponseCompletedEvent completed = ResponseCompletedEvent.from(
-          started, 100, 200, 300, 0.01);
+      ResponseStartedEvent started =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseCompletedEvent completed = ResponseCompletedEvent.from(started, 100, 200, 300, 0.01);
 
       processor.process(completed);
-      
+
       Thread.sleep(100);
 
       RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
@@ -735,13 +749,12 @@ class GrafanaProcessorTest {
       mockWebServer.enqueue(new MockResponse().setResponseCode(200));
       processor = createProcessor(false, true, false);
 
-      ResponseStartedEvent started = ResponseStartedEvent.create(
-          "session-1", "trace-123", "span-456", "gpt-4o");
-      ResponseCompletedEvent completed = ResponseCompletedEvent.from(
-          started, 100, 200, 300, 0.01);
+      ResponseStartedEvent started =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseCompletedEvent completed = ResponseCompletedEvent.from(started, 100, 200, 300, 0.01);
 
       processor.process(completed);
-      
+
       Thread.sleep(100);
 
       RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
@@ -757,11 +770,11 @@ class GrafanaProcessorTest {
       mockWebServer.enqueue(new MockResponse().setResponseCode(200));
       processor = createProcessor(false, false, true);
 
-      ResponseStartedEvent event = ResponseStartedEvent.create(
-          "session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseStartedEvent event =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
 
       processor.process(event);
-      
+
       Thread.sleep(100);
 
       RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
@@ -776,11 +789,11 @@ class GrafanaProcessorTest {
     void noMetricsSentForNonCompletedEvents() throws Exception {
       processor = createProcessor(false, true, false);
 
-      ResponseStartedEvent event = ResponseStartedEvent.create(
-          "session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseStartedEvent event =
+          ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
 
       processor.process(event);
-      
+
       Thread.sleep(100);
 
       // No metrics should be sent for started events
@@ -789,5 +802,3 @@ class GrafanaProcessorTest {
     }
   }
 }
-
-

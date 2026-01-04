@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.http.RetryPolicy;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
@@ -17,9 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for {@link LangfusePromptProvider}.
- */
+/** Tests for {@link LangfusePromptProvider}. */
 class LangfusePromptProviderTest {
 
   private MockWebServer server;
@@ -29,10 +26,11 @@ class LangfusePromptProviderTest {
   void setUp() throws Exception {
     server = new MockWebServer();
     server.start();
-    httpClient = new OkHttpClient.Builder()
-        .connectTimeout(5, TimeUnit.SECONDS)
-        .readTimeout(5, TimeUnit.SECONDS)
-        .build();
+    httpClient =
+        new OkHttpClient.Builder()
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(5, TimeUnit.SECONDS)
+            .build();
   }
 
   @AfterEach
@@ -46,10 +44,8 @@ class LangfusePromptProviderTest {
         .publicKey("pk-test")
         .secretKey("sk-test")
         .baseUrl(server.url("/").toString().replaceAll("/$", ""))
-        .retryPolicy(RetryPolicy.builder()
-            .maxRetries(2)
-            .initialDelay(Duration.ofMillis(10))
-            .build())
+        .retryPolicy(
+            RetryPolicy.builder().maxRetries(2).initialDelay(Duration.ofMillis(10)).build())
         .build();
   }
 
@@ -60,11 +56,12 @@ class LangfusePromptProviderTest {
 
     @Test
     void builder_allRequiredFields_builds() {
-      LangfusePromptProvider provider = LangfusePromptProvider.builder()
-          .httpClient(httpClient)
-          .publicKey("pk-test")
-          .secretKey("sk-test")
-          .build();
+      LangfusePromptProvider provider =
+          LangfusePromptProvider.builder()
+              .httpClient(httpClient)
+              .publicKey("pk-test")
+              .secretKey("sk-test")
+              .build();
 
       assertNotNull(provider);
       assertEquals(LangfusePromptProvider.DEFAULT_BASE_URL, provider.baseUrl());
@@ -72,12 +69,13 @@ class LangfusePromptProviderTest {
 
     @Test
     void builder_withCustomBaseUrl_setsBaseUrl() {
-      LangfusePromptProvider provider = LangfusePromptProvider.builder()
-          .httpClient(httpClient)
-          .publicKey("pk-test")
-          .secretKey("sk-test")
-          .baseUrl("https://custom.langfuse.com")
-          .build();
+      LangfusePromptProvider provider =
+          LangfusePromptProvider.builder()
+              .httpClient(httpClient)
+              .publicKey("pk-test")
+              .secretKey("sk-test")
+              .baseUrl("https://custom.langfuse.com")
+              .build();
 
       assertEquals("https://custom.langfuse.com", provider.baseUrl());
     }
@@ -86,12 +84,13 @@ class LangfusePromptProviderTest {
     void builder_withRetryPolicy_setsRetryPolicy() {
       RetryPolicy policy = RetryPolicy.builder().maxRetries(5).build();
 
-      LangfusePromptProvider provider = LangfusePromptProvider.builder()
-          .httpClient(httpClient)
-          .publicKey("pk-test")
-          .secretKey("sk-test")
-          .retryPolicy(policy)
-          .build();
+      LangfusePromptProvider provider =
+          LangfusePromptProvider.builder()
+              .httpClient(httpClient)
+              .publicKey("pk-test")
+              .secretKey("sk-test")
+              .retryPolicy(policy)
+              .build();
 
       assertEquals(5, provider.retryPolicy().maxRetries());
     }
@@ -100,91 +99,81 @@ class LangfusePromptProviderTest {
     void builder_withCustomObjectMapper_usesMapper() {
       ObjectMapper mapper = new ObjectMapper();
 
-      LangfusePromptProvider provider = LangfusePromptProvider.builder()
-          .httpClient(httpClient)
-          .publicKey("pk-test")
-          .secretKey("sk-test")
-          .objectMapper(mapper)
-          .build();
+      LangfusePromptProvider provider =
+          LangfusePromptProvider.builder()
+              .httpClient(httpClient)
+              .publicKey("pk-test")
+              .secretKey("sk-test")
+              .objectMapper(mapper)
+              .build();
 
       assertNotNull(provider);
     }
 
     @Test
     void builder_missingHttpClient_throwsNullPointerException() {
-      assertThrows(NullPointerException.class, () ->
-          LangfusePromptProvider.builder()
-              .publicKey("pk-test")
-              .secretKey("sk-test")
-              .build());
+      assertThrows(
+          NullPointerException.class,
+          () -> LangfusePromptProvider.builder().publicKey("pk-test").secretKey("sk-test").build());
     }
 
     @Test
     void builder_missingPublicKey_throwsNullPointerException() {
-      assertThrows(NullPointerException.class, () ->
-          LangfusePromptProvider.builder()
-              .httpClient(httpClient)
-              .secretKey("sk-test")
-              .build());
+      assertThrows(
+          NullPointerException.class,
+          () ->
+              LangfusePromptProvider.builder().httpClient(httpClient).secretKey("sk-test").build());
     }
 
     @Test
     void builder_missingSecretKey_throwsNullPointerException() {
-      assertThrows(NullPointerException.class, () ->
-          LangfusePromptProvider.builder()
-              .httpClient(httpClient)
-              .publicKey("pk-test")
-              .build());
+      assertThrows(
+          NullPointerException.class,
+          () ->
+              LangfusePromptProvider.builder().httpClient(httpClient).publicKey("pk-test").build());
     }
 
     @Test
     void builder_nullHttpClient_throwsNullPointerException() {
-      assertThrows(NullPointerException.class, () ->
-          LangfusePromptProvider.builder()
-              .httpClient(null));
+      assertThrows(
+          NullPointerException.class, () -> LangfusePromptProvider.builder().httpClient(null));
     }
 
     @Test
     void builder_nullPublicKey_throwsNullPointerException() {
-      assertThrows(NullPointerException.class, () ->
-          LangfusePromptProvider.builder()
-              .publicKey(null));
+      assertThrows(
+          NullPointerException.class, () -> LangfusePromptProvider.builder().publicKey(null));
     }
 
     @Test
     void builder_nullSecretKey_throwsNullPointerException() {
-      assertThrows(NullPointerException.class, () ->
-          LangfusePromptProvider.builder()
-              .secretKey(null));
+      assertThrows(
+          NullPointerException.class, () -> LangfusePromptProvider.builder().secretKey(null));
     }
 
     @Test
     void builder_nullBaseUrl_throwsNullPointerException() {
-      assertThrows(NullPointerException.class, () ->
-          LangfusePromptProvider.builder()
-              .baseUrl(null));
+      assertThrows(
+          NullPointerException.class, () -> LangfusePromptProvider.builder().baseUrl(null));
     }
 
     @Test
     void builder_nullRetryPolicy_throwsNullPointerException() {
-      assertThrows(NullPointerException.class, () ->
-          LangfusePromptProvider.builder()
-              .retryPolicy(null));
+      assertThrows(
+          NullPointerException.class, () -> LangfusePromptProvider.builder().retryPolicy(null));
     }
 
     @Test
     void builder_nullObjectMapper_throwsNullPointerException() {
-      assertThrows(NullPointerException.class, () ->
-          LangfusePromptProvider.builder()
-              .objectMapper(null));
+      assertThrows(
+          NullPointerException.class, () -> LangfusePromptProvider.builder().objectMapper(null));
     }
 
     @Test
     void builder_fromEnv_loadsEnvironmentVariables() {
       // This test just verifies fromEnv doesn't throw when env vars are not set
-      LangfusePromptProvider.Builder builder = LangfusePromptProvider.builder()
-          .httpClient(httpClient)
-          .fromEnv();
+      LangfusePromptProvider.Builder builder =
+          LangfusePromptProvider.builder().httpClient(httpClient).fromEnv();
 
       // Should be able to chain after fromEnv
       builder.publicKey("pk-test").secretKey("sk-test");
@@ -199,7 +188,8 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_textPrompt_returnsPrompt() throws Exception {
-      String json = """
+      String json =
+          """
           {
             "type": "text",
             "name": "my-prompt",
@@ -210,10 +200,11 @@ class LangfusePromptProviderTest {
             "tags": ["greeting"]
           }
           """;
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(json)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       Prompt prompt = provider.providePrompt("my-prompt", null);
@@ -223,7 +214,8 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_textPromptWithVariables_returnsUncompiled() throws Exception {
-      String json = """
+      String json =
+          """
           {
             "type": "text",
             "name": "template",
@@ -234,10 +226,11 @@ class LangfusePromptProviderTest {
             "tags": []
           }
           """;
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(json)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       Prompt prompt = provider.providePrompt("template");
@@ -254,7 +247,8 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_chatPrompt_returnsConcatenatedContent() throws Exception {
-      String json = """
+      String json =
+          """
           {
             "type": "chat",
             "name": "chat-prompt",
@@ -268,10 +262,11 @@ class LangfusePromptProviderTest {
             "tags": []
           }
           """;
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(json)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       Prompt prompt = provider.providePrompt("chat-prompt");
@@ -288,7 +283,8 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_withVersionFilter_sendsQueryParam() throws Exception {
-      String json = """
+      String json =
+          """
           {
             "type": "text",
             "name": "test",
@@ -299,10 +295,11 @@ class LangfusePromptProviderTest {
             "tags": []
           }
           """;
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(json)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       provider.providePrompt("test", Map.of("version", "2"));
@@ -313,7 +310,8 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_withLabelFilter_sendsQueryParam() throws Exception {
-      String json = """
+      String json =
+          """
           {
             "type": "text",
             "name": "test",
@@ -324,10 +322,11 @@ class LangfusePromptProviderTest {
             "tags": []
           }
           """;
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(json)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       provider.providePrompt("test", Map.of("label", "staging"));
@@ -338,7 +337,8 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_withBothFilters_sendsBothQueryParams() throws Exception {
-      String json = """
+      String json =
+          """
           {
             "type": "text",
             "name": "test",
@@ -349,10 +349,11 @@ class LangfusePromptProviderTest {
             "tags": []
           }
           """;
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(json)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       provider.providePrompt("test", Map.of("version", "3", "label", "production"));
@@ -364,7 +365,8 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_emptyFilters_noQueryParams() throws Exception {
-      String json = """
+      String json =
+          """
           {
             "type": "text",
             "name": "test",
@@ -375,10 +377,11 @@ class LangfusePromptProviderTest {
             "tags": []
           }
           """;
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(json)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       provider.providePrompt("test", Map.of());
@@ -390,7 +393,8 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_emptyVersionValue_notSent() throws Exception {
-      String json = """
+      String json =
+          """
           {
             "type": "text",
             "name": "test",
@@ -401,10 +405,11 @@ class LangfusePromptProviderTest {
             "tags": []
           }
           """;
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(json)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       provider.providePrompt("test", Map.of("version", ""));
@@ -421,7 +426,8 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_sendsBasicAuthHeader() throws Exception {
-      String json = """
+      String json =
+          """
           {
             "type": "text",
             "name": "test",
@@ -432,20 +438,21 @@ class LangfusePromptProviderTest {
             "tags": []
           }
           """;
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(json)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       provider.providePrompt("test");
 
       RecordedRequest request = server.takeRequest(1, TimeUnit.SECONDS);
       String auth = request.getHeader("Authorization");
-      
+
       assertNotNull(auth);
       assertTrue(auth.startsWith("Basic "));
-      
+
       // Decode and verify credentials
       String encoded = auth.substring("Basic ".length());
       String decoded = new String(java.util.Base64.getDecoder().decode(encoded));
@@ -454,7 +461,8 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_sendsAcceptHeader() throws Exception {
-      String json = """
+      String json =
+          """
           {
             "type": "text",
             "name": "test",
@@ -465,10 +473,11 @@ class LangfusePromptProviderTest {
             "tags": []
           }
           """;
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(json)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       provider.providePrompt("test");
@@ -485,7 +494,8 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_promptIdWithSlash_urlEncodes() throws Exception {
-      String json = """
+      String json =
+          """
           {
             "type": "text",
             "name": "folder/prompt",
@@ -496,23 +506,26 @@ class LangfusePromptProviderTest {
             "tags": []
           }
           """;
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(json)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       provider.providePrompt("folder/prompt");
 
       RecordedRequest request = server.takeRequest(1, TimeUnit.SECONDS);
       // URL-encoded slash is %2F
-      assertTrue(request.getPath().contains("folder%2Fprompt") || 
-                 request.getPath().contains("folder/prompt"));
+      assertTrue(
+          request.getPath().contains("folder%2Fprompt")
+              || request.getPath().contains("folder/prompt"));
     }
 
     @Test
     void providePrompt_promptIdWithSpecialChars_urlEncodes() throws Exception {
-      String json = """
+      String json =
+          """
           {
             "type": "text",
             "name": "my prompt",
@@ -523,18 +536,19 @@ class LangfusePromptProviderTest {
             "tags": []
           }
           """;
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(json)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       provider.providePrompt("my prompt");
 
       RecordedRequest request = server.takeRequest(1, TimeUnit.SECONDS);
       // URL-encoded space is + or %20
-      assertTrue(request.getPath().contains("my+prompt") || 
-                 request.getPath().contains("my%20prompt"));
+      assertTrue(
+          request.getPath().contains("my+prompt") || request.getPath().contains("my%20prompt"));
     }
   }
 
@@ -545,14 +559,12 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_404_throwsException() {
-      server.enqueue(new MockResponse()
-          .setResponseCode(404)
-          .setBody("Not found"));
+      server.enqueue(new MockResponse().setResponseCode(404).setBody("Not found"));
 
       LangfusePromptProvider provider = createProvider();
 
-      PromptProviderException ex = assertThrows(PromptProviderException.class, () ->
-          provider.providePrompt("nonexistent"));
+      PromptProviderException ex =
+          assertThrows(PromptProviderException.class, () -> provider.providePrompt("nonexistent"));
 
       assertEquals("nonexistent", ex.promptId());
       assertTrue(ex.getMessage().contains("not found"));
@@ -561,14 +573,12 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_401_throwsException() {
-      server.enqueue(new MockResponse()
-          .setResponseCode(401)
-          .setBody("Unauthorized"));
+      server.enqueue(new MockResponse().setResponseCode(401).setBody("Unauthorized"));
 
       LangfusePromptProvider provider = createProvider();
 
-      PromptProviderException ex = assertThrows(PromptProviderException.class, () ->
-          provider.providePrompt("test"));
+      PromptProviderException ex =
+          assertThrows(PromptProviderException.class, () -> provider.providePrompt("test"));
 
       assertTrue(ex.getMessage().toLowerCase().contains("unauthorized"));
       assertFalse(ex.isRetryable());
@@ -576,48 +586,46 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_403_throwsException() {
-      server.enqueue(new MockResponse()
-          .setResponseCode(403)
-          .setBody("Forbidden"));
+      server.enqueue(new MockResponse().setResponseCode(403).setBody("Forbidden"));
 
       LangfusePromptProvider provider = createProvider();
 
-      PromptProviderException ex = assertThrows(PromptProviderException.class, () ->
-          provider.providePrompt("test"));
+      PromptProviderException ex =
+          assertThrows(PromptProviderException.class, () -> provider.providePrompt("test"));
 
-      assertTrue(ex.getMessage().toLowerCase().contains("forbidden") || 
-                 ex.getMessage().toLowerCase().contains("access denied"));
+      assertTrue(
+          ex.getMessage().toLowerCase().contains("forbidden")
+              || ex.getMessage().toLowerCase().contains("access denied"));
     }
 
     @Test
     void providePrompt_nullPromptId_throwsNullPointerException() {
       LangfusePromptProvider provider = createProvider();
 
-      assertThrows(NullPointerException.class, () ->
-          provider.providePrompt(null));
+      assertThrows(NullPointerException.class, () -> provider.providePrompt(null));
     }
 
     @Test
     void providePrompt_emptyPromptId_throwsException() {
       LangfusePromptProvider provider = createProvider();
 
-      PromptProviderException ex = assertThrows(PromptProviderException.class, () ->
-          provider.providePrompt(""));
+      PromptProviderException ex =
+          assertThrows(PromptProviderException.class, () -> provider.providePrompt(""));
 
       assertTrue(ex.getMessage().contains("empty"));
     }
 
     @Test
     void providePrompt_invalidJson_throwsException() {
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody("not valid json")
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody("not valid json")
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
 
-      assertThrows(PromptProviderException.class, () ->
-          provider.providePrompt("test"));
+      assertThrows(PromptProviderException.class, () -> provider.providePrompt("test"));
     }
   }
 
@@ -629,20 +637,22 @@ class LangfusePromptProviderTest {
     @Test
     void providePrompt_429_retriesThenSucceeds() throws Exception {
       server.enqueue(new MockResponse().setResponseCode(429).setBody("Rate limited"));
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody("""
-              {
-                "type": "text",
-                "name": "test",
-                "version": 1,
-                "prompt": "success",
-                "config": null,
-                "labels": [],
-                "tags": []
-              }
-              """)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(
+                  """
+                  {
+                    "type": "text",
+                    "name": "test",
+                    "version": 1,
+                    "prompt": "success",
+                    "config": null,
+                    "labels": [],
+                    "tags": []
+                  }
+                  """)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       Prompt prompt = provider.providePrompt("test");
@@ -654,20 +664,22 @@ class LangfusePromptProviderTest {
     @Test
     void providePrompt_503_retriesThenSucceeds() throws Exception {
       server.enqueue(new MockResponse().setResponseCode(503).setBody("Service Unavailable"));
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody("""
-              {
-                "type": "text",
-                "name": "test",
-                "version": 1,
-                "prompt": "recovered",
-                "config": null,
-                "labels": [],
-                "tags": []
-              }
-              """)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(
+                  """
+                  {
+                    "type": "text",
+                    "name": "test",
+                    "version": 1,
+                    "prompt": "recovered",
+                    "config": null,
+                    "labels": [],
+                    "tags": []
+                  }
+                  """)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       Prompt prompt = provider.providePrompt("test");
@@ -685,8 +697,7 @@ class LangfusePromptProviderTest {
 
       LangfusePromptProvider provider = createProvider();
 
-      assertThrows(PromptProviderException.class, () ->
-          provider.providePrompt("test"));
+      assertThrows(PromptProviderException.class, () -> provider.providePrompt("test"));
 
       // Should have made initial + retry attempts
       assertTrue(server.getRequestCount() >= 2);
@@ -698,8 +709,7 @@ class LangfusePromptProviderTest {
 
       LangfusePromptProvider provider = createProvider();
 
-      assertThrows(PromptProviderException.class, () ->
-          provider.providePrompt("test"));
+      assertThrows(PromptProviderException.class, () -> provider.providePrompt("test"));
 
       assertEquals(1, server.getRequestCount());
     }
@@ -712,7 +722,8 @@ class LangfusePromptProviderTest {
 
     @Test
     void providePrompt_noFilters_works() throws Exception {
-      String json = """
+      String json =
+          """
           {
             "type": "text",
             "name": "test",
@@ -723,10 +734,11 @@ class LangfusePromptProviderTest {
             "tags": []
           }
           """;
-      server.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(json)
-          .setHeader("Content-Type", "application/json"));
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(json)
+              .setHeader("Content-Type", "application/json"));
 
       LangfusePromptProvider provider = createProvider();
       Prompt prompt = provider.providePrompt("test");

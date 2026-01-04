@@ -8,12 +8,9 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Comprehensive tests for OtelAttributeValue.
- * 
- * Tests cover:
- * - Factory methods (ofString, ofBool, ofInt, ofDouble, of)
- * - Type inference in of() method
- * - Record accessors
- * - Edge cases
+ *
+ * <p>Tests cover: - Factory methods (ofString, ofBool, ofInt, ofDouble, of) - Type inference in
+ * of() method - Record accessors - Edge cases
  */
 @DisplayName("OtelAttributeValue")
 class OtelAttributeValueTest {
@@ -162,12 +159,13 @@ class OtelAttributeValueTest {
     @Test
     @DisplayName("of(arbitrary object) converts to string value")
     void ofObjectConvertsToStringValue() {
-      Object customObj = new Object() {
-        @Override
-        public String toString() {
-          return "custom-to-string";
-        }
-      };
+      Object customObj =
+          new Object() {
+            @Override
+            public String toString() {
+              return "custom-to-string";
+            }
+          };
       OtelAttributeValue value = OtelAttributeValue.of(customObj);
 
       assertEquals("custom-to-string", value.stringValue());

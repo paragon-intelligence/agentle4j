@@ -2,9 +2,7 @@ package com.paragon.web;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-/**
- * Supported PDF page formats.
- */
+/** Supported PDF page formats. */
 public enum PdfFormat {
   A0("A0"),
   A1("A1"),

@@ -82,8 +82,7 @@ class HttpEventListenerTest {
       TrackingListener listener2 = new TrackingListener();
       TrackingListener listener3 = new TrackingListener();
 
-      HttpEventListener composite =
-          HttpEventListener.composite(listener1, listener2, listener3);
+      HttpEventListener composite = HttpEventListener.composite(listener1, listener2, listener3);
 
       HttpRequest request = HttpRequest.get("/test").build();
       composite.onRequestStart(request);
@@ -239,7 +238,8 @@ class HttpEventListenerTest {
       HttpEventListener listener =
           new HttpEventListener() {
             @Override
-            public void onRetry(HttpRequest request, int attempt, long delayMs, Throwable lastError) {
+            public void onRetry(
+                HttpRequest request, int attempt, long delayMs, Throwable lastError) {
               attempts.add(attempt);
             }
           };

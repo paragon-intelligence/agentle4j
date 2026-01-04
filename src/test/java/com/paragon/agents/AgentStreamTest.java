@@ -22,8 +22,7 @@ class AgentStreamTest {
     @DisplayName("failed creates pre-failed stream")
     void failedCreatesPreFailedStream() {
       AgentContext context = AgentContext.create();
-      AgentResult failedResult = AgentResult.error(
-          new RuntimeException("Test error"), context, 0);
+      AgentResult failedResult = AgentResult.error(new RuntimeException("Test error"), context, 0);
 
       AgentStream stream = AgentStream.failed(failedResult);
 
@@ -34,12 +33,10 @@ class AgentStreamTest {
     @DisplayName("failed stream accepts error handler")
     void failedStreamAcceptsErrorHandler() {
       AgentContext context = AgentContext.create();
-      AgentResult failedResult = AgentResult.error(
-          new RuntimeException("Test error"), context, 0);
+      AgentResult failedResult = AgentResult.error(new RuntimeException("Test error"), context, 0);
       AtomicBoolean errorCalled = new AtomicBoolean(false);
 
-      AgentStream stream = AgentStream.failed(failedResult)
-          .onError(e -> errorCalled.set(true));
+      AgentStream stream = AgentStream.failed(failedResult).onError(e -> errorCalled.set(true));
 
       assertNotNull(stream);
     }
@@ -48,12 +45,10 @@ class AgentStreamTest {
     @DisplayName("failed stream accepts complete handler")
     void failedStreamAcceptsCompleteHandler() {
       AgentContext context = AgentContext.create();
-      AgentResult failedResult = AgentResult.error(
-          new RuntimeException("Test error"), context, 0);
+      AgentResult failedResult = AgentResult.error(new RuntimeException("Test error"), context, 0);
       AtomicReference<AgentResult> result = new AtomicReference<>();
 
-      AgentStream stream = AgentStream.failed(failedResult)
-          .onComplete(result::set);
+      AgentStream stream = AgentStream.failed(failedResult).onComplete(result::set);
 
       assertNotNull(stream);
     }
@@ -71,15 +66,16 @@ class AgentStreamTest {
       AgentContext context = AgentContext.create();
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
-      AgentStream stream = AgentStream.failed(result)
-          .onTurnStart(turn -> {})
-          .onTextDelta(text -> {})
-          .onTurnComplete(response -> {})
-          .onToolExecuted(exec -> {})
-          .onGuardrailFailed(failed -> {})
-          .onHandoff(handoff -> {})
-          .onComplete(r -> {})
-          .onError(e -> {});
+      AgentStream stream =
+          AgentStream.failed(result)
+              .onTurnStart(turn -> {})
+              .onTextDelta(text -> {})
+              .onTurnComplete(response -> {})
+              .onToolExecuted(exec -> {})
+              .onGuardrailFailed(failed -> {})
+              .onHandoff(handoff -> {})
+              .onComplete(r -> {})
+              .onError(e -> {});
 
       assertNotNull(stream);
     }

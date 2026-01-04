@@ -79,7 +79,7 @@ class ResponseTest {
     @DisplayName("background returns value")
     void backgroundReturnsValue() {
       Response response = createResponseWithAllFields();
-      
+
       assertEquals(true, response.background());
     }
 
@@ -87,7 +87,7 @@ class ResponseTest {
     @DisplayName("createdAt returns value")
     void createdAtReturnsValue() {
       Response response = createMinimalResponse("resp_123");
-      
+
       assertNotNull(response.createdAt());
     }
 
@@ -95,7 +95,7 @@ class ResponseTest {
     @DisplayName("maxOutputTokens returns value")
     void maxOutputTokensReturnsValue() {
       Response response = createResponseWithAllFields();
-      
+
       assertEquals(1000, response.maxOutputTokens());
     }
 
@@ -103,7 +103,7 @@ class ResponseTest {
     @DisplayName("maxToolCalls returns value")
     void maxToolCallsReturnsValue() {
       Response response = createResponseWithAllFields();
-      
+
       assertEquals(10, response.maxToolCalls());
     }
 
@@ -111,7 +111,7 @@ class ResponseTest {
     @DisplayName("parallelToolCalls returns value")
     void parallelToolCallsReturnsValue() {
       Response response = createResponseWithAllFields();
-      
+
       assertEquals(true, response.parallelToolCalls());
     }
 
@@ -119,7 +119,7 @@ class ResponseTest {
     @DisplayName("metadata returns value")
     void metadataReturnsValue() {
       Response response = createResponseWithAllFields();
-      
+
       assertNotNull(response.metadata());
       assertEquals("value1", response.metadata().get("key1"));
     }
@@ -128,7 +128,7 @@ class ResponseTest {
     @DisplayName("temperature returns value")
     void temperatureReturnsValue() {
       Response response = createResponseWithAllFields();
-      
+
       assertNotNull(response.temperature());
     }
 
@@ -136,7 +136,7 @@ class ResponseTest {
     @DisplayName("topP returns value")
     void topPReturnsValue() {
       Response response = createResponseWithAllFields();
-      
+
       assertNotNull(response.topP());
     }
 
@@ -144,7 +144,7 @@ class ResponseTest {
     @DisplayName("topLogprobs returns value")
     void topLogprobsReturnsValue() {
       Response response = createResponseWithAllFields();
-      
+
       assertEquals(5, response.topLogprobs());
     }
 
@@ -152,7 +152,7 @@ class ResponseTest {
     @DisplayName("promptCacheKey returns value")
     void promptCacheKeyReturnsValue() {
       Response response = createResponseWithAllFields();
-      
+
       assertEquals("cache-key", response.promptCacheKey());
     }
 
@@ -160,7 +160,7 @@ class ResponseTest {
     @DisplayName("promptCacheRetention returns value")
     void promptCacheRetentionReturnsValue() {
       Response response = createResponseWithAllFields();
-      
+
       assertEquals("24h", response.promptCacheRetention());
     }
 
@@ -168,7 +168,7 @@ class ResponseTest {
     @DisplayName("safetyIdentifier returns value")
     void safetyIdentifierReturnsValue() {
       Response response = createResponseWithAllFields();
-      
+
       assertEquals("safety-123", response.safetyIdentifier());
     }
 
@@ -176,7 +176,7 @@ class ResponseTest {
     @DisplayName("serviceTier returns value")
     void serviceTierReturnsValue() {
       Response response = createResponseWithAllFields();
-      
+
       assertEquals("default", response.serviceTier());
     }
 
@@ -184,7 +184,7 @@ class ResponseTest {
     @DisplayName("instructions returns null when not set")
     void instructionsReturnsNullWhenNotSet() {
       Response response = createMinimalResponse("resp_123");
-      
+
       assertNull(response.instructions());
     }
 
@@ -192,7 +192,7 @@ class ResponseTest {
     @DisplayName("error returns null when not set")
     void errorReturnsNullWhenNotSet() {
       Response response = createMinimalResponse("resp_123");
-      
+
       assertNull(response.error());
     }
 
@@ -200,7 +200,7 @@ class ResponseTest {
     @DisplayName("conversation returns null when not set")
     void conversationReturnsNullWhenNotSet() {
       Response response = createMinimalResponse("resp_123");
-      
+
       assertNull(response.conversation());
     }
 
@@ -208,7 +208,7 @@ class ResponseTest {
     @DisplayName("incompleteDetails returns null when not set")
     void incompleteDetailsReturnsNullWhenNotSet() {
       Response response = createMinimalResponse("resp_123");
-      
+
       assertNull(response.incompleteDetails());
     }
 
@@ -216,7 +216,7 @@ class ResponseTest {
     @DisplayName("prompt returns null when not set")
     void promptReturnsNullWhenNotSet() {
       Response response = createMinimalResponse("resp_123");
-      
+
       assertNull(response.prompt());
     }
 
@@ -224,7 +224,7 @@ class ResponseTest {
     @DisplayName("reasoning returns null when not set")
     void reasoningReturnsNullWhenNotSet() {
       Response response = createMinimalResponse("resp_123");
-      
+
       assertNull(response.reasoning());
     }
 
@@ -232,7 +232,7 @@ class ResponseTest {
     @DisplayName("text returns null when not set")
     void textReturnsNullWhenNotSet() {
       Response response = createMinimalResponse("resp_123");
-      
+
       assertNull(response.text());
     }
 
@@ -240,7 +240,7 @@ class ResponseTest {
     @DisplayName("toolChoice returns null when not set")
     void toolChoiceReturnsNullWhenNotSet() {
       Response response = createMinimalResponse("resp_123");
-      
+
       assertNull(response.toolChoice());
     }
 
@@ -248,7 +248,7 @@ class ResponseTest {
     @DisplayName("tools returns null when not set")
     void toolsReturnsNullWhenNotSet() {
       Response response = createMinimalResponse("resp_123");
-      
+
       assertNull(response.tools());
     }
 
@@ -256,7 +256,7 @@ class ResponseTest {
     @DisplayName("truncation returns null when not set")
     void truncationReturnsNullWhenNotSet() {
       Response response = createMinimalResponse("resp_123");
-      
+
       assertNull(response.truncation());
     }
   }
@@ -556,10 +556,34 @@ class ResponseTest {
 
   private Response createMinimalResponseFixed(String id, long createdAt) {
     return new Response(
-        null, null, createdAt, null, id, null, null, null, null, null,
-        "gpt-4o", ResponseObject.RESPONSE, List.of(createOutputMessage("Test output")),
-        null, null, null, null, null, null, null,
-        ResponseGenerationStatus.COMPLETED, null, null, null, null, null, null, null);
+        null,
+        null,
+        createdAt,
+        null,
+        id,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "gpt-4o",
+        ResponseObject.RESPONSE,
+        List.of(createOutputMessage("Test output")),
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        ResponseGenerationStatus.COMPLETED,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 
   private Response createMinimalResponseWithEmptyOutput() {
@@ -596,10 +620,34 @@ class ResponseTest {
 
   private Response createResponseWithNullOutput() {
     return new Response(
-        null, null, System.currentTimeMillis() / 1000, null, "resp_123", null, null,
-        null, null, null, "gpt-4o", ResponseObject.RESPONSE, null, null, null, null,
-        null, null, null, null, ResponseGenerationStatus.COMPLETED, null, null, null,
-        null, null, null, null);
+        null,
+        null,
+        System.currentTimeMillis() / 1000,
+        null,
+        "resp_123",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "gpt-4o",
+        ResponseObject.RESPONSE,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        ResponseGenerationStatus.COMPLETED,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 
   private Response createResponseWithOutput(String text) {
@@ -664,15 +712,39 @@ class ResponseTest {
         5, // topLogprobs
         0.9, // topP
         null // truncation
-    );
+        );
   }
 
   private Response createFailedResponse() {
     return new Response(
-        null, null, System.currentTimeMillis() / 1000, null, "resp_fail", null, null,
-        null, null, null, "gpt-4o", ResponseObject.RESPONSE, List.of(), null, null,
-        null, null, null, null, null, ResponseGenerationStatus.FAILED, null, null,
-        null, null, null, null, null);
+        null,
+        null,
+        System.currentTimeMillis() / 1000,
+        null,
+        "resp_fail",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "gpt-4o",
+        ResponseObject.RESPONSE,
+        List.of(),
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        ResponseGenerationStatus.FAILED,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 
   private ResponseOutput createOutputMessage(String text) {
@@ -683,4 +755,3 @@ class ResponseTest {
 
   public record Person(String name, int age) {}
 }
-

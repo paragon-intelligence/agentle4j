@@ -73,8 +73,7 @@ class AgentExecutionExceptionTest {
     @Test
     @DisplayName("maxTurnsExceeded creates correct exception")
     void maxTurnsExceededCreatesCorrectException() {
-      AgentExecutionException ex =
-          AgentExecutionException.maxTurnsExceeded("myAgent", 10, 10);
+      AgentExecutionException ex = AgentExecutionException.maxTurnsExceeded("myAgent", 10, 10);
 
       assertEquals("myAgent", ex.agentName());
       assertEquals(AgentExecutionException.Phase.MAX_TURNS_EXCEEDED, ex.phase());
@@ -88,8 +87,7 @@ class AgentExecutionExceptionTest {
     @DisplayName("llmCallFailed creates correct exception")
     void llmCallFailedCreatesCorrectException() {
       Exception cause = new RuntimeException("API timeout");
-      AgentExecutionException ex =
-          AgentExecutionException.llmCallFailed("myAgent", 3, cause);
+      AgentExecutionException ex = AgentExecutionException.llmCallFailed("myAgent", 3, cause);
 
       assertEquals("myAgent", ex.agentName());
       assertEquals(AgentExecutionException.Phase.LLM_CALL, ex.phase());
@@ -104,8 +102,7 @@ class AgentExecutionExceptionTest {
     @DisplayName("parsingFailed creates correct exception")
     void parsingFailedCreatesCorrectException() {
       Exception cause = new RuntimeException("Invalid JSON");
-      AgentExecutionException ex =
-          AgentExecutionException.parsingFailed("myAgent", 5, cause);
+      AgentExecutionException ex = AgentExecutionException.parsingFailed("myAgent", 5, cause);
 
       assertEquals("myAgent", ex.agentName());
       assertEquals(AgentExecutionException.Phase.PARSING, ex.phase());
@@ -208,8 +205,7 @@ class AgentExecutionExceptionTest {
     @DisplayName("each phase has a suggestion")
     void eachPhaseHasSuggestion() {
       for (AgentExecutionException.Phase phase : AgentExecutionException.Phase.values()) {
-        AgentExecutionException ex =
-            new AgentExecutionException("agent", phase, 0, "Test error");
+        AgentExecutionException ex = new AgentExecutionException("agent", phase, 0, "Test error");
 
         assertNotNull(ex.suggestion(), "Phase " + phase + " should have a suggestion");
         assertFalse(ex.suggestion().isEmpty());
@@ -227,8 +223,7 @@ class AgentExecutionExceptionTest {
     @DisplayName("extends AgentleException")
     void extendsAgentleException() {
       AgentExecutionException ex =
-          new AgentExecutionException(
-              "agent", AgentExecutionException.Phase.LLM_CALL, 0, "Error");
+          new AgentExecutionException("agent", AgentExecutionException.Phase.LLM_CALL, 0, "Error");
 
       assertInstanceOf(AgentleException.class, ex);
     }

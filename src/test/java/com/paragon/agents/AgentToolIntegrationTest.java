@@ -286,7 +286,8 @@ class AgentToolIntegrationTest {
       AgentResult result = agent.interact("Keep adding forever").join();
 
       assertTrue(result.isError());
-      assertInstanceOf(com.paragon.responses.exception.AgentExecutionException.class, result.error());
+      assertInstanceOf(
+          com.paragon.responses.exception.AgentExecutionException.class, result.error());
     }
   }
 

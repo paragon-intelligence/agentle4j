@@ -2,11 +2,8 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.paragon.responses.Responder;
 import com.paragon.responses.spec.*;
 import java.util.List;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
 
 /** Tests for AgentResult factory methods and accessors. */
@@ -46,8 +43,9 @@ class AgentResultTest {
       List<ToolExecution> executions = List.of();
       TestPerson parsed = new TestPerson("John", 30);
 
-      AgentResult result = AgentResult.successWithParsed(
-          "{\"name\":\"John\",\"age\":30}", parsed, response, context, executions, 1);
+      AgentResult result =
+          AgentResult.successWithParsed(
+              "{\"name\":\"John\",\"age\":30}", parsed, response, context, executions, 1);
 
       assertTrue(result.isSuccess());
       assertEquals("{\"name\":\"John\",\"age\":30}", result.output());
@@ -85,9 +83,10 @@ class AgentResultTest {
     @DisplayName("paused creates paused result")
     void pausedCreatesPausedResult() {
       AgentContext context = AgentContext.create();
-      FunctionToolCall pendingCall = new FunctionToolCall("{}", "call-123", "test_tool", null, null);
-      AgentRunState state = AgentRunState.pendingApproval(
-          "TestAgent", context, pendingCall, null, List.of(), 1);
+      FunctionToolCall pendingCall =
+          new FunctionToolCall("{}", "call-123", "test_tool", null, null);
+      AgentRunState state =
+          AgentRunState.pendingApproval("TestAgent", context, pendingCall, null, List.of(), 1);
 
       AgentResult result = AgentResult.paused(state, context);
 
@@ -155,7 +154,8 @@ class AgentResultTest {
     void isPausedReturnsTrueForPaused() {
       AgentContext context = AgentContext.create();
       FunctionToolCall call = new FunctionToolCall("{}", "call-1", "tool", null, null);
-      AgentRunState state = AgentRunState.pendingApproval("Agent", context, call, null, List.of(), 1);
+      AgentRunState state =
+          AgentRunState.pendingApproval("Agent", context, call, null, List.of(), 1);
 
       AgentResult result = AgentResult.paused(state, context);
 
@@ -213,8 +213,13 @@ class AgentResultTest {
     void toolExecutionsReturnsExecutions() {
       AgentContext context = AgentContext.create();
       Response response = createMinimalResponse();
-      ToolExecution exec = new ToolExecution("tool", "call-1", "{}", 
-          FunctionToolCallOutput.success("output"), java.time.Duration.ofMillis(100));
+      ToolExecution exec =
+          new ToolExecution(
+              "tool",
+              "call-1",
+              "{}",
+              FunctionToolCallOutput.success("output"),
+              java.time.Duration.ofMillis(100));
       List<ToolExecution> executions = List.of(exec);
 
       AgentResult result = AgentResult.success("output", response, context, executions, 1);
@@ -246,7 +251,8 @@ class AgentResultTest {
     void pausedStateReturnsStateForPaused() {
       AgentContext context = AgentContext.create();
       FunctionToolCall call = new FunctionToolCall("{}", "call-1", "tool", null, null);
-      AgentRunState state = AgentRunState.pendingApproval("Agent", context, call, null, List.of(), 1);
+      AgentRunState state =
+          AgentRunState.pendingApproval("Agent", context, call, null, List.of(), 1);
 
       AgentResult result = AgentResult.paused(state, context);
 
@@ -279,7 +285,8 @@ class AgentResultTest {
       Response response = createMinimalResponse();
       TestPerson person = new TestPerson("Jane", 25);
 
-      AgentResult result = AgentResult.successWithParsed("{}", person, response, context, List.of(), 1);
+      AgentResult result =
+          AgentResult.successWithParsed("{}", person, response, context, List.of(), 1);
 
       assertNotNull(result.parsed());
       TestPerson parsed = (TestPerson) result.parsed();
@@ -352,14 +359,37 @@ class AgentResultTest {
 
   private Response createMinimalResponse() {
     return new Response(
-        null, null, System.currentTimeMillis() / 1000, null, "resp_123", null, null,
-        null, null, null, "gpt-4o", ResponseObject.RESPONSE,
-        List.of(new OutputMessage<Void>(List.of(Text.valueOf("Test")), "msg_1", 
-            InputMessageStatus.COMPLETED, null)),
-        null, null, null, null, null, null, null,
-        ResponseGenerationStatus.COMPLETED, null, null, null, null, null, null, null);
+        null,
+        null,
+        System.currentTimeMillis() / 1000,
+        null,
+        "resp_123",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "gpt-4o",
+        ResponseObject.RESPONSE,
+        List.of(
+            new OutputMessage<Void>(
+                List.of(Text.valueOf("Test")), "msg_1", InputMessageStatus.COMPLETED, null)),
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        ResponseGenerationStatus.COMPLETED,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 
   public record TestPerson(String name, int age) {}
 }
-

@@ -14,7 +14,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-
 /**
  * Comprehensive tests for Agent.
  *
@@ -592,7 +591,9 @@ class AgentTest {
       Agent agent = createTestAgent("Test");
       enqueueSuccessResponse("Image response");
 
-      Image image = Image.fromBase64("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+      Image image =
+          Image.fromBase64(
+              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
       CompletableFuture<AgentResult> future = agent.interact(image);
 
       assertNotNull(future);
@@ -634,10 +635,7 @@ class AgentTest {
       Agent agent = createTestAgent("Test");
       enqueueSuccessResponse("List response");
 
-      List<ResponseInputItem> items = List.of(
-          Message.user("First"),
-          Message.user("Second")
-      );
+      List<ResponseInputItem> items = List.of(Message.user("First"), Message.user("Second"));
       CompletableFuture<AgentResult> future = agent.interact(items);
 
       assertNotNull(future);
@@ -688,13 +686,14 @@ class AgentTest {
     @Test
     @DisplayName("temperature can be set")
     void temperature_canBeSet() {
-      Agent agent = Agent.builder()
-          .name("Test")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .temperature(0.7)
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .temperature(0.7)
+              .build();
 
       assertNotNull(agent);
     }
@@ -702,13 +701,14 @@ class AgentTest {
     @Test
     @DisplayName("objectMapper can be set")
     void objectMapper_canBeSet() {
-      Agent agent = Agent.builder()
-          .name("Test")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .objectMapper(new com.fasterxml.jackson.databind.ObjectMapper())
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .objectMapper(new com.fasterxml.jackson.databind.ObjectMapper())
+              .build();
 
       assertNotNull(agent);
     }
@@ -716,13 +716,14 @@ class AgentTest {
     @Test
     @DisplayName("telemetryContext can be set")
     void telemetryContext_canBeSet() {
-      Agent agent = Agent.builder()
-          .name("Test")
-          .model("test-model")
-          .instructions("Test")
-          .responder(responder)
-          .telemetryContext(com.paragon.telemetry.TelemetryContext.builder().build())
-          .build();
+      Agent agent =
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .telemetryContext(com.paragon.telemetry.TelemetryContext.builder().build())
+              .build();
 
       assertNotNull(agent);
     }
@@ -777,4 +778,3 @@ class AgentTest {
             .addHeader("Content-Type", "application/json"));
   }
 }
-

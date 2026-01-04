@@ -271,7 +271,8 @@ class StreamConsumerTest {
 
       @SuppressWarnings("unchecked")
       StreamConsumer<List<String>> consumer =
-          StreamConsumer.of((Class<List<String>>) (Class<?>) List.class, received::add, ex -> {}, () -> {});
+          StreamConsumer.of(
+              (Class<List<String>>) (Class<?>) List.class, received::add, ex -> {}, () -> {});
 
       consumer.onEvent(List.of("a", "b", "c"));
       consumer.onEvent(List.of("x", "y"));

@@ -13,10 +13,11 @@ import org.jspecify.annotations.Nullable;
 /**
  * A {@link PromptProvider} that reads prompts from the local filesystem.
  *
- * <p>Prompts are stored as text files, where the prompt ID is treated as a relative
- * path from the configured base directory.
+ * <p>Prompts are stored as text files, where the prompt ID is treated as a relative path from the
+ * configured base directory.
  *
  * <h2>Usage Example</h2>
+ *
  * <pre>{@code
  * // Create provider with base directory
  * PromptProvider provider = FilesystemPromptProvider.create(Path.of("./prompts"));
@@ -31,8 +32,8 @@ import org.jspecify.annotations.Nullable;
  * Prompt compiled = greeting.compile(Map.of("name", "World"));
  * }</pre>
  *
- * <p><strong>Note:</strong> The filters parameter is ignored by this implementation
- * as the filesystem does not support versioning or labeling.
+ * <p><strong>Note:</strong> The filters parameter is ignored by this implementation as the
+ * filesystem does not support versioning or labeling.
  *
  * @author Agentle Framework
  * @since 1.0
@@ -78,7 +79,8 @@ public final class FilesystemPromptProvider implements PromptProvider {
   }
 
   @Override
-  public @NonNull Prompt providePrompt(@NonNull String promptId, @Nullable Map<String, String> filters) {
+  public @NonNull Prompt providePrompt(
+      @NonNull String promptId, @Nullable Map<String, String> filters) {
     Objects.requireNonNull(promptId, "promptId must not be null");
 
     if (promptId.isEmpty()) {
@@ -86,19 +88,17 @@ public final class FilesystemPromptProvider implements PromptProvider {
     }
 
     Path promptPath = baseDirectory.resolve(promptId);
-    
+
     // Security check: prevent path traversal attacks
     if (!promptPath.normalize().startsWith(baseDirectory.normalize())) {
-      throw new PromptProviderException(
-          "Invalid prompt path: path traversal detected", promptId);
+      throw new PromptProviderException("Invalid prompt path: path traversal detected", promptId);
     }
 
     try {
       String content = Files.readString(promptPath, StandardCharsets.UTF_8);
       return Prompt.of(content);
     } catch (NoSuchFileException e) {
-      throw new PromptProviderException(
-          "Prompt file not found: " + promptPath, promptId, e);
+      throw new PromptProviderException("Prompt file not found: " + promptPath, promptId, e);
     } catch (IOException e) {
       throw new PromptProviderException(
           "Failed to read prompt file: " + promptPath, promptId, e, true);

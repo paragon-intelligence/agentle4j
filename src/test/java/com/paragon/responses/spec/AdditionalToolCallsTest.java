@@ -7,9 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for FileSearchToolCall DTO (27 missed lines).
- */
+/** Tests for FileSearchToolCall DTO (27 missed lines). */
 @DisplayName("FileSearchToolCall DTO")
 class FileSearchToolCallTest {
 
@@ -20,12 +18,9 @@ class FileSearchToolCallTest {
     @Test
     @DisplayName("constructor creates instance with all fields")
     void constructorCreatesInstance() {
-      FileSearchToolCall call = new FileSearchToolCall(
-          "fs_123",
-          List.of("query1", "query2"),
-          FileSearchToolCallStatus.IN_PROGRESS,
-          null
-      );
+      FileSearchToolCall call =
+          new FileSearchToolCall(
+              "fs_123", List.of("query1", "query2"), FileSearchToolCallStatus.IN_PROGRESS, null);
 
       assertEquals("fs_123", call.id());
       assertEquals(2, call.queries().size());
@@ -78,12 +73,12 @@ class FileSearchToolCallTest {
     @DisplayName("equals returns false for different id")
     void equalsReturnsFalseForDifferentId() {
       FileSearchToolCall call1 = createFileSearchToolCall();
-      FileSearchToolCall call2 = new FileSearchToolCall(
-          "different_id",
-          List.of("query1", "query2"),
-          FileSearchToolCallStatus.SEARCHING,
-          null
-      );
+      FileSearchToolCall call2 =
+          new FileSearchToolCall(
+              "different_id",
+              List.of("query1", "query2"),
+              FileSearchToolCallStatus.SEARCHING,
+              null);
       assertNotEquals(call1, call2);
     }
 
@@ -132,12 +127,9 @@ class FileSearchToolCallTest {
     @Test
     @DisplayName("toString works with empty results")
     void toStringWithEmptyResults() {
-      FileSearchToolCall call = new FileSearchToolCall(
-          "fs_123",
-          List.of("single query"),
-          FileSearchToolCallStatus.INCOMPLETE,
-          null
-      );
+      FileSearchToolCall call =
+          new FileSearchToolCall(
+              "fs_123", List.of("single query"), FileSearchToolCallStatus.INCOMPLETE, null);
       String str = call.toString();
       assertTrue(str.contains("single query"));
     }
@@ -145,12 +137,9 @@ class FileSearchToolCallTest {
     @Test
     @DisplayName("toString with results list")
     void toStringWithResults() {
-      FileSearchToolCall call = new FileSearchToolCall(
-          "fs_123",
-          List.of("query"),
-          FileSearchToolCallStatus.FAILED,
-          List.of()
-      );
+      FileSearchToolCall call =
+          new FileSearchToolCall(
+              "fs_123", List.of("query"), FileSearchToolCallStatus.FAILED, List.of());
       String str = call.toString();
       assertNotNull(str);
     }
@@ -167,13 +156,13 @@ class FileSearchToolCallTest {
     @Test
     @DisplayName("toString formats all fields")
     void toStringFormatsAllFields() {
-      FileSearchToolCallResult result = new FileSearchToolCallResult(
-          java.util.Map.of("key", "value"),
-          "file_123",
-          "document.pdf",
-          0.95,
-          "Sample text content"
-      );
+      FileSearchToolCallResult result =
+          new FileSearchToolCallResult(
+              java.util.Map.of("key", "value"),
+              "file_123",
+              "document.pdf",
+              0.95,
+              "Sample text content");
 
       String str = result.toString();
       assertTrue(str.contains("file_123"));
@@ -185,9 +174,7 @@ class FileSearchToolCallTest {
     @Test
     @DisplayName("toString handles null fields")
     void toStringHandlesNullFields() {
-      FileSearchToolCallResult result = new FileSearchToolCallResult(
-          null, null, null, null, null
-      );
+      FileSearchToolCallResult result = new FileSearchToolCallResult(null, null, null, null, null);
 
       String str = result.toString();
       assertTrue(str.contains("null"));
@@ -196,10 +183,6 @@ class FileSearchToolCallTest {
 
   private FileSearchToolCall createFileSearchToolCall() {
     return new FileSearchToolCall(
-        "fs_123",
-        List.of("query1", "query2"),
-        FileSearchToolCallStatus.SEARCHING,
-        null
-    );
+        "fs_123", List.of("query1", "query2"), FileSearchToolCallStatus.SEARCHING, null);
   }
 }

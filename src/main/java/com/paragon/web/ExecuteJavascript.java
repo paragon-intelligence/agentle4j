@@ -11,9 +11,8 @@ import org.jspecify.annotations.NonNull;
  * @param script The JavaScript code to execute
  */
 public record ExecuteJavascript(
-    @JsonProperty("script")
-    @JsonPropertyDescription("The JavaScript code to execute.")
-    @NonNull String script)
+    @JsonProperty("script") @JsonPropertyDescription("The JavaScript code to execute.")
+        @NonNull String script)
     implements Action {
 
   /**

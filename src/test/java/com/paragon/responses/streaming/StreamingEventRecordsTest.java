@@ -87,7 +87,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("OutputTextDeltaEvent deserializes with delta")
     void outputTextDeltaDeserializes() throws Exception {
-      String json = "{\"type\":\"response.output_text.delta\",\"sequence_number\":5,\"item_id\":\"item1\",\"output_index\":0,\"content_index\":0,\"delta\":\"Hello\"}";
+      String json =
+          "{\"type\":\"response.output_text.delta\",\"sequence_number\":5,\"item_id\":\"item1\",\"output_index\":0,\"content_index\":0,\"delta\":\"Hello\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(OutputTextDeltaEvent.class, event);
       OutputTextDeltaEvent textEvent = (OutputTextDeltaEvent) event;
@@ -98,7 +99,9 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("OutputTextDoneEvent deserializes with full text")
     void outputTextDoneDeserializes() throws Exception {
-      String json = "{\"type\":\"response.output_text.done\",\"sequence_number\":10,\"item_id\":\"item1\",\"output_index\":0,\"content_index\":0,\"text\":\"Complete text\"}";
+      String json =
+          "{\"type\":\"response.output_text.done\",\"sequence_number\":10,\"item_id\":\"item1\",\"output_index\":0,\"content_index\":0,\"text\":\"Complete"
+              + " text\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(OutputTextDoneEvent.class, event);
       OutputTextDoneEvent textEvent = (OutputTextDoneEvent) event;
@@ -108,7 +111,9 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("RefusalDeltaEvent deserializes")
     void refusalDeltaDeserializes() throws Exception {
-      String json = "{\"type\":\"response.refusal.delta\",\"sequence_number\":3,\"item_id\":\"item1\",\"output_index\":0,\"content_index\":0,\"delta\":\"I cannot\"}";
+      String json =
+          "{\"type\":\"response.refusal.delta\",\"sequence_number\":3,\"item_id\":\"item1\",\"output_index\":0,\"content_index\":0,\"delta\":\"I"
+              + " cannot\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(RefusalDeltaEvent.class, event);
     }
@@ -116,7 +121,9 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("RefusalDoneEvent deserializes")
     void refusalDoneDeserializes() throws Exception {
-      String json = "{\"type\":\"response.refusal.done\",\"sequence_number\":5,\"item_id\":\"item1\",\"output_index\":0,\"content_index\":0,\"refusal\":\"I cannot help with that\"}";
+      String json =
+          "{\"type\":\"response.refusal.done\",\"sequence_number\":5,\"item_id\":\"item1\",\"output_index\":0,\"content_index\":0,\"refusal\":\"I"
+              + " cannot help with that\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(RefusalDoneEvent.class, event);
     }
@@ -131,7 +138,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("FunctionCallArgumentsDeltaEvent deserializes")
     void functionCallArgumentsDeltaDeserializes() throws Exception {
-      String json = "{\"type\":\"response.function_call_arguments.delta\",\"sequence_number\":3,\"item_id\":\"call1\",\"output_index\":0,\"delta\":\"{\\\"q\"}";
+      String json =
+          "{\"type\":\"response.function_call_arguments.delta\",\"sequence_number\":3,\"item_id\":\"call1\",\"output_index\":0,\"delta\":\"{\\\"q\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(FunctionCallArgumentsDeltaEvent.class, event);
       FunctionCallArgumentsDeltaEvent funcEvent = (FunctionCallArgumentsDeltaEvent) event;
@@ -141,7 +149,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("FunctionCallArgumentsDoneEvent deserializes")
     void functionCallArgumentsDoneDeserializes() throws Exception {
-      String json = "{\"type\":\"response.function_call_arguments.done\",\"sequence_number\":5,\"item_id\":\"call1\",\"output_index\":0,\"arguments\":\"{\\\"query\\\":\\\"test\\\"}\"}";
+      String json =
+          "{\"type\":\"response.function_call_arguments.done\",\"sequence_number\":5,\"item_id\":\"call1\",\"output_index\":0,\"arguments\":\"{\\\"query\\\":\\\"test\\\"}\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(FunctionCallArgumentsDoneEvent.class, event);
     }
@@ -156,7 +165,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("FileSearchCallInProgressEvent deserializes")
     void fileSearchInProgressDeserializes() throws Exception {
-      String json = "{\"type\":\"response.file_search_call.in_progress\",\"sequence_number\":2,\"item_id\":\"search1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.file_search_call.in_progress\",\"sequence_number\":2,\"item_id\":\"search1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(FileSearchCallInProgressEvent.class, event);
     }
@@ -164,7 +174,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("FileSearchCallSearchingEvent deserializes")
     void fileSearchSearchingDeserializes() throws Exception {
-      String json = "{\"type\":\"response.file_search_call.searching\",\"sequence_number\":3,\"item_id\":\"search1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.file_search_call.searching\",\"sequence_number\":3,\"item_id\":\"search1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(FileSearchCallSearchingEvent.class, event);
     }
@@ -172,7 +183,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("FileSearchCallCompletedEvent deserializes")
     void fileSearchCompletedDeserializes() throws Exception {
-      String json = "{\"type\":\"response.file_search_call.completed\",\"sequence_number\":5,\"item_id\":\"search1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.file_search_call.completed\",\"sequence_number\":5,\"item_id\":\"search1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(FileSearchCallCompletedEvent.class, event);
     }
@@ -180,7 +192,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("WebSearchCallInProgressEvent deserializes")
     void webSearchInProgressDeserializes() throws Exception {
-      String json = "{\"type\":\"response.web_search_call.in_progress\",\"sequence_number\":2,\"item_id\":\"web1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.web_search_call.in_progress\",\"sequence_number\":2,\"item_id\":\"web1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(WebSearchCallInProgressEvent.class, event);
     }
@@ -188,7 +201,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("WebSearchCallCompletedEvent deserializes")
     void webSearchCompletedDeserializes() throws Exception {
-      String json = "{\"type\":\"response.web_search_call.completed\",\"sequence_number\":5,\"item_id\":\"web1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.web_search_call.completed\",\"sequence_number\":5,\"item_id\":\"web1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(WebSearchCallCompletedEvent.class, event);
     }
@@ -203,7 +217,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("CodeInterpreterCallInProgressEvent deserializes")
     void codeInterpreterInProgressDeserializes() throws Exception {
-      String json = "{\"type\":\"response.code_interpreter_call.in_progress\",\"sequence_number\":2,\"item_id\":\"code1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.code_interpreter_call.in_progress\",\"sequence_number\":2,\"item_id\":\"code1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(CodeInterpreterCallInProgressEvent.class, event);
     }
@@ -211,7 +226,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("CodeInterpreterCallInterpretingEvent deserializes")
     void codeInterpreterInterpretingDeserializes() throws Exception {
-      String json = "{\"type\":\"response.code_interpreter_call.interpreting\",\"sequence_number\":3,\"item_id\":\"code1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.code_interpreter_call.interpreting\",\"sequence_number\":3,\"item_id\":\"code1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(CodeInterpreterCallInterpretingEvent.class, event);
     }
@@ -219,7 +235,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("CodeInterpreterCallCompletedEvent deserializes")
     void codeInterpreterCompletedDeserializes() throws Exception {
-      String json = "{\"type\":\"response.code_interpreter_call.completed\",\"sequence_number\":5,\"item_id\":\"code1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.code_interpreter_call.completed\",\"sequence_number\":5,\"item_id\":\"code1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(CodeInterpreterCallCompletedEvent.class, event);
     }
@@ -227,7 +244,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("CodeInterpreterCallCodeDeltaEvent deserializes")
     void codeInterpreterCodeDeltaDeserializes() throws Exception {
-      String json = "{\"type\":\"response.code_interpreter_call_code.delta\",\"sequence_number\":3,\"item_id\":\"code1\",\"output_index\":0,\"delta\":\"print(\"}";
+      String json =
+          "{\"type\":\"response.code_interpreter_call_code.delta\",\"sequence_number\":3,\"item_id\":\"code1\",\"output_index\":0,\"delta\":\"print(\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(CodeInterpreterCallCodeDeltaEvent.class, event);
     }
@@ -235,7 +253,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("CodeInterpreterCallCodeDoneEvent deserializes")
     void codeInterpreterCodeDoneDeserializes() throws Exception {
-      String json = "{\"type\":\"response.code_interpreter_call_code.done\",\"sequence_number\":5,\"item_id\":\"code1\",\"output_index\":0,\"code\":\"print('Hello')\"}";
+      String json =
+          "{\"type\":\"response.code_interpreter_call_code.done\",\"sequence_number\":5,\"item_id\":\"code1\",\"output_index\":0,\"code\":\"print('Hello')\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(CodeInterpreterCallCodeDoneEvent.class, event);
     }
@@ -250,7 +269,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("ReasoningSummaryPartAddedEvent deserializes")
     void reasoningSummaryPartAddedDeserializes() throws Exception {
-      String json = "{\"type\":\"response.reasoning_summary_part.added\",\"sequence_number\":2,\"item_id\":\"r1\",\"output_index\":0,\"summary_index\":0}";
+      String json =
+          "{\"type\":\"response.reasoning_summary_part.added\",\"sequence_number\":2,\"item_id\":\"r1\",\"output_index\":0,\"summary_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(ReasoningSummaryPartAddedEvent.class, event);
     }
@@ -258,7 +278,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("ReasoningSummaryTextDeltaEvent deserializes")
     void reasoningSummaryTextDeltaDeserializes() throws Exception {
-      String json = "{\"type\":\"response.reasoning_summary_text.delta\",\"sequence_number\":3,\"item_id\":\"r1\",\"output_index\":0,\"summary_index\":0,\"delta\":\"First\"}";
+      String json =
+          "{\"type\":\"response.reasoning_summary_text.delta\",\"sequence_number\":3,\"item_id\":\"r1\",\"output_index\":0,\"summary_index\":0,\"delta\":\"First\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(ReasoningSummaryTextDeltaEvent.class, event);
     }
@@ -266,7 +287,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("ReasoningTextDeltaEvent deserializes")
     void reasoningTextDeltaDeserializes() throws Exception {
-      String json = "{\"type\":\"response.reasoning_text.delta\",\"sequence_number\":3,\"item_id\":\"r1\",\"output_index\":0,\"content_index\":0,\"delta\":\"Thinking\"}";
+      String json =
+          "{\"type\":\"response.reasoning_text.delta\",\"sequence_number\":3,\"item_id\":\"r1\",\"output_index\":0,\"content_index\":0,\"delta\":\"Thinking\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(ReasoningTextDeltaEvent.class, event);
     }
@@ -274,7 +296,9 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("ReasoningTextDoneEvent deserializes")
     void reasoningTextDoneDeserializes() throws Exception {
-      String json = "{\"type\":\"response.reasoning_text.done\",\"sequence_number\":5,\"item_id\":\"r1\",\"output_index\":0,\"content_index\":0,\"text\":\"Complete reasoning\"}";
+      String json =
+          "{\"type\":\"response.reasoning_text.done\",\"sequence_number\":5,\"item_id\":\"r1\",\"output_index\":0,\"content_index\":0,\"text\":\"Complete"
+              + " reasoning\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(ReasoningTextDoneEvent.class, event);
     }
@@ -289,7 +313,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("ImageGenerationCallInProgressEvent deserializes")
     void imageGenInProgressDeserializes() throws Exception {
-      String json = "{\"type\":\"response.image_generation_call.in_progress\",\"sequence_number\":2,\"item_id\":\"img1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.image_generation_call.in_progress\",\"sequence_number\":2,\"item_id\":\"img1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(ImageGenerationCallInProgressEvent.class, event);
     }
@@ -297,7 +322,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("ImageGenerationCallGeneratingEvent deserializes")
     void imageGenGeneratingDeserializes() throws Exception {
-      String json = "{\"type\":\"response.image_generation_call.generating\",\"sequence_number\":3,\"item_id\":\"img1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.image_generation_call.generating\",\"sequence_number\":3,\"item_id\":\"img1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(ImageGenerationCallGeneratingEvent.class, event);
     }
@@ -305,7 +331,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("ImageGenerationCallPartialImageEvent deserializes")
     void imageGenPartialImageDeserializes() throws Exception {
-      String json = "{\"type\":\"response.image_generation_call.partial_image\",\"sequence_number\":4,\"item_id\":\"img1\",\"output_index\":0,\"partial_image_b64\":\"abc123\",\"partial_image_index\":0}";
+      String json =
+          "{\"type\":\"response.image_generation_call.partial_image\",\"sequence_number\":4,\"item_id\":\"img1\",\"output_index\":0,\"partial_image_b64\":\"abc123\",\"partial_image_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(ImageGenerationCallPartialImageEvent.class, event);
     }
@@ -313,7 +340,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("ImageGenerationCallCompletedEvent deserializes")
     void imageGenCompletedDeserializes() throws Exception {
-      String json = "{\"type\":\"response.image_generation_call.completed\",\"sequence_number\":5,\"item_id\":\"img1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.image_generation_call.completed\",\"sequence_number\":5,\"item_id\":\"img1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(ImageGenerationCallCompletedEvent.class, event);
     }
@@ -328,7 +356,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("McpCallInProgressEvent deserializes")
     void mcpCallInProgressDeserializes() throws Exception {
-      String json = "{\"type\":\"response.mcp_call.in_progress\",\"sequence_number\":2,\"item_id\":\"mcp1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.mcp_call.in_progress\",\"sequence_number\":2,\"item_id\":\"mcp1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(McpCallInProgressEvent.class, event);
     }
@@ -336,7 +365,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("McpCallCompletedEvent deserializes")
     void mcpCallCompletedDeserializes() throws Exception {
-      String json = "{\"type\":\"response.mcp_call.completed\",\"sequence_number\":5,\"item_id\":\"mcp1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.mcp_call.completed\",\"sequence_number\":5,\"item_id\":\"mcp1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(McpCallCompletedEvent.class, event);
     }
@@ -344,7 +374,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("McpCallFailedEvent deserializes")
     void mcpCallFailedDeserializes() throws Exception {
-      String json = "{\"type\":\"response.mcp_call.failed\",\"sequence_number\":5,\"item_id\":\"mcp1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.mcp_call.failed\",\"sequence_number\":5,\"item_id\":\"mcp1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(McpCallFailedEvent.class, event);
     }
@@ -352,7 +383,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("McpCallArgumentsDeltaEvent deserializes")
     void mcpCallArgumentsDeltaDeserializes() throws Exception {
-      String json = "{\"type\":\"response.mcp_call_arguments.delta\",\"sequence_number\":3,\"item_id\":\"mcp1\",\"output_index\":0,\"delta\":\"{\\\"key\"}";
+      String json =
+          "{\"type\":\"response.mcp_call_arguments.delta\",\"sequence_number\":3,\"item_id\":\"mcp1\",\"output_index\":0,\"delta\":\"{\\\"key\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(McpCallArgumentsDeltaEvent.class, event);
     }
@@ -360,7 +392,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("McpListToolsInProgressEvent deserializes")
     void mcpListToolsInProgressDeserializes() throws Exception {
-      String json = "{\"type\":\"response.mcp_list_tools.in_progress\",\"sequence_number\":1,\"item_id\":\"list1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.mcp_list_tools.in_progress\",\"sequence_number\":1,\"item_id\":\"list1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(McpListToolsInProgressEvent.class, event);
     }
@@ -368,7 +401,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("McpListToolsCompletedEvent deserializes")
     void mcpListToolsCompletedDeserializes() throws Exception {
-      String json = "{\"type\":\"response.mcp_list_tools.completed\",\"sequence_number\":2,\"item_id\":\"list1\",\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.mcp_list_tools.completed\",\"sequence_number\":2,\"item_id\":\"list1\",\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(McpListToolsCompletedEvent.class, event);
     }
@@ -383,7 +417,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("ContentPartAddedEvent deserializes")
     void contentPartAddedDeserializes() throws Exception {
-      String json = "{\"type\":\"response.content_part.added\",\"sequence_number\":3,\"item_id\":\"item1\",\"output_index\":0,\"content_index\":0}";
+      String json =
+          "{\"type\":\"response.content_part.added\",\"sequence_number\":3,\"item_id\":\"item1\",\"output_index\":0,\"content_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(ContentPartAddedEvent.class, event);
     }
@@ -391,7 +426,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("ContentPartDoneEvent deserializes")
     void contentPartDoneDeserializes() throws Exception {
-      String json = "{\"type\":\"response.content_part.done\",\"sequence_number\":8,\"item_id\":\"item1\",\"output_index\":0,\"content_index\":0}";
+      String json =
+          "{\"type\":\"response.content_part.done\",\"sequence_number\":8,\"item_id\":\"item1\",\"output_index\":0,\"content_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(ContentPartDoneEvent.class, event);
     }
@@ -399,7 +435,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("OutputItemAddedEvent deserializes")
     void outputItemAddedDeserializes() throws Exception {
-      String json = "{\"type\":\"response.output_item.added\",\"sequence_number\":2,\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.output_item.added\",\"sequence_number\":2,\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(OutputItemAddedEvent.class, event);
     }
@@ -407,7 +444,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("OutputItemDoneEvent deserializes")
     void outputItemDoneDeserializes() throws Exception {
-      String json = "{\"type\":\"response.output_item.done\",\"sequence_number\":9,\"output_index\":0}";
+      String json =
+          "{\"type\":\"response.output_item.done\",\"sequence_number\":9,\"output_index\":0}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(OutputItemDoneEvent.class, event);
     }
@@ -422,7 +460,9 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("StreamingErrorEvent deserializes")
     void streamingErrorDeserializes() throws Exception {
-      String json = "{\"type\":\"error\",\"sequence_number\":0,\"code\":\"server_error\",\"message\":\"An error occurred\",\"param\":null}";
+      String json =
+          "{\"type\":\"error\",\"sequence_number\":0,\"code\":\"server_error\",\"message\":\"An"
+              + " error occurred\",\"param\":null}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(StreamingErrorEvent.class, event);
     }
@@ -437,7 +477,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("CustomToolCallInputDeltaEvent deserializes")
     void customToolCallInputDeltaDeserializes() throws Exception {
-      String json = "{\"type\":\"response.custom_tool_call_input.delta\",\"sequence_number\":3,\"item_id\":\"tool1\",\"output_index\":0,\"delta\":\"{\\\"arg\"}";
+      String json =
+          "{\"type\":\"response.custom_tool_call_input.delta\",\"sequence_number\":3,\"item_id\":\"tool1\",\"output_index\":0,\"delta\":\"{\\\"arg\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(CustomToolCallInputDeltaEvent.class, event);
     }
@@ -445,7 +486,8 @@ class StreamingEventRecordsTest {
     @Test
     @DisplayName("CustomToolCallInputDoneEvent deserializes")
     void customToolCallInputDoneDeserializes() throws Exception {
-      String json = "{\"type\":\"response.custom_tool_call_input.done\",\"sequence_number\":5,\"item_id\":\"tool1\",\"output_index\":0,\"input\":\"{\\\"arg\\\":\\\"value\\\"}\"}";
+      String json =
+          "{\"type\":\"response.custom_tool_call_input.done\",\"sequence_number\":5,\"item_id\":\"tool1\",\"output_index\":0,\"input\":\"{\\\"arg\\\":\\\"value\\\"}\"}";
       StreamingEvent event = mapper.readValue(json, StreamingEvent.class);
       assertInstanceOf(CustomToolCallInputDoneEvent.class, event);
     }

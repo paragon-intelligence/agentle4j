@@ -7,11 +7,8 @@ import com.paragon.http.RetryPolicy;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,10 +47,7 @@ class OpenRouterEmbeddingProviderTest {
     void builder_setsCustomObjectMapper() {
       ObjectMapper mapper = new ObjectMapper();
       OpenRouterEmbeddingProvider provider =
-          OpenRouterEmbeddingProvider.builder()
-              .apiKey("test-api-key")
-              .objectMapper(mapper)
-              .build();
+          OpenRouterEmbeddingProvider.builder().apiKey("test-api-key").objectMapper(mapper).build();
 
       assertNotNull(provider);
       provider.close();
@@ -66,10 +60,7 @@ class OpenRouterEmbeddingProviderTest {
           RetryPolicy.builder().maxRetries(5).initialDelay(Duration.ofMillis(100)).build();
 
       OpenRouterEmbeddingProvider provider =
-          OpenRouterEmbeddingProvider.builder()
-              .apiKey("test-api-key")
-              .retryPolicy(policy)
-              .build();
+          OpenRouterEmbeddingProvider.builder().apiKey("test-api-key").retryPolicy(policy).build();
 
       assertNotNull(provider);
       provider.close();
@@ -92,10 +83,7 @@ class OpenRouterEmbeddingProviderTest {
     @DisplayName("sets allowFallbacks to true")
     void builder_setsAllowFallbacksTrue() {
       OpenRouterEmbeddingProvider provider =
-          OpenRouterEmbeddingProvider.builder()
-              .apiKey("test-api-key")
-              .allowFallbacks(true)
-              .build();
+          OpenRouterEmbeddingProvider.builder().apiKey("test-api-key").allowFallbacks(true).build();
 
       assertNotNull(provider);
       provider.close();
@@ -171,8 +159,7 @@ class OpenRouterEmbeddingProviderTest {
 
       try {
         assertThrows(
-            NullPointerException.class,
-            () -> provider.createEmbeddings(List.of("test"), null));
+            NullPointerException.class, () -> provider.createEmbeddings(List.of("test"), null));
       } finally {
         provider.close();
       }
@@ -232,19 +219,22 @@ class OpenRouterEmbeddingProviderTest {
         }
         sb.append("],\"index\":").append(i).append("}");
       }
-      sb.append("],\"model\":\"").append(model).append("\",\"usage\":{\"prompt_tokens\":10,\"total_tokens\":10}}");
+      sb.append("],\"model\":\"")
+          .append(model)
+          .append("\",\"usage\":{\"prompt_tokens\":10,\"total_tokens\":10}}");
       return sb.toString();
     }
 
     @Test
     @DisplayName("sends request to /embeddings endpoint")
     void sendsRequestToEmbeddingsEndpoint() throws Exception {
-      String responseBody = createEmbeddingResponse(
-          List.of(List.of(0.1, 0.2, 0.3)), "openai/text-embedding-3-small");
-      mockWebServer.enqueue(new MockResponse()
-          .setResponseCode(200)
-          .setBody(responseBody)
-          .addHeader("Content-Type", "application/json"));
+      String responseBody =
+          createEmbeddingResponse(List.of(List.of(0.1, 0.2, 0.3)), "openai/text-embedding-3-small");
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(responseBody)
+              .addHeader("Content-Type", "application/json"));
 
       // Note: We can't easily inject a custom base URL into OpenRouterEmbeddingProvider
       // since it hardcodes BASE_URL. This test documents expected behavior.
@@ -323,10 +313,7 @@ class OpenRouterEmbeddingProviderTest {
               .build();
 
       OpenRouterEmbeddingProvider provider =
-          OpenRouterEmbeddingProvider.builder()
-              .apiKey("test-api-key")
-              .retryPolicy(policy)
-              .build();
+          OpenRouterEmbeddingProvider.builder().apiKey("test-api-key").retryPolicy(policy).build();
 
       assertNotNull(provider);
       provider.close();
@@ -343,10 +330,7 @@ class OpenRouterEmbeddingProviderTest {
               .build();
 
       OpenRouterEmbeddingProvider provider =
-          OpenRouterEmbeddingProvider.builder()
-              .apiKey("test-api-key")
-              .retryPolicy(policy)
-              .build();
+          OpenRouterEmbeddingProvider.builder().apiKey("test-api-key").retryPolicy(policy).build();
 
       assertNotNull(provider);
       provider.close();
@@ -358,10 +342,7 @@ class OpenRouterEmbeddingProviderTest {
       RetryPolicy policy = RetryPolicy.builder().maxRetries(0).build();
 
       OpenRouterEmbeddingProvider provider =
-          OpenRouterEmbeddingProvider.builder()
-              .apiKey("test-api-key")
-              .retryPolicy(policy)
-              .build();
+          OpenRouterEmbeddingProvider.builder().apiKey("test-api-key").retryPolicy(policy).build();
 
       assertNotNull(provider);
       provider.close();
@@ -466,10 +447,7 @@ class OpenRouterEmbeddingProviderTest {
     void fullConfiguration() {
       ObjectMapper mapper = new ObjectMapper();
       RetryPolicy policy =
-          RetryPolicy.builder()
-              .maxRetries(3)
-              .initialDelay(Duration.ofMillis(100))
-              .build();
+          RetryPolicy.builder().maxRetries(3).initialDelay(Duration.ofMillis(100)).build();
 
       OpenRouterEmbeddingProvider provider =
           OpenRouterEmbeddingProvider.builder()
@@ -487,9 +465,7 @@ class OpenRouterEmbeddingProviderTest {
     @DisplayName("minimal configuration with only API key")
     void minimalConfiguration() {
       OpenRouterEmbeddingProvider provider =
-          OpenRouterEmbeddingProvider.builder()
-              .apiKey("test-api-key")
-              .build();
+          OpenRouterEmbeddingProvider.builder().apiKey("test-api-key").build();
 
       assertNotNull(provider);
       provider.close();

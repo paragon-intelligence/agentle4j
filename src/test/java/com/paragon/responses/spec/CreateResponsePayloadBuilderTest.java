@@ -36,9 +36,7 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("build() creates payload with defaults")
     void build_createsPayloadWithDefaults() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .build();
+      CreateResponsePayload payload = CreateResponsePayload.builder().model("gpt-4o").build();
 
       assertEquals("gpt-4o", payload.model());
       assertFalse(payload.background());
@@ -49,9 +47,7 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("model() sets model")
     void model_setsModel() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o-mini")
-          .build();
+      CreateResponsePayload payload = CreateResponsePayload.builder().model("gpt-4o-mini").build();
 
       assertEquals("gpt-4o-mini", payload.model());
     }
@@ -68,10 +64,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("addUserMessage(String) adds user message")
     void addUserMessage_String_addsUserMessage() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Hello")
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").addUserMessage("Hello").build();
 
       assertEquals(1, payload.input().size());
       assertTrue(payload.input().getFirst() instanceof UserMessage);
@@ -80,10 +74,11 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("addUserMessage(String, status) adds user message with status")
     void addUserMessage_withStatus_addsUserMessageWithStatus() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Hello", InputMessageStatus.COMPLETED)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Hello", InputMessageStatus.COMPLETED)
+              .build();
 
       assertEquals(1, payload.input().size());
     }
@@ -92,10 +87,8 @@ class CreateResponsePayloadBuilderTest {
     @DisplayName("addUserMessage(UserMessage) adds user message object")
     void addUserMessage_object_addsUserMessageObject() {
       UserMessage userMessage = Message.user("Hello world");
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage(userMessage)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").addUserMessage(userMessage).build();
 
       assertEquals(1, payload.input().size());
       assertEquals(userMessage, payload.input().getFirst());
@@ -104,10 +97,11 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("addDeveloperMessage(String) adds developer message")
     void addDeveloperMessage_String_addsDeveloperMessage() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addDeveloperMessage("System instructions")
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addDeveloperMessage("System instructions")
+              .build();
 
       assertEquals(1, payload.input().size());
       assertTrue(payload.input().getFirst() instanceof DeveloperMessage);
@@ -116,11 +110,12 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("addDeveloperMessage(String, status) adds developer message with status")
     void addDeveloperMessage_withStatus_addsDeveloperMessageWithStatus() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addDeveloperMessage("Instructions", InputMessageStatus.COMPLETED)
-          .addUserMessage("Hello")
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addDeveloperMessage("Instructions", InputMessageStatus.COMPLETED)
+              .addUserMessage("Hello")
+              .build();
 
       assertEquals(2, payload.input().size());
       // Developer message should be first
@@ -130,21 +125,20 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("addDeveloperMessage throws when duplicate developer message exists")
     void addDeveloperMessage_throwsWhenDuplicate() {
-      CreateResponsePayload.Builder builder = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addDeveloperMessage("First");
+      CreateResponsePayload.Builder builder =
+          CreateResponsePayload.builder().model("gpt-4o").addDeveloperMessage("First");
 
-      assertThrows(IllegalArgumentException.class, () ->
-          builder.addDeveloperMessage("Second"));
+      assertThrows(IllegalArgumentException.class, () -> builder.addDeveloperMessage("Second"));
     }
 
     @Test
     @DisplayName("addAssistantMessage(String) adds assistant message")
     void addAssistantMessage_String_addsAssistantMessage() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addAssistantMessage("I can help with that")
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addAssistantMessage("I can help with that")
+              .build();
 
       assertEquals(1, payload.input().size());
       assertTrue(payload.input().getFirst() instanceof AssistantMessage);
@@ -153,10 +147,11 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("addAssistantMessage(String, status) adds assistant message with status")
     void addAssistantMessage_withStatus_addsAssistantMessageWithStatus() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addAssistantMessage("Response", InputMessageStatus.COMPLETED)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addAssistantMessage("Response", InputMessageStatus.COMPLETED)
+              .build();
 
       assertEquals(1, payload.input().size());
     }
@@ -165,10 +160,8 @@ class CreateResponsePayloadBuilderTest {
     @DisplayName("addAssistantMessage(AssistantMessage) adds assistant message object")
     void addAssistantMessage_object_addsAssistantMessageObject() {
       AssistantMessage msg = Message.assistant("Testing");
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addAssistantMessage(msg)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").addAssistantMessage(msg).build();
 
       assertEquals(1, payload.input().size());
       assertEquals(msg, payload.input().getFirst());
@@ -178,10 +171,8 @@ class CreateResponsePayloadBuilderTest {
     @DisplayName("addMessage() adds any message type")
     void addMessage_addsAnyMessageType() {
       UserMessage user = Message.user("Hello");
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addMessage(user)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").addMessage(user).build();
 
       assertEquals(1, payload.input().size());
     }
@@ -189,15 +180,10 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("addMessages(List) adds multiple messages")
     void addMessages_list_addsMultipleMessages() {
-      List<Message> messages = List.of(
-          Message.user("Hello"),
-          Message.assistant("Hi there")
-      );
+      List<Message> messages = List.of(Message.user("Hello"), Message.assistant("Hi there"));
 
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addMessages(messages)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").addMessages(messages).build();
 
       assertEquals(2, payload.input().size());
     }
@@ -205,15 +191,10 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("addMessages(Messages) adds messages from Messages object")
     void addMessages_messagesObject_addsMessages() {
-      Messages messages = Messages.of(
-          Message.user("First"),
-          Message.assistant("Second")
-      );
+      Messages messages = Messages.of(Message.user("First"), Message.assistant("Second"));
 
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addMessages(messages)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").addMessages(messages).build();
 
       assertEquals(2, payload.input().size());
     }
@@ -223,10 +204,8 @@ class CreateResponsePayloadBuilderTest {
     void input_setsInputListDirectly() {
       List<ResponseInputItem> items = List.of(Message.user("Direct input"));
 
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .input(items)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").input(items).build();
 
       assertEquals(1, payload.input().size());
     }
@@ -243,10 +222,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("instructions() sets instructions")
     void instructions_setsInstructions() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .instructions("Be helpful")
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").instructions("Be helpful").build();
 
       assertEquals("Be helpful", payload.instructions());
     }
@@ -254,10 +231,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("temperature() sets temperature")
     void temperature_setsTemperature() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .temperature(0.7)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").temperature(0.7).build();
 
       assertEquals(0.7, payload.temperature());
     }
@@ -265,10 +240,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("maxOutputTokens() sets max output tokens")
     void maxOutputTokens_setsMaxOutputTokens() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .maxOutputTokens(1000)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").maxOutputTokens(1000).build();
 
       assertEquals(1000, payload.maxOutputTokens());
     }
@@ -276,10 +249,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("topP() sets top P")
     void topP_setsTopP() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .topP(0.9)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").topP(0.9).build();
 
       assertEquals(0.9, payload.topP());
     }
@@ -287,10 +258,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("topLogprobs() sets top logprobs")
     void topLogprobs_setsTopLogprobs() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .topLogprobs(5)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").topLogprobs(5).build();
 
       assertEquals(5, payload.topLogprobs());
     }
@@ -307,10 +276,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("maxToolCalls() sets max tool calls")
     void maxToolCalls_setsMaxToolCalls() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .maxToolCalls(5)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").maxToolCalls(5).build();
 
       assertEquals(5, payload.maxToolCalls());
     }
@@ -318,10 +285,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("parallelToolCalls() sets parallel tool calls")
     void parallelToolCalls_setsParallelToolCalls() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .parallelToolCalls(false)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").parallelToolCalls(false).build();
 
       assertFalse(payload.parallelToolCalls());
     }
@@ -330,10 +295,8 @@ class CreateResponsePayloadBuilderTest {
     @DisplayName("tools() sets tools list")
     void tools_setsToolsList() {
       WebSearchTool webSearch = new WebSearchTool(null, null, null);
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .tools(List.of(webSearch))
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").tools(List.of(webSearch)).build();
 
       assertEquals(1, payload.tools().size());
     }
@@ -342,10 +305,8 @@ class CreateResponsePayloadBuilderTest {
     @DisplayName("addTool() adds single tool")
     void addTool_addsSingleTool() {
       WebSearchTool webSearch = new WebSearchTool(null, null, null);
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addTool(webSearch)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").addTool(webSearch).build();
 
       assertEquals(1, payload.tools().size());
     }
@@ -354,11 +315,12 @@ class CreateResponsePayloadBuilderTest {
     @DisplayName("addTool() can add multiple tools")
     void addTool_canAddMultipleTools() {
       WebSearchTool webSearch = new WebSearchTool(null, null, null);
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addTool(webSearch)
-          .addTool(webSearch)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addTool(webSearch)
+              .addTool(webSearch)
+              .build();
 
       assertEquals(2, payload.tools().size());
     }
@@ -366,10 +328,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("toolChoice() sets tool choice")
     void toolChoice_setsToolChoice() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .toolChoice(ToolChoiceMode.AUTO)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").toolChoice(ToolChoiceMode.AUTO).build();
 
       assertEquals(ToolChoiceMode.AUTO, payload.toolChoice());
     }
@@ -387,10 +347,8 @@ class CreateResponsePayloadBuilderTest {
     @DisplayName("metadata() sets metadata")
     void metadata_setsMetadata() {
       Map<String, String> meta = Map.of("key", "value", "user_id", "123");
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .metadata(meta)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").metadata(meta).build();
 
       assertEquals(meta, payload.metadata());
     }
@@ -398,10 +356,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("store() sets store flag")
     void store_setsStoreFlag() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .store(true)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").store(true).build();
 
       assertTrue(payload.store());
     }
@@ -409,10 +365,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("background() sets background flag")
     void background_setsBackgroundFlag() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .background(true)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").background(true).build();
 
       assertTrue(payload.background());
     }
@@ -420,10 +374,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("conversation() sets conversation ID")
     void conversation_setsConversationId() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .conversation("conv-123")
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").conversation("conv-123").build();
 
       assertEquals("conv-123", payload.conversation());
     }
@@ -431,10 +383,11 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("serviceTier() sets service tier")
     void serviceTier_setsServiceTier() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .serviceTier(ServiceTierType.DEFAULT)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .serviceTier(ServiceTierType.DEFAULT)
+              .build();
 
       assertEquals(ServiceTierType.DEFAULT, payload.serviceTier());
     }
@@ -442,10 +395,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("truncation() sets truncation strategy")
     void truncation_setsTruncationStrategy() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .truncation(Truncation.AUTO)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").truncation(Truncation.AUTO).build();
 
       assertEquals(Truncation.AUTO, payload.truncation());
     }
@@ -453,10 +404,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("safetyIdentifier() sets safety identifier")
     void safetyIdentifier_setsSafetyIdentifier() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .safetyIdentifier("safety-123")
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").safetyIdentifier("safety-123").build();
 
       assertEquals("safety-123", payload.safetyIdentifier());
     }
@@ -473,10 +422,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("stream() sets stream flag")
     void stream_setsStreamFlag() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .stream(true)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").stream(true).build();
 
       assertTrue(payload.stream());
       assertTrue(payload instanceof CreateResponsePayload.Streaming);
@@ -485,10 +432,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("stream(false) returns base payload")
     void stream_falseReturnsBasePayload() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .stream(false)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").stream(false).build();
 
       assertFalse(payload.stream());
       assertFalse(payload instanceof CreateResponsePayload.Streaming);
@@ -497,12 +442,11 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("streaming() returns StreamingBuilder")
     void streaming_returnsStreamingBuilder() {
-      CreateResponsePayload.StreamingBuilder builder = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .streaming();
+      CreateResponsePayload.StreamingBuilder builder =
+          CreateResponsePayload.builder().model("gpt-4o").streaming();
 
       assertNotNull(builder);
-      
+
       CreateResponsePayload payload = builder.build();
       assertTrue(payload.stream());
     }
@@ -511,11 +455,10 @@ class CreateResponsePayloadBuilderTest {
     @DisplayName("streamOptions() sets stream options")
     void streamOptions_setsStreamOptions() {
       StreamOptions options = new StreamOptions(true);
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .stream(true)
-          .streamOptions(options)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").stream(true)
+              .streamOptions(options)
+              .build();
 
       assertEquals(options, payload.streamOptions());
     }
@@ -534,11 +477,12 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("withStructuredOutput(Class) configures text format")
     void withStructuredOutput_Class_configuresTextFormat() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Extract person info")
-          .withStructuredOutput(TestOutput.class)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Extract person info")
+              .withStructuredOutput(TestOutput.class)
+              .build();
 
       assertNotNull(payload.text());
       assertTrue(payload.hasJsonSchemaTextFormat());
@@ -547,11 +491,12 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("withStructuredOutput with verbosity config")
     void withStructuredOutput_withVerbosityConfig() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .addUserMessage("Extract")
-          .withStructuredOutput(TestOutput.class, ModelVerbosityConfig.HIGH)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Extract")
+              .withStructuredOutput(TestOutput.class, ModelVerbosityConfig.HIGH)
+              .build();
 
       assertNotNull(payload.text());
     }
@@ -568,10 +513,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("promptCacheKey() sets prompt cache key")
     void promptCacheKey_setsPromptCacheKey() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .promptCacheKey("cache-key-123")
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").promptCacheKey("cache-key-123").build();
 
       assertEquals("cache-key-123", payload.promptCacheKey());
     }
@@ -579,10 +522,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("promptCacheRetention() sets retention")
     void promptCacheRetention_setsRetention() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .promptCacheRetention("1d")
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").promptCacheRetention("1d").build();
 
       assertEquals("1d", payload.promptCacheRetention());
     }
@@ -591,10 +532,8 @@ class CreateResponsePayloadBuilderTest {
     @DisplayName("reasoning() sets reasoning config")
     void reasoning_setsReasoningConfig() {
       ReasoningConfig config = new ReasoningConfig(ReasoningEffort.MEDIUM, null);
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .reasoning(config)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").reasoning(config).build();
 
       assertEquals(config, payload.reasoning());
     }
@@ -612,10 +551,8 @@ class CreateResponsePayloadBuilderTest {
     @DisplayName("include() sets output data includes")
     void include_setsOutputDataIncludes() {
       List<OutputDataInclude> includes = List.of(OutputDataInclude.FILE_SEARCH_CALL_RESULTS);
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .include(includes)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").include(includes).build();
 
       assertEquals(includes, payload.include());
     }
@@ -624,10 +561,8 @@ class CreateResponsePayloadBuilderTest {
     @DisplayName("prompt() sets prompt template")
     void prompt_setsPromptTemplate() {
       PromptTemplate template = new PromptTemplate("template-id", null, null);
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .prompt(template)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").prompt(template).build();
 
       assertEquals(template, payload.prompt());
     }
@@ -644,13 +579,12 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("openRouterCustomPayload() sets OpenRouter payload")
     void openRouterCustomPayload_setsPayload() {
-      OpenRouterCustomPayload orPayload = new OpenRouterCustomPayload(
-          null, null, null, null, null
-      );
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .openRouterCustomPayload(orPayload)
-          .build();
+      OpenRouterCustomPayload orPayload = new OpenRouterCustomPayload(null, null, null, null, null);
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .openRouterCustomPayload(orPayload)
+              .build();
 
       // Empty payload gets normalized to null
       assertNull(payload.openRouterCustomPayload());
@@ -668,9 +602,7 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("hasEmptyText() returns true when text is null")
     void hasEmptyText_returnsTrueWhenTextNull() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .build();
+      CreateResponsePayload payload = CreateResponsePayload.builder().model("gpt-4o").build();
 
       assertTrue(payload.hasEmptyText());
     }
@@ -678,9 +610,7 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("hasEmptyTextFormat() returns true when no format")
     void hasEmptyTextFormat_returnsTrueWhenNoFormat() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .build();
+      CreateResponsePayload payload = CreateResponsePayload.builder().model("gpt-4o").build();
 
       assertTrue(payload.hasEmptyTextFormat());
     }
@@ -688,10 +618,8 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("streamEnabled() returns stream value")
     void streamEnabled_returnsStreamValue() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .stream(true)
-          .build();
+      CreateResponsePayload payload =
+          CreateResponsePayload.builder().model("gpt-4o").stream(true).build();
 
       assertTrue(payload.streamEnabled());
     }
@@ -699,14 +627,10 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("equals() works correctly")
     void equals_worksCorrectly() {
-      CreateResponsePayload payload1 = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .temperature(0.7)
-          .build();
-      CreateResponsePayload payload2 = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .temperature(0.7)
-          .build();
+      CreateResponsePayload payload1 =
+          CreateResponsePayload.builder().model("gpt-4o").temperature(0.7).build();
+      CreateResponsePayload payload2 =
+          CreateResponsePayload.builder().model("gpt-4o").temperature(0.7).build();
 
       assertEquals(payload1, payload2);
       assertEquals(payload1.hashCode(), payload2.hashCode());
@@ -715,9 +639,7 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("toString() returns formatted string")
     void toString_returnsFormattedString() {
-      CreateResponsePayload payload = CreateResponsePayload.builder()
-          .model("gpt-4o")
-          .build();
+      CreateResponsePayload payload = CreateResponsePayload.builder().model("gpt-4o").build();
 
       String result = payload.toString();
 

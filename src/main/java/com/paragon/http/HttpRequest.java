@@ -2,15 +2,12 @@ package com.paragon.http;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 
-/**
- * Immutable HTTP request with fluent builder.
- */
+/** Immutable HTTP request with fluent builder. */
 public final class HttpRequest {
 
   private static final ObjectMapper DEFAULT_MAPPER = new ObjectMapper();
@@ -98,7 +95,8 @@ public final class HttpRequest {
 
   @Override
   public String toString() {
-    return "HttpRequest{%s %s, body=%s}".formatted(method, url, body != null ? body.length + "B" : "null");
+    return "HttpRequest{%s %s, body=%s}"
+        .formatted(method, url, body != null ? body.length + "B" : "null");
   }
 
   public static final class Builder {
@@ -172,7 +170,8 @@ public final class HttpRequest {
     }
 
     public Builder basicAuth(String user, String pass) {
-      var encoded = Base64.getEncoder().encodeToString((user + ":" + pass).getBytes(StandardCharsets.UTF_8));
+      var encoded =
+          Base64.getEncoder().encodeToString((user + ":" + pass).getBytes(StandardCharsets.UTF_8));
       return setHeader("Authorization", "Basic " + encoded);
     }
 

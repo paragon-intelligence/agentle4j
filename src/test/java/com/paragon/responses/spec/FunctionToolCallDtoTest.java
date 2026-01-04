@@ -7,9 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for FunctionToolCall and related DTOs with low coverage.
- */
+/** Tests for FunctionToolCall and related DTOs with low coverage. */
 @DisplayName("Function Tool Call DTOs")
 class FunctionToolCallDtoTest {
 
@@ -24,13 +22,13 @@ class FunctionToolCallDtoTest {
     @Test
     @DisplayName("constructor sets all fields correctly")
     void constructor_setsAllFields() {
-      FunctionToolCall call = new FunctionToolCall(
-          "{\"city\": \"Tokyo\"}",
-          "call-123",
-          "get_weather",
-          "id-456",
-          FunctionToolCallStatus.COMPLETED
-      );
+      FunctionToolCall call =
+          new FunctionToolCall(
+              "{\"city\": \"Tokyo\"}",
+              "call-123",
+              "get_weather",
+              "id-456",
+              FunctionToolCallStatus.COMPLETED);
 
       assertEquals("{\"city\": \"Tokyo\"}", call.arguments());
       assertEquals("call-123", call.callId());
@@ -42,9 +40,7 @@ class FunctionToolCallDtoTest {
     @Test
     @DisplayName("constructor handles null optional fields")
     void constructor_handlesNullOptionalFields() {
-      FunctionToolCall call = new FunctionToolCall(
-          "{}", "call-123", "my_func", null, null
-      );
+      FunctionToolCall call = new FunctionToolCall("{}", "call-123", "my_func", null, null);
 
       assertEquals("{}", call.arguments());
       assertEquals("call-123", call.callId());
@@ -56,8 +52,10 @@ class FunctionToolCallDtoTest {
     @Test
     @DisplayName("equals returns true for identical objects")
     void equals_returnsTrueForIdentical() {
-      FunctionToolCall call1 = new FunctionToolCall("{}", "call-1", "func", "id-1", FunctionToolCallStatus.COMPLETED);
-      FunctionToolCall call2 = new FunctionToolCall("{}", "call-1", "func", "id-1", FunctionToolCallStatus.COMPLETED);
+      FunctionToolCall call1 =
+          new FunctionToolCall("{}", "call-1", "func", "id-1", FunctionToolCallStatus.COMPLETED);
+      FunctionToolCall call2 =
+          new FunctionToolCall("{}", "call-1", "func", "id-1", FunctionToolCallStatus.COMPLETED);
 
       assertEquals(call1, call2);
       assertEquals(call1.hashCode(), call2.hashCode());
@@ -66,8 +64,10 @@ class FunctionToolCallDtoTest {
     @Test
     @DisplayName("equals returns false for different objects")
     void equals_returnsFalseForDifferent() {
-      FunctionToolCall call1 = new FunctionToolCall("{}", "call-1", "func_a", "id-1", FunctionToolCallStatus.COMPLETED);
-      FunctionToolCall call2 = new FunctionToolCall("{}", "call-1", "func_b", "id-1", FunctionToolCallStatus.COMPLETED);
+      FunctionToolCall call1 =
+          new FunctionToolCall("{}", "call-1", "func_a", "id-1", FunctionToolCallStatus.COMPLETED);
+      FunctionToolCall call2 =
+          new FunctionToolCall("{}", "call-1", "func_b", "id-1", FunctionToolCallStatus.COMPLETED);
 
       assertNotEquals(call1, call2);
     }
@@ -85,9 +85,13 @@ class FunctionToolCallDtoTest {
     @Test
     @DisplayName("toString returns XML formatted string")
     void toString_returnsXmlFormattedString() {
-      FunctionToolCall call = new FunctionToolCall(
-          "{\"query\": \"test\"}", "call-123", "search", "id-456", FunctionToolCallStatus.IN_PROGRESS
-      );
+      FunctionToolCall call =
+          new FunctionToolCall(
+              "{\"query\": \"test\"}",
+              "call-123",
+              "search",
+              "id-456",
+              FunctionToolCallStatus.IN_PROGRESS);
 
       String result = call.toString();
 
@@ -111,9 +115,13 @@ class FunctionToolCallDtoTest {
     @DisplayName("can be serialized and deserialized with Jackson")
     void canBeSerializedAndDeserialized() throws Exception {
       ObjectMapper mapper = new ObjectMapper();
-      FunctionToolCall original = new FunctionToolCall(
-          "{\"key\": \"value\"}", "call-1", "test_func", "id-1", FunctionToolCallStatus.COMPLETED
-      );
+      FunctionToolCall original =
+          new FunctionToolCall(
+              "{\"key\": \"value\"}",
+              "call-1",
+              "test_func",
+              "id-1",
+              FunctionToolCallStatus.COMPLETED);
 
       String json = mapper.writeValueAsString(original);
       assertNotNull(json);
@@ -161,7 +169,8 @@ class FunctionToolCallDtoTest {
     @DisplayName("valueOf works for valid values")
     void valueOf_worksForValidValues() {
       assertEquals(FunctionToolCallStatus.COMPLETED, FunctionToolCallStatus.valueOf("COMPLETED"));
-      assertEquals(FunctionToolCallStatus.IN_PROGRESS, FunctionToolCallStatus.valueOf("IN_PROGRESS"));
+      assertEquals(
+          FunctionToolCallStatus.IN_PROGRESS, FunctionToolCallStatus.valueOf("IN_PROGRESS"));
       assertEquals(FunctionToolCallStatus.INCOMPLETE, FunctionToolCallStatus.valueOf("INCOMPLETE"));
     }
   }
@@ -297,7 +306,8 @@ class FunctionToolCallDtoTest {
     @Test
     @DisplayName("constructor sets fields correctly")
     void constructor_setsFieldsCorrectly() {
-      PendingSafetyCheck check = new PendingSafetyCheck("check-123", "code-456", "Safety check description");
+      PendingSafetyCheck check =
+          new PendingSafetyCheck("check-123", "code-456", "Safety check description");
 
       assertEquals("check-123", check.id());
       assertEquals("code-456", check.code());

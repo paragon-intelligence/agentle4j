@@ -299,7 +299,9 @@ class RetryPolicyTest {
     @DisplayName("shouldRetry returns true for network errors (status -1)")
     void shouldRetryReturnsTrueForNetworkErrors() {
       RetryPolicy policy = RetryPolicy.builder().maxRetries(3).build();
-      HttpException error = HttpException.networkFailure("Network error", new java.io.IOException("Connection refused"));
+      HttpException error =
+          HttpException.networkFailure(
+              "Network error", new java.io.IOException("Connection refused"));
 
       assertTrue(policy.shouldRetry(error, 1));
       assertTrue(policy.shouldRetry(error, 2));

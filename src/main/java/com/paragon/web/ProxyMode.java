@@ -2,16 +2,14 @@ package com.paragon.web;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-/**
- * Proxy mode for web extraction requests.
- */
+/** Proxy mode for web extraction requests. */
 public enum ProxyMode {
   /** Basic proxy without special handling. */
   BASIC("basic"),
-  
+
   /** Stealth proxy with anti-detection measures. */
   STEALTH("stealth"),
-  
+
   /** Automatically choose the best proxy mode. */
   AUTO("auto");
 

@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for McpToolCall DTO (27 missed lines).
- */
+/** Tests for McpToolCall DTO (27 missed lines). */
 @DisplayName("McpToolCall DTO")
 class McpToolCallTest {
 
@@ -19,16 +17,16 @@ class McpToolCallTest {
     @Test
     @DisplayName("constructor creates instance with all fields")
     void constructorCreatesInstance() {
-      McpToolCall call = new McpToolCall(
-          "{\"key\":\"value\"}", // arguments
-          "mcp_123",            // id
-          "search_files",       // name
-          "server1",            // serverLabel
-          "approval_456",       // approvalRequestId
-          null,                 // error
-          "search results",     // output
-          McpToolCallStatus.COMPLETED
-      );
+      McpToolCall call =
+          new McpToolCall(
+              "{\"key\":\"value\"}", // arguments
+              "mcp_123", // id
+              "search_files", // name
+              "server1", // serverLabel
+              "approval_456", // approvalRequestId
+              null, // error
+              "search results", // output
+              McpToolCallStatus.COMPLETED);
 
       assertEquals("mcp_123", call.id());
       assertEquals("search_files", call.name());
@@ -70,8 +68,7 @@ class McpToolCallTest {
     @Test
     @DisplayName("output can be null")
     void outputCanBeNull() {
-      McpToolCall call = new McpToolCall(
-          "{}", "id", "name", "server", null, null, null, null);
+      McpToolCall call = new McpToolCall("{}", "id", "name", "server", null, null, null, null);
       assertNull(call.output());
     }
 
@@ -85,8 +82,7 @@ class McpToolCallTest {
     @Test
     @DisplayName("status can be null")
     void statusCanBeNull() {
-      McpToolCall call = new McpToolCall(
-          "{}", "id", "name", "server", null, null, null, null);
+      McpToolCall call = new McpToolCall("{}", "id", "name", "server", null, null, null, null);
       assertNull(call.status());
     }
   }
@@ -107,7 +103,8 @@ class McpToolCallTest {
     @DisplayName("equals returns false for different values")
     void equalsReturnsFalseForDifferent() {
       McpToolCall call1 = createMcpToolCall();
-      McpToolCall call2 = new McpToolCall("{}", "different", "name", "server", null, null, null, null);
+      McpToolCall call2 =
+          new McpToolCall("{}", "different", "name", "server", null, null, null, null);
       assertNotEquals(call1, call2);
     }
 
@@ -173,7 +170,6 @@ class McpToolCallTest {
         null,
         null,
         "output",
-        McpToolCallStatus.COMPLETED
-    );
+        McpToolCallStatus.COMPLETED);
   }
 }

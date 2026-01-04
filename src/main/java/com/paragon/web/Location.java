@@ -8,16 +8,14 @@ import org.jspecify.annotations.Nullable;
 /**
  * Represents a geographic location for geo-targeting requests.
  *
- * @param country  The country code (e.g., "US", "GB", "BR")
+ * @param country The country code (e.g., "US", "GB", "BR")
  * @param language Optional language code (e.g., "en", "pt")
  */
 public record Location(
-    @JsonProperty("country")
-    @JsonPropertyDescription("The country code (e.g., 'US', 'GB', 'BR')")
-    @NonNull String country,
-    @JsonProperty("language")
-    @JsonPropertyDescription("The language code (e.g., 'en', 'pt')")
-    @Nullable String language) {
+    @JsonProperty("country") @JsonPropertyDescription("The country code (e.g., 'US', 'GB', 'BR')")
+        @NonNull String country,
+    @JsonProperty("language") @JsonPropertyDescription("The language code (e.g., 'en', 'pt')")
+        @Nullable String language) {
 
   /**
    * Creates a Location with just a country code.
@@ -32,7 +30,7 @@ public record Location(
   /**
    * Creates a Location with country and language codes.
    *
-   * @param country  The country code
+   * @param country The country code
    * @param language The language code
    * @return A new Location instance
    */
