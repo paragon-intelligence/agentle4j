@@ -1,5 +1,7 @@
 # Agentle
 
+![Coverage](https://img.shields.io/badge/coverage-88%25-brightgreen)
+
 A Java library for the OpenAI Responses API, with first-class support for agents, streaming, and structured outputs.
 
 Requires Java 21+.
