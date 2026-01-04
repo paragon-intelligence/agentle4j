@@ -672,9 +672,9 @@ public class Main {
     System.out.println("📤 Query: '" + techQuery + "'");
 
     // Classify without executing
-    Agent classified = router.classify(techQuery).join();
+    var classified = router.classify(techQuery).join();
     System.out.println(
-        "📍 Would route to: " + (classified != null ? classified.name() : "fallback"));
+        "📍 Would route to: " + classified.map(Agent::name).orElse("fallback"));
 
     // Route and execute
     AgentResult result = router.route(techQuery).join();

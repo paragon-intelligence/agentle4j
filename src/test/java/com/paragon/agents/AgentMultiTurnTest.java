@@ -107,11 +107,11 @@ class AgentMultiTurnTest {
       agent.interact(context).join();
 
       // State should still be there
-      assertEquals("user-123", context.getState("userId"));
+      assertEquals("user-123", context.getState("userId").orElse(null));
 
       context.addInput(Message.user("Second"));
       agent.interact(context).join();
-      assertEquals("user-123", context.getState("userId"));
+      assertEquals("user-123", context.getState("userId").orElse(null));
     }
   }
 

@@ -25,8 +25,8 @@ class TraceCorrelationTest {
     ctx.withTraceContext("abc123abc123abc123abc123abc123ab", "def456def456def4");
 
     assertTrue(ctx.hasTraceContext());
-    assertEquals("abc123abc123abc123abc123abc123ab", ctx.parentTraceId());
-    assertEquals("def456def456def4", ctx.parentSpanId());
+    assertEquals("abc123abc123abc123abc123abc123ab", ctx.parentTraceId().orElse(null));
+    assertEquals("def456def456def4", ctx.parentSpanId().orElse(null));
   }
 
   @Test
@@ -41,13 +41,13 @@ class TraceCorrelationTest {
     AgentContext child = parent.fork("cccc3333cccc3333");
 
     // TraceId should be preserved
-    assertEquals("aaaa1111aaaa1111aaaa1111aaaa1111", child.parentTraceId());
+    assertEquals("aaaa1111aaaa1111aaaa1111aaaa1111", child.parentTraceId().orElse(null));
     // ParentSpanId should be the new one
-    assertEquals("cccc3333cccc3333", child.parentSpanId());
+    assertEquals("cccc3333cccc3333", child.parentSpanId().orElse(null));
     // RequestId should be preserved
-    assertEquals("req-001", child.requestId());
+    assertEquals("req-001", child.requestId().orElse(null));
     // State should be copied
-    assertEquals("value", child.getState("key"));
+    assertEquals("value", child.getState("key").orElse(null));
     // Turn count should be reset
     assertEquals(0, child.getTurnCount());
   }
@@ -139,6 +139,6 @@ class TraceCorrelationTest {
     AgentContext ctx = AgentContext.create().withRequestId("my-request-123");
 
     assertFalse(ctx.hasTraceContext(), "RequestId alone should not mean hasTraceContext");
-    assertEquals("my-request-123", ctx.requestId());
+    assertEquals("my-request-123", ctx.requestId().orElse(null));
   }
 }

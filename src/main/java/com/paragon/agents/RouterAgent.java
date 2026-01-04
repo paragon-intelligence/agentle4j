@@ -8,6 +8,7 @@ import com.paragon.responses.spec.Text;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -132,8 +133,8 @@ public final class RouterAgent {
     Objects.requireNonNull(context, "context cannot be null");
 
     // Extract the last user message text for classification
-    String inputText = extractLastUserMessage(context);
-    if (inputText == null || inputText.isBlank()) {
+    Optional<String> inputTextOpt = extractLastUserMessage(context);
+    if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
       return CompletableFuture.completedFuture(
           AgentResult.error(
               new IllegalStateException("No user message found in context for routing"),
@@ -141,10 +142,11 @@ public final class RouterAgent {
               0));
     }
 
+    String inputText = inputTextOpt.get();
     return classify(inputText)
         .thenCompose(
-            selected -> {
-              if (selected == null) {
+            selectedOpt -> {
+              if (selectedOpt.isEmpty()) {
                 return CompletableFuture.completedFuture(
                     AgentResult.error(
                         new IllegalStateException("No suitable agent found for input"),
@@ -152,6 +154,7 @@ public final class RouterAgent {
                         0));
               }
 
+              Agent selected = selectedOpt.get();
               return selected
                   .interact(context)
                   .thenApply(result -> AgentResult.handoff(selected, result, context));
@@ -191,9 +194,9 @@ public final class RouterAgent {
    * <p>Useful when you need to know which agent would handle the input before committing.
    *
    * @param input the user input to classify
-   * @return future completing with the selected agent, or fallback/null if no match
+   * @return future completing with an Optional containing the selected agent, or empty if no match and no fallback
    */
-  public @NonNull CompletableFuture<Agent> classify(@NonNull String input) {
+  public @NonNull CompletableFuture<Optional<Agent>> classify(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
 
     // Build routing prompt
@@ -227,12 +230,12 @@ public final class RouterAgent {
                 String output = response.outputText().trim();
                 int selectedIndex = Integer.parseInt(output) - 1;
                 if (selectedIndex >= 0 && selectedIndex < routes.size()) {
-                  return routes.get(selectedIndex).agent;
+                  return Optional.of(routes.get(selectedIndex).agent);
                 }
               } catch (Exception e) {
                 // Fall through to fallback
               }
-              return fallbackAgent;
+              return Optional.ofNullable(fallbackAgent);
             });
   }
 
@@ -248,7 +251,7 @@ public final class RouterAgent {
   // ===== Helper Methods =====
 
   /** Extracts the last user message text from context. */
-  private String extractLastUserMessage(AgentContext context) {
+  private Optional<String> extractLastUserMessage(AgentContext context) {
     List<ResponseInputItem> history = context.getHistory();
     for (int i = history.size() - 1; i >= 0; i--) {
       ResponseInputItem item = history.get(i);
@@ -257,13 +260,13 @@ public final class RouterAgent {
         if (msg.content() != null) {
           for (var content : msg.content()) {
             if (content instanceof Text text) {
-              return text.text();
+              return Optional.of(text.text());
             }
           }
         }
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   // ===== Package-private accessors for RouterStream =====
@@ -272,8 +275,8 @@ public final class RouterAgent {
     return routes;
   }
 
-  @Nullable Agent getFallbackAgent() {
-    return fallbackAgent;
+  Optional<Agent> getFallbackAgent() {
+    return Optional.ofNullable(fallbackAgent);
   }
 
   @NonNull String getModel() {

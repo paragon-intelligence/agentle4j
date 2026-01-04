@@ -17,7 +17,7 @@ class PromptProviderExceptionTest {
       PromptProviderException ex = new PromptProviderException("Error message", "my-prompt");
 
       assertEquals("Error message", ex.getMessage());
-      assertEquals("my-prompt", ex.promptId());
+      assertEquals("my-prompt", ex.promptId().orElse(null));
       assertNull(ex.getCause());
       assertFalse(ex.isRetryable());
     }
@@ -28,7 +28,7 @@ class PromptProviderExceptionTest {
       PromptProviderException ex = new PromptProviderException("Error message", "my-prompt", cause);
 
       assertEquals("Error message", ex.getMessage());
-      assertEquals("my-prompt", ex.promptId());
+      assertEquals("my-prompt", ex.promptId().orElse(null));
       assertEquals(cause, ex.getCause());
       assertFalse(ex.isRetryable());
     }
@@ -53,7 +53,7 @@ class PromptProviderExceptionTest {
     void constructor_nullPromptId_allowsNull() {
       PromptProviderException ex = new PromptProviderException("Error", null);
 
-      assertNull(ex.promptId());
+      assertTrue(ex.promptId().isEmpty());
     }
 
     @Test
@@ -63,7 +63,7 @@ class PromptProviderExceptionTest {
           new PromptProviderException("Failed to connect", "prompt-123", cause, true);
 
       assertEquals("Failed to connect", ex.getMessage());
-      assertEquals("prompt-123", ex.promptId());
+      assertEquals("prompt-123", ex.promptId().orElse(null));
       assertEquals(cause, ex.getCause());
       assertTrue(ex.isRetryable());
     }
@@ -75,7 +75,7 @@ class PromptProviderExceptionTest {
     @Test
     void promptId_returnsPromptId() {
       PromptProviderException ex = new PromptProviderException("Error", "test-id");
-      assertEquals("test-id", ex.promptId());
+      assertEquals("test-id", ex.promptId().orElse(null));
     }
 
     @Test

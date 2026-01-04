@@ -245,7 +245,7 @@ class AgentAgenticLoopTest {
       agent.interact(context).get(5, TimeUnit.SECONDS);
 
       // Context should still have the trace we set
-      assertEquals("custom-trace-id", context.parentTraceId());
+      assertEquals("custom-trace-id", context.parentTraceId().orElse(null));
     }
   }
 

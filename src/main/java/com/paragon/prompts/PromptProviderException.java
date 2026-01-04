@@ -1,5 +1,6 @@
 package com.paragon.prompts;
 
+import java.util.Optional;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -66,11 +67,10 @@ public class PromptProviderException extends RuntimeException {
   /**
    * Returns the ID of the prompt that failed to load.
    *
-   * @return the prompt ID, may be null
+   * @return an Optional containing the prompt ID, or empty if not available
    */
-  @Nullable
-  public String promptId() {
-    return promptId;
+  public Optional<String> promptId() {
+    return Optional.ofNullable(promptId);
   }
 
   /**

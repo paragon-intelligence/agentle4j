@@ -566,7 +566,7 @@ class LangfusePromptProviderTest {
       PromptProviderException ex =
           assertThrows(PromptProviderException.class, () -> provider.providePrompt("nonexistent"));
 
-      assertEquals("nonexistent", ex.promptId());
+      assertEquals("nonexistent", ex.promptId().orElse(null));
       assertTrue(ex.getMessage().contains("not found"));
       assertFalse(ex.isRetryable());
     }

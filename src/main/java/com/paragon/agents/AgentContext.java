@@ -172,11 +172,11 @@ public final class AgentContext {
    * Retrieves a value from the context's state.
    *
    * @param key the key to look up
-   * @return the stored value, or null if not found
+   * @return an Optional containing the stored value, or empty if not found
    */
-  public @Nullable Object getState(@NonNull String key) {
+  public Optional<Object> getState(@NonNull String key) {
     Objects.requireNonNull(key, "key cannot be null");
-    return state.get(key);
+    return Optional.ofNullable(state.get(key));
   }
 
   /**
@@ -185,18 +185,18 @@ public final class AgentContext {
    * @param key the key to look up
    * @param type the expected type
    * @param <T> the type parameter
-   * @return the stored value cast to the expected type, or null if not found
+   * @return an Optional containing the stored value cast to the expected type, or empty if not found
    * @throws ClassCastException if the stored value is not of the expected type
    */
   @SuppressWarnings("unchecked")
-  public <T> @Nullable T getState(@NonNull String key, @NonNull Class<T> type) {
+  public <T> Optional<T> getState(@NonNull String key, @NonNull Class<T> type) {
     Objects.requireNonNull(key, "key cannot be null");
     Objects.requireNonNull(type, "type cannot be null");
     Object value = state.get(key);
     if (value == null) {
-      return null;
+      return Optional.empty();
     }
-    return (T) value;
+    return Optional.of((T) value);
   }
 
   /**
@@ -311,28 +311,28 @@ public final class AgentContext {
   /**
    * Returns the parent trace ID, if set.
    *
-   * @return the parent trace ID, or null if not set
+   * @return an Optional containing the parent trace ID, or empty if not set
    */
-  public @Nullable String parentTraceId() {
-    return parentTraceId;
+  public Optional<String> parentTraceId() {
+    return Optional.ofNullable(parentTraceId);
   }
 
   /**
    * Returns the parent span ID, if set.
    *
-   * @return the parent span ID, or null if not set
+   * @return an Optional containing the parent span ID, or empty if not set
    */
-  public @Nullable String parentSpanId() {
-    return parentSpanId;
+  public Optional<String> parentSpanId() {
+    return Optional.ofNullable(parentSpanId);
   }
 
   /**
    * Returns the request ID, if set.
    *
-   * @return the request ID, or null if not set
+   * @return an Optional containing the request ID, or empty if not set
    */
-  public @Nullable String requestId() {
-    return requestId;
+  public Optional<String> requestId() {
+    return Optional.ofNullable(requestId);
   }
 
   /**

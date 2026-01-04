@@ -684,15 +684,15 @@ class AgentExtendedTest {
       context.withTraceContext("trace-123", "span-456");
 
       assertTrue(context.hasTraceContext());
-      assertEquals("trace-123", context.parentTraceId());
-      assertEquals("span-456", context.parentSpanId());
+      assertEquals("trace-123", context.parentTraceId().orElse(null));
+      assertEquals("span-456", context.parentSpanId().orElse(null));
 
       enqueueSuccessResponse("Response");
       context.addInput(Message.user("Hello"));
       agent.interact(context).get(5, TimeUnit.SECONDS);
 
       // Original trace context should be preserved
-      assertEquals("trace-123", context.parentTraceId());
+      assertEquals("trace-123", context.parentTraceId().orElse(null));
     }
   }
 

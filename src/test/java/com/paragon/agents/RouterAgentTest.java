@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.Text;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
@@ -199,7 +200,7 @@ class RouterAgentTest {
       Agent target = createTestAgent("Target");
       RouterAgent router = createRouter(target);
 
-      CompletableFuture<Agent> future = router.classify("test input");
+      CompletableFuture<Optional<Agent>> future = router.classify("test input");
 
       assertNotNull(future);
       assertInstanceOf(CompletableFuture.class, future);
@@ -221,9 +222,10 @@ class RouterAgentTest {
 
       enqueueResponse("1"); // LLM says route to first agent
 
-      Agent selected = router.classify("Invoice question").get(5, TimeUnit.SECONDS);
+      Optional<Agent> selected = router.classify("Invoice question").get(5, TimeUnit.SECONDS);
 
-      assertEquals(billing, selected);
+      assertTrue(selected.isPresent());
+      assertEquals(billing, selected.get());
     }
 
     @Test
@@ -242,9 +244,10 @@ class RouterAgentTest {
 
       enqueueResponse("invalid"); // LLM returns unparseable response
 
-      Agent selected = router.classify("test").get(5, TimeUnit.SECONDS);
+      Optional<Agent> selected = router.classify("test").get(5, TimeUnit.SECONDS);
 
-      assertEquals(fallback, selected);
+      assertTrue(selected.isPresent());
+      assertEquals(fallback, selected.get());
     }
 
     @Test
@@ -261,9 +264,9 @@ class RouterAgentTest {
 
       enqueueResponse("invalid");
 
-      Agent selected = router.classify("test").get(5, TimeUnit.SECONDS);
+      Optional<Agent> selected = router.classify("test").get(5, TimeUnit.SECONDS);
 
-      assertNull(selected);
+      assertTrue(selected.isEmpty());
     }
 
     @Test

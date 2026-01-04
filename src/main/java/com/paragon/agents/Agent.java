@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -610,19 +611,19 @@ public final class Agent implements Serializable {
         }
 
         // Check for handoffs
-        Handoff handoff = detectHandoff(toolCalls);
-        if (handoff != null) {
+        Optional<Handoff> handoffOpt = detectHandoff(toolCalls);
+        if (handoffOpt.isPresent()) {
+          Handoff handoff = handoffOpt.get();
           if (callbacks != null) callbacks.onHandoff(handoff);
-          String handoffMessage = extractHandoffMessage(toolCalls, handoff.name());
+          String handoffMessage = extractHandoffMessage(toolCalls, handoff.name()).orElse(fallbackHandoffText);
 
           // Fork context with new parent span for child agent
           String childSpanId = TraceIdGenerator.generateSpanId();
           AgentContext childContext = context.fork(childSpanId);
 
           // Add handoff message to child context
-          String message = handoffMessage != null ? handoffMessage : fallbackHandoffText;
-          if (message != null && !message.isEmpty()) {
-            childContext.addInput(Message.user(message));
+          if (handoffMessage != null && !handoffMessage.isEmpty()) {
+            childContext.addInput(Message.user(handoffMessage));
           }
 
           try {
@@ -737,18 +738,15 @@ public final class Agent implements Serializable {
   /** Broadcasts a failed event for telemetry. */
   private void broadcastFailedEvent(Exception exception, AgentContext context) {
     if (telemetryProcessors != null) {
-      String sessionId =
-          context.requestId() != null
-              ? context.requestId()
-              : java.util.UUID.randomUUID().toString();
+      String sessionId = context.requestId().orElseGet(() -> java.util.UUID.randomUUID().toString());
       AgentFailedEvent event =
           AgentFailedEvent.from(
               name,
               context.getTurnCount(),
               exception,
               sessionId,
-              context.parentTraceId(),
-              context.parentSpanId(),
+              context.parentTraceId().orElse(null),
+              context.parentSpanId().orElse(null),
               null);
       telemetryProcessors.broadcast(event);
     }
@@ -805,15 +803,9 @@ public final class Agent implements Serializable {
     TelemetryContext.Builder builder =
         TelemetryContext.builder().traceName(name + ".turn-" + context.getTurnCount());
 
-    if (context.parentTraceId() != null) {
-      builder.parentTraceId(context.parentTraceId());
-    }
-    if (context.parentSpanId() != null) {
-      builder.parentSpanId(context.parentSpanId());
-    }
-    if (context.requestId() != null) {
-      builder.requestId(context.requestId());
-    }
+    context.parentTraceId().ifPresent(builder::parentTraceId);
+    context.parentSpanId().ifPresent(builder::parentSpanId);
+    context.requestId().ifPresent(builder::requestId);
 
     // Merge with agent-level telemetry context
     builder.metadata(telemetryContext.metadata());
@@ -838,31 +830,31 @@ public final class Agent implements Serializable {
     return calls;
   }
 
-  private @Nullable Handoff detectHandoff(List<FunctionToolCall> toolCalls) {
+  private Optional<Handoff> detectHandoff(List<FunctionToolCall> toolCalls) {
     for (FunctionToolCall call : toolCalls) {
       for (Handoff handoff : handoffs) {
         if (handoff.name().equals(call.name())) {
-          return handoff;
+          return Optional.of(handoff);
         }
       }
     }
-    return null;
+    return Optional.empty();
   }
 
-  private @Nullable String extractHandoffMessage(
+  private Optional<String> extractHandoffMessage(
       List<FunctionToolCall> toolCalls, String handoffName) {
     for (FunctionToolCall call : toolCalls) {
       if (handoffName.equals(call.name())) {
         try {
           Handoff.HandoffParams params =
               objectMapper.readValue(call.arguments(), Handoff.HandoffParams.class);
-          return params.message();
+          return Optional.ofNullable(params.message());
         } catch (JsonProcessingException e) {
-          return null;
+          return Optional.empty();
         }
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   /**

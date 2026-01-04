@@ -123,7 +123,7 @@ class FilesystemPromptProviderTest {
           assertThrows(
               PromptProviderException.class, () -> provider.providePrompt("nonexistent.txt", null));
 
-      assertEquals("nonexistent.txt", ex.promptId());
+      assertEquals("nonexistent.txt", ex.promptId().orElse(null));
       assertTrue(ex.getMessage().contains("not found"));
       assertFalse(ex.isRetryable());
     }

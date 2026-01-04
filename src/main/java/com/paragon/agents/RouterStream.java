@@ -6,10 +6,10 @@ import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Streaming wrapper for RouterAgent that provides event callbacks during routing and execution.
@@ -131,8 +131,8 @@ public final class RouterStream {
    */
   public @NonNull CompletableFuture<AgentResult> start() {
     // First, classify the input
-    String inputText = extractLastUserMessage();
-    if (inputText == null || inputText.isBlank()) {
+    Optional<String> inputTextOpt = extractLastUserMessage();
+    if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
       AgentResult errorResult =
           AgentResult.error(
               new IllegalStateException("No user message found in context for routing"),
@@ -147,11 +147,12 @@ public final class RouterStream {
       return CompletableFuture.completedFuture(errorResult);
     }
 
+    String inputText = inputTextOpt.get();
     return router
         .classify(inputText)
         .thenCompose(
-            selectedAgent -> {
-              if (selectedAgent == null) {
+            selectedAgentOpt -> {
+              if (selectedAgentOpt.isEmpty()) {
                 AgentResult errorResult =
                     AgentResult.error(
                         new IllegalStateException("No suitable agent found for input"), context, 0);
@@ -163,6 +164,8 @@ public final class RouterStream {
                 }
                 return CompletableFuture.completedFuture(errorResult);
               }
+
+              Agent selectedAgent = selectedAgentOpt.get();
 
               // Notify about route selection
               if (onRouteSelected != null) {
@@ -215,7 +218,7 @@ public final class RouterStream {
             });
   }
 
-  private @Nullable String extractLastUserMessage() {
+  private Optional<String> extractLastUserMessage() {
     List<ResponseInputItem> history = context.getHistory();
     for (int i = history.size() - 1; i >= 0; i--) {
       ResponseInputItem item = history.get(i);
@@ -223,12 +226,12 @@ public final class RouterStream {
         if (msg.content() != null) {
           for (var content : msg.content()) {
             if (content instanceof Text text) {
-              return text.text();
+              return Optional.of(text.text());
             }
           }
         }
       }
     }
-    return null;
+    return Optional.empty();
   }
 }

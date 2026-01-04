@@ -164,11 +164,9 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
       // Copy trace context for observability
       if (parentContext.hasTraceContext()) {
         String childSpanId = TraceIdGenerator.generateSpanId();
-        childContext.withTraceContext(parentContext.parentTraceId(), childSpanId);
+        childContext.withTraceContext(parentContext.parentTraceId().orElseThrow(), childSpanId);
       }
-      if (parentContext.requestId() != null) {
-        childContext.withRequestId(parentContext.requestId());
-      }
+      parentContext.requestId().ifPresent(childContext::withRequestId);
 
       // Copy custom state
       for (Map.Entry<String, Object> entry : parentContext.getAllState().entrySet()) {

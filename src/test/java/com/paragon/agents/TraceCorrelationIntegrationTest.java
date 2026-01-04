@@ -61,10 +61,10 @@ class TraceCorrelationIntegrationTest {
 
       // After interact, context should have trace initialized
       assertTrue(ctx.hasTraceContext(), "Context should have trace after interact");
-      assertNotNull(ctx.parentTraceId(), "TraceId should be set");
-      assertNotNull(ctx.parentSpanId(), "SpanId should be set");
-      assertTrue(TraceIdGenerator.isValidTraceId(ctx.parentTraceId()), "TraceId should be valid");
-      assertTrue(TraceIdGenerator.isValidSpanId(ctx.parentSpanId()), "SpanId should be valid");
+      assertTrue(ctx.parentTraceId().isPresent(), "TraceId should be set");
+      assertTrue(ctx.parentSpanId().isPresent(), "SpanId should be set");
+      assertTrue(TraceIdGenerator.isValidTraceId(ctx.parentTraceId().get()), "TraceId should be valid");
+      assertTrue(TraceIdGenerator.isValidSpanId(ctx.parentSpanId().get()), "SpanId should be valid");
     }
 
     @Test
@@ -82,8 +82,8 @@ class TraceCorrelationIntegrationTest {
       agent.interact(ctx).get(5, TimeUnit.SECONDS);
 
       // Original trace should be preserved
-      assertEquals(existingTraceId, ctx.parentTraceId(), "TraceId should be preserved");
-      assertEquals(existingSpanId, ctx.parentSpanId(), "SpanId should be preserved");
+      assertEquals(existingTraceId, ctx.parentTraceId().orElse(null), "TraceId should be preserved");
+      assertEquals(existingSpanId, ctx.parentSpanId().orElse(null), "SpanId should be preserved");
     }
 
     @Test
@@ -97,8 +97,8 @@ class TraceCorrelationIntegrationTest {
       ctx.addInput(Message.user("First message"));
       agent.interact(ctx).get(5, TimeUnit.SECONDS);
 
-      String firstTraceId = ctx.parentTraceId();
-      String firstSpanId = ctx.parentSpanId();
+      String firstTraceId = ctx.parentTraceId().orElse(null);
+      String firstSpanId = ctx.parentSpanId().orElse(null);
 
       enqueueSuccessResponse("Second response");
 
@@ -106,8 +106,8 @@ class TraceCorrelationIntegrationTest {
       agent.interact(ctx).get(5, TimeUnit.SECONDS);
 
       // Trace should be preserved across interactions
-      assertEquals(firstTraceId, ctx.parentTraceId(), "TraceId should be consistent across turns");
-      assertEquals(firstSpanId, ctx.parentSpanId(), "SpanId should be consistent across turns");
+      assertEquals(firstTraceId, ctx.parentTraceId().orElse(null), "TraceId should be consistent across turns");
+      assertEquals(firstSpanId, ctx.parentSpanId().orElse(null), "SpanId should be consistent across turns");
     }
   }
 
@@ -153,8 +153,8 @@ class TraceCorrelationIntegrationTest {
 
       assertEquals(2, results.size());
       // Original context should still have its trace (copy was made)
-      assertEquals(existingTraceId, sharedContext.parentTraceId());
-      assertEquals(existingSpanId, sharedContext.parentSpanId());
+      assertEquals(existingTraceId, sharedContext.parentTraceId().orElse(null));
+      assertEquals(existingSpanId, sharedContext.parentSpanId().orElse(null));
     }
 
     @Test
@@ -208,7 +208,7 @@ class TraceCorrelationIntegrationTest {
       ctx.addInput(Message.user("Hello"));
       agent.interact(ctx).get(5, TimeUnit.SECONDS);
 
-      assertEquals("user-session-12345", ctx.requestId(), "RequestId should be preserved");
+      assertEquals("user-session-12345", ctx.requestId().orElse(null), "RequestId should be preserved");
     }
 
     @Test
@@ -228,7 +228,7 @@ class TraceCorrelationIntegrationTest {
 
       // Verify copy is independent
       copy.withRequestId("different-session");
-      assertEquals("session-abc", original.requestId(), "Original should not be modified");
+      assertEquals("session-abc", original.requestId().orElse(null), "Original should not be modified");
     }
 
     @Test
@@ -245,9 +245,9 @@ class TraceCorrelationIntegrationTest {
       String newSpan = TraceIdGenerator.generateSpanId();
       AgentContext child = parent.fork(newSpan);
 
-      assertEquals(originalTrace, child.parentTraceId(), "TraceId should be inherited");
-      assertEquals(newSpan, child.parentSpanId(), "SpanId should be updated");
-      assertEquals("request-123", child.requestId(), "RequestId should be inherited");
+      assertEquals(originalTrace, child.parentTraceId().orElse(null), "TraceId should be inherited");
+      assertEquals(newSpan, child.parentSpanId().orElse(null), "SpanId should be updated");
+      assertEquals("request-123", child.requestId().orElse(null), "RequestId should be inherited");
 
       // Turn count should be reset for child
       assertEquals(0, child.getTurnCount(), "Child turn count should be reset");

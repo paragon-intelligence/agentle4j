@@ -133,7 +133,7 @@ class AgentContextTest {
 
       context.setState("key", "value");
 
-      assertEquals("value", context.getState("key"));
+      assertEquals("value", context.getState("key").orElse(null));
     }
 
     @Test
@@ -144,8 +144,8 @@ class AgentContextTest {
       AgentContext result = context.setState("a", 1).setState("b", 2);
 
       assertSame(context, result);
-      assertEquals(1, context.getState("a"));
-      assertEquals(2, context.getState("b"));
+      assertEquals(1, context.getState("a").orElse(null));
+      assertEquals(2, context.getState("b").orElse(null));
     }
 
     @Test
@@ -156,7 +156,7 @@ class AgentContextTest {
 
       context.setState("key", null);
 
-      assertNull(context.getState("key"));
+      assertTrue(context.getState("key").isEmpty());
       assertFalse(context.hasState("key"));
     }
 
@@ -166,17 +166,17 @@ class AgentContextTest {
       AgentContext context = AgentContext.create();
       context.setState("number", 42);
 
-      Integer value = context.getState("number", Integer.class);
+      Integer value = context.getState("number", Integer.class).orElse(null);
 
       assertEquals(42, value);
     }
 
     @Test
-    @DisplayName("getState() returns null for missing key")
-    void getState_returnsNullForMissingKey() {
+    @DisplayName("getState() returns empty for missing key")
+    void getState_returnsEmptyForMissingKey() {
       AgentContext context = AgentContext.create();
 
-      assertNull(context.getState("nonexistent"));
+      assertTrue(context.getState("nonexistent").isEmpty());
     }
 
     @Test
@@ -263,11 +263,11 @@ class AgentContextTest {
       copy.setState("new", "value");
 
       // Original unchanged
-      assertEquals("initial", original.getState("shared"));
+      assertEquals("initial", original.getState("shared").orElse(null));
       assertFalse(original.hasState("new"));
 
       // Copy has changes
-      assertEquals("modified", copy.getState("shared"));
+      assertEquals("modified", copy.getState("shared").orElse(null));
       assertTrue(copy.hasState("new"));
     }
 

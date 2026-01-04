@@ -321,7 +321,7 @@ class AgentIntegrationTest {
     AgentResult result = agent.interact(context).join();
 
     assertTrue(result.isSuccess());
-    assertEquals("user-123", context.getState("userId", String.class));
+    assertEquals("user-123", context.getState("userId", String.class).orElse(null));
   }
 
   @Test
