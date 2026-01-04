@@ -425,12 +425,13 @@ export OPENROUTER_API_KEY="your-key-here"
 ```
 
 **"Connection timeout"**
+
+Connection issues are handled automatically by the built-in retry policy. To configure retries:
 ```java
-// Increase timeout in the builder
 Responder responder = Responder.builder()
     .openRouter()
     .apiKey(apiKey)
-    .timeout(Duration.ofSeconds(60))
+    .maxRetries(5)  // Increase retry attempts
     .build();
 ```
 

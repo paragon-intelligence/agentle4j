@@ -1782,7 +1782,7 @@ agentle4j:
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.2</version>
 </dependency>
 ```
 

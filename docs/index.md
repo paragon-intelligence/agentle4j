@@ -146,14 +146,14 @@ System.out.println(response.outputText());
     <dependency>
         <groupId>io.github.paragon-intelligence</groupId>
         <artifactId>agentle4j</artifactId>
-        <version>0.1.0</version>
+        <version>0.2.2</version>
     </dependency>
     ```
 
 === "Gradle"
 
     ```groovy
-    implementation 'io.github.paragon-intelligence:agentle4j:0.1.0'
+    implementation 'io.github.paragon-intelligence:agentle4j:0.2.2'
     ```
 
 ---

@@ -19,7 +19,7 @@ Maven:
 
 Gradle:
 ```groovy
-implementation 'io.github.paragon-intelligence:agentle4j:0.1.0'
+implementation 'io.github.paragon-intelligence:agentle4j:0.2.2'
 ```
 
 ## Why Agentle?
