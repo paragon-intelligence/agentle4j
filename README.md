@@ -221,7 +221,7 @@ responder.respond(streamingPayload)
 
 ### Handoffs
 
-![Multi-Agent](docs/media/multiagent.png)
+<img src="docs/media/multiagent.png" width="600" alt="Multi-Agent">
 
 Route conversations between specialized agents:
 
@@ -246,7 +246,7 @@ if (result.isHandoff()) {
 
 ### RouterAgent
 
-![Routing](docs/media/routing.png)
+<img src="docs/media/routing.png" width="600" alt="Routing">
 
 For pure classification without conversational noise:
 
@@ -276,7 +276,7 @@ router.routeStream("Help with my invoice")
 
 ### Parallel execution
 
-![Parallel Agents](docs/media/parallel_agents.png)
+<img src="docs/media/parallel_agents.png" width="600" alt="Parallel Agents">
 
 Run multiple agents concurrently:
 
@@ -301,7 +301,7 @@ team.runStream("Analyze trends")
 
 ### Sub-agents (Agent-as-Tool)
 
-![Sub-agents](docs/media/subagent.png)
+<img src="docs/media/subagent.png" width="600" alt="Sub-agents">
 
 Invoke specialized agents as tools within a parent agent's loop:
 
@@ -350,7 +350,7 @@ AgentResult result = orchestrator.interact("Analyze these sales figures...").joi
 
 ## Guardrails
 
-![Guardrails](docs/media/guardrails.png)
+<img src="docs/media/guardrails.png" width="600" alt="Guardrails">
 
 Validate inputs and outputs:
 
@@ -374,7 +374,7 @@ Agent agent = Agent.builder()
 
 ## Human-in-the-loop
 
-![Human-in-the-Loop](docs/media/hitl.png)
+<img src="docs/media/hitl.png" width="600" alt="Human-in-the-Loop">
 
 Mark sensitive tools that require approval:
 
@@ -432,7 +432,7 @@ Agent agent = Agent.builder()
 
 ## Memory
 
-![Memory](docs/media/memory.png)
+<img src="docs/media/memory.png" width="600" alt="Memory">
 
 Persistent memory across conversations:
 
