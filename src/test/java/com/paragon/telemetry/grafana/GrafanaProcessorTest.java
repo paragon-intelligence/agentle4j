@@ -628,6 +628,166 @@ class GrafanaProcessorTest {
       RecordedRequest request = mockWebServer.takeRequest(100, TimeUnit.MILLISECONDS);
       assertNull(request);
     }
+
+    @Test
+    @DisplayName("sends log for ResponseCompletedEvent with all token fields")
+    void sendsLogForResponseCompletedEventWithAllTokens() throws Exception {
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // trace
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // metrics
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // log
+      processor = createProcessor(true, true, true);
+
+      ResponseStartedEvent started = ResponseStartedEvent.create(
+          "session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseCompletedEvent completed = ResponseCompletedEvent.from(
+          started, 100, 200, 300, 0.01);
+
+      processor.process(completed);
+      
+      Thread.sleep(150);
+
+      // Should get 3 requests: trace, metrics, log
+      int requestCount = 0;
+      while (mockWebServer.takeRequest(100, TimeUnit.MILLISECONDS) != null) {
+        requestCount++;
+      }
+      assertEquals(3, requestCount);
+    }
+
+    @Test
+    @DisplayName("sends log for AgentFailedEvent with suggestion")
+    void sendsLogForAgentFailedEventWithSuggestion() throws Exception {
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // trace
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // log
+      processor = createProcessor(true, false, true);
+
+      AgentFailedEvent event = AgentFailedEvent.from(
+          "TestAgent", 3, new RuntimeException("Error"),
+          "session-1", "trace-123", "span-456", "Try using a different model");
+
+      processor.process(event);
+      
+      Thread.sleep(100);
+
+      RecordedRequest request1 = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      RecordedRequest request2 = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(request1);
+      assertNotNull(request2);
+    }
+
+    @Test
+    @DisplayName("handles null model in ResponseStartedEvent")
+    void handlesNullModelInResponseStartedEvent() throws Exception {
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200));
+      processor = createProcessor(true, false, false);
+
+      ResponseStartedEvent event = ResponseStartedEvent.create(
+          "session-1", "trace-123", "span-456", null);
+
+      processor.process(event);
+      
+      Thread.sleep(100);
+
+      RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(request);
+      assertEquals("/otlp/v1/traces", request.getPath());
+    }
+
+    @Test
+    @DisplayName("handles server error response gracefully")
+    void handlesServerErrorResponseGracefully() throws Exception {
+      mockWebServer.enqueue(new MockResponse().setResponseCode(500).setBody("Internal Server Error"));
+      processor = createProcessor(true, false, false);
+
+      ResponseStartedEvent event = ResponseStartedEvent.create(
+          "session-1", "trace-123", "span-456", "gpt-4o");
+
+      // Should not throw
+      assertDoesNotThrow(() -> {
+        processor.process(event);
+        Thread.sleep(100);
+      });
+    }
+
+    @Test
+    @DisplayName("sends metrics only when metricsEnabled and event is ResponseCompletedEvent")
+    void sendsMetricsOnlyForCompletedEvents() throws Exception {
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200)); // metrics only
+      processor = createProcessor(false, true, false);
+
+      ResponseStartedEvent started = ResponseStartedEvent.create(
+          "session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseCompletedEvent completed = ResponseCompletedEvent.from(
+          started, 100, 200, 300, 0.01);
+
+      processor.process(completed);
+      
+      Thread.sleep(100);
+
+      RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(request);
+      assertEquals("/otlp/v1/metrics", request.getPath());
+    }
+
+    @Test
+    @DisplayName("metrics request body contains token metrics")
+    void metricsRequestBodyContainsTokenMetrics() throws Exception {
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200));
+      processor = createProcessor(false, true, false);
+
+      ResponseStartedEvent started = ResponseStartedEvent.create(
+          "session-1", "trace-123", "span-456", "gpt-4o");
+      ResponseCompletedEvent completed = ResponseCompletedEvent.from(
+          started, 100, 200, 300, 0.01);
+
+      processor.process(completed);
+      
+      Thread.sleep(100);
+
+      RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(request);
+      String body = request.getBody().readUtf8();
+      assertTrue(body.contains("resourceMetrics"));
+      assertTrue(body.contains("gen_ai.response.duration"));
+    }
+
+    @Test
+    @DisplayName("log request body contains structured log data")
+    void logRequestBodyContainsStructuredLogData() throws Exception {
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200));
+      processor = createProcessor(false, false, true);
+
+      ResponseStartedEvent event = ResponseStartedEvent.create(
+          "session-1", "trace-123", "span-456", "gpt-4o");
+
+      processor.process(event);
+      
+      Thread.sleep(100);
+
+      RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+      assertNotNull(request);
+      String body = request.getBody().readUtf8();
+      assertTrue(body.contains("resourceLogs"));
+      assertTrue(body.contains("session.id"));
+    }
+
+    @Test
+    @DisplayName("no metrics sent for non-completed events")
+    void noMetricsSentForNonCompletedEvents() throws Exception {
+      processor = createProcessor(false, true, false);
+
+      ResponseStartedEvent event = ResponseStartedEvent.create(
+          "session-1", "trace-123", "span-456", "gpt-4o");
+
+      processor.process(event);
+      
+      Thread.sleep(100);
+
+      // No metrics should be sent for started events
+      RecordedRequest request = mockWebServer.takeRequest(100, TimeUnit.MILLISECONDS);
+      assertNull(request);
+    }
   }
 }
+
 
