@@ -624,7 +624,7 @@ Pick based on what matters for your use case.
 
 ## Multiagent Interaction Patterns - A wide overview
 
-![Multi-agent patterns overview](docs/media/multiagent.png)
+![Multi-agent patterns overview](docs/media/multiagent_interaction.png)
 
 Agentle supports a comprehensive set of multi-agent collaboration patterns for building sophisticated AI systems:
 
