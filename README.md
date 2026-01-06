@@ -472,6 +472,56 @@ List<Embedding> results = embeddings.createEmbeddings(
 - **529** - Provider overloaded (uses fallback providers when enabled)
 - **5xx** - Server errors
 
+## Vision
+
+Analyze images with vision-capable models:
+
+```java
+Image image = Image.fromUrl("https://example.com/photo.jpg");
+
+UserMessage message = Message.builder()
+    .addText("What's in this image?")
+    .addContent(image)
+    .asUser();
+
+var payload = CreateResponsePayload.builder()
+    .model("openai/gpt-4o")
+    .addMessage(message)
+    .build();
+
+Response response = responder.respond(payload).join();
+System.out.println(response.outputText());
+```
+
+Use `ImageDetail.HIGH` for OCR and detailed analysis, `ImageDetail.LOW` for faster processing. See the [Vision Guide](docs/guides/vision.md) for more.
+
+## Web extraction
+
+Extract structured data from web pages using Playwright and LLM:
+
+```java
+record Article(String title, String author, String summary) {}
+
+try (Playwright playwright = Playwright.create();
+     Browser browser = playwright.chromium().launch()) {
+    
+    WebExtractor extractor = WebExtractor.create(responder, "openai/gpt-4o");
+    
+    ExtractionResult.Structured<Article> result = extractor.extract(
+        ExtractPayload.structuredBuilder(Article.class)
+            .browser(browser)
+            .url("https://example.com/article")
+            .prompt("Extract the article title, author, and summary")
+            .withPreferences(p -> p.onlyMainContent(true))
+            .build()
+    ).join();
+    
+    Article article = result.requireOutput();
+}
+```
+
+See the [Web Extraction Guide](docs/guides/web-extraction.md) for configuration options.
+
 ## Observability
 
 Built-in OpenTelemetry support:
