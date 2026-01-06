@@ -1326,6 +1326,23 @@ Send a message to all peers simultaneously without sequential visibility:
 List<AgentNetwork.Contribution> responses = network.broadcast("Quick opinion?").join();
 ```
 
+### Streaming Support
+
+```java
+network.discussStream("Should AI be regulated?")
+    .onPeerTextDelta((peer, delta) -> System.out.print("[" + peer.name() + "] " + delta))
+    .onRoundStart(round -> System.out.println("=== Round " + round + " ==="))
+    .onRoundComplete(contributions -> System.out.println("Round complete!"))
+    .onComplete(result -> System.out.println("Discussion finished!"))
+    .start();
+
+// Broadcast with streaming
+network.broadcastStream("Quick opinion?")
+    .onPeerComplete((peer, result) -> System.out.println(peer.name() + " responded"))
+    .onComplete(result -> System.out.println("All peers responded"))
+    .start();
+```
+
 ---
 
 ## 🏛️ HierarchicalAgents

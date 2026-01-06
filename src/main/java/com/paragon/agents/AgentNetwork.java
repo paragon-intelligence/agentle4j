@@ -97,6 +97,15 @@ public final class AgentNetwork {
   }
 
   /**
+   * Returns the synthesizer agent if configured.
+   *
+   * @return the synthesizer agent, or null if not set
+   */
+  @Nullable Agent getSynthesizer() {
+    return synthesizer;
+  }
+
+  /**
    * Initiates a discussion among all peer agents.
    *
    * <p>Agents contribute in sequence within each round, with each agent seeing all previous
@@ -199,6 +208,51 @@ public final class AgentNetwork {
 
     return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
         .thenApply(v -> futures.stream().map(CompletableFuture::join).collect(Collectors.toList()));
+  }
+
+  // ===== Streaming Methods =====
+
+  /**
+   * Initiates a streaming discussion among all peer agents.
+   *
+   * <p>Returns a {@link NetworkStream} that allows registering callbacks for text deltas, round
+   * progression, and completion events.
+   *
+   * @param topic the discussion topic
+   * @return a NetworkStream for processing streaming events
+   */
+  public @NonNull NetworkStream discussStream(@NonNull String topic) {
+    Objects.requireNonNull(topic, "topic cannot be null");
+    AgentContext context = AgentContext.create();
+    context.addInput(Message.user(topic));
+    return discussStream(context);
+  }
+
+  /**
+   * Initiates a streaming discussion using an existing context.
+   *
+   * @param context the context with discussion history
+   * @return a NetworkStream for processing streaming events
+   */
+  public @NonNull NetworkStream discussStream(@NonNull AgentContext context) {
+    Objects.requireNonNull(context, "context cannot be null");
+    return new NetworkStream(this, context, NetworkStream.Mode.DISCUSS);
+  }
+
+  /**
+   * Broadcasts a message to all peers simultaneously with streaming.
+   *
+   * <p>Unlike discussStream(), broadcastStream() runs all agents in parallel without sequential
+   * visibility. Each agent only sees the original message, not other agents' responses.
+   *
+   * @param message the message to broadcast
+   * @return a NetworkStream for processing streaming events
+   */
+  public @NonNull NetworkStream broadcastStream(@NonNull String message) {
+    Objects.requireNonNull(message, "message cannot be null");
+    AgentContext context = AgentContext.create();
+    context.addInput(Message.user(message));
+    return new NetworkStream(this, context, NetworkStream.Mode.BROADCAST);
   }
 
   private CompletableFuture<List<Contribution>> runDiscussionRounds(

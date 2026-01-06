@@ -669,6 +669,13 @@ AgentNetwork network = AgentNetwork.builder()
 NetworkResult result = network.discuss("Should we adopt AI widely?").join();
 result.contributions().forEach(c -> 
     System.out.println(c.agent().name() + ": " + c.output()));
+
+// Streaming
+network.discussStream("Should we adopt AI widely?")
+    .onPeerTextDelta((peer, delta) -> System.out.print("[" + peer.name() + "] " + delta))
+    .onRoundStart(round -> System.out.println("=== Round " + round + " ==="))
+    .onComplete(r -> System.out.println("Discussion finished!"))
+    .start();
 ```
 
 ### Supervisor Pattern
