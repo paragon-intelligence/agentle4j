@@ -9,8 +9,8 @@ import com.paragon.responses.spec.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -195,11 +195,12 @@ class ResponseStreamTest {
     var payload =
         CreateResponsePayload.builder().model("gpt-4o").addUserMessage("Test").streaming().build();
 
-    CompletableFuture<Throwable> error = new CompletableFuture<>();
+    AtomicReference<Throwable> error = new AtomicReference<>();
 
-    responder.respond(payload).onError(error::complete).start();
+    responder.respond(payload).onError(error::set).start();
 
-    Throwable ex = error.join();
+    Thread.sleep(500);
+    Throwable ex = error.get();
     assertNotNull(ex);
     assertTrue(ex.getMessage().contains("rate_limit_exceeded"));
   }
@@ -212,11 +213,12 @@ class ResponseStreamTest {
     var payload =
         CreateResponsePayload.builder().model("gpt-4o").addUserMessage("Test").streaming().build();
 
-    CompletableFuture<Throwable> error = new CompletableFuture<>();
+    AtomicReference<Throwable> error = new AtomicReference<>();
 
-    responder.respond(payload).onError(error::complete).start();
+    responder.respond(payload).onError(error::set).start();
 
-    Throwable ex = error.join();
+    Thread.sleep(500);
+    Throwable ex = error.get();
     assertNotNull(ex);
     assertTrue(ex.getMessage().contains("401"));
   }
@@ -376,11 +378,12 @@ class ResponseStreamTest {
             .streaming()
             .build();
 
-    CompletableFuture<ParsedResponse<TestPerson>> parsedFuture = new CompletableFuture<>();
+    AtomicReference<ParsedResponse<TestPerson>> parsedRef = new AtomicReference<>();
 
-    responder.respond(payload).onParsedComplete(parsedFuture::complete).start();
+    responder.respond(payload).onParsedComplete(parsedRef::set).start();
 
-    ParsedResponse<TestPerson> parsed = parsedFuture.join();
+    Thread.sleep(500);
+    ParsedResponse<TestPerson> parsed = parsedRef.get();
     assertNotNull(parsed);
     assertEquals("Bob", parsed.outputParsed().name());
     assertEquals(30, parsed.outputParsed().age());

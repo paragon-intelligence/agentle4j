@@ -8,7 +8,6 @@ import com.paragon.responses.json.JsonSchemaProducer;
 import com.paragon.responses.spec.*;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import net.jqwik.api.*;
 import okhttp3.OkHttpClient;

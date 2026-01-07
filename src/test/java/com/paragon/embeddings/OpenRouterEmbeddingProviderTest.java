@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.http.RetryPolicy;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
@@ -418,7 +417,7 @@ class OpenRouterEmbeddingProviderTest {
 
     @Test
     @DisplayName("createEmbeddings returns List<Embedding>")
-    void createEmbeddingsReturnsCompletableFuture() {
+    void createEmbeddingsReturnsList() {
       OpenRouterEmbeddingProvider provider =
           OpenRouterEmbeddingProvider.builder().apiKey("test-api-key").build();
 

@@ -6,7 +6,6 @@ import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.Text;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;

@@ -6,7 +6,6 @@ import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.Text;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;

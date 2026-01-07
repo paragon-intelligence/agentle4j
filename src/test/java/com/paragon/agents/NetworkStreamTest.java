@@ -193,8 +193,8 @@ class NetworkStreamTest {
     }
 
     @Test
-    @DisplayName("start() returns CompletableFuture with NetworkResult")
-    void start_returnsCompletableFuture() throws Exception {
+    @DisplayName("start() returns NetworkResult")
+    void start_returnsNetworkResult() throws Exception {
       AgentNetwork network = createTestNetwork();
       enqueueStreamingResponse("Response 1");
       enqueueStreamingResponse("Response 2");

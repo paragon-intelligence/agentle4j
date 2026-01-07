@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.*;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -17,7 +16,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Comprehensive tests for Agent.
  *
- * <p>Tests cover: - Builder pattern - Async interaction (all methods return CompletableFuture) -
+ * <p>Tests cover: - Builder pattern - Synchronous-first interaction (methods block and return results directly) -
  * Guardrail integration - Tool registration - Handoff configuration - Context handling
  */
 @DisplayName("Agent")
