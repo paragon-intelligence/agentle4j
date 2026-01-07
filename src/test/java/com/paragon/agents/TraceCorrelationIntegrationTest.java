@@ -57,14 +57,14 @@ class TraceCorrelationIntegrationTest {
       enqueueSuccessResponse("Hello!");
 
       ctx.addInput(Message.user("Hello"));
-      agent.interact(ctx).get(5, TimeUnit.SECONDS);
+      agent.interact(ctx);
 
       // After interact, context should have trace initialized
       assertTrue(ctx.hasTraceContext(), "Context should have trace after interact");
       assertTrue(ctx.parentTraceId().isPresent(), "TraceId should be set");
       assertTrue(ctx.parentSpanId().isPresent(), "SpanId should be set");
-      assertTrue(TraceIdGenerator.isValidTraceId(ctx.parentTraceId().get()), "TraceId should be valid");
-      assertTrue(TraceIdGenerator.isValidSpanId(ctx.parentSpanId().get()), "SpanId should be valid");
+      assertTrue(TraceIdGenerator.isValidTraceId(ctx.parentTraceId().orElse(null)), "TraceId should be valid");
+      assertTrue(TraceIdGenerator.isValidSpanId(ctx.parentSpanId().orElse(null)), "SpanId should be valid");
     }
 
     @Test
@@ -79,7 +79,7 @@ class TraceCorrelationIntegrationTest {
       enqueueSuccessResponse("Hello!");
 
       ctx.addInput(Message.user("Hello"));
-      agent.interact(ctx).get(5, TimeUnit.SECONDS);
+      agent.interact(ctx);
 
       // Original trace should be preserved
       assertEquals(existingTraceId, ctx.parentTraceId().orElse(null), "TraceId should be preserved");
@@ -95,7 +95,7 @@ class TraceCorrelationIntegrationTest {
       enqueueSuccessResponse("First response");
 
       ctx.addInput(Message.user("First message"));
-      agent.interact(ctx).get(5, TimeUnit.SECONDS);
+      agent.interact(ctx);
 
       String firstTraceId = ctx.parentTraceId().orElse(null);
       String firstSpanId = ctx.parentSpanId().orElse(null);
@@ -103,7 +103,7 @@ class TraceCorrelationIntegrationTest {
       enqueueSuccessResponse("Second response");
 
       ctx.addInput(Message.user("Second message"));
-      agent.interact(ctx).get(5, TimeUnit.SECONDS);
+      agent.interact(ctx);
 
       // Trace should be preserved across interactions
       assertEquals(firstTraceId, ctx.parentTraceId().orElse(null), "TraceId should be consistent across turns");
@@ -125,7 +125,7 @@ class TraceCorrelationIntegrationTest {
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
 
-      List<AgentResult> results = parallel.run("Test input").get(5, TimeUnit.SECONDS);
+      List<AgentResult> results = parallel.run("Test input");
 
       assertEquals(2, results.size(), "Should have 2 results");
       assertFalse(results.get(0).isError(), "First result should not be error");
@@ -149,7 +149,7 @@ class TraceCorrelationIntegrationTest {
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
 
-      List<AgentResult> results = parallel.run(sharedContext).get(5, TimeUnit.SECONDS);
+      List<AgentResult> results = parallel.run(sharedContext);
 
       assertEquals(2, results.size());
       // Original context should still have its trace (copy was made)
@@ -167,7 +167,7 @@ class TraceCorrelationIntegrationTest {
       enqueueSuccessResponse("Fast response");
       enqueueSuccessResponse("Slow response");
 
-      AgentResult result = parallel.runFirst("Race").get(5, TimeUnit.SECONDS);
+      AgentResult result = parallel.runFirst("Race");
 
       assertNotNull(result, "Should have a result");
       assertFalse(result.isError(), "Result should not be error");
@@ -186,7 +186,7 @@ class TraceCorrelationIntegrationTest {
       enqueueSuccessResponse("Synthesized result");
 
       AgentResult result =
-          parallel.runAndSynthesize("Analyze this", synthesizer).get(5, TimeUnit.SECONDS);
+          parallel.runAndSynthesize("Analyze this", synthesizer);
 
       assertNotNull(result, "Should have synthesized result");
       assertFalse(result.isError(), "Synthesized result should not be error");
@@ -206,7 +206,7 @@ class TraceCorrelationIntegrationTest {
       enqueueSuccessResponse("Hello!");
 
       ctx.addInput(Message.user("Hello"));
-      agent.interact(ctx).get(5, TimeUnit.SECONDS);
+      agent.interact(ctx);
 
       assertEquals("user-session-12345", ctx.requestId().orElse(null), "RequestId should be preserved");
     }

@@ -5,14 +5,11 @@ import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import com.paragon.telemetry.processors.TraceIdGenerator;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Streaming wrapper for AgentNetwork that provides event callbacks during network discussions.
@@ -135,50 +132,51 @@ public final class NetworkStream {
   }
 
   /**
-   * Starts the streaming network execution.
+   * Starts the streaming network execution. Blocks until completion.
    *
-   * @return future completing with the network result
+   * <p>On virtual threads, blocking is efficient and does not consume platform threads.
+   *
+   * @return the network result
    */
-  public @NonNull CompletableFuture<AgentNetwork.NetworkResult> start() {
-    return switch (mode) {
-      case DISCUSS -> startDiscuss();
-      case BROADCAST -> startBroadcast();
-    };
+  public AgentNetwork.NetworkResult start() {
+    try {
+      return switch (mode) {
+        case DISCUSS -> startDiscuss();
+        case BROADCAST -> startBroadcast();
+      };
+    } catch (Exception ex) {
+      if (onError != null) {
+        onError.accept(ex);
+      }
+      throw new RuntimeException(ex);
+    }
   }
 
-  private CompletableFuture<AgentNetwork.NetworkResult> startDiscuss() {
+  private AgentNetwork.NetworkResult startDiscuss() {
     String parentTraceId = TraceIdGenerator.generateTraceId();
     String parentSpanId = TraceIdGenerator.generateSpanId();
     context.withTraceContext(parentTraceId, parentSpanId);
 
     String originalTopic = extractLastUserMessage();
-    List<AgentNetwork.Contribution> allContributions =
-        Collections.synchronizedList(new ArrayList<>());
+    List<AgentNetwork.Contribution> allContributions = new ArrayList<>();
 
-    return runStreamingRounds(allContributions, parentTraceId, parentSpanId)
-        .thenCompose(
-            contributions -> {
-              Agent synthesizer = network.getSynthesizer();
-              if (synthesizer != null) {
-                return synthesizeWithStreaming(contributions, originalTopic, synthesizer);
-              }
-              AgentNetwork.NetworkResult result =
-                  new AgentNetwork.NetworkResult(contributions, null);
-              if (onComplete != null) {
-                onComplete.accept(result);
-              }
-              return CompletableFuture.completedFuture(result);
-            })
-        .exceptionally(
-            ex -> {
-              if (onError != null) {
-                onError.accept(ex);
-              }
-              throw new RuntimeException(ex);
-            });
+    // Run rounds sequentially (blocking)
+    runStreamingRounds(allContributions, parentTraceId, parentSpanId);
+
+    // Synthesize if configured
+    Agent synthesizer = network.getSynthesizer();
+    if (synthesizer != null) {
+      return synthesizeWithStreaming(allContributions, originalTopic, synthesizer);
+    }
+
+    AgentNetwork.NetworkResult result = new AgentNetwork.NetworkResult(allContributions, null);
+    if (onComplete != null) {
+      onComplete.accept(result);
+    }
+    return result;
   }
 
-  private CompletableFuture<List<AgentNetwork.Contribution>> runStreamingRounds(
+  private void runStreamingRounds(
       List<AgentNetwork.Contribution> allContributions,
       String parentTraceId,
       String parentSpanId) {
@@ -186,90 +184,57 @@ public final class NetworkStream {
     List<Agent> peers = network.peers();
     int maxRounds = network.maxRounds();
 
-    // Build a chain of futures for sequential round execution
-    CompletableFuture<Void> roundChain = CompletableFuture.completedFuture(null);
-
     for (int round = 1; round <= maxRounds; round++) {
       final int currentRound = round;
-      List<AgentNetwork.Contribution> roundContributions =
-          Collections.synchronizedList(new ArrayList<>());
+      List<AgentNetwork.Contribution> roundContributions = new ArrayList<>();
 
       // Start round callback
-      roundChain =
-          roundChain.thenRun(
-              () -> {
-                if (onRoundStart != null) {
-                  onRoundStart.accept(currentRound);
-                }
-              });
+      if (onRoundStart != null) {
+        onRoundStart.accept(currentRound);
+      }
 
       // Process each peer sequentially within the round
       for (Agent peer : peers) {
-        roundChain =
-            roundChain.thenCompose(
-                v -> {
-                  AgentContext peerContext = buildPeerContext(peer, currentRound);
-                  peerContext.withTraceContext(parentTraceId, parentSpanId);
+        AgentContext peerContext = buildPeerContext(peer, currentRound);
+        peerContext.withTraceContext(parentTraceId, parentSpanId);
 
-                  CompletableFuture<AgentResult> peerFuture = new CompletableFuture<>();
-                  AgentStream stream = peer.interactStream(peerContext);
+        AgentStream stream = peer.interactStream(peerContext);
 
-                  if (onPeerTextDelta != null) {
-                    stream.onTextDelta(delta -> onPeerTextDelta.accept(peer, delta));
-                  }
+        if (onPeerTextDelta != null) {
+          stream.onTextDelta(delta -> onPeerTextDelta.accept(peer, delta));
+        }
 
-                  stream.onComplete(
-                      result -> {
-                        String output = result.output();
-                        boolean isError = result.isError();
+        // Execute synchronously (blocking)
+        AgentResult result = stream.start();
 
-                        // Add contribution to shared context for next peers
-                        if (!isError && output != null) {
-                          Message contribution =
-                              Message.assistant(Text.valueOf("[" + peer.name() + "]: " + output));
-                          context.addInput(contribution);
-                        }
+        String output = result.output();
+        boolean isError = result.isError();
 
-                        AgentNetwork.Contribution contrib =
-                            new AgentNetwork.Contribution(peer, currentRound, output, isError);
-                        allContributions.add(contrib);
-                        roundContributions.add(contrib);
+        // Add contribution to shared context for next peers
+        if (!isError && output != null) {
+          Message contribution =
+              Message.assistant(Text.valueOf("[" + peer.name() + "]: " + output));
+          context.addInput(contribution);
+        }
 
-                        if (onPeerComplete != null) {
-                          onPeerComplete.accept(peer, result);
-                        }
+        AgentNetwork.Contribution contrib =
+            new AgentNetwork.Contribution(peer, currentRound, output, isError);
+        allContributions.add(contrib);
+        roundContributions.add(contrib);
 
-                        peerFuture.complete(result);
-                      });
-
-                  if (onError != null) {
-                    stream.onError(
-                        ex -> {
-                          onError.accept(ex);
-                          peerFuture.completeExceptionally(ex);
-                        });
-                  }
-
-                  stream.start();
-                  return peerFuture.thenApply(r -> null);
-                });
+        if (onPeerComplete != null) {
+          onPeerComplete.accept(peer, result);
+        }
       }
 
       // End round callback
-      final List<AgentNetwork.Contribution> finalRoundContributions = roundContributions;
-      roundChain =
-          roundChain.thenRun(
-              () -> {
-                if (onRoundComplete != null) {
-                  onRoundComplete.accept(new ArrayList<>(finalRoundContributions));
-                }
-              });
+      if (onRoundComplete != null) {
+        onRoundComplete.accept(new ArrayList<>(roundContributions));
+      }
     }
-
-    return roundChain.thenApply(v -> new ArrayList<>(allContributions));
   }
 
-  private CompletableFuture<AgentNetwork.NetworkResult> synthesizeWithStreaming(
+  private AgentNetwork.NetworkResult synthesizeWithStreaming(
       List<AgentNetwork.Contribution> contributions, String originalTopic, Agent synthesizer) {
 
     StringBuilder synthPrompt = new StringBuilder();
@@ -292,106 +257,77 @@ public final class NetworkStream {
     AgentContext synthContext = AgentContext.create();
     synthContext.addInput(Message.user(synthPrompt.toString()));
 
-    CompletableFuture<AgentNetwork.NetworkResult> resultFuture = new CompletableFuture<>();
-    StringBuilder synthesisOutput = new StringBuilder();
-
     AgentStream synthStream = synthesizer.interactStream(synthContext);
 
     if (onSynthesisTextDelta != null) {
-      synthStream.onTextDelta(
-          delta -> {
-            synthesisOutput.append(delta);
-            onSynthesisTextDelta.accept(delta);
-          });
-    } else {
-      synthStream.onTextDelta(synthesisOutput::append);
+      synthStream.onTextDelta(onSynthesisTextDelta);
     }
 
-    synthStream.onComplete(
-        synthResult -> {
-          String synthesis = synthResult.output();
-          AgentNetwork.NetworkResult networkResult =
-              new AgentNetwork.NetworkResult(contributions, synthesis);
-          if (onComplete != null) {
-            onComplete.accept(networkResult);
-          }
-          resultFuture.complete(networkResult);
-        });
+    // Execute synchronously (blocking)
+    AgentResult synthResult = synthStream.start();
 
-    if (onError != null) {
-      synthStream.onError(
-          ex -> {
-            onError.accept(ex);
-            resultFuture.completeExceptionally(ex);
-          });
+    String synthesis = synthResult.output();
+    AgentNetwork.NetworkResult networkResult =
+        new AgentNetwork.NetworkResult(contributions, synthesis);
+
+    if (onComplete != null) {
+      onComplete.accept(networkResult);
     }
 
-    synthStream.start();
-    return resultFuture;
+    return networkResult;
   }
 
-  private CompletableFuture<AgentNetwork.NetworkResult> startBroadcast() {
+  private AgentNetwork.NetworkResult startBroadcast() {
     String parentTraceId = TraceIdGenerator.generateTraceId();
     String parentSpanId = TraceIdGenerator.generateSpanId();
 
     List<Agent> peers = network.peers();
-    List<CompletableFuture<AgentNetwork.Contribution>> futures = new ArrayList<>();
+    List<AgentNetwork.Contribution> contributions = new ArrayList<>();
+
+    // Run all peers in parallel using virtual threads
+    List<Thread> threads = new ArrayList<>();
+    List<AgentNetwork.Contribution> syncContributions =
+        java.util.Collections.synchronizedList(contributions);
 
     for (Agent peer : peers) {
-      AgentContext peerContext = context.copy();
-      peerContext.withTraceContext(parentTraceId, parentSpanId);
+      Thread thread = Thread.startVirtualThread(() -> {
+        AgentContext peerContext = context.copy();
+        peerContext.withTraceContext(parentTraceId, parentSpanId);
 
-      CompletableFuture<AgentNetwork.Contribution> future = new CompletableFuture<>();
-      futures.add(future);
+        AgentStream stream = peer.interactStream(peerContext);
 
-      AgentStream stream = peer.interactStream(peerContext);
+        if (onPeerTextDelta != null) {
+          stream.onTextDelta(delta -> onPeerTextDelta.accept(peer, delta));
+        }
 
-      if (onPeerTextDelta != null) {
-        stream.onTextDelta(delta -> onPeerTextDelta.accept(peer, delta));
-      }
+        AgentResult result = stream.start();
 
-      stream.onComplete(
-          result -> {
-            AgentNetwork.Contribution contrib =
-                new AgentNetwork.Contribution(peer, 1, result.output(), result.isError());
-            if (onPeerComplete != null) {
-              onPeerComplete.accept(peer, result);
-            }
-            future.complete(contrib);
-          });
+        AgentNetwork.Contribution contrib =
+            new AgentNetwork.Contribution(peer, 1, result.output(), result.isError());
+        syncContributions.add(contrib);
 
-      if (onError != null) {
-        stream.onError(
-            ex -> {
-              onError.accept(ex);
-              future.completeExceptionally(ex);
-            });
-      }
-
-      stream.start();
+        if (onPeerComplete != null) {
+          onPeerComplete.accept(peer, result);
+        }
+      });
+      threads.add(thread);
     }
 
-    return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-        .thenApply(
-            v -> {
-              List<AgentNetwork.Contribution> contributions = new ArrayList<>();
-              for (CompletableFuture<AgentNetwork.Contribution> f : futures) {
-                contributions.add(f.join());
-              }
-              AgentNetwork.NetworkResult result =
-                  new AgentNetwork.NetworkResult(contributions, null);
-              if (onComplete != null) {
-                onComplete.accept(result);
-              }
-              return result;
-            })
-        .exceptionally(
-            ex -> {
-              if (onError != null) {
-                onError.accept(ex);
-              }
-              throw new RuntimeException(ex);
-            });
+    // Wait for all threads to complete
+    for (Thread thread : threads) {
+      try {
+        thread.join();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new RuntimeException("Broadcast interrupted", e);
+      }
+    }
+
+    AgentNetwork.NetworkResult result = new AgentNetwork.NetworkResult(contributions, null);
+    if (onComplete != null) {
+      onComplete.accept(result);
+    }
+    return result;
   }
 
   private AgentContext buildPeerContext(Agent peer, int round) {

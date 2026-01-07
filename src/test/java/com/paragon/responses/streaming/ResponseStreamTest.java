@@ -199,7 +199,7 @@ class ResponseStreamTest {
 
     responder.respond(payload).onError(error::complete).start();
 
-    Throwable ex = error.get(5, TimeUnit.SECONDS);
+    Throwable ex = error.join();
     assertNotNull(ex);
     assertTrue(ex.getMessage().contains("rate_limit_exceeded"));
   }
@@ -216,7 +216,7 @@ class ResponseStreamTest {
 
     responder.respond(payload).onError(error::complete).start();
 
-    Throwable ex = error.get(5, TimeUnit.SECONDS);
+    Throwable ex = error.join();
     assertNotNull(ex);
     assertTrue(ex.getMessage().contains("401"));
   }
@@ -380,7 +380,7 @@ class ResponseStreamTest {
 
     responder.respond(payload).onParsedComplete(parsedFuture::complete).start();
 
-    ParsedResponse<TestPerson> parsed = parsedFuture.get(5, TimeUnit.SECONDS);
+    ParsedResponse<TestPerson> parsed = parsedFuture.join();
     assertNotNull(parsed);
     assertEquals("Bob", parsed.outputParsed().name());
     assertEquals(30, parsed.outputParsed().age());

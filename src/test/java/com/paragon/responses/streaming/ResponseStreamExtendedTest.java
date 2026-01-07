@@ -9,7 +9,7 @@ import com.paragon.responses.Responder;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.*;
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -78,7 +78,7 @@ class ResponseStreamExtendedTest {
               .streaming()
               .build();
 
-      Response response = responder.respond(payload).toFuture().get(5, TimeUnit.SECONDS);
+      Response response = responder.respond(payload).get();
 
       assertNotNull(response);
       assertEquals("resp-1", response.id());
@@ -105,9 +105,9 @@ class ResponseStreamExtendedTest {
               .streaming()
               .build();
 
-      CompletableFuture<Response> future = responder.respond(payload).toFuture();
+      ResponseStream<Void> stream = responder.respond(payload);
 
-      Exception ex = assertThrows(Exception.class, () -> future.get(5, TimeUnit.SECONDS));
+      Exception ex = assertThrows(RuntimeException.class, stream::get);
       assertTrue(
           ex.getMessage().contains("rate_limit")
               || ex.getCause().getMessage().contains("rate_limit"));
@@ -151,7 +151,7 @@ class ResponseStreamExtendedTest {
               .streaming()
               .build();
 
-      String text = responder.respond(payload).collectText().get(5, TimeUnit.SECONDS);
+      String text = responder.respond(payload).getText();
 
       assertEquals("Hello World", text);
     }
@@ -179,7 +179,7 @@ class ResponseStreamExtendedTest {
               .streaming()
               .build();
 
-      String text = responder.respond(payload).collectText().get(5, TimeUnit.SECONDS);
+      String text = responder.respond(payload).getText();
 
       assertEquals("", text);
     }
@@ -205,7 +205,7 @@ class ResponseStreamExtendedTest {
 
       ResponseStream<Void> stream = responder.respond(payload);
 
-      assertThrows(IllegalStateException.class, stream::toParsedFuture);
+      assertThrows(IllegalStateException.class, stream::getParsed);
     }
 
     @Test
@@ -235,7 +235,7 @@ class ResponseStreamExtendedTest {
               .build();
 
       ParsedResponse<TestPerson> parsed =
-          responder.respond(payload).toParsedFuture().get(5, TimeUnit.SECONDS);
+          responder.respond(payload).getParsed();
 
       assertNotNull(parsed);
       assertEquals("Alice", parsed.outputParsed().name());
@@ -346,11 +346,18 @@ class ResponseStreamExtendedTest {
               .streaming()
               .build();
 
-      CompletableFuture<Throwable> error = new CompletableFuture<>();
+      java.util.concurrent.atomic.AtomicReference<Throwable> error = new java.util.concurrent.atomic.AtomicReference<>();
 
-      responder.respond(payload).onError(error::complete).start();
+      ResponseStream<Void> stream = responder.respond(payload).onError(error::set);
+      
+      // Start will throw or capture error via callback
+      try {
+        stream.get();
+      } catch (RuntimeException e) {
+        // Expected
+      }
 
-      Throwable ex = error.get(5, TimeUnit.SECONDS);
+      Throwable ex = error.get();
       assertNotNull(ex);
       assertTrue(ex.getMessage().contains("failed") || ex.getMessage().contains("error"));
     }

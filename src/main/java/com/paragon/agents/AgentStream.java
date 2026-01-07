@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.jspecify.annotations.NonNull;
@@ -267,12 +267,14 @@ public final class AgentStream {
   // ===== Execution =====
 
   /**
-   * Starts the streaming agentic loop asynchronously using virtual threads.
+   * Starts the streaming agentic loop. Blocks until completion.
    *
-   * @return a future that completes with the final AgentResult
+   * <p>On virtual threads, blocking is efficient and does not consume platform threads.
+   *
+   * @return the final AgentResult
    */
-  public @NonNull CompletableFuture<AgentResult> start() {
-    return CompletableFuture.supplyAsync(this::runAgenticLoop);
+  public @NonNull AgentResult start() {
+    return runAgenticLoop();
   }
 
   /**
@@ -415,8 +417,7 @@ public final class AgentStream {
 
     // For now, use non-streaming since we need the full agentic loop
     // TODO: Integrate with ResponseStream for true streaming within each turn
-    CompletableFuture<Response> future = responder.respond(payload);
-    Response response = future.join();
+    Response response = responder.respond(payload);
 
     // Emit text delta for the complete response (for now)
     if (onTextDelta != null && response.outputText() != null) {

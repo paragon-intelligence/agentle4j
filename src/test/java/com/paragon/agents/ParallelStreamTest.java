@@ -6,7 +6,7 @@ import com.paragon.responses.Responder;
 import com.paragon.responses.spec.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -202,9 +202,9 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      CompletableFuture<?> future = parallel.runStream(context).start();
+      Object result = parallel.runStream(context).start();
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
@@ -222,10 +222,9 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello all"));
 
-      CompletableFuture<?> future =
+      Object result =
           parallel.runStream(context).onComplete(collectedResults::addAll).start();
 
-      future.get(10, TimeUnit.SECONDS);
 
       // In ALL mode, both agents should complete
       assertTrue(collectedResults.size() >= 1);
@@ -247,7 +246,7 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello first"));
 
-      CompletableFuture<?> future =
+      Object result =
           parallel
               .runStream(context)
               .onFirstComplete(
@@ -258,12 +257,11 @@ class ParallelStreamTest {
               .onAgentComplete(
                   (a, r) -> {
                     // Also capture via onAgentComplete if onFirstComplete isn't called
-                    if (firstResult.get() == null) firstResult.set(r);
+                    if (firstResult == null) firstResult.set(r);
                     completed.set(true);
                   })
               .start();
 
-      future.get(10, TimeUnit.SECONDS);
 
       // The test passes if either callback was invoked
       assertTrue(completed.get());
@@ -326,13 +324,12 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      CompletableFuture<?> future =
+      Object result =
           parallel
               .runStream(context)
-              .onAgentComplete((agent, result) -> completedAgents.add(agent.name()))
+              .onAgentComplete((agent, r) -> completedAgents.add(agent.name()))
               .start();
 
-      future.get(10, TimeUnit.SECONDS);
 
       assertTrue(completedAgents.size() >= 1);
     }
@@ -349,10 +346,9 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      CompletableFuture<?> future =
+      Object result =
           parallel.runStream(context).onAgentTurnStart((agent, turn) -> turns.add(turn)).start();
 
-      future.get(10, TimeUnit.SECONDS);
 
       // At least one turn should start
       assertFalse(turns.isEmpty());

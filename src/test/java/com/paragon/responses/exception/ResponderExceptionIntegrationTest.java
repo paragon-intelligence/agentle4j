@@ -8,7 +8,6 @@ import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.*;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
@@ -65,13 +64,13 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex =
+      RuntimeException ex =
           assertThrows(
-              ExecutionException.class,
-              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+              RuntimeException.class,
+              () -> responder.respond(createPayload()));
 
       // Verify the exception message contains the status code
-      assertTrue(ex.getCause().getMessage().contains("429"));
+      assertTrue(ex.getMessage().contains("429"));
     }
 
     @Test
@@ -85,7 +84,7 @@ class ResponderExceptionIntegrationTest {
 
       assertDoesNotThrow(
           () -> {
-            responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+            responder.respond(createPayload());
           });
       assertEquals(2, mockWebServer.getRequestCount());
     }
@@ -105,12 +104,12 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex =
+      RuntimeException ex =
           assertThrows(
-              ExecutionException.class,
-              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+              RuntimeException.class,
+              () -> responder.respond(createPayload()));
 
-      assertTrue(ex.getCause().getMessage().contains("401"));
+      assertTrue(ex.getMessage().contains("401"));
     }
 
     @Test
@@ -123,12 +122,12 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex =
+      RuntimeException ex =
           assertThrows(
-              ExecutionException.class,
-              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+              RuntimeException.class,
+              () -> responder.respond(createPayload()));
 
-      assertTrue(ex.getCause().getMessage().contains("403"));
+      assertTrue(ex.getMessage().contains("403"));
     }
 
     @Test
@@ -139,8 +138,8 @@ class ResponderExceptionIntegrationTest {
       Responder responder = createResponder(RetryPolicy.defaults());
 
       assertThrows(
-          ExecutionException.class,
-          () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+          RuntimeException.class,
+          () -> responder.respond(createPayload()));
 
       assertEquals(1, mockWebServer.getRequestCount()); // No retry
     }
@@ -160,12 +159,12 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex =
+      RuntimeException ex =
           assertThrows(
-              ExecutionException.class,
-              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+              RuntimeException.class,
+              () -> responder.respond(createPayload()));
 
-      assertTrue(ex.getCause().getMessage().contains("500"));
+      assertTrue(ex.getMessage().contains("500"));
     }
 
     @Test
@@ -178,12 +177,12 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex =
+      RuntimeException ex =
           assertThrows(
-              ExecutionException.class,
-              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+              RuntimeException.class,
+              () -> responder.respond(createPayload()));
 
-      assertTrue(ex.getCause().getMessage().contains("503"));
+      assertTrue(ex.getMessage().contains("503"));
     }
 
     @Test
@@ -197,7 +196,7 @@ class ResponderExceptionIntegrationTest {
 
       assertDoesNotThrow(
           () -> {
-            responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+            responder.respond(createPayload());
           });
       assertEquals(2, mockWebServer.getRequestCount());
     }
@@ -217,12 +216,12 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex =
+      RuntimeException ex =
           assertThrows(
-              ExecutionException.class,
-              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+              RuntimeException.class,
+              () -> responder.respond(createPayload()));
 
-      assertTrue(ex.getCause().getMessage().contains("400"));
+      assertTrue(ex.getMessage().contains("400"));
     }
 
     @Test
@@ -235,12 +234,12 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex =
+      RuntimeException ex =
           assertThrows(
-              ExecutionException.class,
-              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+              RuntimeException.class,
+              () -> responder.respond(createPayload()));
 
-      assertTrue(ex.getCause().getMessage().contains("404"));
+      assertTrue(ex.getMessage().contains("404"));
     }
 
     @Test
@@ -253,12 +252,12 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex =
+      RuntimeException ex =
           assertThrows(
-              ExecutionException.class,
-              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+              RuntimeException.class,
+              () -> responder.respond(createPayload()));
 
-      assertTrue(ex.getCause().getMessage().contains("422"));
+      assertTrue(ex.getMessage().contains("422"));
     }
 
     @Test
@@ -269,8 +268,8 @@ class ResponderExceptionIntegrationTest {
       Responder responder = createResponder(RetryPolicy.defaults());
 
       assertThrows(
-          ExecutionException.class,
-          () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+          RuntimeException.class,
+          () -> responder.respond(createPayload()));
 
       assertEquals(1, mockWebServer.getRequestCount()); // No retry
     }
@@ -288,8 +287,8 @@ class ResponderExceptionIntegrationTest {
       Responder responder = createResponder(RetryPolicy.disabled());
 
       assertThrows(
-          ExecutionException.class,
-          () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+          RuntimeException.class,
+          () -> responder.respond(createPayload()));
     }
 
     @Test
@@ -302,7 +301,7 @@ class ResponderExceptionIntegrationTest {
 
       assertDoesNotThrow(
           () -> {
-            responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+            responder.respond(createPayload());
           });
       assertEquals(2, mockWebServer.getRequestCount());
     }
@@ -319,12 +318,12 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex =
+      RuntimeException ex =
           assertThrows(
-              ExecutionException.class,
-              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+              RuntimeException.class,
+              () -> responder.respond(createPayload()));
 
-      String message = ex.getCause().getMessage();
+      String message = ex.getMessage();
       assertTrue(
           message.contains("418") || message.contains("teapot"),
           "Error message should contain status info");
@@ -338,13 +337,13 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      ExecutionException ex =
+      RuntimeException ex =
           assertThrows(
-              ExecutionException.class,
-              () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+              RuntimeException.class,
+              () -> responder.respond(createPayload()));
 
       // Error message or cause should contain the response body
-      assertNotNull(ex.getCause().getMessage());
+      assertNotNull(ex.getMessage());
     }
   }
 

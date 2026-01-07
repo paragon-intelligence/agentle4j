@@ -162,8 +162,8 @@ class ResponderTest {
     CreateResponsePayload payload = createSamplePayload();
 
     // Execute
-    CompletableFuture<Response> future = responder.respond(payload);
-    Response response = future.get();
+    Response future = responder.respond(payload);
+    Response response = future;
 
     // Verify
     assertNotNull(response);
@@ -189,11 +189,8 @@ class ResponderTest {
 
     CreateResponsePayload payload = createSamplePayload();
 
-    // Execute and verify exception
-    CompletableFuture<Response> future = responder.respond(payload);
-
-    ExecutionException exception = assertThrows(ExecutionException.class, future::get);
-    assertNotNull(exception.getCause());
+    // Execute and verify exception - API is synchronous now, so exceptions throw directly
+    assertThrows(RuntimeException.class, () -> responder.respond(payload));
   }
 
   // ===== Parse Method Tests =====
@@ -256,8 +253,8 @@ class ResponderTest {
     CreateResponsePayload.Structured<TestData> payload = createSamplePayloadForParsing();
 
     // Execute
-    CompletableFuture<ParsedResponse<TestData>> future = responder.respond(payload);
-    ParsedResponse<TestData> parsedResponse = future.get();
+    ParsedResponse<TestData> future = responder.respond(payload);
+    ParsedResponse<TestData> parsedResponse = future;
 
     // Verify
     assertNotNull(parsedResponse);
@@ -320,13 +317,9 @@ class ResponderTest {
 
     CreateResponsePayload.Structured<TestData> payload = createSamplePayloadForParsing();
 
-    // Execute
-    CompletableFuture<ParsedResponse<TestData>> future = responder.respond(payload);
-
-    // Verify exception
-    ExecutionException exception = assertThrows(ExecutionException.class, future::get);
-    assertTrue(exception.getCause() instanceof RuntimeException);
-    assertTrue(exception.getCause().getMessage().contains("could not be parsed"));
+    // Verify exception - API is synchronous, throws directly
+    RuntimeException exception = assertThrows(RuntimeException.class, () -> responder.respond(payload));
+    assertTrue(exception.getMessage().contains("could not be parsed"));
   }
 
   @Test
@@ -383,12 +376,8 @@ class ResponderTest {
 
     CreateResponsePayload.Structured<TestData> payload = createSamplePayloadForParsing();
 
-    // Execute
-    CompletableFuture<ParsedResponse<TestData>> future = responder.respond(payload);
-
-    // Verify exception
-    ExecutionException exception = assertThrows(ExecutionException.class, future::get);
-    assertInstanceOf(RuntimeException.class, exception.getCause());
+    // Verify exception - API is synchronous, throws directly
+    assertThrows(RuntimeException.class, () -> responder.respond(payload));
   }
 
   // ===== Equals, HashCode, and ToString Tests =====

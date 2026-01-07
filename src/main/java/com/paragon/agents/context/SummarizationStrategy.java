@@ -160,7 +160,7 @@ public final class SummarizationStrategy implements ContextWindowStrategy {
       CreateResponsePayload payload =
           CreateResponsePayload.builder().model(model).addUserMessage(prompt).build();
 
-      Response response = responder.respond(payload).join();
+      Response response = responder.respond(payload);
       return response.outputText();
     } catch (Exception e) {
       // If summarization fails, return a basic fallback

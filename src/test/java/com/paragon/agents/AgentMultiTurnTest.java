@@ -60,13 +60,13 @@ class AgentMultiTurnTest {
       // First call
       assertEquals(0, context.historySize());
       context.addInput(Message.user("First message"));
-      agent.interact(context).join();
+      agent.interact(context);
       int historyAfterFirst = context.historySize();
       assertTrue(historyAfterFirst > 0);
 
       // Second call with same context
       context.addInput(Message.user("Second message"));
-      agent.interact(context).join();
+      agent.interact(context);
       int historyAfterSecond = context.historySize();
       assertTrue(historyAfterSecond > historyAfterFirst);
     }
@@ -81,12 +81,12 @@ class AgentMultiTurnTest {
 
       AgentContext context1 = AgentContext.create();
       context1.addInput(Message.user("Message 1"));
-      agent.interact(context1).join();
+      agent.interact(context1);
 
       AgentContext context2 = AgentContext.create();
       assertEquals(0, context2.historySize());
       context2.addInput(Message.user("Message 2"));
-      agent.interact(context2).join();
+      agent.interact(context2);
 
       // context1 and context2 should have independent histories
       assertTrue(context1.historySize() > 0);
@@ -104,13 +104,13 @@ class AgentMultiTurnTest {
 
       context.setState("userId", "user-123");
       context.addInput(Message.user("First"));
-      agent.interact(context).join();
+      agent.interact(context);
 
       // State should still be there
       assertEquals("user-123", context.getState("userId").orElse(null));
 
       context.addInput(Message.user("Second"));
-      agent.interact(context).join();
+      agent.interact(context);
       assertEquals("user-123", context.getState("userId").orElse(null));
     }
   }
@@ -130,7 +130,7 @@ class AgentMultiTurnTest {
 
       enqueueSuccessResponse("Simple response");
 
-      AgentResult result = agent.interact("Hello").join();
+      AgentResult result = agent.interact("Hello");
 
       assertEquals(1, result.turnsUsed());
     }
@@ -145,11 +145,11 @@ class AgentMultiTurnTest {
       enqueueSuccessResponse("Response 2");
 
       context.addInput(Message.user("First"));
-      AgentResult result1 = agent.interact(context).join();
+      AgentResult result1 = agent.interact(context);
       assertTrue(result1.turnsUsed() >= 1);
 
       context.addInput(Message.user("Second"));
-      AgentResult result2 = agent.interact(context).join();
+      AgentResult result2 = agent.interact(context);
       assertTrue(result2.turnsUsed() >= 1);
     }
   }
@@ -171,7 +171,7 @@ class AgentMultiTurnTest {
       enqueueSuccessResponse("Response");
 
       context.addInput(Message.user("User said this"));
-      agent.interact(context).join();
+      agent.interact(context);
 
       // History should have at least the user message
       assertTrue(context.historySize() > 0);
@@ -184,7 +184,7 @@ class AgentMultiTurnTest {
 
       enqueueSuccessResponse("Response text");
 
-      AgentResult result = agent.interact("Hello").join();
+      AgentResult result = agent.interact("Hello");
 
       assertNotNull(result.history());
       assertFalse(result.history().isEmpty());
@@ -198,14 +198,14 @@ class AgentMultiTurnTest {
 
       enqueueSuccessResponse("Response 1");
       original.addInput(Message.user("Original message"));
-      agent.interact(original).join();
+      agent.interact(original);
 
       AgentContext copy = original.copy();
       assertEquals(original.historySize(), copy.historySize());
 
       enqueueSuccessResponse("Response 2");
       original.addInput(Message.user("New message"));
-      agent.interact(original).join();
+      agent.interact(original);
 
       // Copy should not have the new message
       assertTrue(original.historySize() > copy.historySize());
@@ -232,7 +232,7 @@ class AgentMultiTurnTest {
 
       for (int i = 0; i < 5; i++) {
         context.addInput(Message.user("Message " + i));
-        AgentResult result = agent.interact(context).join();
+        AgentResult result = agent.interact(context);
         assertNotNull(result.output());
         assertFalse(result.isError());
       }
@@ -248,7 +248,7 @@ class AgentMultiTurnTest {
 
       enqueueSuccessResponse("First response");
       context.addInput(Message.user("First message"));
-      agent.interact(context).join();
+      agent.interact(context);
       int historyBefore = context.historySize();
       assertTrue(historyBefore > 0);
 
@@ -257,7 +257,7 @@ class AgentMultiTurnTest {
 
       enqueueSuccessResponse("After clear");
       context.addInput(Message.user("After clear"));
-      agent.interact(context).join();
+      agent.interact(context);
       // History started fresh
       assertTrue(context.historySize() < historyBefore * 2);
     }

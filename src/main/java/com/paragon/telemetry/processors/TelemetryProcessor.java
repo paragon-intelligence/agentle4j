@@ -58,24 +58,20 @@ public abstract class TelemetryProcessor {
   }
 
   /**
-   * Queues an event for async processing. Returns immediately without blocking.
+   * Queues an event for async processing. Returns immediately without blocking (fire-and-forget).
    *
    * @param event the telemetry event to process
-   * @return a future that completes when the event is queued (not processed)
    */
-  public @NonNull CompletableFuture<Void> process(@NonNull TelemetryEvent event) {
+  public void process(@NonNull TelemetryEvent event) {
     if (!running.get()) {
-      return CompletableFuture.failedFuture(
-          new IllegalStateException("Processor has been shut down"));
+      logger.warn("[{}] Ignoring event, processor has been shut down", processorName);
+      return;
     }
 
     boolean offered = eventQueue.offer(event);
     if (!offered) {
       logger.warn("[{}] Event queue full, dropping event: {}", processorName, event.sessionId());
-      return CompletableFuture.completedFuture(null);
     }
-
-    return CompletableFuture.completedFuture(null);
   }
 
   /**

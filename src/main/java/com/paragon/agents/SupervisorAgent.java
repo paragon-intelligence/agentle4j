@@ -2,13 +2,11 @@ package com.paragon.agents;
 
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
-import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import com.paragon.telemetry.processors.TraceIdGenerator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -20,6 +18,7 @@ import org.jspecify.annotations.Nullable;
  * delegate tasks to workers, receive their outputs, and make decisions about next steps.
  *
  * <p>The supervisor uses its instructions to:
+ *
  * <ul>
  *   <li>Decompose complex tasks into subtasks
  *   <li>Delegate subtasks to appropriate workers (as tools)
@@ -27,8 +26,8 @@ import org.jspecify.annotations.Nullable;
  *   <li>Make decisions about task completion
  * </ul>
  *
- * <p><b>All methods are async by default</b> - they return {@link CompletableFuture}. For blocking
- * calls, use {@code .join()}.
+ * <p><b>Virtual Thread Design:</b> Uses synchronous API optimized for Java 21+ virtual threads.
+ * Blocking calls are cheap and efficient with virtual threads.
  *
  * <h2>Usage Example</h2>
  *
@@ -45,7 +44,7 @@ import org.jspecify.annotations.Nullable;
  *     .build();
  *
  * // Supervisor orchestrates workers to complete the task
- * AgentResult result = supervisor.orchestrate("Write a report on AI trends").join();
+ * AgentResult result = supervisor.orchestrate("Write a report on AI trends");
  * }</pre>
  *
  * @see ParallelAgents
@@ -128,9 +127,9 @@ public final class SupervisorAgent {
    * as needed, aggregating their outputs into a final result.
    *
    * @param input the task description
-   * @return future completing with the orchestrated result
+   * @return the orchestrated result
    */
-  public @NonNull CompletableFuture<AgentResult> orchestrate(@NonNull String input) {
+  public @NonNull AgentResult orchestrate(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
     return supervisorAgent.interact(input);
   }
@@ -139,9 +138,9 @@ public final class SupervisorAgent {
    * Orchestrates workers with Text content.
    *
    * @param text the task text
-   * @return future completing with the orchestrated result
+   * @return the orchestrated result
    */
-  public @NonNull CompletableFuture<AgentResult> orchestrate(@NonNull Text text) {
+  public @NonNull AgentResult orchestrate(@NonNull Text text) {
     Objects.requireNonNull(text, "text cannot be null");
     return supervisorAgent.interact(text);
   }
@@ -150,9 +149,9 @@ public final class SupervisorAgent {
    * Orchestrates workers with a Message.
    *
    * @param message the task message
-   * @return future completing with the orchestrated result
+   * @return the orchestrated result
    */
-  public @NonNull CompletableFuture<AgentResult> orchestrate(@NonNull Message message) {
+  public @NonNull AgentResult orchestrate(@NonNull Message message) {
     Objects.requireNonNull(message, "message cannot be null");
     return supervisorAgent.interact(message);
   }
@@ -161,9 +160,9 @@ public final class SupervisorAgent {
    * Orchestrates workers using an existing context.
    *
    * @param context the context with task history
-   * @return future completing with the orchestrated result
+   * @return the orchestrated result
    */
-  public @NonNull CompletableFuture<AgentResult> orchestrate(@NonNull AgentContext context) {
+  public @NonNull AgentResult orchestrate(@NonNull AgentContext context) {
     Objects.requireNonNull(context, "context cannot be null");
 
     // Ensure trace correlation

@@ -131,7 +131,7 @@ class AgentNonStreamingHitlTest {
       mockWebServer.enqueue(
           new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
 
-      AgentResult result = agent.interact("Do something dangerous").join();
+      AgentResult result = agent.interact("Do something dangerous");
 
       // Should be paused, not completed
       assertTrue(result.isPaused(), "Agent should be paused");
@@ -168,7 +168,7 @@ class AgentNonStreamingHitlTest {
       mockWebServer.enqueue(
           new MockResponse().setResponseCode(200).setBody(buildTextResponse("Done!")));
 
-      AgentResult result = agent.interact("Do something safe").join();
+      AgentResult result = agent.interact("Do something safe");
 
       // Should complete, not pause
       assertFalse(result.isPaused(), "Agent should not be paused");
@@ -200,7 +200,7 @@ class AgentNonStreamingHitlTest {
       mockWebServer.enqueue(
           new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
 
-      AgentResult pausedResult = agent.interact("Do something dangerous").join();
+      AgentResult pausedResult = agent.interact("Do something dangerous");
       assertTrue(pausedResult.isPaused());
 
       // Get paused state and approve
@@ -239,7 +239,7 @@ class AgentNonStreamingHitlTest {
       mockWebServer.enqueue(
           new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
 
-      AgentResult pausedResult = agent.interact("Do something dangerous").join();
+      AgentResult pausedResult = agent.interact("Do something dangerous");
       assertTrue(pausedResult.isPaused());
 
       // Get paused state and reject
@@ -282,7 +282,7 @@ class AgentNonStreamingHitlTest {
       mockWebServer.enqueue(
           new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
 
-      AgentResult result = agent.interact("Do something").join();
+      AgentResult result = agent.interact("Do something");
 
       AgentRunState state = result.pausedState();
       assertNotNull(state);
@@ -321,7 +321,7 @@ class AgentNonStreamingHitlTest {
       mockWebServer.enqueue(
           new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
 
-      AgentResult result = agent.interact("Do something").join();
+      AgentResult result = agent.interact("Do something");
 
       assertTrue(result.isPaused());
       assertFalse(dangerousTool.executed);
@@ -361,7 +361,7 @@ class AgentNonStreamingHitlTest {
       mockWebServer.enqueue(
           new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
 
-      AgentResult result = agent.interact("Do something").join();
+      AgentResult result = agent.interact("Do something");
       AgentRunState state = result.pausedState();
 
       // Don't call approveToolCall or rejectToolCall

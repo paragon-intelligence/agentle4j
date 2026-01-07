@@ -92,11 +92,11 @@ class AgenticFileParserTest {
       MarkdownResult result = new MarkdownResult(List.of("# Page 1", "## Section"));
       when(parsedResponse.outputParsed()).thenReturn(result);
       when(responder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.completedFuture(parsedResponse));
+          .thenReturn(parsedResponse);
 
       // Execute
-      CompletableFuture<MarkdownResult> future = parser.parse(testFile);
-      MarkdownResult actual = future.get();
+      MarkdownResult future = parser.parse(testFile);
+      MarkdownResult actual = future;
 
       // Verify
       assertNotNull(actual);
@@ -124,7 +124,7 @@ class AgenticFileParserTest {
       MarkdownResult result = new MarkdownResult(List.of("# Parsed"));
       when(parsedResponse.outputParsed()).thenReturn(result);
       when(responder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.completedFuture(parsedResponse));
+          .thenReturn(parsedResponse);
 
       // Execute
       parser.parse(testFile);
@@ -154,10 +154,10 @@ class AgenticFileParserTest {
       MarkdownResult result = new MarkdownResult(List.of("# Report Content"));
       when(parsedResponse.outputParsed()).thenReturn(result);
       when(responder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.completedFuture(parsedResponse));
+          .thenReturn(parsedResponse);
 
       // Execute
-      CompletableFuture<MarkdownResult> future = parser.parse(validUri);
+      MarkdownResult future = parser.parse(validUri);
 
       // Verify
       assertNotNull(future);
@@ -215,10 +215,10 @@ class AgenticFileParserTest {
       MarkdownResult result = new MarkdownResult(List.of("# Hello World"));
       when(parsedResponse.outputParsed()).thenReturn(result);
       when(responder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.completedFuture(parsedResponse));
+          .thenReturn(parsedResponse);
 
       // Execute
-      CompletableFuture<MarkdownResult> future = parser.parse(base64);
+      MarkdownResult future = parser.parse(base64);
 
       // Verify
       assertNotNull(future);
@@ -234,7 +234,7 @@ class AgenticFileParserTest {
       MarkdownResult result = new MarkdownResult(List.of("# Test"));
       when(parsedResponse.outputParsed()).thenReturn(result);
       when(responder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.completedFuture(parsedResponse));
+          .thenReturn(parsedResponse);
 
       // Execute
       parser.parse(base64);
@@ -263,11 +263,11 @@ class AgenticFileParserTest {
       MarkdownResult result = new MarkdownResult(List.of("# Page 1", "# Page 2"));
       when(parsedResponse.outputParsed()).thenReturn(result);
       when(responder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.completedFuture(parsedResponse));
+          .thenReturn(parsedResponse);
 
       // Execute
-      CompletableFuture<MarkdownResult> future = parser.parse(file);
-      MarkdownResult actual = future.get();
+      MarkdownResult future = parser.parse(file);
+      MarkdownResult actual = future;
 
       // Verify
       assertEquals(result, actual);
@@ -284,7 +284,7 @@ class AgenticFileParserTest {
       MarkdownResult result = new MarkdownResult(List.of("# Content"));
       when(parsedResponse.outputParsed()).thenReturn(result);
       when(responder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.completedFuture(parsedResponse));
+          .thenReturn(parsedResponse);
 
       // Execute
       parser.parse(file);
@@ -303,7 +303,7 @@ class AgenticFileParserTest {
       MarkdownResult result = new MarkdownResult(List.of("# Report"));
       when(parsedResponse.outputParsed()).thenReturn(result);
       when(responder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.completedFuture(parsedResponse));
+          .thenReturn(parsedResponse);
 
       // Execute
       parser.parse(file);
@@ -327,13 +327,13 @@ class AgenticFileParserTest {
       MarkdownResult expectedResult = new MarkdownResult(List.of("# Extracted"));
       when(parsedResponse.outputParsed()).thenReturn(expectedResult);
       when(responder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.completedFuture(parsedResponse));
+          .thenReturn(parsedResponse);
 
       // Execute
-      CompletableFuture<MarkdownResult> future = parser.parse(file);
+      MarkdownResult future = parser.parse(file);
 
-      // The thenApply should have been applied
-      assertInstanceOf(CompletableFuture.class, future);
+      // The API is now synchronous
+      assertInstanceOf(MarkdownResult.class, future);
     }
   }
 
@@ -355,7 +355,7 @@ class AgenticFileParserTest {
       MarkdownResult result = new MarkdownResult(List.of("# Content"));
       when(parsedResponse.outputParsed()).thenReturn(result);
       when(responder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.completedFuture(parsedResponse));
+          .thenReturn(parsedResponse);
 
       // Should not throw
       assertDoesNotThrow(() -> parser.parse(validUri));
@@ -384,7 +384,7 @@ class AgenticFileParserTest {
       MarkdownResult result = new MarkdownResult(List.of("# Report v2"));
       when(parsedResponse.outputParsed()).thenReturn(result);
       when(responder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.completedFuture(parsedResponse));
+          .thenReturn(parsedResponse);
 
       // Path still has .pdf, so should be accepted
       assertDoesNotThrow(() -> parser.parse(uriWithParams));
@@ -397,7 +397,7 @@ class AgenticFileParserTest {
       MarkdownResult result = new MarkdownResult(List.of("# Content"));
       when(parsedResponse.outputParsed()).thenReturn(result);
       when(responder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.completedFuture(parsedResponse));
+          .thenReturn(parsedResponse);
 
       // All these should be accepted
       assertDoesNotThrow(() -> parser.parse(URI.create("https://example.com/doc.pdf")));
@@ -428,16 +428,12 @@ class AgenticFileParserTest {
       com.paragon.responses.spec.File file =
           com.paragon.responses.spec.File.fromUrl("https://example.com/test.pdf");
 
-      // Setup mock to return failed future
+      // Setup mock to throw exception - API is now synchronous
       when(responder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.failedFuture(new RuntimeException("API error")));
+          .thenThrow(new RuntimeException("API error"));
 
-      // Execute
-      CompletableFuture<MarkdownResult> future = parser.parse(file);
-
-      // Verify exception is propagated
-      assertTrue(future.isCompletedExceptionally());
-      assertThrows(ExecutionException.class, future::get);
+      // Execute and verify exception is thrown directly
+      assertThrows(RuntimeException.class, () -> parser.parse(file));
     }
 
     @Test

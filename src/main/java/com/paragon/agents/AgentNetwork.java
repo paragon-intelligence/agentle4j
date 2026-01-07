@@ -9,8 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import java.util.concurrent.StructuredTaskScope;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -22,6 +21,7 @@ import org.jspecify.annotations.Nullable;
  * rounds, building on each other's contributions.
  *
  * <p>Key characteristics:
+ *
  * <ul>
  *   <li>No central coordinator - agents are peers
  *   <li>Each agent sees previous agents' contributions
@@ -29,8 +29,8 @@ import org.jspecify.annotations.Nullable;
  *   <li>Resilient - failure of one agent doesn't cripple the network
  * </ul>
  *
- * <p><b>All methods are async by default</b> - they return {@link CompletableFuture}. For blocking
- * calls, use {@code .join()}.
+ * <p><b>Virtual Thread Design:</b> Uses synchronous API optimized for Java 21+ virtual threads.
+ * Blocking calls are cheap and efficient with virtual threads.
  *
  * <h2>Usage Example</h2>
  *
@@ -50,7 +50,7 @@ import org.jspecify.annotations.Nullable;
  *     .build();
  *
  * // Agents discuss in rounds, each seeing previous contributions
- * NetworkResult result = network.discuss("Should we adopt AI widely?").join();
+ * NetworkResult result = network.discuss("Should we adopt AI widely?");
  * result.contributions().forEach(c ->
  *     System.out.println(c.agent().name() + ": " + c.output()));
  * }</pre>
@@ -112,9 +112,9 @@ public final class AgentNetwork {
    * contributions. Discussion continues for the configured number of rounds.
    *
    * @param topic the discussion topic
-   * @return future completing with the network result containing all contributions
+   * @return the network result containing all contributions
    */
-  public @NonNull CompletableFuture<NetworkResult> discuss(@NonNull String topic) {
+  public @NonNull NetworkResult discuss(@NonNull String topic) {
     Objects.requireNonNull(topic, "topic cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(topic));
@@ -125,9 +125,9 @@ public final class AgentNetwork {
    * Initiates a discussion with Text content.
    *
    * @param text the discussion topic
-   * @return future completing with the network result
+   * @return the network result
    */
-  public @NonNull CompletableFuture<NetworkResult> discuss(@NonNull Text text) {
+  public @NonNull NetworkResult discuss(@NonNull Text text) {
     Objects.requireNonNull(text, "text cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(text));
@@ -138,9 +138,9 @@ public final class AgentNetwork {
    * Initiates a discussion with a Message.
    *
    * @param message the discussion message
-   * @return future completing with the network result
+   * @return the network result
    */
-  public @NonNull CompletableFuture<NetworkResult> discuss(@NonNull Message message) {
+  public @NonNull NetworkResult discuss(@NonNull Message message) {
     Objects.requireNonNull(message, "message cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(message);
@@ -154,9 +154,9 @@ public final class AgentNetwork {
    * conversation history as agents contribute.
    *
    * @param context the context with discussion history
-   * @return future completing with the network result
+   * @return the network result
    */
-  public @NonNull CompletableFuture<NetworkResult> discuss(@NonNull AgentContext context) {
+  public @NonNull NetworkResult discuss(@NonNull AgentContext context) {
     Objects.requireNonNull(context, "context cannot be null");
 
     // Ensure trace correlation
@@ -167,17 +167,17 @@ public final class AgentNetwork {
     // Extract original topic for synthesis
     String originalTopic = extractLastUserMessage(context);
 
-    return runDiscussionRounds(context, parentTraceId, parentSpanId)
-        .thenCompose(
-            contributions -> {
-              if (synthesizer != null) {
-                return synthesizeContributions(contributions, originalTopic)
-                    .thenApply(
-                        synthesisResult ->
-                            new NetworkResult(contributions, synthesisResult.output()));
-              }
-              return CompletableFuture.completedFuture(new NetworkResult(contributions, null));
-            });
+    // Run discussion rounds
+    List<Contribution> contributions =
+        runDiscussionRounds(context, parentTraceId, parentSpanId);
+
+    // Synthesize if configured
+    if (synthesizer != null) {
+      AgentResult synthesisResult = synthesizeContributions(contributions, originalTopic);
+      return new NetworkResult(contributions, synthesisResult.output());
+    }
+
+    return new NetworkResult(contributions, null);
   }
 
   /**
@@ -186,28 +186,47 @@ public final class AgentNetwork {
    * <p>Unlike discuss(), broadcast() runs all agents in parallel without sequential visibility.
    * Each agent only sees the original message, not other agents' responses.
    *
+   * <p>Uses structured concurrency (Java 21+) for parallel execution.
+   *
    * @param message the message to broadcast
-   * @return future completing with list of contributions
+   * @return list of contributions
    */
-  public @NonNull CompletableFuture<List<Contribution>> broadcast(@NonNull String message) {
+  public @NonNull List<Contribution> broadcast(@NonNull String message) {
     Objects.requireNonNull(message, "message cannot be null");
 
     String parentTraceId = TraceIdGenerator.generateTraceId();
     String parentSpanId = TraceIdGenerator.generateSpanId();
 
-    List<CompletableFuture<Contribution>> futures = new ArrayList<>();
-    for (Agent peer : peers) {
-      AgentContext ctx = AgentContext.create();
-      ctx.addInput(Message.user(message));
-      ctx.withTraceContext(parentTraceId, parentSpanId);
+    try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+      List<StructuredTaskScope.Subtask<Contribution>> subtasks = new ArrayList<>();
 
-      futures.add(
-          peer.interact(ctx)
-              .thenApply(result -> new Contribution(peer, 1, result.output(), result.isError())));
+      for (Agent peer : peers) {
+        AgentContext ctx = AgentContext.create();
+        ctx.addInput(Message.user(message));
+        ctx.withTraceContext(parentTraceId, parentSpanId);
+
+        subtasks.add(
+            scope.fork(
+                () -> {
+                  AgentResult result = peer.interact(ctx);
+                  return new Contribution(peer, 1, result.output(), result.isError());
+                }));
+      }
+
+      scope.join();
+      scope.throwIfFailed();
+
+      List<Contribution> contributions = new ArrayList<>();
+      for (var subtask : subtasks) {
+        contributions.add(subtask.get());
+      }
+      return contributions;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException("Broadcast interrupted", e);
+    } catch (java.util.concurrent.ExecutionException e) {
+      throw new RuntimeException("Broadcast failed", e.getCause() != null ? e.getCause() : e);
     }
-
-    return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-        .thenApply(v -> futures.stream().map(CompletableFuture::join).collect(Collectors.toList()));
   }
 
   // ===== Streaming Methods =====
@@ -255,49 +274,35 @@ public final class AgentNetwork {
     return new NetworkStream(this, context, NetworkStream.Mode.BROADCAST);
   }
 
-  private CompletableFuture<List<Contribution>> runDiscussionRounds(
+  private List<Contribution> runDiscussionRounds(
       AgentContext sharedContext, String parentTraceId, String parentSpanId) {
 
     List<Contribution> allContributions = Collections.synchronizedList(new ArrayList<>());
 
     // Run rounds sequentially
-    CompletableFuture<Void> roundChain = CompletableFuture.completedFuture(null);
-
     for (int round = 1; round <= maxRounds; round++) {
-      final int currentRound = round;
-
       // Within each round, agents contribute sequentially so they can see previous contributions
       for (Agent peer : peers) {
-        roundChain =
-            roundChain.thenCompose(
-                v -> {
-                  // Build context with discussion history and role-specific prompt
-                  AgentContext peerContext = buildPeerContext(sharedContext, peer, currentRound);
-                  peerContext.withTraceContext(parentTraceId, parentSpanId);
+        // Build context with discussion history and role-specific prompt
+        AgentContext peerContext = buildPeerContext(sharedContext, peer, round);
+        peerContext.withTraceContext(parentTraceId, parentSpanId);
 
-                  return peer
-                      .interact(peerContext)
-                      .thenAccept(
-                          result -> {
-                            String output = result.output();
-                            boolean isError = result.isError();
+        AgentResult result = peer.interact(peerContext);
+        String output = result.output();
+        boolean isError = result.isError();
 
-                            // Add contribution to shared context for next agents
-                            if (!isError && output != null) {
-                              Message contribution =
-                                  Message.assistant(
-                                      Text.valueOf("[" + peer.name() + "]: " + output));
-                              sharedContext.addInput(contribution);
-                            }
+        // Add contribution to shared context for next agents
+        if (!isError && output != null) {
+          Message contribution =
+              Message.assistant(Text.valueOf("[" + peer.name() + "]: " + output));
+          sharedContext.addInput(contribution);
+        }
 
-                            allContributions.add(
-                                new Contribution(peer, currentRound, output, isError));
-                          });
-                });
+        allContributions.add(new Contribution(peer, round, output, isError));
       }
     }
 
-    return roundChain.thenApply(v -> new ArrayList<>(allContributions));
+    return new ArrayList<>(allContributions);
   }
 
   private AgentContext buildPeerContext(AgentContext sharedContext, Agent peer, int round) {
@@ -315,7 +320,7 @@ public final class AgentNetwork {
     return peerContext;
   }
 
-  private CompletableFuture<AgentResult> synthesizeContributions(
+  private AgentResult synthesizeContributions(
       List<Contribution> contributions, String originalTopic) {
 
     StringBuilder synthPrompt = new StringBuilder();

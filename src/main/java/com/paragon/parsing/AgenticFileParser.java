@@ -11,9 +11,13 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
-import java.util.concurrent.CompletableFuture;
 import org.jspecify.annotations.NonNull;
 
+/**
+ * Agentic file parser that uses LLM to convert documents to markdown.
+ *
+ * <p><b>Virtual Thread Design:</b> Uses synchronous API optimized for Java 21+ virtual threads.
+ */
 @SuppressWarnings("ClassCanBeRecord")
 public class AgenticFileParser {
   @NonNull
@@ -29,7 +33,14 @@ public class AgenticFileParser {
     this.responder = responder;
   }
 
-  public @NonNull CompletableFuture<MarkdownResult> parse(@NonNull Path path) throws IOException {
+  /**
+   * Parses a file from the given path into markdown.
+   *
+   * @param path the path to the file
+   * @return the markdown result
+   * @throws IOException if the file cannot be read
+   */
+  public @NonNull MarkdownResult parse(@NonNull Path path) throws IOException {
     boolean fileDoesNotExist = Files.notExists(path);
 
     if (fileDoesNotExist) {
@@ -41,7 +52,14 @@ public class AgenticFileParser {
     return parse(base64);
   }
 
-  public @NonNull CompletableFuture<MarkdownResult> parse(@NonNull URI uri) throws IOException {
+  /**
+   * Parses a file from a URI into markdown.
+   *
+   * @param uri the URI of the file
+   * @return the markdown result
+   * @throws IOException if the file cannot be read
+   */
+  public @NonNull MarkdownResult parse(@NonNull URI uri) throws IOException {
     if (!seemsLikeFile(uri)) {
       throw new IllegalArgumentException(String.format("URI %s is not a file", uri));
     }
@@ -50,21 +68,34 @@ public class AgenticFileParser {
     return parse(file);
   }
 
-  public @NonNull CompletableFuture<MarkdownResult> parse(@NonNull String base64)
-      throws IOException {
+  /**
+   * Parses a base64-encoded file into markdown.
+   *
+   * @param base64 the base64-encoded file content
+   * @return the markdown result
+   * @throws IOException if processing fails
+   */
+  public @NonNull MarkdownResult parse(@NonNull String base64) throws IOException {
     File file = File.fromBase64(base64);
     return parse(file);
   }
 
-  public @NonNull CompletableFuture<MarkdownResult> parse(@NonNull File file) throws IOException {
-    return responder
-        .respond(
+  /**
+   * Parses a File object into markdown.
+   *
+   * @param file the file to parse
+   * @return the markdown result
+   * @throws IOException if processing fails
+   */
+  public @NonNull MarkdownResult parse(@NonNull File file) throws IOException {
+    ParsedResponse<MarkdownResult> response =
+        responder.respond(
             CreateResponsePayload.builder()
                 .addDeveloperMessage(Message.developer(INSTRUCTIONS))
                 .addUserMessage(Message.builder().addContent(file).asUser())
                 .withStructuredOutput(MarkdownResult.class)
-                .build())
-        .thenApply(ParsedResponse::outputParsed);
+                .build());
+    return response.outputParsed();
   }
 
   private boolean seemsLikeFile(URI uri) {

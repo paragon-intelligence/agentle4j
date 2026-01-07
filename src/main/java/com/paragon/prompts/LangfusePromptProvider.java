@@ -9,10 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -123,26 +119,21 @@ public final class LangfusePromptProvider implements PromptProvider {
       String promptId, @Nullable Map<String, String> filters, int attempt) {
 
     try {
-      return fetchPrompt(promptId, filters).join();
-    } catch (CompletionException e) {
-      Throwable cause = e.getCause();
-
-      if (cause instanceof PromptProviderException ppe) {
-        if (ppe.isRetryable() && attempt < retryPolicy.maxRetries()) {
-          sleepForRetry(attempt + 1);
-          return fetchPromptWithRetry(promptId, filters, attempt + 1);
-        }
-        throw ppe;
-      }
-
-      // Check if we should retry based on the error
-      if (isRetryable(cause) && attempt < retryPolicy.maxRetries()) {
+      return fetchPrompt(promptId, filters);
+    } catch (PromptProviderException ppe) {
+      if (ppe.isRetryable() && attempt < retryPolicy.maxRetries()) {
         sleepForRetry(attempt + 1);
         return fetchPromptWithRetry(promptId, filters, attempt + 1);
       }
-
+      throw ppe;
+    } catch (Exception e) {
+      // Check if we should retry based on the error
+      if (isRetryable(e) && attempt < retryPolicy.maxRetries()) {
+        sleepForRetry(attempt + 1);
+        return fetchPromptWithRetry(promptId, filters, attempt + 1);
+      }
       throw new PromptProviderException(
-          "Failed to fetch prompt: " + cause.getMessage(), promptId, cause, false);
+          "Failed to fetch prompt: " + e.getMessage(), promptId, e, false);
     }
   }
 
@@ -166,10 +157,8 @@ public final class LangfusePromptProvider implements PromptProvider {
     return false;
   }
 
-  private CompletableFuture<LangfusePromptResponse> fetchPrompt(
+  private LangfusePromptResponse fetchPrompt(
       String promptId, @Nullable Map<String, String> filters) {
-
-    CompletableFuture<LangfusePromptResponse> future = new CompletableFuture<>();
 
     String encodedPromptId = URLEncoder.encode(promptId, StandardCharsets.UTF_8);
     HttpUrl.Builder urlBuilder =
@@ -196,60 +185,39 @@ public final class LangfusePromptProvider implements PromptProvider {
             .get()
             .build();
 
-    httpClient
-        .newCall(request)
-        .enqueue(
-            new Callback() {
-              @Override
-              public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                future.completeExceptionally(
-                    new PromptProviderException(
-                        "Network error fetching prompt: " + e.getMessage(), promptId, e, true));
-              }
+    try {
+      Response response = httpClient.newCall(request).execute();
 
-              @Override
-              public void onResponse(@NonNull Call call, @NonNull Response response) {
-                try (ResponseBody body = response.body()) {
-                  int code = response.code();
+      try (ResponseBody body = response.body()) {
+        int code = response.code();
 
-                  if (!response.isSuccessful()) {
-                    String errorBody = body != null ? body.string() : "";
-                    boolean retryable = retryPolicy.isRetryable(code);
+        if (!response.isSuccessful()) {
+          String errorBody = body != null ? body.string() : "";
+          boolean retryable = retryPolicy.isRetryable(code);
 
-                    String message =
-                        switch (code) {
-                          case 401 -> "Unauthorized: Invalid Langfuse credentials";
-                          case 403 -> "Forbidden: Access denied to prompt '" + promptId + "'";
-                          case 404 -> "Prompt not found: '" + promptId + "'";
-                          case 429 -> "Rate limited by Langfuse API";
-                          default -> "HTTP " + code + ": " + errorBody;
-                        };
+          String message =
+              switch (code) {
+                case 401 -> "Unauthorized: Invalid Langfuse credentials";
+                case 403 -> "Forbidden: Access denied to prompt '" + promptId + "'";
+                case 404 -> "Prompt not found: '" + promptId + "'";
+                case 429 -> "Rate limited by Langfuse API";
+                default -> "HTTP " + code + ": " + errorBody;
+              };
 
-                    future.completeExceptionally(
-                        new PromptProviderException(message, promptId, null, retryable));
-                    return;
-                  }
+          throw new PromptProviderException(message, promptId, null, retryable);
+        }
 
-                  if (body == null) {
-                    future.completeExceptionally(
-                        new PromptProviderException("Empty response body", promptId));
-                    return;
-                  }
+        if (body == null) {
+          throw new PromptProviderException("Empty response body", promptId);
+        }
 
-                  String json = body.string();
-                  LangfusePromptResponse promptResponse =
-                      objectMapper.readValue(json, LangfusePromptResponse.class);
-
-                  future.complete(promptResponse);
-                } catch (IOException e) {
-                  future.completeExceptionally(
-                      new PromptProviderException(
-                          "Failed to parse response: " + e.getMessage(), promptId, e));
-                }
-              }
-            });
-
-    return future;
+        String json = body.string();
+        return objectMapper.readValue(json, LangfusePromptResponse.class);
+      }
+    } catch (IOException e) {
+      throw new PromptProviderException(
+          "Network error fetching prompt: " + e.getMessage(), promptId, e, true);
+    }
   }
 
   /**

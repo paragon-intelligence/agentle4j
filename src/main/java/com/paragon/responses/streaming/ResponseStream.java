@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -38,16 +38,15 @@ import org.slf4j.LoggerFactory;
  *     .onError(Throwable::printStackTrace)
  *     .start();
  *
- * // Wait for completion
- * Response response = responder.respondStream(payload).toFuture().get();
+ * // Wait for completion (blocking)
+ * Response response = responder.respondStream(payload).get();
  *
- * // Collect all text
- * String text = responder.respondStream(payload).collectText().get();
+ * // Collect all text (blocking)
+ * String text = responder.respondStream(payload).getText();
  *
- * // Structured output streaming
+ * // Structured output streaming (blocking)
  * ParsedResponse<MyClass> parsed = responder.respondStream(structuredPayload)
- *     .toParsedFuture()
- *     .get();
+ *     .getParsed();
  * }</pre>
  *
  * @param <T> the type for structured output parsing, or {@code Void} for regular streaming
@@ -336,67 +335,108 @@ public final class ResponseStream<T> {
   }
 
   /**
-   * Returns a CompletableFuture that completes with the final Response. Automatically starts
-   * streaming if not already started.
+   * Blocks until streaming completes and returns the final Response.
+   * Automatically starts streaming if not already started.
    *
-   * @return CompletableFuture containing the Response
+   * <p>On virtual threads, blocking is efficient and does not consume platform threads.
+   *
+   * @return the final Response
+   * @throws RuntimeException if streaming fails
    */
-  public @NonNull CompletableFuture<Response> toFuture() {
-    CompletableFuture<Response> future = new CompletableFuture<>();
+  public @NonNull Response get() {
+    final AtomicReference<Response> resultRef = new AtomicReference<>();
+    final AtomicReference<Throwable> errorRef = new AtomicReference<>();
+    final Object lock = new Object();
+    final AtomicBoolean done = new AtomicBoolean(false);
 
-    this.onComplete(future::complete);
-    this.onError(future::completeExceptionally);
+    Consumer<Response> originalComplete = this.onCompleteHandler;
+    Consumer<Throwable> originalError = this.onErrorHandler;
+
+    this.onCompleteHandler = response -> {
+      if (originalComplete != null) {
+        originalComplete.accept(response);
+      }
+      resultRef.set(response);
+      synchronized (lock) {
+        done.set(true);
+        lock.notifyAll();
+      }
+    };
+
+    this.onErrorHandler = error -> {
+      if (originalError != null) {
+        originalError.accept(error);
+      }
+      errorRef.set(error);
+      synchronized (lock) {
+        done.set(true);
+        lock.notifyAll();
+      }
+    };
 
     if (started.compareAndSet(false, true)) {
       Thread.startVirtualThread(this::executeStream);
     }
 
-    return future;
+    synchronized (lock) {
+      while (!done.get()) {
+        try {
+          lock.wait();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new RuntimeException("Stream wait interrupted", e);
+        }
+      }
+    }
+
+    if (errorRef.get() != null) {
+      throw new RuntimeException("Streaming failed", errorRef.get());
+    }
+
+    return resultRef.get();
   }
 
   /**
-   * Returns a CompletableFuture that completes with a parsed structured response. Only available
-   * for structured output streams.
+   * Blocks until streaming completes and returns a parsed structured response.
+   * Only available for structured output streams.
    *
-   * @return CompletableFuture containing the ParsedResponse
+   * @return the ParsedResponse with typed content
    * @throws IllegalStateException if this is not a structured output stream
+   * @throws RuntimeException if streaming or parsing fails
    */
-  public @NonNull CompletableFuture<ParsedResponse<T>> toParsedFuture() {
+  public @NonNull ParsedResponse<T> getParsed() {
     if (responseType == null) {
       throw new IllegalStateException(
-          "toParsedFuture() is only available for structured output streams");
+          "getParsed() is only available for structured output streams");
     }
 
-    return toFuture()
-        .thenApply(
-            response -> {
-              try {
-                return response.parse(responseType, objectMapper);
-              } catch (JsonProcessingException e) {
-                throw new RuntimeException("Failed to parse structured output", e);
-              }
-            });
+    Response response = get();
+    try {
+      return response.parse(responseType, objectMapper);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("Failed to parse structured output", e);
+    }
   }
 
   /**
-   * Collects all text deltas and returns the complete text. Automatically starts streaming if not
-   * already started.
+   * Collects all text deltas and returns the complete text. Blocks until streaming completes.
    *
-   * @return CompletableFuture containing the concatenated text
+   * @return the concatenated text
+   * @throws RuntimeException if streaming fails
    */
-  public @NonNull CompletableFuture<String> collectText() {
-    CompletableFuture<String> future = new CompletableFuture<>();
+  public @NonNull String getText() {
     StringBuilder textBuilder = new StringBuilder();
 
-    this.onTextDelta(textBuilder::append);
-    this.onComplete(ignored -> future.complete(textBuilder.toString()));
-    this.onError(future::completeExceptionally);
+    Consumer<String> originalDelta = this.onTextDeltaHandler;
+    this.onTextDeltaHandler = delta -> {
+      if (originalDelta != null) {
+        originalDelta.accept(delta);
+      }
+      textBuilder.append(delta);
+    };
 
-    if (started.compareAndSet(false, true)) {
-      Thread.startVirtualThread(this::executeStream);
-    }
-
-    return future;
+    get(); // Wait for completion
+    return textBuilder.toString();
   }
 
   /** Cancels the stream. Safe to call multiple times. */

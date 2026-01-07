@@ -212,7 +212,7 @@ class AgentExtendedTest {
       // Second response is final answer
       enqueueSuccessResponse("Tool result processed");
 
-      AgentResult result = agent.interact("Search for something").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Search for something");
 
       assertNotNull(result);
       assertEquals("search term", capturedArg.get());
@@ -238,7 +238,7 @@ class AgentExtendedTest {
       // Second response is final answer after error
       enqueueSuccessResponse("I encountered an error");
 
-      AgentResult result = agent.interact("Run the tool").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Run the tool");
 
       assertNotNull(result);
       // Tool execution should have captured the error
@@ -268,7 +268,7 @@ class AgentExtendedTest {
           List.of("tool_one", "tool_two"), List.of("{\"query\": \"a\"}", "{\"query\": \"b\"}"));
       enqueueSuccessResponse("Both tools completed");
 
-      AgentResult result = agent.interact("Run both tools").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Run both tools");
 
       assertNotNull(result);
       assertEquals(2, callCount.get());
@@ -292,7 +292,7 @@ class AgentExtendedTest {
       // LLM calls the confirmation tool
       enqueueToolCallResponse("confirmation_tool", "{\"query\": \"delete everything\"}");
 
-      AgentResult result = agent.interact("Delete stuff").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Delete stuff");
 
       // Should be paused waiting for confirmation
       assertTrue(result.isPaused());
@@ -384,7 +384,7 @@ class AgentExtendedTest {
               .addHandoff(Handoff.to(targetAgent).build())
               .build();
 
-      AgentResult result = mainAgent.interact("I need support").get(5, TimeUnit.SECONDS);
+      AgentResult result = mainAgent.interact("I need support");
 
       assertTrue(result.isHandoff());
       assertNotNull(result.handoffAgent());
@@ -470,7 +470,7 @@ class AgentExtendedTest {
       enqueueToolCallResponse("simple_test_tool", "{\"query\": \"b\"}");
       // Turn 3 would exceed max
 
-      AgentResult result = agent.interact("Start infinite loop").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Start infinite loop");
 
       assertTrue(result.isError());
       assertNotNull(result.error());
@@ -508,7 +508,7 @@ class AgentExtendedTest {
 
       enqueueSuccessResponse("This is forbidden content");
 
-      AgentResult result = agent.interact("Generate response").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Generate response");
 
       assertTrue(result.isError());
       assertNotNull(result.error());
@@ -534,7 +534,7 @@ class AgentExtendedTest {
 
       enqueueSuccessResponse("This is perfectly fine content");
 
-      AgentResult result = agent.interact("Generate response").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Generate response");
 
       assertTrue(result.isSuccess());
     }
@@ -569,7 +569,7 @@ class AgentExtendedTest {
 
       enqueueSuccessResponse("Response with context management");
 
-      AgentResult result = agent.interact("Hello").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Hello");
 
       assertNotNull(result);
       assertTrue(result.isSuccess());
@@ -598,7 +598,7 @@ class AgentExtendedTest {
 
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Hello").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Hello");
 
       assertNotNull(result);
     }
@@ -670,7 +670,7 @@ class AgentExtendedTest {
 
       enqueueSuccessResponse("Response");
       context.addInput(Message.user("Hello"));
-      agent.interact(context).get(5, TimeUnit.SECONDS);
+      agent.interact(context);
 
       // After interaction, trace context should be set
       assertTrue(context.hasTraceContext());
@@ -689,7 +689,7 @@ class AgentExtendedTest {
 
       enqueueSuccessResponse("Response");
       context.addInput(Message.user("Hello"));
-      agent.interact(context).get(5, TimeUnit.SECONDS);
+      agent.interact(context);
 
       // Original trace context should be preserved
       assertEquals("trace-123", context.parentTraceId().orElse(null));
@@ -718,7 +718,7 @@ class AgentExtendedTest {
 
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Hello").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Hello");
 
       assertNotNull(result);
     }
@@ -739,7 +739,7 @@ class AgentExtendedTest {
 
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Hello").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Hello");
 
       assertNotNull(result);
     }
@@ -761,7 +761,7 @@ class AgentExtendedTest {
 
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Hello").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Hello");
 
       assertNotNull(result);
     }
@@ -790,7 +790,7 @@ class AgentExtendedTest {
       enqueueStructuredResponse("{\\\"name\\\": \\\"John\\\", \\\"age\\\": 30}");
 
       StructuredAgentResult<PersonInfo> result =
-          agent.interact("Extract: John is 30").get(5, TimeUnit.SECONDS);
+          agent.interact("Extract: John is 30");
 
       assertNotNull(result);
       if (result.output() != null) {
@@ -815,7 +815,7 @@ class AgentExtendedTest {
       enqueueSuccessResponse("This is not valid JSON");
 
       StructuredAgentResult<PersonInfo> result =
-          agent.interact("Parse this").get(5, TimeUnit.SECONDS);
+          agent.interact("Parse this");
 
       // Result may indicate error or have null output
       assertNotNull(result);
@@ -935,7 +935,7 @@ class AgentExtendedTest {
 
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Hello").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Hello");
 
       assertTrue(result.isSuccess());
       assertEquals(2, guardrailCallCount.get());

@@ -68,7 +68,7 @@ class FunctionToolRequiresConfirmationTest {
   }
 
   @Nested
-  @DisplayName("FunctionToolStore.get()")
+  @DisplayName("FunctionToolStore")
   class ToolStoreGetTests {
 
     @Test

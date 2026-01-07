@@ -122,61 +122,55 @@ class AgentTest {
   }
 
   @Nested
-  @DisplayName("Async Interaction (interact returns CompletableFuture)")
-  class AsyncInteraction {
+  @DisplayName("Synchronous Interaction (interact returns AgentResult directly)")
+  class SynchronousInteraction {
 
     @Test
-    @DisplayName("interact(String) returns CompletableFuture")
-    void interact_string_returnsCompletableFuture() {
+    @DisplayName("interact(String) returns AgentResult directly")
+    void interact_string_returnsAgentResultDirectly() {
       Agent agent = createTestAgent("Test");
       enqueueSuccessResponse("Hello");
 
-      CompletableFuture<AgentResult> future = agent.interact("Hello");
+      AgentResult result = agent.interact("Hello");
 
-      assertNotNull(future);
-      assertInstanceOf(CompletableFuture.class, future);
+      assertNotNull(result);
+      assertInstanceOf(AgentResult.class, result);
     }
 
     @Test
-    @DisplayName("interact(String, Context) returns CompletableFuture")
-    void interact_stringAndContext_returnsCompletableFuture() {
+    @DisplayName("interact(String, Context) returns AgentResult directly")
+    void interact_stringAndContext_returnsAgentResultDirectly() {
       Agent agent = createTestAgent("Test");
       AgentContext context = AgentContext.create();
       enqueueSuccessResponse("Hello");
 
       context.addInput(Message.user("Hello"));
-      CompletableFuture<AgentResult> future = agent.interact(context);
+      AgentResult result = agent.interact(context);
 
-      assertNotNull(future);
-      assertInstanceOf(CompletableFuture.class, future);
+      assertNotNull(result);
+      assertInstanceOf(AgentResult.class, result);
     }
 
     @Test
-    @DisplayName("interact().join() blocks and returns result")
-    void interact_join_blocksAndReturnsResult() throws Exception {
+    @DisplayName("interact() blocks and returns result synchronously")
+    void interact_blocksAndReturnsResult() {
       Agent agent = createTestAgent("Test");
       enqueueSuccessResponse("Response text");
 
-      AgentResult result = agent.interact("Hello").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Hello");
 
       assertNotNull(result);
     }
 
     @Test
-    @DisplayName("interact().thenAccept() handles async result")
-    void interact_thenAccept_handlesAsyncResult() throws Exception {
+    @DisplayName("interact() result can be verified synchronously")
+    void interact_resultCanBeVerifiedSynchronously() {
       Agent agent = createTestAgent("Test");
       enqueueSuccessResponse("Response");
 
-      CompletableFuture<Void> processed =
-          agent
-              .interact("Hello")
-              .thenAccept(
-                  result -> {
-                    assertNotNull(result);
-                  });
+      AgentResult result = agent.interact("Hello");
 
-      processed.get(5, TimeUnit.SECONDS);
+      assertNotNull(result);
     }
   }
 
@@ -244,7 +238,7 @@ class AgentTest {
               .addInputGuardrail((input, ctx) -> GuardrailResult.failed("Blocked"))
               .build();
 
-      AgentResult result = agent.interact("Hello").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Hello");
 
       assertFalse(result.isSuccess());
     }
@@ -301,7 +295,7 @@ class AgentTest {
       Agent agent = createTestAgent("Test");
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Hello").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Hello");
 
       assertNotNull(result);
     }
@@ -316,7 +310,7 @@ class AgentTest {
       enqueueSuccessResponse("Response");
 
       context.addInput(Message.user("Hello"));
-      AgentResult result = agent.interact(context).get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact(context);
 
       // Context should be updated during interaction
       assertNotNull(result);
@@ -335,11 +329,8 @@ class AgentTest {
 
       context1.addInput(Message.user("Hello 1"));
       context2.addInput(Message.user("Hello 2"));
-      CompletableFuture<AgentResult> future1 = agent.interact(context1);
-      CompletableFuture<AgentResult> future2 = agent.interact(context2);
-
-      AgentResult result1 = future1.get(5, TimeUnit.SECONDS);
-      AgentResult result2 = future2.get(5, TimeUnit.SECONDS);
+      AgentResult result1 = agent.interact(context1);
+      AgentResult result2 = agent.interact(context2);
 
       assertNotNull(result1);
       assertNotNull(result2);
@@ -457,7 +448,7 @@ class AgentTest {
 
       enqueueSuccessResponse("Single response");
 
-      AgentResult result = agent.interact("Hello").join();
+      AgentResult result = agent.interact("Hello");
 
       assertNotNull(result.output());
       assertEquals(1, result.turnsUsed());
@@ -478,7 +469,7 @@ class AgentTest {
       Agent agent = createTestAgent("Test");
       enqueueSuccessResponse("Success");
 
-      AgentResult result = agent.interact("Hello").join();
+      AgentResult result = agent.interact("Hello");
 
       assertFalse(result.isError());
       assertNull(result.error());
@@ -496,7 +487,7 @@ class AgentTest {
               .setBody("{\"error\": \"Internal server error\"}")
               .addHeader("Content-Type", "application/json"));
 
-      AgentResult result = agent.interact("Hello").join();
+      AgentResult result = agent.interact("Hello");
 
       // Either isError is true or there's an error in the result
       // depending on how errors are handled
@@ -510,7 +501,7 @@ class AgentTest {
       enqueueSuccessResponse("Response to empty");
 
       // Empty string should be handled (not throw)
-      AgentResult result = agent.interact("").join();
+      AgentResult result = agent.interact("");
       assertNotNull(result);
     }
   }
@@ -543,7 +534,7 @@ class AgentTest {
       Agent agent = createTestAgent("Test");
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Hello").join();
+      AgentResult result = agent.interact("Hello");
 
       assertNotNull(result);
       assertFalse(result.isError());
@@ -564,10 +555,10 @@ class AgentTest {
       Agent agent = createTestAgent("Test");
       enqueueSuccessResponse("Response");
 
-      CompletableFuture<AgentResult> future = agent.interact(Text.valueOf("Hello"));
+      AgentResult future = agent.interact(Text.valueOf("Hello"));
 
       assertNotNull(future);
-      AgentResult result = future.get(5, TimeUnit.SECONDS);
+      AgentResult result = future;
       assertNotNull(result);
     }
 
@@ -578,10 +569,10 @@ class AgentTest {
       enqueueSuccessResponse("File processed");
 
       File file = File.fromBase64("SGVsbG8gV29ybGQ=");
-      CompletableFuture<AgentResult> future = agent.interact(file);
+      AgentResult future = agent.interact(file);
 
       assertNotNull(future);
-      AgentResult result = future.get(5, TimeUnit.SECONDS);
+      AgentResult result = future;
       assertNotNull(result);
     }
 
@@ -594,10 +585,10 @@ class AgentTest {
       Image image =
           Image.fromBase64(
               "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
-      CompletableFuture<AgentResult> future = agent.interact(image);
+      AgentResult future = agent.interact(image);
 
       assertNotNull(future);
-      AgentResult result = future.get(5, TimeUnit.SECONDS);
+      AgentResult result = future;
       assertNotNull(result);
     }
 
@@ -608,10 +599,10 @@ class AgentTest {
       enqueueSuccessResponse("Message response");
 
       Message message = Message.user("Hello from message");
-      CompletableFuture<AgentResult> future = agent.interact(message);
+      AgentResult future = agent.interact(message);
 
       assertNotNull(future);
-      AgentResult result = future.get(5, TimeUnit.SECONDS);
+      AgentResult result = future;
       assertNotNull(result);
     }
 
@@ -622,10 +613,10 @@ class AgentTest {
       enqueueSuccessResponse("Input item response");
 
       ResponseInputItem item = Message.user("Hello input item");
-      CompletableFuture<AgentResult> future = agent.interact(item);
+      AgentResult future = agent.interact(item);
 
       assertNotNull(future);
-      AgentResult result = future.get(5, TimeUnit.SECONDS);
+      AgentResult result = future;
       assertNotNull(result);
     }
 
@@ -636,10 +627,10 @@ class AgentTest {
       enqueueSuccessResponse("List response");
 
       List<ResponseInputItem> items = List.of(Message.user("First"), Message.user("Second"));
-      CompletableFuture<AgentResult> future = agent.interact(items);
+      AgentResult future = agent.interact(items);
 
       assertNotNull(future);
-      AgentResult result = future.get(5, TimeUnit.SECONDS);
+      AgentResult result = future;
       assertNotNull(result);
     }
   }

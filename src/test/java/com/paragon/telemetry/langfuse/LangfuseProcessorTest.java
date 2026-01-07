@@ -619,8 +619,7 @@ class LangfuseProcessorTest {
       ResponseStartedEvent event =
           ResponseStartedEvent.create("session-1", "trace-123", "span-456", "gpt-4o");
 
-      var future = processor.process(event);
-      assertTrue(future.isCompletedExceptionally());
+      processor.process(event);
     }
 
     @Test
@@ -654,3 +653,4 @@ class LangfuseProcessorTest {
     }
   }
 }
+

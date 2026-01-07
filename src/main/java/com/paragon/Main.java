@@ -150,7 +150,7 @@ public class Main {
             .addUserMessage("Hello, how are you?")
             .build();
 
-    Response response = responder.respond(payload).join();
+    Response response = responder.respond(payload);
     System.out.println("🤖 Response: " + response.outputText());
   }
 
@@ -170,7 +170,7 @@ public class Main {
             .withStructuredOutput(WeatherInfo.class)
             .build();
 
-    Response response = responder.respond(payload).join();
+    Response response = responder.respond(payload);
     System.out.println("🌤️ Structured Response: " + response.outputText());
   }
 
@@ -197,7 +197,7 @@ public class Main {
             .addTool(weatherTool)
             .build();
 
-    Response response = responder.respond(payload).join();
+    Response response = responder.respond(payload);
 
     var calledFunctions = response.functionToolCalls(toolStore);
     for (BoundedFunctionCall calledFunction : calledFunctions) {
@@ -236,10 +236,10 @@ public class Main {
             .build();
 
     System.out.println("🎯 Low Temperature (0.2) - Focused:");
-    System.out.println("   " + responder.respond(focusedPayload).join().outputText());
+    System.out.println("   " + responder.respond(focusedPayload).outputText());
 
     System.out.println("\n🎨 High Temperature (1.5) - Creative:");
-    System.out.println("   " + responder.respond(creativePayload).join().outputText());
+    System.out.println("   " + responder.respond(creativePayload).outputText());
   }
 
   /** Example 5: Multi-turn conversation with context. */
@@ -257,7 +257,7 @@ public class Main {
             .addUserMessage("What is the Pythagorean theorem?")
             .build();
 
-    Response response1 = responder.respond(turn1).join();
+    Response response1 = responder.respond(turn1);
     String reply1 = response1.outputText();
     System.out.println("📚 Turn 1: " + reply1);
 
@@ -271,7 +271,7 @@ public class Main {
             .addUserMessage("Can you give me an example?")
             .build();
 
-    Response response2 = responder.respond(turn2).join();
+    Response response2 = responder.respond(turn2);
     System.out.println("\n📚 Turn 2: " + response2.outputText());
   }
 
@@ -299,7 +299,7 @@ public class Main {
             .addMessage(userMessage)
             .build();
 
-    var response = responder.respond(payload).join();
+    var response = responder.respond(payload);
     System.out.println("🖼️ Vision Response: " + response.outputText());
   }
 
@@ -329,7 +329,7 @@ public class Main {
             .toolChoice(ToolChoiceMode.REQUIRED)
             .build();
 
-    Response required = responder.respond(requiredPayload).join();
+    Response required = responder.respond(requiredPayload);
     System.out.println(
         "🔧 ToolChoice=REQUIRED - Tool called: " + !required.functionToolCalls().isEmpty());
 
@@ -342,7 +342,7 @@ public class Main {
             .toolChoice(ToolChoiceMode.NONE)
             .build();
 
-    Response none = responder.respond(nonePayload).join();
+    Response none = responder.respond(nonePayload);
     System.out.println("🚫 ToolChoice=NONE - Response: " + none.outputText());
   }
 
@@ -361,7 +361,7 @@ public class Main {
             .maxOutputTokens(50)
             .build();
 
-    Response response = responder.respond(shortPayload).join();
+    Response response = responder.respond(shortPayload);
     System.out.println("📏 Response (max 50 tokens): " + response.outputText());
   }
 
@@ -472,14 +472,14 @@ public class Main {
 
     System.out.println("📤 Sending: 'What is the capital of France?'");
     context.addInput(Message.user("What is the capital of France?"));
-    AgentResult result1 = agent.interact(context).join();
+    AgentResult result1 = agent.interact(context);
     System.out.println("📥 Response: " + result1.output());
     System.out.println("📊 Turns used: " + result1.turnsUsed());
 
     // The context now contains the previous exchange in its history
     System.out.println("\n📤 Sending: 'And what about Germany?' (using same context)");
     context.addInput(Message.user("And what about Germany?"));
-    AgentResult result2 = agent.interact(context).join();
+    AgentResult result2 = agent.interact(context);
     System.out.println("📥 Response: " + result2.output());
     System.out.println("📊 Context history size: " + context.historySize());
   }
@@ -518,12 +518,12 @@ public class Main {
 
     // Test 1: Valid input
     System.out.println("📤 Sending: 'Tell me a joke.'");
-    AgentResult result1 = agent.interact("Tell me a joke.").join();
+    AgentResult result1 = agent.interact("Tell me a joke.");
     System.out.println("📥 Response: " + result1.output());
 
     // Test 2: Blocked by input guardrail
     System.out.println("\n📤 Sending: 'What is my password?'");
-    AgentResult result2 = agent.interact("What is my password?").join();
+    AgentResult result2 = agent.interact("What is my password?");
     if (result2.isError()) {
       System.out.println("🚫 Blocked: " + result2.error().getMessage());
     } else {
@@ -567,7 +567,7 @@ public class Main {
     System.out.println("📤 Sending: 'I have a question about my invoice from last month.'");
 
     AgentResult result =
-        triageAgent.interact("I have a question about my invoice from last month.").join();
+        triageAgent.interact("I have a question about my invoice from last month.");
     System.out.println("📥 Response: " + result.output());
 
     if (result.handoffAgent() != null) {
@@ -618,7 +618,7 @@ public class Main {
     System.out.println("🔄 Running agents in parallel...\n");
 
     // Run all agents and synthesize
-    AgentResult synthesized = team.runAndSynthesize(question, synthesizerAgent).join();
+    AgentResult synthesized = team.runAndSynthesize(question, synthesizerAgent);
     System.out.println("📥 Synthesized Response:\n" + synthesized.output());
   }
 
@@ -672,12 +672,12 @@ public class Main {
     System.out.println("📤 Query: '" + techQuery + "'");
 
     // Classify without executing
-    var classified = router.classify(techQuery).join();
+    var classified = router.classify(techQuery);
     System.out.println(
         "📍 Would route to: " + classified.map(Agent::name).orElse("fallback"));
 
     // Route and execute
-    AgentResult result = router.route(techQuery).join();
+    AgentResult result = router.route(techQuery);
     System.out.println("📥 Response: " + result.output());
   }
 

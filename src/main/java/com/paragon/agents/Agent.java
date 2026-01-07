@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -58,6 +57,7 @@ import org.jspecify.annotations.Nullable;
  *     .maxTurns(10)
  *     .build();
  *
+ * // Blocking call - cheap with virtual threads
  * AgentResult result = agent.interact("What's the status of order #12345?");
  * System.out.println(result.output());
  * }</pre>
@@ -261,12 +261,13 @@ public final class Agent implements Serializable {
   /**
    * Interacts with the agent using a text message. Creates a fresh context.
    *
-   * <p>All interact methods are async by default. For blocking, call {@code .join()}.
+   * <p>This method blocks until the interaction completes. When running on virtual threads,
+   * blocking is cheap and does not consume platform threads.
    *
    * @param input the user's text input
-   * @return a future completing with the agent's result
+   * @return the agent's result
    */
-  public @NonNull CompletableFuture<AgentResult> interact(@NonNull String input) {
+  public @NonNull AgentResult interact(@NonNull String input) {
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(Text.valueOf(input)));
     return interact(context);
@@ -278,9 +279,9 @@ public final class Agent implements Serializable {
    * Interacts with the agent using a Text content. Creates a fresh context.
    *
    * @param text the text content
-   * @return a future completing with the agent's result
+   * @return the agent's result
    */
-  public @NonNull CompletableFuture<AgentResult> interact(@NonNull Text text) {
+  public @NonNull AgentResult interact(@NonNull Text text) {
     Objects.requireNonNull(text, "text cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(text));
@@ -291,9 +292,9 @@ public final class Agent implements Serializable {
    * Interacts with the agent using a file. Creates a fresh context.
    *
    * @param file the file input
-   * @return a future completing with the agent's result
+   * @return the agent's result
    */
-  public @NonNull CompletableFuture<AgentResult> interact(@NonNull File file) {
+  public @NonNull AgentResult interact(@NonNull File file) {
     Objects.requireNonNull(file, "file cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(file));
@@ -304,9 +305,9 @@ public final class Agent implements Serializable {
    * Interacts with the agent using an image. Creates a fresh context.
    *
    * @param image the image input
-   * @return a future completing with the agent's result
+   * @return the agent's result
    */
-  public @NonNull CompletableFuture<AgentResult> interact(@NonNull Image image) {
+  public @NonNull AgentResult interact(@NonNull Image image) {
     Objects.requireNonNull(image, "image cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(image));
@@ -317,9 +318,9 @@ public final class Agent implements Serializable {
    * Interacts with the agent using a Message. Creates a fresh context.
    *
    * @param message the message input
-   * @return a future completing with the agent's result
+   * @return the agent's result
    */
-  public @NonNull CompletableFuture<AgentResult> interact(@NonNull Message message) {
+  public @NonNull AgentResult interact(@NonNull Message message) {
     Objects.requireNonNull(message, "message cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(message);
@@ -330,9 +331,9 @@ public final class Agent implements Serializable {
    * Interacts with the agent using a ResponseInputItem. Creates a fresh context.
    *
    * @param input the input item
-   * @return a future completing with the agent's result
+   * @return the agent's result
    */
-  public @NonNull CompletableFuture<AgentResult> interact(@NonNull ResponseInputItem input) {
+  public @NonNull AgentResult interact(@NonNull ResponseInputItem input) {
     Objects.requireNonNull(input, "input cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(input);
@@ -343,9 +344,9 @@ public final class Agent implements Serializable {
    * Interacts with the agent using multiple inputs. Creates a fresh context.
    *
    * @param input the input items
-   * @return a future completing with the agent's result
+   * @return the agent's result
    */
-  public @NonNull CompletableFuture<AgentResult> interact(@NonNull List<ResponseInputItem> input) {
+  public @NonNull AgentResult interact(@NonNull List<ResponseInputItem> input) {
     AgentContext context = AgentContext.create();
     for (ResponseInputItem item : input) {
       context.addInput(item);
@@ -513,16 +514,19 @@ public final class Agent implements Serializable {
   }
 
   /**
-   * Core interact method. Executes the agentic loop asynchronously.
+   * Core interact method. Executes the agentic loop.
    *
    * <p>This is the primary execution method. All other interact overloads ultimately delegate here
    * after adding their input to the context.
    *
+   * <p>This method blocks until the interaction completes. When running on virtual threads,
+   * blocking is cheap and does not consume platform threads.
+   *
    * @param context the conversation context containing all history
-   * @return a future completing with the agent's result
+   * @return the agent's result
    */
-  public @NonNull CompletableFuture<AgentResult> interact(@NonNull AgentContext context) {
-    return CompletableFuture.supplyAsync(() -> interactBlocking(context, null));
+  public @NonNull AgentResult interact(@NonNull AgentContext context) {
+    return interactBlocking(context, null);
   }
 
   // ===== Core Interaction Methods =====
@@ -583,7 +587,7 @@ public final class Agent implements Serializable {
         // Build payload and call LLM with trace context
         CreateResponsePayload payload = buildPayload(context);
         try {
-          lastResponse = responder.respond(payload, telemetryCtx).join();
+          lastResponse = responder.respond(payload, telemetryCtx);
           lastResponseId = lastResponse.id();
         } catch (Exception e) {
           // Wrap LLM call failures in AgentExecutionException
@@ -627,7 +631,7 @@ public final class Agent implements Serializable {
           }
 
           try {
-            AgentResult innerResult = handoff.targetAgent().interact(childContext).join();
+            AgentResult innerResult = handoff.targetAgent().interact(childContext);
             return AgentResult.handoff(handoff.targetAgent(), innerResult, context);
           } catch (Exception e) {
             AgentExecutionException agentEx =
@@ -1584,12 +1588,10 @@ public final class Agent implements Serializable {
     /**
      * Interacts with the agent and returns type-safe structured output.
      *
-     * <p>All methods are async by default. For blocking, call {@code .join()}.
-     *
      * @param input the user's text input
-     * @return a future completing with the typed result
+     * @return the typed result
      */
-    public @NonNull CompletableFuture<StructuredAgentResult<T>> interact(@NonNull String input) {
+    public @NonNull StructuredAgentResult<T> interact(@NonNull String input) {
       return interact(input, AgentContext.create());
     }
 
@@ -1598,9 +1600,9 @@ public final class Agent implements Serializable {
      *
      * @param input the user's text input
      * @param context the conversation context
-     * @return a future completing with the typed result
+     * @return the typed result
      */
-    public @NonNull CompletableFuture<StructuredAgentResult<T>> interact(
+    public @NonNull StructuredAgentResult<T> interact(
         @NonNull String input, @NonNull AgentContext context) {
       Objects.requireNonNull(input, "input cannot be null");
       context.addInput(Message.user(input));
@@ -1613,11 +1615,11 @@ public final class Agent implements Serializable {
      * <p>This is the core method. All other interact overloads delegate here.
      *
      * @param context the conversation context containing all history
-     * @return a future completing with the typed result
+     * @return the typed result
      */
-    public @NonNull CompletableFuture<StructuredAgentResult<T>> interact(
-        @NonNull AgentContext context) {
-      return agent.interact(context).thenApply(this::parseResult);
+    public @NonNull StructuredAgentResult<T> interact(@NonNull AgentContext context) {
+      AgentResult result = agent.interact(context);
+      return parseResult(result);
     }
 
     /** Parses the AgentResult into a type-safe StructuredAgentResult. */

@@ -124,7 +124,7 @@ class AgentToolIntegrationTest {
 
       enqueueSuccessResponse("Hello! I'm a calculator. How can I help?");
 
-      AgentResult result = agent.interact("Hi there!").join();
+      AgentResult result = agent.interact("Hi there!");
 
       assertNotNull(result.output());
       assertFalse(result.isError());
@@ -150,7 +150,7 @@ class AgentToolIntegrationTest {
       // Second response: LLM provides final answer after tool result
       enqueueSuccessResponse("The result is 5.");
 
-      AgentResult result = agent.interact("What is 2 + 3?").join();
+      AgentResult result = agent.interact("What is 2 + 3?");
 
       assertNotNull(result.output());
       assertTrue(result.output().contains("5"));
@@ -182,7 +182,7 @@ class AgentToolIntegrationTest {
       enqueueToolCallResponse("add", "{\"a\": 1, \"b\": 2}");
       enqueueSuccessResponse("The answer is 3.");
 
-      AgentResult result = agent.interact("What is 1 + 2?").join();
+      AgentResult result = agent.interact("What is 1 + 2?");
 
       // Tool executions should be tracked
       assertNotNull(result.toolExecutions());
@@ -218,7 +218,7 @@ class AgentToolIntegrationTest {
       // Final response
       enqueueSuccessResponse("Results: 15 and 22");
 
-      AgentResult result = agent.interact("Calculate 10+5 and 15+7").join();
+      AgentResult result = agent.interact("Calculate 10+5 and 15+7");
 
       assertTrue(result.isSuccess());
       assertNotNull(result.toolExecutions());
@@ -248,7 +248,7 @@ class AgentToolIntegrationTest {
       // Final response
       enqueueSuccessResponse("2+3=5, then 5*4=20");
 
-      AgentResult result = agent.interact("Add 2+3, then multiply by 4").join();
+      AgentResult result = agent.interact("Add 2+3, then multiply by 4");
 
       assertTrue(result.isSuccess());
       assertEquals(2, result.toolExecutions().size());
@@ -283,7 +283,7 @@ class AgentToolIntegrationTest {
         enqueueToolCallResponse("add", "{\"a\": 1, \"b\": 1}");
       }
 
-      AgentResult result = agent.interact("Keep adding forever").join();
+      AgentResult result = agent.interact("Keep adding forever");
 
       assertTrue(result.isError());
       assertInstanceOf(
@@ -318,7 +318,7 @@ class AgentToolIntegrationTest {
       // LLM responds after receiving error
       enqueueSuccessResponse("I received an error from the tool.");
 
-      AgentResult result = agent.interact("Use the failing tool").join();
+      AgentResult result = agent.interact("Use the failing tool");
 
       assertTrue(result.isSuccess());
     }
@@ -342,7 +342,7 @@ class AgentToolIntegrationTest {
       // LLM responds after receiving error
       enqueueSuccessResponse("The arguments were invalid.");
 
-      AgentResult result = agent.interact("Add something").join();
+      AgentResult result = agent.interact("Add something");
 
       // Should still complete, error passed back to LLM
       assertFalse(result.isError());

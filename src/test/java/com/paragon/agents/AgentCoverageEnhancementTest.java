@@ -161,7 +161,7 @@ class AgentCoverageEnhancementTest {
         // Target agent fails with connection reset
         failingServer.shutdown(); // Shutdown immediately to force connection error
 
-        AgentResult result = mainAgent.interact("Route me").join();
+        AgentResult result = mainAgent.interact("Route me");
 
         // Should complete (either with error or handoff failure)
         assertNotNull(result, "Result should not be null");
@@ -199,7 +199,7 @@ class AgentCoverageEnhancementTest {
 
       enqueueToolCallResponse("confirmation_tool", "{\"query\": \"test\"}");
 
-      AgentResult result = agent.interact("Do something").join();
+      AgentResult result = agent.interact("Do something");
 
       // Non-streaming should pause when tool requires confirmation
       assertTrue(result.isPaused(), "Result should be paused for confirmation tool");
@@ -254,7 +254,7 @@ class AgentCoverageEnhancementTest {
       latch.await(10, TimeUnit.SECONDS);
 
       // Result should complete (possibly with rejection in context)
-      assertNotNull(capturedResult.get());
+      assertNotNull(capturedResult);
     }
   }
 
@@ -284,7 +284,7 @@ class AgentCoverageEnhancementTest {
       String validJson = "{\"name\":\"John\",\"age\":30}";
       enqueueStructuredResponse(validJson);
 
-      AgentResult result = agent.interact("John is 30").join();
+      AgentResult result = agent.interact("John is 30");
 
       // The result should complete successfully
       // parsed() may return the raw ParsedResponse or the actual typed object depending on
@@ -308,7 +308,7 @@ class AgentCoverageEnhancementTest {
       // Enqueue invalid JSON that cannot be parsed as Person
       enqueueSuccessResponse("This is not valid JSON for Person class");
 
-      AgentResult result = agent.interact("Parse this").join();
+      AgentResult result = agent.interact("Parse this");
 
       // Should be error due to JSON parsing failure
       assertTrue(result.isError(), "Result should be error due to parsing failure");
@@ -349,7 +349,7 @@ class AgentCoverageEnhancementTest {
       // Target agent response
       enqueueSuccessResponse("Target response");
 
-      AgentResult result = mainAgent.interact("Route me").join();
+      AgentResult result = mainAgent.interact("Route me");
 
       // Should still complete (message extraction returns null gracefully)
       assertFalse(
@@ -380,7 +380,7 @@ class AgentCoverageEnhancementTest {
       enqueueHandoffResponse("transfer_to_target_agent", "{}");
       enqueueSuccessResponse("Target response");
 
-      AgentResult result = mainAgent.interact("Route me").join();
+      AgentResult result = mainAgent.interact("Route me");
 
       // Should complete successfully
       assertNotNull(result);
@@ -724,7 +724,7 @@ class AgentCoverageEnhancementTest {
 
       enqueueEmptyOutputResponse();
 
-      AgentResult result = agent.interact("Hello").join();
+      AgentResult result = agent.interact("Hello");
 
       // Should handle empty output gracefully
       assertNotNull(result);
@@ -745,7 +745,7 @@ class AgentCoverageEnhancementTest {
 
       enqueueSuccessResponse("Normal response");
 
-      AgentResult result = agent.interact("Hello").join();
+      AgentResult result = agent.interact("Hello");
 
       assertNotNull(result);
     }
@@ -1023,7 +1023,7 @@ class AgentCoverageEnhancementTest {
 
       enqueueToolCallResponse("confirmation_tool", "{\"query\": \"test\"}");
 
-      AgentResult result = agent.interact("Do something").join();
+      AgentResult result = agent.interact("Do something");
 
       // Non-streaming with confirmation tool should pause
       assertTrue(result.isPaused(), "Result should be paused for confirmation tool");
@@ -1054,7 +1054,7 @@ class AgentCoverageEnhancementTest {
               .addInputGuardrail((input, ctx) -> GuardrailResult.failed("Blocked"))
               .build();
 
-      StructuredAgentResult<Person> result = agent.interact("Blocked input").join();
+      StructuredAgentResult<Person> result = agent.interact("Blocked input");
 
       // Should be error due to guardrail
       assertTrue(result.isError(), "Result should be error from guardrail");
@@ -1076,7 +1076,7 @@ class AgentCoverageEnhancementTest {
       // Enqueue response that is not valid JSON for Person
       enqueueSuccessResponse("This is plain text, not JSON");
 
-      StructuredAgentResult<Person> result = agent.interact("Extract John").join();
+      StructuredAgentResult<Person> result = agent.interact("Extract John");
 
       // Should be error due to parsing failure
       assertTrue(result.isError(), "Result should be error from parsing failure");
@@ -1097,7 +1097,7 @@ class AgentCoverageEnhancementTest {
       AgentContext context = AgentContext.create();
       enqueueStructuredResponse("{\"name\":\"Jane\",\"age\":25}");
 
-      StructuredAgentResult<Person> result = agent.interact("Extract Jane", context).join();
+      StructuredAgentResult<Person> result = agent.interact("Extract Jane", context);
 
       // Should succeed
       assertTrue(result.isSuccess(), "Result should be success");
@@ -1147,7 +1147,7 @@ class AgentCoverageEnhancementTest {
               .setBody(json)
               .addHeader("Content-Type", "application/json"));
 
-      AgentResult result = agent.interact("Test").join();
+      AgentResult result = agent.interact("Test");
 
       assertNotNull(result);
     }

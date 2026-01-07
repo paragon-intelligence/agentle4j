@@ -195,15 +195,17 @@ class RouterAgentTest {
   class Classify {
 
     @Test
-    @DisplayName("classify() returns CompletableFuture")
-    void classify_returnsCompletableFuture() {
+    @DisplayName("classify() returns Optional<Agent>")
+    void classify_returnsOptionalAgent() {
       Agent target = createTestAgent("Target");
       RouterAgent router = createRouter(target);
 
-      CompletableFuture<Optional<Agent>> future = router.classify("test input");
+      enqueueResponse("1"); // Mock LLM response
 
-      assertNotNull(future);
-      assertInstanceOf(CompletableFuture.class, future);
+      Optional<Agent> result = router.classify("test input");
+
+      assertNotNull(result);
+      assertInstanceOf(Optional.class, result);
     }
 
     @Test
@@ -222,7 +224,7 @@ class RouterAgentTest {
 
       enqueueResponse("1"); // LLM says route to first agent
 
-      Optional<Agent> selected = router.classify("Invoice question").get(5, TimeUnit.SECONDS);
+      Optional<Agent> selected = router.classify("Invoice question");
 
       assertTrue(selected.isPresent());
       assertEquals(billing, selected.get());
@@ -244,7 +246,7 @@ class RouterAgentTest {
 
       enqueueResponse("invalid"); // LLM returns unparseable response
 
-      Optional<Agent> selected = router.classify("test").get(5, TimeUnit.SECONDS);
+      Optional<Agent> selected = router.classify("test");
 
       assertTrue(selected.isPresent());
       assertEquals(fallback, selected.get());
@@ -264,7 +266,7 @@ class RouterAgentTest {
 
       enqueueResponse("invalid");
 
-      Optional<Agent> selected = router.classify("test").get(5, TimeUnit.SECONDS);
+      Optional<Agent> selected = router.classify("test");
 
       assertTrue(selected.isEmpty());
     }
@@ -284,8 +286,8 @@ class RouterAgentTest {
   class RouteString {
 
     @Test
-    @DisplayName("route(String) returns CompletableFuture")
-    void route_returnsCompletableFuture() {
+    @DisplayName("route(String) returns AgentResult")
+    void route_returnsAgentResult() {
       Agent target = createTestAgent("Target");
       RouterAgent router = createRouter(target);
 
@@ -293,10 +295,10 @@ class RouterAgentTest {
       enqueueResponse("1");
       enqueueSuccessResponse("Target response");
 
-      CompletableFuture<AgentResult> future = router.route("test input");
+      AgentResult result = router.route("test input");
 
-      assertNotNull(future);
-      assertInstanceOf(CompletableFuture.class, future);
+      assertNotNull(result);
+      assertInstanceOf(AgentResult.class, result);
     }
 
     @Test
@@ -313,7 +315,7 @@ class RouterAgentTest {
 
       enqueueResponse("invalid"); // No valid agent selected
 
-      AgentResult result = router.route("test").get(5, TimeUnit.SECONDS);
+      AgentResult result = router.route("test");
 
       assertTrue(result.isError());
     }
@@ -341,9 +343,9 @@ class RouterAgentTest {
       enqueueResponse("1");
       enqueueSuccessResponse("Target response");
 
-      CompletableFuture<AgentResult> future = router.route(Text.valueOf("test text input"));
+      AgentResult result = router.route(Text.valueOf("test text input"));
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
@@ -369,9 +371,9 @@ class RouterAgentTest {
       enqueueResponse("1");
       enqueueSuccessResponse("Target response");
 
-      CompletableFuture<AgentResult> future = router.route(Message.user("test message input"));
+      AgentResult result = router.route(Message.user("test message input"));
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
@@ -400,9 +402,9 @@ class RouterAgentTest {
       enqueueResponse("1");
       enqueueSuccessResponse("Target response");
 
-      CompletableFuture<AgentResult> future = router.route(context);
+      AgentResult result = router.route(context);
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
@@ -413,7 +415,7 @@ class RouterAgentTest {
 
       AgentContext context = AgentContext.create(); // Empty context
 
-      AgentResult result = router.route(context).get(5, TimeUnit.SECONDS);
+      AgentResult result = router.route(context);
 
       assertTrue(result.isError());
     }

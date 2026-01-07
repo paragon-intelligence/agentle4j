@@ -161,41 +161,41 @@ class AgentStructuredTest {
   class StructuredInteractTests {
 
     @Test
-    @DisplayName("interact(String) returns CompletableFuture")
-    void interactStringReturnsCompletableFuture() {
+    @DisplayName("interact(String) returns StructuredAgentResult directly")
+    void interactStringReturnsStructuredAgentResult() {
       Agent.Structured<TestPerson> agent = createTestStructuredAgent();
       enqueueStructuredResponse("{\"name\":\"John\",\"age\":30}");
 
-      CompletableFuture<StructuredAgentResult<TestPerson>> future = agent.interact("Extract John");
+      StructuredAgentResult<TestPerson> result = agent.interact("Extract John");
 
-      assertNotNull(future);
-      assertInstanceOf(CompletableFuture.class, future);
+      assertNotNull(result);
+      assertInstanceOf(StructuredAgentResult.class, result);
     }
 
     @Test
-    @DisplayName("interact(String, Context) returns CompletableFuture")
-    void interactStringContextReturnsCompletableFuture() {
+    @DisplayName("interact(String, Context) returns StructuredAgentResult directly")
+    void interactStringContextReturnsStructuredAgentResult() {
       Agent.Structured<TestPerson> agent = createTestStructuredAgent();
       AgentContext context = AgentContext.create();
       enqueueStructuredResponse("{\"name\":\"Jane\",\"age\":25}");
 
-      CompletableFuture<StructuredAgentResult<TestPerson>> future =
+      StructuredAgentResult<TestPerson> result =
           agent.interact("Extract Jane", context);
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
-    @DisplayName("interact(Context) uses existing context")
-    void interactContextUsesExistingContext() {
+    @DisplayName("interact(Context) returns StructuredAgentResult directly")
+    void interactContextReturnsStructuredAgentResult() {
       Agent.Structured<TestPerson> agent = createTestStructuredAgent();
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Extract Bob"));
       enqueueStructuredResponse("{\"name\":\"Bob\",\"age\":40}");
 
-      CompletableFuture<StructuredAgentResult<TestPerson>> future = agent.interact(context);
+      StructuredAgentResult<TestPerson> result = agent.interact(context);
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
@@ -205,7 +205,7 @@ class AgentStructuredTest {
       enqueueStructuredResponse("{\"name\":\"Alice\",\"age\":28}");
 
       StructuredAgentResult<TestPerson> result =
-          agent.interact("Extract Alice").get(5, TimeUnit.SECONDS);
+          agent.interact("Extract Alice");
 
       assertNotNull(result);
     }

@@ -1,7 +1,6 @@
 package com.paragon.agents;
 
 import com.paragon.responses.spec.Message;
-import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import com.paragon.telemetry.processors.TraceIdGenerator;
 import java.util.ArrayList;
@@ -9,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -21,12 +19,16 @@ import org.jspecify.annotations.Nullable;
  * ultimately, operational agents at the lowest tier.
  *
  * <p>Key characteristics:
+ *
  * <ul>
  *   <li>Tree structure with executive at root
  *   <li>Managers delegate to their team workers
  *   <li>Escalation when workers cannot complete tasks
  *   <li>Distributed decision-making within defined boundaries
  * </ul>
+ *
+ * <p><b>Virtual Thread Design:</b> Uses synchronous API optimized for Java 21+ virtual threads.
+ * Blocking calls are cheap and efficient with virtual threads.
  *
  * <h2>Usage Example</h2>
  *
@@ -50,7 +52,7 @@ import org.jspecify.annotations.Nullable;
  *     .build();
  *
  * // Executive delegates through managers to workers
- * AgentResult result = hierarchy.execute("Launch new product feature").join();
+ * AgentResult result = hierarchy.execute("Launch new product feature");
  * }</pre>
  *
  * @since 1.0
@@ -106,9 +108,9 @@ public final class HierarchicalAgents {
    * <p>The executive receives the task and delegates through managers to workers as appropriate.
    *
    * @param task the task description
-   * @return future completing with the execution result
+   * @return the execution result
    */
-  public @NonNull CompletableFuture<AgentResult> execute(@NonNull String task) {
+  public @NonNull AgentResult execute(@NonNull String task) {
     Objects.requireNonNull(task, "task cannot be null");
     return rootSupervisor.orchestrate(task);
   }
@@ -117,9 +119,9 @@ public final class HierarchicalAgents {
    * Executes a task with Text content.
    *
    * @param text the task text
-   * @return future completing with the execution result
+   * @return the execution result
    */
-  public @NonNull CompletableFuture<AgentResult> execute(@NonNull Text text) {
+  public @NonNull AgentResult execute(@NonNull Text text) {
     Objects.requireNonNull(text, "text cannot be null");
     return rootSupervisor.orchestrate(text);
   }
@@ -128,9 +130,9 @@ public final class HierarchicalAgents {
    * Executes a task with a Message.
    *
    * @param message the task message
-   * @return future completing with the execution result
+   * @return the execution result
    */
-  public @NonNull CompletableFuture<AgentResult> execute(@NonNull Message message) {
+  public @NonNull AgentResult execute(@NonNull Message message) {
     Objects.requireNonNull(message, "message cannot be null");
     return rootSupervisor.orchestrate(message);
   }
@@ -139,9 +141,9 @@ public final class HierarchicalAgents {
    * Executes a task using an existing context.
    *
    * @param context the context with task history
-   * @return future completing with the execution result
+   * @return the execution result
    */
-  public @NonNull CompletableFuture<AgentResult> execute(@NonNull AgentContext context) {
+  public @NonNull AgentResult execute(@NonNull AgentContext context) {
     Objects.requireNonNull(context, "context cannot be null");
 
     // Ensure trace correlation
@@ -182,10 +184,10 @@ public final class HierarchicalAgents {
    *
    * @param departmentName the department name
    * @param task the task description
-   * @return future completing with the department result
+   * @return the department result
    * @throws IllegalArgumentException if department doesn't exist
    */
-  public @NonNull CompletableFuture<AgentResult> sendToDepartment(
+  public @NonNull AgentResult sendToDepartment(
       @NonNull String departmentName, @NonNull String task) {
     Objects.requireNonNull(departmentName, "departmentName cannot be null");
     Objects.requireNonNull(task, "task cannot be null");

@@ -6,7 +6,7 @@ import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -201,11 +201,9 @@ class NetworkStreamTest {
       enqueueStreamingResponse("Response 3"); // Round 2, peer 1
       enqueueStreamingResponse("Response 4"); // Round 2, peer 2
 
-      CompletableFuture<AgentNetwork.NetworkResult> future =
+      AgentNetwork.NetworkResult result =
           network.discussStream("Topic").onComplete(r -> {}).start();
 
-      assertNotNull(future);
-      AgentNetwork.NetworkResult result = future.get(10, TimeUnit.SECONDS);
       assertNotNull(result);
       assertNotNull(result.contributions());
     }
@@ -404,3 +402,4 @@ class NetworkStreamTest {
             .addHeader("Content-Type", "text/event-stream"));
   }
 }
+

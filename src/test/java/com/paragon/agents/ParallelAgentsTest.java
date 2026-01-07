@@ -99,16 +99,16 @@ class ParallelAgentsTest {
   class RunString {
 
     @Test
-    @DisplayName("run(String) returns CompletableFuture")
-    void run_returnsCompletableFuture() {
+    @DisplayName("run(String) returns List<AgentResult>")
+    void run_returnsListOfAgentResult() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
       enqueueSuccessResponse("Hello");
 
-      CompletableFuture<List<AgentResult>> future = orchestrator.run("Test input");
+      List<AgentResult> results = orchestrator.run("Test input");
 
-      assertNotNull(future);
-      assertInstanceOf(CompletableFuture.class, future);
+      assertNotNull(results);
+      assertInstanceOf(List.class, results);
     }
 
     @Test
@@ -121,7 +121,7 @@ class ParallelAgentsTest {
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
 
-      List<AgentResult> results = orchestrator.run("Test").get(5, TimeUnit.SECONDS);
+      List<AgentResult> results = orchestrator.run("Test");
 
       assertEquals(2, results.size());
     }
@@ -147,9 +147,9 @@ class ParallelAgentsTest {
       ParallelAgents orchestrator = ParallelAgents.of(agent);
       enqueueSuccessResponse("Hello");
 
-      CompletableFuture<List<AgentResult>> future = orchestrator.run(Text.valueOf("Test text"));
+      List<AgentResult> results = orchestrator.run(Text.valueOf("Test text"));
 
-      assertNotNull(future);
+      assertNotNull(results);
     }
 
     @Test
@@ -173,9 +173,9 @@ class ParallelAgentsTest {
       ParallelAgents orchestrator = ParallelAgents.of(agent);
       enqueueSuccessResponse("Hello");
 
-      CompletableFuture<List<AgentResult>> future = orchestrator.run(Message.user("Test message"));
+      List<AgentResult> results = orchestrator.run(Message.user("Test message"));
 
-      assertNotNull(future);
+      assertNotNull(results);
     }
 
     @Test
@@ -202,7 +202,7 @@ class ParallelAgentsTest {
       context.addInput(Message.user("Context input"));
       enqueueSuccessResponse("Response");
 
-      List<AgentResult> results = orchestrator.run(context).get(5, TimeUnit.SECONDS);
+      List<AgentResult> results = orchestrator.run(context);
 
       assertNotNull(results);
       assertEquals(1, results.size());
@@ -223,8 +223,8 @@ class ParallelAgentsTest {
   class RunFirst {
 
     @Test
-    @DisplayName("runFirst(String) returns CompletableFuture with single result")
-    void runFirst_returnsFutureWithSingleResult() throws Exception {
+    @DisplayName("runFirst(String) returns AgentResult for single result")
+    void runFirst_returnsAgentResult() throws Exception {
       Agent agent1 = createTestAgent("Fast");
       Agent agent2 = createTestAgent("Slow");
       ParallelAgents orchestrator = ParallelAgents.of(agent1, agent2);
@@ -232,10 +232,8 @@ class ParallelAgentsTest {
       enqueueSuccessResponse("First!");
       enqueueSuccessResponse("Second!");
 
-      CompletableFuture<AgentResult> future = orchestrator.runFirst("Race");
+      AgentResult result = orchestrator.runFirst("Race");
 
-      assertNotNull(future);
-      AgentResult result = future.get(5, TimeUnit.SECONDS);
       assertNotNull(result);
     }
 
@@ -255,9 +253,9 @@ class ParallelAgentsTest {
       ParallelAgents orchestrator = ParallelAgents.of(agent);
       enqueueSuccessResponse("First!");
 
-      CompletableFuture<AgentResult> future = orchestrator.runFirst(Text.valueOf("Test"));
+      AgentResult result = orchestrator.runFirst(Text.valueOf("Test"));
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
@@ -267,9 +265,9 @@ class ParallelAgentsTest {
       ParallelAgents orchestrator = ParallelAgents.of(agent);
       enqueueSuccessResponse("First!");
 
-      CompletableFuture<AgentResult> future = orchestrator.runFirst(Message.user("Test"));
+      AgentResult result = orchestrator.runFirst(Message.user("Test"));
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
@@ -282,7 +280,7 @@ class ParallelAgentsTest {
       context.addInput(Message.user("Context input"));
       enqueueSuccessResponse("First!");
 
-      AgentResult result = orchestrator.runFirst(context).get(5, TimeUnit.SECONDS);
+      AgentResult result = orchestrator.runFirst(context);
 
       assertNotNull(result);
     }
@@ -293,8 +291,8 @@ class ParallelAgentsTest {
   class RunAndSynthesize {
 
     @Test
-    @DisplayName("runAndSynthesize(String, Agent) returns CompletableFuture")
-    void runAndSynthesize_returnsCompletableFuture() {
+    @DisplayName("runAndSynthesize(String, Agent) returns AgentResult")
+    void runAndSynthesize_returnsAgentResult() {
       Agent worker = createTestAgent("Worker");
       Agent synthesizer = createTestAgent("Synthesizer");
       ParallelAgents orchestrator = ParallelAgents.of(worker);
@@ -302,10 +300,10 @@ class ParallelAgentsTest {
       enqueueSuccessResponse("Worker output");
       enqueueSuccessResponse("Synthesized result");
 
-      CompletableFuture<AgentResult> future = orchestrator.runAndSynthesize("Task", synthesizer);
+      AgentResult result = orchestrator.runAndSynthesize("Task", synthesizer);
 
-      assertNotNull(future);
-      assertInstanceOf(CompletableFuture.class, future);
+      assertNotNull(result);
+      assertInstanceOf(AgentResult.class, result);
     }
 
     @Test
@@ -339,10 +337,10 @@ class ParallelAgentsTest {
       enqueueSuccessResponse("Worker output");
       enqueueSuccessResponse("Synthesized result");
 
-      CompletableFuture<AgentResult> future =
+      AgentResult result =
           orchestrator.runAndSynthesize(Text.valueOf("Task"), synthesizer);
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
@@ -355,10 +353,10 @@ class ParallelAgentsTest {
       enqueueSuccessResponse("Worker output");
       enqueueSuccessResponse("Synthesized result");
 
-      CompletableFuture<AgentResult> future =
+      AgentResult result =
           orchestrator.runAndSynthesize(Message.user("Task"), synthesizer);
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
@@ -375,7 +373,7 @@ class ParallelAgentsTest {
       enqueueSuccessResponse("Synthesized result");
 
       AgentResult result =
-          orchestrator.runAndSynthesize(context, synthesizer).get(5, TimeUnit.SECONDS);
+          orchestrator.runAndSynthesize(context, synthesizer);
 
       assertNotNull(result);
     }

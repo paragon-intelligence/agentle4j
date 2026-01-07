@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
@@ -64,7 +63,7 @@ class ResponderRetryTest {
     mockWebServer.enqueue(createSuccessResponse());
 
     Responder responder = createResponder(RetryPolicy.builder().maxRetries(3).build());
-    Response response = responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+    Response response = responder.respond(createPayload());
 
     assertNotNull(response);
     assertEquals("resp-123", response.id());
@@ -79,7 +78,7 @@ class ResponderRetryTest {
     mockWebServer.enqueue(createSuccessResponse());
 
     Responder responder = createResponder(RetryPolicy.builder().maxRetries(3).build());
-    Response response = responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+    Response response = responder.respond(createPayload());
 
     assertNotNull(response);
     assertEquals(2, mockWebServer.getRequestCount());
@@ -91,7 +90,7 @@ class ResponderRetryTest {
     mockWebServer.enqueue(createSuccessResponse());
 
     Responder responder = createResponder(RetryPolicy.builder().maxRetries(3).build());
-    Response response = responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+    Response response = responder.respond(createPayload());
 
     assertNotNull(response);
     assertEquals(2, mockWebServer.getRequestCount());
@@ -103,7 +102,7 @@ class ResponderRetryTest {
     mockWebServer.enqueue(createSuccessResponse());
 
     Responder responder = createResponder(RetryPolicy.builder().maxRetries(3).build());
-    Response response = responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+    Response response = responder.respond(createPayload());
 
     assertNotNull(response);
     assertEquals(2, mockWebServer.getRequestCount());
@@ -115,7 +114,7 @@ class ResponderRetryTest {
     mockWebServer.enqueue(createSuccessResponse());
 
     Responder responder = createResponder(RetryPolicy.builder().maxRetries(3).build());
-    Response response = responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+    Response response = responder.respond(createPayload());
 
     assertNotNull(response);
     assertEquals(2, mockWebServer.getRequestCount());
@@ -127,12 +126,12 @@ class ResponderRetryTest {
 
     Responder responder = createResponder(RetryPolicy.defaults());
 
-    ExecutionException ex =
+    RuntimeException ex =
         assertThrows(
-            ExecutionException.class,
-            () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+            RuntimeException.class,
+            () -> responder.respond(createPayload()));
 
-    assertTrue(ex.getCause().getMessage().contains("400"));
+    assertTrue(ex.getMessage().contains("400"));
     assertEquals(1, mockWebServer.getRequestCount()); // No retry
   }
 
@@ -142,12 +141,12 @@ class ResponderRetryTest {
 
     Responder responder = createResponder(RetryPolicy.defaults());
 
-    ExecutionException ex =
+    RuntimeException ex =
         assertThrows(
-            ExecutionException.class,
-            () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+            RuntimeException.class,
+            () -> responder.respond(createPayload()));
 
-    assertTrue(ex.getCause().getMessage().contains("401"));
+    assertTrue(ex.getMessage().contains("401"));
     assertEquals(1, mockWebServer.getRequestCount());
   }
 
@@ -157,12 +156,12 @@ class ResponderRetryTest {
 
     Responder responder = createResponder(RetryPolicy.defaults());
 
-    ExecutionException ex =
+    RuntimeException ex =
         assertThrows(
-            ExecutionException.class,
-            () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+            RuntimeException.class,
+            () -> responder.respond(createPayload()));
 
-    assertTrue(ex.getCause().getMessage().contains("404"));
+    assertTrue(ex.getMessage().contains("404"));
     assertEquals(1, mockWebServer.getRequestCount());
   }
 
@@ -181,12 +180,12 @@ class ResponderRetryTest {
             .build();
     Responder responder = createResponder(policy);
 
-    ExecutionException ex =
+    RuntimeException ex =
         assertThrows(
-            ExecutionException.class,
-            () -> responder.respond(createPayload()).get(30, TimeUnit.SECONDS));
+            RuntimeException.class,
+            () -> responder.respond(createPayload()));
 
-    assertTrue(ex.getCause().getMessage().contains("500"));
+    assertTrue(ex.getMessage().contains("500"));
     assertEquals(4, mockWebServer.getRequestCount()); // 1 initial + 3 retries
   }
 
@@ -196,12 +195,12 @@ class ResponderRetryTest {
 
     Responder responder = createResponder(RetryPolicy.disabled());
 
-    ExecutionException ex =
+    RuntimeException ex =
         assertThrows(
-            ExecutionException.class,
-            () -> responder.respond(createPayload()).get(5, TimeUnit.SECONDS));
+            RuntimeException.class,
+            () -> responder.respond(createPayload()));
 
-    assertTrue(ex.getCause().getMessage().contains("429"));
+    assertTrue(ex.getMessage().contains("429"));
     assertEquals(1, mockWebServer.getRequestCount());
   }
 
@@ -216,7 +215,7 @@ class ResponderRetryTest {
         RetryPolicy.builder().maxRetries(3).initialDelay(Duration.ofMillis(10)).build();
     Responder responder = createResponder(policy);
 
-    Response response = responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+    Response response = responder.respond(createPayload());
 
     assertNotNull(response);
     assertEquals(2, mockWebServer.getRequestCount());
@@ -234,7 +233,7 @@ class ResponderRetryTest {
         RetryPolicy.builder().maxRetries(5).initialDelay(Duration.ofMillis(10)).build();
     Responder responder = createResponder(policy);
 
-    Response response = responder.respond(createPayload()).get(30, TimeUnit.SECONDS);
+    Response response = responder.respond(createPayload());
 
     assertNotNull(response);
     assertEquals(4, mockWebServer.getRequestCount());
@@ -254,7 +253,7 @@ class ResponderRetryTest {
             .build();
     Responder responder = createResponder(policy);
 
-    Response response = responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+    Response response = responder.respond(createPayload());
 
     assertNotNull(response);
     assertEquals(2, mockWebServer.getRequestCount());
@@ -274,7 +273,7 @@ class ResponderRetryTest {
             .maxRetries(3)
             .build();
 
-    Response response = responder.respond(createPayload()).get(10, TimeUnit.SECONDS);
+    Response response = responder.respond(createPayload());
 
     assertNotNull(response);
     assertEquals(2, mockWebServer.getRequestCount());

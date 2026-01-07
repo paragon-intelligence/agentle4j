@@ -7,7 +7,6 @@ import com.paragon.responses.spec.Text;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import org.jspecify.annotations.NonNull;
 
@@ -125,11 +124,13 @@ public final class RouterStream {
   }
 
   /**
-   * Starts the streaming router execution.
+   * Starts the streaming router execution. Blocks until completion.
    *
-   * @return future completing with the final result
+   * <p>On virtual threads, blocking is efficient and does not consume platform threads.
+   *
+   * @return the final result
    */
-  public @NonNull CompletableFuture<AgentResult> start() {
+  public @NonNull AgentResult start() {
     // First, classify the input
     Optional<String> inputTextOpt = extractLastUserMessage();
     if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
@@ -144,78 +145,64 @@ public final class RouterStream {
       if (onComplete != null) {
         onComplete.accept(errorResult);
       }
-      return CompletableFuture.completedFuture(errorResult);
+      return errorResult;
     }
 
     String inputText = inputTextOpt.get();
-    return router
-        .classify(inputText)
-        .thenCompose(
-            selectedAgentOpt -> {
-              if (selectedAgentOpt.isEmpty()) {
-                AgentResult errorResult =
-                    AgentResult.error(
-                        new IllegalStateException("No suitable agent found for input"), context, 0);
-                if (onError != null) {
-                  onError.accept(errorResult.error());
-                }
-                if (onComplete != null) {
-                  onComplete.accept(errorResult);
-                }
-                return CompletableFuture.completedFuture(errorResult);
-              }
 
-              Agent selectedAgent = selectedAgentOpt.get();
+    // Classify synchronously (returns Optional<Agent> directly)
+    Optional<Agent> selectedAgentOpt = router.classify(inputText);
 
-              // Notify about route selection
-              if (onRouteSelected != null) {
-                onRouteSelected.accept(selectedAgent);
-              }
+    if (selectedAgentOpt.isEmpty()) {
+      AgentResult errorResult =
+          AgentResult.error(
+              new IllegalStateException("No suitable agent found for input"), context, 0);
+      if (onError != null) {
+        onError.accept(errorResult.error());
+      }
+      if (onComplete != null) {
+        onComplete.accept(errorResult);
+      }
+      return errorResult;
+    }
 
-              // Execute the selected agent with streaming
-              AgentStream agentStream = selectedAgent.interactStream(context);
+    Agent selectedAgent = selectedAgentOpt.get();
 
-              // Wire up callbacks
-              if (onTextDelta != null) {
-                agentStream.onTextDelta(onTextDelta);
-              }
-              if (onTurnStart != null) {
-                agentStream.onTurnStart(onTurnStart);
-              }
+    // Notify about route selection
+    if (onRouteSelected != null) {
+      onRouteSelected.accept(selectedAgent);
+    }
 
-              if (onToolExecuted != null) {
-                agentStream.onToolExecuted(onToolExecuted);
-              }
-              if (onHandoff != null) {
-                agentStream.onHandoff(onHandoff);
-              }
-              if (onError != null) {
-                agentStream.onError(onError);
-              }
+    // Execute the selected agent with streaming
+    AgentStream agentStream = selectedAgent.interactStream(context);
 
-              // Wrap result as handoff
-              CompletableFuture<AgentResult> future = new CompletableFuture<>();
-              final Agent selected = selectedAgent;
+    // Wire up callbacks
+    if (onTextDelta != null) {
+      agentStream.onTextDelta(onTextDelta);
+    }
+    if (onTurnStart != null) {
+      agentStream.onTurnStart(onTurnStart);
+    }
 
-              agentStream.onComplete(
-                  innerResult -> {
-                    AgentResult handoffResult = AgentResult.handoff(selected, innerResult, context);
-                    if (onComplete != null) {
-                      onComplete.accept(handoffResult);
-                    }
-                    future.complete(handoffResult);
-                  });
+    if (onToolExecuted != null) {
+      agentStream.onToolExecuted(onToolExecuted);
+    }
+    if (onHandoff != null) {
+      agentStream.onHandoff(onHandoff);
+    }
+    if (onError != null) {
+      agentStream.onError(onError);
+    }
 
-              agentStream.start();
-              return future;
-            })
-        .exceptionally(
-            ex -> {
-              if (onError != null) {
-                onError.accept(ex);
-              }
-              return AgentResult.error(ex, context, 0);
-            });
+    // Execute and wrap result as handoff
+    AgentResult innerResult = agentStream.start();
+    AgentResult handoffResult = AgentResult.handoff(selectedAgent, innerResult, context);
+    
+    if (onComplete != null) {
+      onComplete.accept(handoffResult);
+    }
+    
+    return handoffResult;
   }
 
   private Optional<String> extractLastUserMessage() {

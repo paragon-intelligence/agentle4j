@@ -58,7 +58,7 @@ class AgentIntegrationTest {
             .responder(responder)
             .build();
 
-    AgentResult result = agent.interact("Hello").join();
+    AgentResult result = agent.interact("Hello");
 
     assertTrue(result.isError());
     assertNotNull(result.error());
@@ -81,7 +81,7 @@ class AgentIntegrationTest {
             .responder(responder)
             .build();
 
-    AgentResult result = agent.interact("Hello").join();
+    AgentResult result = agent.interact("Hello");
 
     assertTrue(result.isError());
   }
@@ -108,7 +108,7 @@ class AgentIntegrationTest {
                 })
             .build();
 
-    AgentResult result = agent.interact("This is forbidden content").join();
+    AgentResult result = agent.interact("This is forbidden content");
 
     assertTrue(result.isError());
     assertTrue(result.error() instanceof GuardrailException);
@@ -134,7 +134,7 @@ class AgentIntegrationTest {
                 })
             .build();
 
-    AgentResult result = agent.interact("This should block").join();
+    AgentResult result = agent.interact("This should block");
 
     assertTrue(result.isError());
   }
@@ -151,7 +151,7 @@ class AgentIntegrationTest {
     Agent agent = createBasicAgent();
     Text textInput = new Text("Hello from Text");
 
-    AgentResult result = agent.interact(textInput).join();
+    AgentResult result = agent.interact(textInput);
 
     assertTrue(result.isSuccess());
   }
@@ -164,7 +164,7 @@ class AgentIntegrationTest {
     Agent agent = createBasicAgent();
     Message message = Message.user("Hello from Message");
 
-    AgentResult result = agent.interact(message).join();
+    AgentResult result = agent.interact(message);
 
     assertTrue(result.isSuccess());
   }
@@ -178,7 +178,7 @@ class AgentIntegrationTest {
     AgentContext context = AgentContext.create();
     context.addInput(Message.user("Hello from context"));
 
-    AgentResult result = agent.interact(context).join();
+    AgentResult result = agent.interact(context);
 
     assertTrue(result.isSuccess());
   }
@@ -192,7 +192,7 @@ class AgentIntegrationTest {
     List<ResponseInputItem> items =
         List.of(Message.user("First message"), Message.user("Second message"));
 
-    AgentResult result = agent.interact(items).join();
+    AgentResult result = agent.interact(items);
 
     assertTrue(result.isSuccess());
   }
@@ -315,10 +315,10 @@ class AgentIntegrationTest {
     context.setState("userId", "user-123");
 
     context.addInput(Message.user("First message"));
-    agent.interact(context).join();
+    agent.interact(context);
 
     context.addInput(Message.user("Second message"));
-    AgentResult result = agent.interact(context).join();
+    AgentResult result = agent.interact(context);
 
     assertTrue(result.isSuccess());
     assertEquals("user-123", context.getState("userId", String.class).orElse(null));
@@ -334,12 +334,12 @@ class AgentIntegrationTest {
     AgentContext context = AgentContext.create();
 
     context.addInput(Message.user("Message 1"));
-    agent.interact(context).join();
+    agent.interact(context);
 
     int historyAfterFirst = context.getHistory().size();
 
     context.addInput(Message.user("Message 2"));
-    agent.interact(context).join();
+    agent.interact(context);
 
     int historyAfterSecond = context.getHistory().size();
 
@@ -366,7 +366,7 @@ class AgentIntegrationTest {
                 })
             .build();
 
-    AgentResult result = agent.interact("Generate something").join();
+    AgentResult result = agent.interact("Generate something");
 
     assertTrue(result.isError());
     assertTrue(result.error() instanceof GuardrailException);

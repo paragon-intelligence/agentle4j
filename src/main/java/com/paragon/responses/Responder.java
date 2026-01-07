@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import okhttp3.*;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -33,11 +32,30 @@ import org.slf4j.LoggerFactory;
 /**
  * Core class for sending requests to the Responses API.
  *
+ * <p>Uses a synchronous-first API design that is optimized for Java 21+ virtual threads. All
+ * blocking I/O operations are virtual-thread-friendly, allowing thousands of concurrent requests
+ * without consuming platform threads.
+ *
  * <p>Supports OpenTelemetry tracing through configurable telemetry processors. Telemetry is emitted
  * asynchronously and does not impact response latency.
  *
  * <p>When using OpenRouter, an optional {@link OpenRouterModelRegistry} can be provided to
  * calculate request costs based on token usage.
+ *
+ * <h2>Usage with Virtual Threads</h2>
+ *
+ * <pre>{@code
+ * // Simple blocking call - cheap with virtual threads
+ * Response response = responder.respond(payload);
+ *
+ * // Parallel requests using virtual threads
+ * try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+ *     var future1 = executor.submit(() -> responder.respond(payload1));
+ *     var future2 = executor.submit(() -> responder.respond(payload2));
+ *     Response r1 = future1.get();
+ *     Response r2 = future2.get();
+ * }
+ * }</pre>
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class Responder {
@@ -89,8 +107,15 @@ public class Responder {
   /**
    * Sends a request to the API and returns the response. Automatically generates a session ID for
    * telemetry.
+   *
+   * <p>This method blocks until the response is received. When running on virtual threads, blocking
+   * is cheap and does not consume platform threads.
+   *
+   * @param payload the request payload
+   * @return the API response
+   * @throws RuntimeException if the request fails after all retries
    */
-  public @NonNull CompletableFuture<Response> respond(@NonNull CreateResponsePayload payload) {
+  public @NonNull Response respond(@NonNull CreateResponsePayload payload) {
     return respond(payload, UUID.randomUUID().toString(), TelemetryContext.empty());
   }
 
@@ -100,9 +125,9 @@ public class Responder {
    *
    * @param payload the request payload
    * @param context telemetry context with user_id, tags, metadata
-   * @return a future that completes with the response
+   * @return the API response
    */
-  public @NonNull CompletableFuture<Response> respond(
+  public @NonNull Response respond(
       @NonNull CreateResponsePayload payload, @NonNull TelemetryContext context) {
     return respond(payload, UUID.randomUUID().toString(), context);
   }
@@ -112,9 +137,9 @@ public class Responder {
    *
    * @param payload the request payload
    * @param sessionId unique identifier for this session (used for trace correlation)
-   * @return a future that completes with the response
+   * @return the API response
    */
-  public @NonNull CompletableFuture<Response> respond(
+  public @NonNull Response respond(
       @NonNull CreateResponsePayload payload, @NonNull String sessionId) {
     return respond(payload, sessionId, TelemetryContext.empty());
   }
@@ -125,9 +150,9 @@ public class Responder {
    * @param payload the request payload
    * @param sessionId unique identifier for this session (used for trace correlation)
    * @param context telemetry context with user_id, tags, metadata
-   * @return a future that completes with the response
+   * @return the API response
    */
-  public @NonNull CompletableFuture<Response> respond(
+  public @NonNull Response respond(
       @NonNull CreateResponsePayload payload,
       @NonNull String sessionId,
       @NonNull TelemetryContext context) {
@@ -149,108 +174,92 @@ public class Responder {
     return executeWithRetry(request, startedEvent, 0);
   }
 
-  /** Executes an HTTP request with retry logic and exponential backoff. */
-  private @NonNull CompletableFuture<Response> executeWithRetry(
+  /**
+   * Executes an HTTP request with retry logic and exponential backoff.
+   *
+   * <p>Uses synchronous OkHttp calls which are virtual-thread-friendly.
+   */
+  private @NonNull Response executeWithRetry(
       @NonNull Request request, @NonNull ResponseStartedEvent startedEvent, int attempt) {
 
-    CompletableFuture<Response> future = new CompletableFuture<>();
+    try {
+      okhttp3.Response response = httpClient.newCall(request).execute();
 
-    httpClient
-        .newCall(request)
-        .enqueue(
-            new Callback() {
-              @Override
-              public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                // Network errors are retryable
-                if (attempt < retryPolicy.maxRetries()) {
-                  logger.warn(
-                      "Request failed (attempt {}), retrying: {}", attempt + 1, e.getMessage());
-                  scheduleRetry(request, startedEvent, attempt, future);
-                } else {
-                  telemetryProcessors.broadcast(ResponseFailedEvent.from(startedEvent, e));
-                  future.completeExceptionally(e);
-                }
-              }
+      try (ResponseBody body = response.body()) {
+        String json = body != null ? body.string() : "";
+        logger.debug("Raw API Response:\n{}", json);
 
-              @Override
-              public void onResponse(@NonNull Call call, okhttp3.Response response) {
-                try (ResponseBody body = response.body()) {
-                  String json = body.string();
-                  logger.debug("Raw API Response:\n{}", json);
+        if (!response.isSuccessful()) {
+          // Check if we should retry this status code
+          if (retryPolicy.isRetryable(response.code()) && attempt < retryPolicy.maxRetries()) {
+            logger.warn("Received {} (attempt {}), retrying", response.code(), attempt + 1);
+            sleepForRetry(attempt);
+            return executeWithRetry(request, startedEvent, attempt + 1);
+          }
 
-                  if (!response.isSuccessful()) {
-                    // Check if we should retry this status code
-                    if (retryPolicy.isRetryable(response.code())
-                        && attempt < retryPolicy.maxRetries()) {
-                      logger.warn(
-                          "Received {} (attempt {}), retrying", response.code(), attempt + 1);
-                      scheduleRetry(request, startedEvent, attempt, future);
-                      return;
-                    }
+          String errorMessage =
+              String.format(
+                  "API Error: %s %d - %s%nResponse Body: %s",
+                  response.protocol(), response.code(), response.message(), json);
+          logger.error(errorMessage);
 
-                    String errorMessage =
-                        String.format(
-                            "API Error: %s %d - %s%nResponse Body: %s",
-                            response.protocol(), response.code(), response.message(), json);
-                    logger.error(errorMessage);
+          telemetryProcessors.broadcast(
+              ResponseFailedEvent.fromHttpError(startedEvent, response.code(), errorMessage));
 
-                    telemetryProcessors.broadcast(
-                        ResponseFailedEvent.fromHttpError(
-                            startedEvent, response.code(), errorMessage));
+          throw new RuntimeException(errorMessage);
+        }
 
-                    future.completeExceptionally(new RuntimeException(errorMessage));
-                    return;
-                  }
+        Response mapped = responsesApiObjectMapper.readValue(json, Response.class);
 
-                  Response mapped = responsesApiObjectMapper.readValue(json, Response.class);
+        telemetryProcessors.broadcast(
+            ResponseCompletedEvent.from(startedEvent, null, null, null, null));
 
-                  telemetryProcessors.broadcast(
-                      ResponseCompletedEvent.from(startedEvent, null, null, null, null));
-
-                  future.complete(mapped);
-                } catch (Exception e) {
-                  telemetryProcessors.broadcast(ResponseFailedEvent.from(startedEvent, e));
-                  future.completeExceptionally(e);
-                }
-              }
-            });
-
-    return future;
+        return mapped;
+      }
+    } catch (IOException e) {
+      // Network errors are retryable
+      if (attempt < retryPolicy.maxRetries()) {
+        logger.warn("Request failed (attempt {}), retrying: {}", attempt + 1, e.getMessage());
+        sleepForRetry(attempt);
+        return executeWithRetry(request, startedEvent, attempt + 1);
+      }
+      telemetryProcessors.broadcast(ResponseFailedEvent.from(startedEvent, e));
+      throw new RuntimeException("Request failed after " + (attempt + 1) + " attempts", e);
+    }
   }
 
-  /** Schedules a retry with exponential backoff delay. */
-  private void scheduleRetry(
-      @NonNull Request request,
-      @NonNull ResponseStartedEvent startedEvent,
-      int attempt,
-      @NonNull CompletableFuture<Response> originalFuture) {
-
+  /** Sleeps for the retry delay. Virtual-thread-friendly. */
+  private void sleepForRetry(int attempt) {
     java.time.Duration delay = retryPolicy.getDelayForAttempt(attempt + 1);
     logger.debug("Scheduling retry {} after {}ms", attempt + 2, delay.toMillis());
-
-    CompletableFuture.delayedExecutor(delay.toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
-        .execute(
-            () -> {
-              executeWithRetry(request, startedEvent, attempt + 1)
-                  .whenComplete(
-                      (result, error) -> {
-                        if (error != null) {
-                          originalFuture.completeExceptionally(error);
-                        } else {
-                          originalFuture.complete(result);
-                        }
-                      });
-            });
+    try {
+      Thread.sleep(delay.toMillis());
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException("Retry interrupted", e);
+    }
   }
 
-  /** Sends a structured output request and parses the response. */
-  public <T> @NonNull CompletableFuture<ParsedResponse<T>> respond(
-      CreateResponsePayload.Structured<T> payload) {
+  /**
+   * Sends a structured output request and parses the response.
+   *
+   * @param payload the structured request payload
+   * @param <T> the type to parse the response into
+   * @return the parsed response
+   */
+  public <T> @NonNull ParsedResponse<T> respond(CreateResponsePayload.Structured<T> payload) {
     return respond(payload, UUID.randomUUID().toString());
   }
 
-  /** Sends a structured output request with session ID and parses the response. */
-  public <T> @NonNull CompletableFuture<ParsedResponse<T>> respond(
+  /**
+   * Sends a structured output request with session ID and parses the response.
+   *
+   * @param payload the structured request payload
+   * @param sessionId unique identifier for this session
+   * @param <T> the type to parse the response into
+   * @return the parsed response
+   */
+  public <T> @NonNull ParsedResponse<T> respond(
       CreateResponsePayload.Structured<T> payload, @NonNull String sessionId) {
     if (payload.hasEmptyText()) {
       throw new IllegalArgumentException("\"payload.text\" parameter cannot be null.");
@@ -271,20 +280,22 @@ public class Responder {
           """);
     }
 
-    CompletableFuture<Response> response = respond(((CreateResponsePayload) payload), sessionId);
+    Response response = respond(((CreateResponsePayload) payload), sessionId);
 
-    return response.thenApply(
-        res -> {
-          try {
-            return res.parse(payload.responseType(), objectMapper);
-          } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-          }
-        });
+    try {
+      return response.parse(payload.responseType(), objectMapper);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("Failed to parse structured response", e);
+    }
   }
 
-  /** Simple text-only respond method. */
-  public @NonNull CompletableFuture<Response> respond(String input) {
+  /**
+   * Simple text-only respond method.
+   *
+   * @param input the user message
+   * @return the API response
+   */
+  public @NonNull Response respond(String input) {
     var payload = CreateResponsePayload.builder().addUserMessage(input);
     if (provider != null && provider.equals(ResponsesAPIProvider.OPEN_ROUTER)) {
       payload.model("openrouter/auto");

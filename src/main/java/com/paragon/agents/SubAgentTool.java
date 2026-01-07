@@ -127,8 +127,8 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
       // Build child context based on configuration
       AgentContext childContext = buildChildContext(params.request());
 
-      // Invoke the sub-agent (blocking - acceptable in virtual threads)
-      AgentResult result = targetAgent.interact(childContext).join();
+      // Invoke the sub-agent (blocking - cheap in virtual threads)
+      AgentResult result = targetAgent.interact(childContext);
 
       if (result.isError()) {
         return FunctionToolCallOutput.error(

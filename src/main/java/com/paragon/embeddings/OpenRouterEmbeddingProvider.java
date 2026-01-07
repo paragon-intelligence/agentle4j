@@ -2,14 +2,15 @@ package com.paragon.embeddings;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.paragon.http.AsyncHttpClient;
-import com.paragon.http.HttpRequest;
 import com.paragon.http.RetryPolicy;
+import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
+import okhttp3.*;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Embedding provider for OpenRouter's embedding API with built-in retry support.
@@ -21,6 +22,8 @@ import org.jspecify.annotations.NonNull;
  *   <li>529 Provider Overloaded - Temporary overload, uses fallback providers when enabled
  *   <li>5xx Server Errors - Transient server issues
  * </ul>
+ *
+ * <p><b>Virtual Thread Design:</b> Uses synchronous API optimized for Java 21+ virtual threads.
  *
  * <p>Example usage:
  *
@@ -34,31 +37,26 @@ import org.jspecify.annotations.NonNull;
  * List<Embedding> results = embeddings.createEmbeddings(
  *     List.of("Hello world", "AI is amazing"),
  *     "openai/text-embedding-3-small"
- * ).join();
+ * );
  * }</pre>
  */
 public class OpenRouterEmbeddingProvider implements EmbeddingProvider {
   private static final String BASE_URL = "https://openrouter.ai/api/v1";
   private static final String EMBEDDINGS_PATH = "/embeddings";
+  private static final MediaType JSON = MediaType.get("application/json");
 
-  private final @NonNull AsyncHttpClient httpClient;
+  private final @NonNull OkHttpClient httpClient;
   private final @NonNull ObjectMapper objectMapper;
+  private final @NonNull String apiKey;
+  private final @NonNull RetryPolicy retryPolicy;
   private final boolean allowFallbacks;
 
   private OpenRouterEmbeddingProvider(Builder builder) {
     this.objectMapper = builder.objectMapper != null ? builder.objectMapper : new ObjectMapper();
-
+    this.apiKey = builder.apiKey;
+    this.retryPolicy = builder.retryPolicy;
     this.allowFallbacks = builder.allowFallbacks;
-
-    // Build the HTTP client with retry support
-    this.httpClient =
-        AsyncHttpClient.builder()
-            .baseUrl(BASE_URL)
-            .defaultHeader("Authorization", "Bearer " + builder.apiKey)
-            .defaultHeader("Content-Type", "application/json")
-            .retryPolicy(builder.retryPolicy)
-            .objectMapper(objectMapper)
-            .build();
+    this.httpClient = builder.httpClient != null ? builder.httpClient : new OkHttpClient();
   }
 
   /**
@@ -71,22 +69,76 @@ public class OpenRouterEmbeddingProvider implements EmbeddingProvider {
   }
 
   @Override
-  public @NonNull CompletableFuture<List<Embedding>> createEmbeddings(
-      @NonNull List<String> input, @NonNull String model) {
+  public @NonNull List<Embedding> createEmbeddings(@NonNull List<String> input, @NonNull String model) {
     Objects.requireNonNull(input, "input cannot be null");
     Objects.requireNonNull(model, "model cannot be null");
 
-    var request =
-        HttpRequest.post(EMBEDDINGS_PATH)
-            .jsonBody(Map.of("input", input, "model", model, "allow_fallbacks", allowFallbacks))
-            .build();
+    try {
+      String jsonBody =
+          objectMapper.writeValueAsString(
+              Map.of("input", input, "model", model, "allow_fallbacks", allowFallbacks));
 
-    return httpClient.execute(request, EmbeddingResponse.class).thenApply(EmbeddingResponse::data);
+      Request request =
+          new Request.Builder()
+              .url(BASE_URL + EMBEDDINGS_PATH)
+              .post(RequestBody.create(jsonBody, JSON))
+              .addHeader("Authorization", "Bearer " + apiKey)
+              .addHeader("Content-Type", "application/json")
+              .build();
+
+      return executeWithRetry(request, 0);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to create embeddings", e);
+    }
+  }
+
+  private List<Embedding> executeWithRetry(Request request, int attempt) throws IOException {
+    try {
+      Response response = httpClient.newCall(request).execute();
+
+      try (ResponseBody body = response.body()) {
+        String json = body != null ? body.string() : "";
+
+        if (!response.isSuccessful()) {
+          // Check if we should retry this status code
+          if (retryPolicy.isRetryable(response.code()) && attempt < retryPolicy.maxRetries()) {
+            sleepForRetry(attempt);
+            return executeWithRetry(request, attempt + 1);
+          }
+
+          throw new RuntimeException(
+              String.format(
+                  "Embedding API Error: %d - %s%nResponse: %s",
+                  response.code(), response.message(), json));
+        }
+
+        EmbeddingResponse embeddingResponse =
+            objectMapper.readValue(json, EmbeddingResponse.class);
+        return embeddingResponse.data();
+      }
+    } catch (IOException e) {
+      // Network errors are retryable
+      if (attempt < retryPolicy.maxRetries()) {
+        sleepForRetry(attempt);
+        return executeWithRetry(request, attempt + 1);
+      }
+      throw e;
+    }
+  }
+
+  private void sleepForRetry(int attempt) {
+    Duration delay = retryPolicy.getDelayForAttempt(attempt + 1);
+    try {
+      Thread.sleep(delay.toMillis());
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException("Retry interrupted", e);
+    }
   }
 
   /** Closes the underlying HTTP client and releases resources. */
   public void close() {
-    httpClient.close();
+    // OkHttpClient doesn't need explicit close, but keep method for API compatibility
   }
 
   /**
@@ -107,6 +159,7 @@ public class OpenRouterEmbeddingProvider implements EmbeddingProvider {
   public static final class Builder {
     private String apiKey;
     private ObjectMapper objectMapper;
+    private OkHttpClient httpClient;
     private RetryPolicy retryPolicy = RetryPolicy.defaults();
     private boolean allowFallbacks = true;
 
@@ -134,6 +187,17 @@ public class OpenRouterEmbeddingProvider implements EmbeddingProvider {
      */
     public @NonNull Builder objectMapper(@NonNull ObjectMapper objectMapper) {
       this.objectMapper = Objects.requireNonNull(objectMapper);
+      return this;
+    }
+
+    /**
+     * Sets the OkHttpClient for HTTP requests.
+     *
+     * @param httpClient the HTTP client
+     * @return this builder
+     */
+    public @NonNull Builder httpClient(@NonNull OkHttpClient httpClient) {
+      this.httpClient = Objects.requireNonNull(httpClient);
       return this;
     }
 

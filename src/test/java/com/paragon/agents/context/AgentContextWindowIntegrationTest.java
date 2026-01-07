@@ -96,7 +96,7 @@ class AgentContextWindowIntegrationTest {
 
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Hello").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Hello");
 
       assertNotNull(result);
       assertFalse(result.isError());
@@ -136,7 +136,7 @@ class AgentContextWindowIntegrationTest {
       enqueueSuccessResponse("Final response");
 
       context.addInput(Message.user("Last message"));
-      AgentResult result = agent.interact(context).get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact(context);
 
       assertNotNull(result);
 
@@ -169,7 +169,7 @@ class AgentContextWindowIntegrationTest {
 
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Short message").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Short message");
 
       assertNotNull(result);
       assertFalse(result.isError());

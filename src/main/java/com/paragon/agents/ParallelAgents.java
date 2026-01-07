@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.StructuredTaskScope;
 import org.jspecify.annotations.NonNull;
 
 /**
@@ -17,8 +17,8 @@ import org.jspecify.annotations.NonNull;
  * <p>From Chapter 7 (Multi-Agent Collaboration): "Multiple agents work on different parts of a
  * problem simultaneously, and their results are later combined."
  *
- * <p><b>All methods are async by default</b> - they return {@link CompletableFuture}. For blocking
- * calls, use {@code .join()}.
+ * <p><b>Virtual Thread Design:</b> Uses Java 21+ structured concurrency for parallel execution.
+ * All agents run on virtual threads, making parallel execution cheap and efficient.
  *
  * <p><b>Trace Correlation:</b> All parallel agents share the same parent traceId, enabling
  * end-to-end debugging of fan-out patterns.
@@ -32,18 +32,14 @@ import org.jspecify.annotations.NonNull;
  *
  * ParallelAgents team = ParallelAgents.of(researcher, analyst);
  *
- * // Async (returns immediately)
- * team.run("Analyze market trends")
- *     .thenAccept(results -> results.forEach(r -> System.out.println(r.output())));
+ * // Blocking call - uses virtual threads internally
+ * List<AgentResult> results = team.run("Analyze market trends");
  *
- * // Blocking (if you need sync)
- * List<AgentResult> results = team.run("...").join();
- *
- * // Or get just the first to complete
- * AgentResult fastest = team.runFirst("Quick analysis needed").join();
+ * // Get just the first to complete
+ * AgentResult fastest = team.runFirst("Quick analysis needed");
  *
  * // Synthesize with another agent
- * AgentResult combined = team.runAndSynthesize("What's the outlook?", writer).join();
+ * AgentResult combined = team.runAndSynthesize("What's the outlook?", writer);
  *
  * // Streaming support
  * team.runStream("Analyze trends")
@@ -96,17 +92,18 @@ public final class ParallelAgents {
     return agents;
   }
 
-  // ===== Run Methods (All Async) =====
+  // ===== Run Methods =====
 
   /**
    * Runs all agents concurrently with the same input.
    *
    * <p>Each agent receives the same input and processes it independently with a fresh context.
+   * Uses virtual threads for parallel execution.
    *
    * @param input the input text for all agents
-   * @return future completing with list of results, in the same order as agents()
+   * @return list of results, in the same order as agents()
    */
-  public @NonNull CompletableFuture<List<AgentResult>> run(@NonNull String input) {
+  public @NonNull List<AgentResult> run(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(input));
@@ -117,9 +114,9 @@ public final class ParallelAgents {
    * Runs all agents concurrently with Text content.
    *
    * @param text the text content for all agents
-   * @return future completing with list of results
+   * @return list of results
    */
-  public @NonNull CompletableFuture<List<AgentResult>> run(@NonNull Text text) {
+  public @NonNull List<AgentResult> run(@NonNull Text text) {
     Objects.requireNonNull(text, "text cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(text));
@@ -130,9 +127,9 @@ public final class ParallelAgents {
    * Runs all agents concurrently with a Message.
    *
    * @param message the message for all agents
-   * @return future completing with list of results
+   * @return list of results
    */
-  public @NonNull CompletableFuture<List<AgentResult>> run(@NonNull Message message) {
+  public @NonNull List<AgentResult> run(@NonNull Message message) {
     Objects.requireNonNull(message, "message cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(message);
@@ -145,36 +142,45 @@ public final class ParallelAgents {
    * <p>Each agent receives a copy of the context to prevent interference. All parallel agents share
    * the same parent traceId for trace correlation.
    *
+   * <p>Uses structured concurrency (Java 21+) to run all agents on virtual threads.
+   *
    * <p>This is the core method. All other run overloads delegate here.
    *
    * @param context the context to copy for each agent
-   * @return future completing with list of results, in the same order as agents()
+   * @return list of results, in the same order as agents()
    */
-  public @NonNull CompletableFuture<List<AgentResult>> run(@NonNull AgentContext context) {
+  public @NonNull List<AgentResult> run(@NonNull AgentContext context) {
     Objects.requireNonNull(context, "context cannot be null");
 
     // Generate a shared parent traceId for all parallel agents
     String parentTraceId = TraceIdGenerator.generateTraceId();
     String parentSpanId = TraceIdGenerator.generateSpanId();
 
-    // Create futures for all agents
-    List<CompletableFuture<AgentResult>> futures = new ArrayList<>();
-    for (Agent agent : agents) {
-      AgentContext ctx = context.copy();
-      ctx.withTraceContext(parentTraceId, parentSpanId);
-      futures.add(agent.interact(ctx));
-    }
+    try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+      // Fork all agents as subtasks
+      List<StructuredTaskScope.Subtask<AgentResult>> subtasks = new ArrayList<>();
+      for (Agent agent : agents) {
+        AgentContext ctx = context.copy();
+        ctx.withTraceContext(parentTraceId, parentSpanId);
+        subtasks.add(scope.fork(() -> agent.interact(ctx)));
+      }
 
-    // Combine all futures
-    return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-        .thenApply(
-            v -> {
-              List<AgentResult> results = new ArrayList<>();
-              for (CompletableFuture<AgentResult> future : futures) {
-                results.add(future.join());
-              }
-              return results;
-            });
+      // Wait for all to complete
+      scope.join();
+      scope.throwIfFailed();
+
+      // Collect results in order
+      List<AgentResult> results = new ArrayList<>();
+      for (var subtask : subtasks) {
+        results.add(subtask.get());
+      }
+      return results;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException("Parallel execution interrupted", e);
+    } catch (java.util.concurrent.ExecutionException e) {
+      throw new RuntimeException("Parallel execution failed", e.getCause() != null ? e.getCause() : e);
+    }
   }
 
   // ===== RunFirst Methods (Racing) =====
@@ -185,9 +191,9 @@ public final class ParallelAgents {
    * <p>Useful when you want the fastest response and don't need all results.
    *
    * @param input the input text for all agents
-   * @return future completing with the first result
+   * @return the first result
    */
-  public @NonNull CompletableFuture<AgentResult> runFirst(@NonNull String input) {
+  public @NonNull AgentResult runFirst(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(input));
@@ -198,9 +204,9 @@ public final class ParallelAgents {
    * Runs all agents concurrently with Text content and returns the first to complete.
    *
    * @param text the text content for all agents
-   * @return future completing with the first result
+   * @return the first result
    */
-  public @NonNull CompletableFuture<AgentResult> runFirst(@NonNull Text text) {
+  public @NonNull AgentResult runFirst(@NonNull Text text) {
     Objects.requireNonNull(text, "text cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(text));
@@ -211,9 +217,9 @@ public final class ParallelAgents {
    * Runs all agents concurrently with a Message and returns the first to complete.
    *
    * @param message the message for all agents
-   * @return future completing with the first result
+   * @return the first result
    */
-  public @NonNull CompletableFuture<AgentResult> runFirst(@NonNull Message message) {
+  public @NonNull AgentResult runFirst(@NonNull Message message) {
     Objects.requireNonNull(message, "message cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(message);
@@ -223,22 +229,31 @@ public final class ParallelAgents {
   /**
    * Runs all agents concurrently using an existing context and returns the first to complete.
    *
+   * <p>Uses structured concurrency with ShutdownOnSuccess to cancel other agents once one
+   * completes.
+   *
    * @param context the context to copy for each agent
-   * @return future completing with the first result
+   * @return the first result
    */
-  public @NonNull CompletableFuture<AgentResult> runFirst(@NonNull AgentContext context) {
+  public @NonNull AgentResult runFirst(@NonNull AgentContext context) {
     Objects.requireNonNull(context, "context cannot be null");
 
-    // Create futures for all agents
-    List<CompletableFuture<AgentResult>> futures = new ArrayList<>();
-    for (Agent agent : agents) {
-      AgentContext ctx = context.copy();
-      futures.add(agent.interact(ctx));
-    }
+    try (var scope = new StructuredTaskScope.ShutdownOnSuccess<AgentResult>()) {
+      // Fork all agents as subtasks
+      for (Agent agent : agents) {
+        AgentContext ctx = context.copy();
+        scope.fork(() -> agent.interact(ctx));
+      }
 
-    // Return first to complete
-    return CompletableFuture.anyOf(futures.toArray(new CompletableFuture[0]))
-        .thenApply(result -> (AgentResult) result);
+      // Wait for first to complete
+      scope.join();
+      return scope.result();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException("Parallel execution interrupted", e);
+    } catch (java.util.concurrent.ExecutionException e) {
+      throw new RuntimeException("Parallel execution failed", e.getCause() != null ? e.getCause() : e);
+    }
   }
 
   // ===== RunAndSynthesize Methods (Fan-out/Fan-in) =====
@@ -251,10 +266,9 @@ public final class ParallelAgents {
    *
    * @param input the input text for all agents
    * @param synthesizer the agent that combines results
-   * @return future completing with the synthesized result
+   * @return the synthesized result
    */
-  public @NonNull CompletableFuture<AgentResult> runAndSynthesize(
-      @NonNull String input, @NonNull Agent synthesizer) {
+  public @NonNull AgentResult runAndSynthesize(@NonNull String input, @NonNull Agent synthesizer) {
     Objects.requireNonNull(input, "input cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
     AgentContext context = AgentContext.create();
@@ -267,10 +281,9 @@ public final class ParallelAgents {
    *
    * @param text the text content for all agents
    * @param synthesizer the agent that combines results
-   * @return future completing with the synthesized result
+   * @return the synthesized result
    */
-  public @NonNull CompletableFuture<AgentResult> runAndSynthesize(
-      @NonNull Text text, @NonNull Agent synthesizer) {
+  public @NonNull AgentResult runAndSynthesize(@NonNull Text text, @NonNull Agent synthesizer) {
     Objects.requireNonNull(text, "text cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
     AgentContext context = AgentContext.create();
@@ -283,9 +296,9 @@ public final class ParallelAgents {
    *
    * @param message the message for all agents
    * @param synthesizer the agent that combines results
-   * @return future completing with the synthesized result
+   * @return the synthesized result
    */
-  public @NonNull CompletableFuture<AgentResult> runAndSynthesize(
+  public @NonNull AgentResult runAndSynthesize(
       @NonNull Message message, @NonNull Agent synthesizer) {
     Objects.requireNonNull(message, "message cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
@@ -301,9 +314,9 @@ public final class ParallelAgents {
    *
    * @param context the context to copy for each agent
    * @param synthesizer the agent that combines results
-   * @return future completing with the synthesized result
+   * @return the synthesized result
    */
-  public @NonNull CompletableFuture<AgentResult> runAndSynthesize(
+  public @NonNull AgentResult runAndSynthesize(
       @NonNull AgentContext context, @NonNull Agent synthesizer) {
     Objects.requireNonNull(context, "context cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
@@ -311,39 +324,34 @@ public final class ParallelAgents {
     // Extract original query for synthesis prompt
     String originalQuery = extractLastUserMessage(context);
 
-    // Run all agents in parallel, then synthesize
-    return run(context)
-        .thenCompose(
-            results -> {
-              // Build synthesis prompt with all outputs
-              StringBuilder synthesisPrompt = new StringBuilder();
-              synthesisPrompt.append("Original query: ").append(originalQuery).append("\n\n");
-              synthesisPrompt.append("The following agents have provided their outputs:\n\n");
+    // Run all agents in parallel
+    List<AgentResult> results = run(context);
 
-              for (int i = 0; i < agents.size(); i++) {
-                Agent agent = agents.get(i);
-                AgentResult result = results.get(i);
-                synthesisPrompt.append("--- ").append(agent.name()).append(" ---\n");
-                if (result.isError()) {
-                  synthesisPrompt
-                      .append("[ERROR: ")
-                      .append(result.error().getMessage())
-                      .append("]\n");
-                } else {
-                  synthesisPrompt
-                      .append(result.output() != null ? result.output() : "[No output]")
-                      .append("\n");
-                }
-                synthesisPrompt.append("\n");
-              }
+    // Build synthesis prompt with all outputs
+    StringBuilder synthesisPrompt = new StringBuilder();
+    synthesisPrompt.append("Original query: ").append(originalQuery).append("\n\n");
+    synthesisPrompt.append("The following agents have provided their outputs:\n\n");
 
-              synthesisPrompt.append("Please synthesize these outputs into a coherent response.");
+    for (int i = 0; i < agents.size(); i++) {
+      Agent agent = agents.get(i);
+      AgentResult result = results.get(i);
+      synthesisPrompt.append("--- ").append(agent.name()).append(" ---\n");
+      if (result.isError()) {
+        synthesisPrompt.append("[ERROR: ").append(result.error().getMessage()).append("]\n");
+      } else {
+        synthesisPrompt
+            .append(result.output() != null ? result.output() : "[No output]")
+            .append("\n");
+      }
+      synthesisPrompt.append("\n");
+    }
 
-              // Run synthesizer with fresh context
-              AgentContext synthContext = AgentContext.create();
-              synthContext.addInput(Message.user(synthesisPrompt.toString()));
-              return synthesizer.interact(synthContext);
-            });
+    synthesisPrompt.append("Please synthesize these outputs into a coherent response.");
+
+    // Run synthesizer with fresh context
+    AgentContext synthContext = AgentContext.create();
+    synthContext.addInput(Message.user(synthesisPrompt.toString()));
+    return synthesizer.interact(synthContext);
   }
 
   // ===== Streaming Methods =====

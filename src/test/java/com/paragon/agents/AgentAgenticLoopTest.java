@@ -60,7 +60,7 @@ class AgentAgenticLoopTest {
                   })
               .build();
 
-      AgentResult result = agent.interact("This contains blocked content").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("This contains blocked content");
 
       assertFalse(result.isSuccess());
       assertTrue(result.isError());
@@ -82,7 +82,7 @@ class AgentAgenticLoopTest {
 
       enqueueSuccessResponse("Hello!");
 
-      AgentResult result = agent.interact("Safe input").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Safe input");
 
       assertTrue(result.isSuccess());
     }
@@ -116,7 +116,7 @@ class AgentAgenticLoopTest {
 
       enqueueSuccessResponse("This is forbidden output");
 
-      AgentResult result = agent.interact("Give me response").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Give me response");
 
       assertFalse(result.isSuccess());
       assertTrue(result.isError());
@@ -137,7 +137,7 @@ class AgentAgenticLoopTest {
 
       enqueueSuccessResponse("Safe output");
 
-      AgentResult result = agent.interact("Test").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Test");
 
       assertTrue(result.isSuccess());
     }
@@ -157,7 +157,7 @@ class AgentAgenticLoopTest {
       Agent agent = createSimpleAgent();
       enqueueSuccessResponse("Hello!");
 
-      AgentResult result = agent.interact("Hi").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Hi");
 
       assertTrue(result.isSuccess());
       assertFalse(result.isError());
@@ -171,7 +171,7 @@ class AgentAgenticLoopTest {
       Agent agent = createSimpleAgent();
       enqueueSuccessResponse("Test response text");
 
-      AgentResult result = agent.interact("Input").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Input");
 
       assertTrue(result.output().contains("Test response text"));
     }
@@ -182,7 +182,7 @@ class AgentAgenticLoopTest {
       Agent agent = createSimpleAgent();
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Input").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Input");
 
       assertEquals(1, result.turnsUsed());
     }
@@ -193,7 +193,7 @@ class AgentAgenticLoopTest {
       Agent agent = createSimpleAgent();
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Input").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Input");
 
       assertNotNull(result.toolExecutions());
       assertTrue(result.toolExecutions().isEmpty());
@@ -205,7 +205,7 @@ class AgentAgenticLoopTest {
       Agent agent = createSimpleAgent();
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Input").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Input");
 
       assertNotNull(result.history());
       assertFalse(result.history().isEmpty());
@@ -217,7 +217,7 @@ class AgentAgenticLoopTest {
       Agent agent = createSimpleAgent();
       enqueueSuccessResponse("Response");
 
-      AgentResult result = agent.interact("Input").get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interact("Input");
 
       assertNotNull(result.finalResponse());
     }
@@ -242,7 +242,7 @@ class AgentAgenticLoopTest {
       assertTrue(context.hasTraceContext());
 
       enqueueSuccessResponse("Response");
-      agent.interact(context).get(5, TimeUnit.SECONDS);
+      agent.interact(context);
 
       // Context should still have the trace we set
       assertEquals("custom-trace-id", context.parentTraceId().orElse(null));

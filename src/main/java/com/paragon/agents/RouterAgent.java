@@ -3,13 +3,13 @@ package com.paragon.agents;
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.CreateResponsePayload;
 import com.paragon.responses.spec.Message;
+import com.paragon.responses.spec.Response;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -19,8 +19,8 @@ import org.jspecify.annotations.Nullable;
  * <p>Unlike general agents with complex instructions, RouterAgent focuses purely on classification
  * and routing, avoiding the noise of full agent instructions.
  *
- * <p><b>All methods are async by default</b> - they return {@link CompletableFuture}. For blocking
- * calls, use {@code .join()}.
+ * <p><b>Virtual Thread Design:</b> Uses synchronous API optimized for Java 21+ virtual threads.
+ * Blocking calls are cheap and efficient with virtual threads.
  *
  * <h2>Usage Example</h2>
  *
@@ -37,13 +37,13 @@ import org.jspecify.annotations.Nullable;
  *     .addRoute(salesAgent, "pricing, new features, demos, upgrades")
  *     .build();
  *
- * // Route and execute (async)
- * router.route("I have a question about my invoice")
- *     .thenAccept(result -> System.out.println("Handled by: " + result.handoffTarget().name()));
+ * // Route and execute - blocking, uses virtual threads
+ * AgentResult result = router.route("I have a question about my invoice");
+ * System.out.println("Handled by: " + result.handoffTarget().name());
  *
  * // Or just classify without executing
- * router.classify("My app keeps crashing")
- *     .thenAccept(agent -> System.out.println("Would route to: " + agent.name()));
+ * Optional<Agent> agent = router.classify("My app keeps crashing");
+ * System.out.println("Would route to: " + agent.map(Agent::name).orElse("none"));
  *
  * // Streaming support
  * router.routeStream("Help me with billing")
@@ -80,15 +80,15 @@ public final class RouterAgent {
     return new Builder();
   }
 
-  // ===== Route Methods (All Async) =====
+  // ===== Route Methods =====
 
   /**
    * Routes the input to the most appropriate agent and executes it.
    *
    * @param input the user input to route
-   * @return future completing with the result from the selected agent
+   * @return the result from the selected agent
    */
-  public @NonNull CompletableFuture<AgentResult> route(@NonNull String input) {
+  public @NonNull AgentResult route(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(input));
@@ -99,9 +99,9 @@ public final class RouterAgent {
    * Routes the Text content to the most appropriate agent and executes it.
    *
    * @param text the text content to route
-   * @return future completing with the result from the selected agent
+   * @return the result from the selected agent
    */
-  public @NonNull CompletableFuture<AgentResult> route(@NonNull Text text) {
+  public @NonNull AgentResult route(@NonNull Text text) {
     Objects.requireNonNull(text, "text cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(text));
@@ -112,9 +112,9 @@ public final class RouterAgent {
    * Routes the Message to the most appropriate agent and executes it.
    *
    * @param message the message to route
-   * @return future completing with the result from the selected agent
+   * @return the result from the selected agent
    */
-  public @NonNull CompletableFuture<AgentResult> route(@NonNull Message message) {
+  public @NonNull AgentResult route(@NonNull Message message) {
     Objects.requireNonNull(message, "message cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(message);
@@ -127,38 +127,29 @@ public final class RouterAgent {
    * <p>This is the core routing method. All other route overloads delegate here.
    *
    * @param context the conversation context
-   * @return future completing with the result from the selected agent
+   * @return the result from the selected agent
    */
-  public @NonNull CompletableFuture<AgentResult> route(@NonNull AgentContext context) {
+  public @NonNull AgentResult route(@NonNull AgentContext context) {
     Objects.requireNonNull(context, "context cannot be null");
 
     // Extract the last user message text for classification
     Optional<String> inputTextOpt = extractLastUserMessage(context);
     if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
-      return CompletableFuture.completedFuture(
-          AgentResult.error(
-              new IllegalStateException("No user message found in context for routing"),
-              context,
-              0));
+      return AgentResult.error(
+          new IllegalStateException("No user message found in context for routing"), context, 0);
     }
 
     String inputText = inputTextOpt.get();
-    return classify(inputText)
-        .thenCompose(
-            selectedOpt -> {
-              if (selectedOpt.isEmpty()) {
-                return CompletableFuture.completedFuture(
-                    AgentResult.error(
-                        new IllegalStateException("No suitable agent found for input"),
-                        context,
-                        0));
-              }
+    Optional<Agent> selectedOpt = classify(inputText);
 
-              Agent selected = selectedOpt.get();
-              return selected
-                  .interact(context)
-                  .thenApply(result -> AgentResult.handoff(selected, result, context));
-            });
+    if (selectedOpt.isEmpty()) {
+      return AgentResult.error(
+          new IllegalStateException("No suitable agent found for input"), context, 0);
+    }
+
+    Agent selected = selectedOpt.get();
+    AgentResult result = selected.interact(context);
+    return AgentResult.handoff(selected, result, context);
   }
 
   // ===== Streaming Route Methods =====
@@ -194,9 +185,9 @@ public final class RouterAgent {
    * <p>Useful when you need to know which agent would handle the input before committing.
    *
    * @param input the user input to classify
-   * @return future completing with an Optional containing the selected agent, or empty if no match and no fallback
+   * @return Optional containing the selected agent, or empty if no match and no fallback
    */
-  public @NonNull CompletableFuture<Optional<Agent>> classify(@NonNull String input) {
+  public @NonNull Optional<Agent> classify(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
 
     // Build routing prompt
@@ -222,21 +213,18 @@ public final class RouterAgent {
     CreateResponsePayload payload =
         CreateResponsePayload.builder().model(model).addUserMessage(prompt.toString()).build();
 
-    return responder
-        .respond(payload)
-        .thenApply(
-            response -> {
-              try {
-                String output = response.outputText().trim();
-                int selectedIndex = Integer.parseInt(output) - 1;
-                if (selectedIndex >= 0 && selectedIndex < routes.size()) {
-                  return Optional.of(routes.get(selectedIndex).agent);
-                }
-              } catch (Exception e) {
-                // Fall through to fallback
-              }
-              return Optional.ofNullable(fallbackAgent);
-            });
+    Response response = responder.respond(payload);
+
+    try {
+      String output = response.outputText().trim();
+      int selectedIndex = Integer.parseInt(output) - 1;
+      if (selectedIndex >= 0 && selectedIndex < routes.size()) {
+        return Optional.of(routes.get(selectedIndex).agent);
+      }
+    } catch (Exception e) {
+      // Fall through to fallback
+    }
+    return Optional.ofNullable(fallbackAgent);
   }
 
   /**

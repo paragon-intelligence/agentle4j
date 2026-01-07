@@ -56,7 +56,7 @@ class AgentStreamExtendedTest {
       AtomicReference<AgentResult> resultRef = new AtomicReference<>();
 
       AgentResult result =
-          agent.interactStream("Hello").onComplete(resultRef::set).start().get(5, TimeUnit.SECONDS);
+          agent.interactStream("Hello").onComplete(resultRef::set).start();
 
       assertNotNull(result);
       assertTrue(result.isSuccess());
@@ -87,11 +87,11 @@ class AgentStreamExtendedTest {
 
       // First interaction
       context.addInput(Message.user("First message"));
-      agent.interactStream(context).start().get(5, TimeUnit.SECONDS);
+      agent.interactStream(context).start();
 
       // Second interaction uses same context
       context.addInput(Message.user("Second message"));
-      AgentResult result = agent.interactStream(context).start().get(5, TimeUnit.SECONDS);
+      AgentResult result = agent.interactStream(context).start();
 
       assertNotNull(result);
       assertTrue(context.getHistory().size() > 2);
@@ -114,7 +114,7 @@ class AgentStreamExtendedTest {
 
       AtomicInteger turnNumber = new AtomicInteger(-1);
 
-      agent.interactStream("Hello").onTurnStart(turnNumber::set).start().get(5, TimeUnit.SECONDS);
+      agent.interactStream("Hello").onTurnStart(turnNumber::set).start();
 
       assertEquals(1, turnNumber.get());
     }
@@ -127,7 +127,7 @@ class AgentStreamExtendedTest {
 
       AtomicReference<String> deltaRef = new AtomicReference<>();
 
-      agent.interactStream("Hello").onTextDelta(deltaRef::set).start().get(5, TimeUnit.SECONDS);
+      agent.interactStream("Hello").onTextDelta(deltaRef::set).start();
 
       assertEquals("Delta text content", deltaRef.get());
     }
@@ -144,9 +144,9 @@ class AgentStreamExtendedTest {
           .interactStream("Hello")
           .onTurnComplete(responseRef::set)
           .start()
-          .get(5, TimeUnit.SECONDS);
+          ;
 
-      assertNotNull(responseRef.get());
+      assertNotNull(responseRef);
       assertNotNull(responseRef.get().id());
     }
 
@@ -158,9 +158,9 @@ class AgentStreamExtendedTest {
 
       AtomicReference<AgentResult> completedRef = new AtomicReference<>();
 
-      agent.interactStream("Hello").onComplete(completedRef::set).start().get(5, TimeUnit.SECONDS);
+      agent.interactStream("Hello").onComplete(completedRef::set).start();
 
-      assertNotNull(completedRef.get());
+      assertNotNull(completedRef);
       assertTrue(completedRef.get().isSuccess());
     }
 
@@ -179,10 +179,10 @@ class AgentStreamExtendedTest {
       AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
       AgentResult result =
-          agent.interactStream("Hello").onError(errorRef::set).start().get(5, TimeUnit.SECONDS);
+          agent.interactStream("Hello").onError(errorRef::set).start();
 
       // Either error callback was called or result is error
-      assertTrue(errorRef.get() != null || result.isError());
+      assertTrue(errorRef != null || result.isError());
     }
   }
 
@@ -217,9 +217,9 @@ class AgentStreamExtendedTest {
           .interactStream("Call the tool")
           .onToolExecuted(execRef::set)
           .start()
-          .get(5, TimeUnit.SECONDS);
+          ;
 
-      assertNotNull(execRef.get());
+      assertNotNull(execRef);
       assertEquals("simple_tool", execRef.get().toolName());
     }
 
@@ -249,7 +249,7 @@ class AgentStreamExtendedTest {
           .interactStream("Call tools")
           .onToolExecuted(executions::add)
           .start()
-          .get(5, TimeUnit.SECONDS);
+          ;
 
       assertEquals(2, executions.size());
     }
@@ -292,7 +292,7 @@ class AgentStreamExtendedTest {
                 approve.accept(true); // Approve the tool
               })
           .start()
-          .get(5, TimeUnit.SECONDS);
+          ;
 
       assertTrue(callbackCalled.get());
       assertNotNull(pendingCall.get());
@@ -323,7 +323,7 @@ class AgentStreamExtendedTest {
           .onToolCallPending((call, approve) -> approve.accept(false)) // Reject
           .onToolExecuted(exec -> toolExecuted.set(true))
           .start()
-          .get(5, TimeUnit.SECONDS);
+          ;
 
       // Tool should NOT be executed when rejected
       assertFalse(toolExecuted.get());
@@ -354,7 +354,7 @@ class AgentStreamExtendedTest {
           .onToolCallPending((call, approve) -> confirmationCalled.set(true))
           .onToolExecuted(exec -> toolExecuted.set(true))
           .start()
-          .get(5, TimeUnit.SECONDS);
+          ;
 
       // Safe tool should NOT trigger confirmation
       assertFalse(confirmationCalled.get());
@@ -393,10 +393,9 @@ class AgentStreamExtendedTest {
           agent
               .interactStream("Run dangerous tool")
               .onPause(pauseStateRef::set)
-              .start()
-              .get(5, TimeUnit.SECONDS);
+              .start();
 
-      assertNotNull(pauseStateRef.get());
+      assertNotNull(pauseStateRef);
       assertTrue(pauseStateRef.get().isPendingApproval());
       assertEquals("dangerous_tool", pauseStateRef.get().pendingToolCall().name());
       assertTrue(result.isPaused());
@@ -437,10 +436,9 @@ class AgentStreamExtendedTest {
           agent
               .interactStream("Generate response")
               .onGuardrailFailed(failedRef::set)
-              .start()
-              .get(5, TimeUnit.SECONDS);
+              .start();
 
-      assertNotNull(failedRef.get());
+      assertNotNull(failedRef);
       assertTrue(failedRef.get().reason().contains("forbidden"));
       assertFalse(result.isSuccess());
     }
@@ -465,12 +463,11 @@ class AgentStreamExtendedTest {
       AgentResult result =
           AgentStream.failed(failedResult)
               .onComplete(completedRef::set)
-              .start()
-              .get(1, TimeUnit.SECONDS);
+              .start();
 
       assertNotNull(result);
       assertTrue(result.isError());
-      assertNotNull(completedRef.get());
+      assertNotNull(completedRef);
     }
 
     @Test

@@ -112,7 +112,7 @@
         <dependency>
             <groupId>net.jqwik</groupId>
             <artifactId>jqwik</artifactId>
-            <version>1.9.2</version>
+            <version>1.9.3</version>
             <scope>test</scope>
         </dependency>
 
@@ -211,6 +211,9 @@
                 <configuration>
                     <source>21</source>
                     <target>21</target>
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 
@@ -222,6 +225,7 @@
                     <useModulePath>false</useModulePath>
                     <!-- JVM args for Mockito/ByteBuddy compatibility with Java 21+/25 -->
                     <argLine>@{argLine} 
+                        --enable-preview
                         --add-opens java.base/java.lang=ALL-UNNAMED 
                         --add-opens java.base/java.lang.reflect=ALL-UNNAMED
                         --add-opens java.base/java.util=ALL-UNNAMED

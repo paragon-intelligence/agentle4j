@@ -266,15 +266,15 @@ class HierarchicalAgentsTest {
   class ExecutionTests {
 
     @Test
-    @DisplayName("execute(String) returns CompletableFuture")
-    void execute_string_returnsCompletableFuture() {
+    @DisplayName("execute(String) returns AgentResult")
+    void execute_string_returnsAgentResult() {
       HierarchicalAgents hierarchy = createTestHierarchy();
       enqueueSuccessResponse("Result");
 
-      CompletableFuture<AgentResult> future = hierarchy.execute("Task");
+      AgentResult result = hierarchy.execute("Task");
 
-      assertNotNull(future);
-      assertInstanceOf(CompletableFuture.class, future);
+      assertNotNull(result);
+      assertInstanceOf(AgentResult.class, result);
     }
 
     @Test
@@ -286,38 +286,38 @@ class HierarchicalAgentsTest {
     }
 
     @Test
-    @DisplayName("execute(Text) returns CompletableFuture")
-    void execute_text_returnsCompletableFuture() {
+    @DisplayName("execute(Text) returns AgentResult")
+    void execute_text_returnsAgentResult() {
       HierarchicalAgents hierarchy = createTestHierarchy();
       enqueueSuccessResponse("Result");
 
-      CompletableFuture<AgentResult> future = hierarchy.execute(Text.valueOf("Task"));
+      AgentResult result = hierarchy.execute(Text.valueOf("Task"));
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
-    @DisplayName("execute(Message) returns CompletableFuture")
-    void execute_message_returnsCompletableFuture() {
+    @DisplayName("execute(Message) returns AgentResult")
+    void execute_message_returnsAgentResult() {
       HierarchicalAgents hierarchy = createTestHierarchy();
       enqueueSuccessResponse("Result");
 
-      CompletableFuture<AgentResult> future = hierarchy.execute(Message.user("Task"));
+      AgentResult result = hierarchy.execute(Message.user("Task"));
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
-    @DisplayName("execute(AgentContext) returns CompletableFuture")
-    void execute_context_returnsCompletableFuture() {
+    @DisplayName("execute(AgentContext) returns AgentResult")
+    void execute_context_returnsAgentResult() {
       HierarchicalAgents hierarchy = createTestHierarchy();
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Task"));
       enqueueSuccessResponse("Result");
 
-      CompletableFuture<AgentResult> future = hierarchy.execute(context);
+      AgentResult result = hierarchy.execute(context);
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
   }
 
@@ -367,9 +367,9 @@ class HierarchicalAgentsTest {
       HierarchicalAgents hierarchy = createTestHierarchy();
       enqueueSuccessResponse("Result");
 
-      CompletableFuture<AgentResult> future = hierarchy.sendToDepartment("Engineering", "Task");
+      AgentResult result = hierarchy.sendToDepartment("Engineering", "Task");
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test

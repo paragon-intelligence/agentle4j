@@ -30,7 +30,7 @@ class EmbeddingTest {
   @Test
   @DisplayName("EmbeddingProvider interface can be implemented")
   void embeddingProviderImplementation() {
-    EmbeddingProvider provider = (input, model) -> CompletableFuture.supplyAsync(List::of);
+    EmbeddingProvider provider = (input, model) -> List.of();
 
     assertNotNull(provider);
   }

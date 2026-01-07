@@ -209,16 +209,16 @@ class SupervisorAgentTest {
   class OrchestrationTests {
 
     @Test
-    @DisplayName("orchestrate(String) returns CompletableFuture")
-    void orchestrate_string_returnsCompletableFuture() {
+    @DisplayName("orchestrate(String) returns AgentResult")
+    void orchestrate_string_returnsAgentResult() {
       Agent worker = createTestAgent("Worker");
       SupervisorAgent supervisor = createTestSupervisor(worker);
       enqueueSuccessResponse("Result");
 
-      CompletableFuture<AgentResult> future = supervisor.orchestrate("Test task");
+      AgentResult result = supervisor.orchestrate("Test task");
 
-      assertNotNull(future);
-      assertInstanceOf(CompletableFuture.class, future);
+      assertNotNull(result);
+      assertInstanceOf(AgentResult.class, result);
     }
 
     @Test
@@ -231,32 +231,32 @@ class SupervisorAgentTest {
     }
 
     @Test
-    @DisplayName("orchestrate(Text) returns CompletableFuture")
-    void orchestrate_text_returnsCompletableFuture() {
+    @DisplayName("orchestrate(Text) returns AgentResult")
+    void orchestrate_text_returnsAgentResult() {
       Agent worker = createTestAgent("Worker");
       SupervisorAgent supervisor = createTestSupervisor(worker);
       enqueueSuccessResponse("Result");
 
-      CompletableFuture<AgentResult> future = supervisor.orchestrate(Text.valueOf("Test task"));
+      AgentResult result = supervisor.orchestrate(Text.valueOf("Test task"));
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
-    @DisplayName("orchestrate(Message) returns CompletableFuture")
-    void orchestrate_message_returnsCompletableFuture() {
+    @DisplayName("orchestrate(Message) returns AgentResult")
+    void orchestrate_message_returnsAgentResult() {
       Agent worker = createTestAgent("Worker");
       SupervisorAgent supervisor = createTestSupervisor(worker);
       enqueueSuccessResponse("Result");
 
-      CompletableFuture<AgentResult> future = supervisor.orchestrate(Message.user("Test task"));
+      AgentResult result = supervisor.orchestrate(Message.user("Test task"));
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
-    @DisplayName("orchestrate(AgentContext) returns CompletableFuture")
-    void orchestrate_context_returnsCompletableFuture() {
+    @DisplayName("orchestrate(AgentContext) returns AgentResult")
+    void orchestrate_context_returnsAgentResult() {
       Agent worker = createTestAgent("Worker");
       SupervisorAgent supervisor = createTestSupervisor(worker);
 
@@ -264,9 +264,9 @@ class SupervisorAgentTest {
       context.addInput(Message.user("Test task"));
       enqueueSuccessResponse("Result");
 
-      CompletableFuture<AgentResult> future = supervisor.orchestrate(context);
+      AgentResult result = supervisor.orchestrate(context);
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
@@ -276,7 +276,7 @@ class SupervisorAgentTest {
       SupervisorAgent supervisor = createTestSupervisor(worker);
       enqueueSuccessResponse("Orchestrated result");
 
-      AgentResult result = supervisor.orchestrate("Do the task").get(5, TimeUnit.SECONDS);
+      AgentResult result = supervisor.orchestrate("Do the task");
 
       assertNotNull(result);
     }

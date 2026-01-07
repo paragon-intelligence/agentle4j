@@ -240,23 +240,25 @@ class WebExtractorTest {
       assertNotNull(extractor);
     }
 
-    @Test
-    void create_withExecutor_createsInstance() {
-      Executor customExecutor = Executors.newSingleThreadExecutor();
-      WebExtractor extractor = WebExtractor.create(mockResponder, "gpt-4o", customExecutor);
-      assertNotNull(extractor);
-    }
+    // Executor parameter removed with synchronous API refactoring
+    //  @Test
+    //  void create_withExecutor_createsInstance() {
+    //    Executor customExecutor = Executors.newSingleThreadExecutor();
+    //    WebExtractor extractor = WebExtractor.create(mockResponder, "gpt-4o", customExecutor);
+    //    assertNotNull(extractor);
+    //  }
 
     @Test
     void create_nullResponder_throwsException() {
       assertThrows(NullPointerException.class, () -> WebExtractor.create(null));
     }
 
-    @Test
-    void create_nullExecutor_throwsException() {
-      assertThrows(
-          NullPointerException.class, () -> WebExtractor.create(mockResponder, null, null));
-    }
+    // Executor parameter removed with synchronous API refactoring
+    //  @Test
+    //  void create_nullExecutor_throwsException() {
+    //    assertThrows(
+    //        NullPointerException.class, () -> WebExtractor.create(mockResponder, null, null));
+    //  }
   }
 
   // ===== Basic Extraction Tests =====
@@ -270,7 +272,7 @@ class WebExtractorTest {
       ExtractPayload payload =
           ExtractPayload.builder().browser(browser).url(testUrl("/basic")).build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       assertNotNull(result);
       assertEquals(1, result.urls().size());
@@ -296,7 +298,7 @@ class WebExtractorTest {
               .urls(testUrl("/basic"), testUrl("/main-content"))
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       assertNotNull(result);
       assertEquals(2, result.urls().size());
@@ -332,7 +334,7 @@ class WebExtractorTest {
               .withPreferences(p -> p.onlyMainContent(true))
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       String markdown = result.markdown().get(0);
 
@@ -351,7 +353,7 @@ class WebExtractorTest {
               .withPreferences(p -> p.onlyMainContent(true))
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       String markdown = result.markdown().get(0);
       assertTrue(
@@ -367,7 +369,7 @@ class WebExtractorTest {
               .withPreferences(p -> p.removeBase64Images(true))
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       String html = result.html().get(0);
       String markdown = result.markdown().get(0);
@@ -390,7 +392,7 @@ class WebExtractorTest {
               .withPreferences(p -> p.excludeTags(List.of("header", "footer", "nav", "script")))
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       String html = result.html().get(0);
 
@@ -413,7 +415,7 @@ class WebExtractorTest {
               .withPreferences(p -> p.includeTags(List.of("h1", "p")))
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       String html = result.html().get(0);
 
@@ -441,7 +443,7 @@ class WebExtractorTest {
               .ignoreInvalidUrls(true)
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       // Should complete with at least partial results from the valid URL
       assertNotNull(result);
@@ -460,7 +462,7 @@ class WebExtractorTest {
               .ignoreInvalidUrls(true)
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       // Should have a timeout error
       assertTrue(result.hasErrors());
@@ -478,7 +480,7 @@ class WebExtractorTest {
 
       // Note: A 500 error might still return content or be categorized differently
       // depending on Playwright behavior
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       // The behavior depends on whether Playwright treats 500 as an error
       assertNotNull(result);
@@ -500,7 +502,7 @@ class WebExtractorTest {
               .withPreferences(p -> p.mobile(true))
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       // Should complete successfully with mobile settings
       assertNotNull(result);
@@ -524,7 +526,7 @@ class WebExtractorTest {
               .withPreferences(p -> p.headers(Map.of("X-Custom-Header", "test-value")))
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       // Headers are applied to the browser context
       // We can verify the extraction completes successfully
@@ -541,7 +543,7 @@ class WebExtractorTest {
               .build();
 
       long startTime = System.currentTimeMillis();
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
       long elapsed = System.currentTimeMillis() - startTime;
 
       assertTrue(result.isSuccessful());
@@ -559,7 +561,7 @@ class WebExtractorTest {
               .withPreferences(p -> p.skipTlsVerification(true))
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       assertTrue(result.isSuccessful());
     }
@@ -573,7 +575,7 @@ class WebExtractorTest {
               .withPreferences(p -> p.blockAds(true))
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       assertTrue(result.isSuccessful());
     }
@@ -587,7 +589,7 @@ class WebExtractorTest {
               .withPreferences(p -> p.location(40.7128, -74.0060)) // NYC
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       assertTrue(result.isSuccessful());
     }
@@ -610,7 +612,7 @@ class WebExtractorTest {
           .thenReturn(new ArticleData("Test Title", "Test Content"));
 
       when(mockResponder.respond(any(CreateResponsePayload.Structured.class)))
-          .thenReturn(CompletableFuture.completedFuture(mockParsedResponse));
+          .thenReturn(mockParsedResponse);
 
       ExtractPayload.Structured<ArticleData> payload =
           ExtractPayload.structuredBuilder(ArticleData.class)
@@ -619,7 +621,7 @@ class WebExtractorTest {
               .prompt("Extract the article title and content")
               .build();
 
-      ExtractionResult.Structured<ArticleData> result = extractor.extract(payload).join();
+      ExtractionResult.Structured<ArticleData> result = extractor.extract(payload);
 
       assertNotNull(result);
       assertEquals(ArticleData.class, result.outputType());
@@ -653,7 +655,7 @@ class WebExtractorTest {
               .extractionPreferences(prefs)
               .build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       assertEquals(prefs, result.extractionPreferences());
     }
@@ -666,9 +668,10 @@ class WebExtractorTest {
       ExtractPayload payload =
           ExtractPayload.builder().browser(browser).urls(List.of(url1, url2)).build();
 
-      ExtractionResult result = extractor.extract(payload).join();
+      ExtractionResult result = extractor.extract(payload);
 
       assertEquals(List.of(url1, url2), result.urls());
     }
   }
 }
+

@@ -11,10 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Pattern;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -28,6 +24,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Extracts structured data from web pages using Playwright for rendering and an LLM for intelligent
  * data extraction.
+ *
+ * <p><b>Virtual Thread Design:</b> Uses synchronous API optimized for Java 21+ virtual threads.
  *
  * <p>Example usage:
  *
@@ -44,7 +42,7 @@ import org.slf4j.LoggerFactory;
  *             .onlyMainContent(true)
  *             .timeoutMs(15000))
  *         .build()
- * ).join();
+ * );
  *
  * // Structured extraction
  * record Article(String title, String author) {}
@@ -55,7 +53,7 @@ import org.slf4j.LoggerFactory;
  *         .url("https://example.com/article")
  *         .prompt("Extract the article title and author")
  *         .build()
- * ).join();
+ * );
  *
  * Article article = structured.requireOutput();
  * }</pre>
@@ -113,31 +111,22 @@ public final class WebExtractor {
 
   private final @NonNull Responder responder;
   private final @Nullable String model;
-  private final @NonNull Executor executor;
   private final @NonNull FlexmarkHtmlConverter htmlConverter;
 
-  private WebExtractor(
-      @NonNull Responder responder, @Nullable String model, @NonNull Executor executor) {
+  private WebExtractor(@NonNull Responder responder, @Nullable String model) {
     this.responder = Objects.requireNonNull(responder, "responder cannot be null");
     this.model = model;
-    this.executor = Objects.requireNonNull(executor, "executor cannot be null");
     this.htmlConverter = FlexmarkHtmlConverter.builder().build();
   }
 
   /** Creates a new WebExtractor with default settings. */
   public static @NonNull WebExtractor create(@NonNull Responder responder) {
-    return new WebExtractor(responder, null, ForkJoinPool.commonPool());
+    return new WebExtractor(responder, null);
   }
 
   /** Creates a new WebExtractor with a specific model. */
   public static @NonNull WebExtractor create(@NonNull Responder responder, @NonNull String model) {
-    return new WebExtractor(responder, model, ForkJoinPool.commonPool());
-  }
-
-  /** Creates a new WebExtractor with custom executor. */
-  public static @NonNull WebExtractor create(
-      @NonNull Responder responder, @Nullable String model, @NonNull Executor executor) {
-    return new WebExtractor(responder, model, executor);
+    return new WebExtractor(responder, model);
   }
 
   /**
@@ -145,21 +134,11 @@ public final class WebExtractor {
    * content for all URLs.
    *
    * @param payload the extraction configuration
-   * @return a future containing the extraction result
+   * @return the extraction result
    */
-  public @NonNull CompletableFuture<ExtractionResult> extract(@NonNull ExtractPayload payload) {
+  public @NonNull ExtractionResult extract(@NonNull ExtractPayload payload) {
     Objects.requireNonNull(payload, "payload cannot be null");
-
-    return CompletableFuture.supplyAsync(
-        () -> {
-          try {
-            return extractSync(payload);
-          } catch (Exception e) {
-            log.error("Extraction failed", e);
-            throw new CompletionException("Extraction failed: " + e.getMessage(), e);
-          }
-        },
-        executor);
+    return extractSync(payload);
   }
 
   /**
@@ -168,22 +147,12 @@ public final class WebExtractor {
    *
    * @param payload the structured extraction configuration
    * @param <T> the output type
-   * @return a future containing the structured extraction result
+   * @return the structured extraction result
    */
-  public <T> @NonNull CompletableFuture<ExtractionResult.Structured<T>> extract(
-      ExtractPayload.@NonNull Structured<T> payload) {
+  public <T> ExtractionResult.Structured<T> extract(
+      ExtractPayload.Structured<T> payload) {
     Objects.requireNonNull(payload, "payload cannot be null");
-
-    return CompletableFuture.supplyAsync(
-        () -> {
-          try {
-            return extractStructuredSync(payload);
-          } catch (Exception e) {
-            log.error("Structured extraction failed", e);
-            throw new CompletionException("Structured extraction failed: " + e.getMessage(), e);
-          }
-        },
-        executor);
+    return extractStructuredSync(payload);
   }
 
   // ========== Internal Implementation ==========
@@ -456,15 +425,13 @@ public final class WebExtractor {
     String userPrompt = String.format(USER_PROMPT_TEMPLATE, prompt, markdown);
 
     ParsedResponse<T> response =
-        responder
-            .<T>respond(
-                CreateResponsePayload.<T>builder()
-                    .addDeveloperMessage(DEFAULT_SYSTEM_PROMPT)
-                    .addUserMessage(userPrompt)
-                    .model(model)
-                    .withStructuredOutput(outputType)
-                    .build())
-            .join();
+        responder.<T>respond(
+            CreateResponsePayload.<T>builder()
+                .addDeveloperMessage(DEFAULT_SYSTEM_PROMPT)
+                .addUserMessage(userPrompt)
+                .model(model)
+                .withStructuredOutput(outputType)
+                .build());
 
     return response.outputParsed();
   }

@@ -171,14 +171,19 @@ class AgentNetworkTest {
   class DiscussionTests {
 
     @Test
-    @DisplayName("discuss(String) returns CompletableFuture")
-    void discuss_string_returnsCompletableFuture() {
+    @DisplayName("discuss(String) returns NetworkResult")
+    void discuss_string_returnsNetworkResult() {
       AgentNetwork network = createTestNetwork();
+      // 2 peers x 2 rounds = 4 responses needed
+      enqueueSuccessResponse("Response 1");
+      enqueueSuccessResponse("Response 2");
+      enqueueSuccessResponse("Response 3");
+      enqueueSuccessResponse("Response 4");
 
-      CompletableFuture<AgentNetwork.NetworkResult> future = network.discuss("Topic");
+      AgentNetwork.NetworkResult result = network.discuss("Topic");
 
-      assertNotNull(future);
-      assertInstanceOf(CompletableFuture.class, future);
+      assertNotNull(result);
+      assertInstanceOf(AgentNetwork.NetworkResult.class, result);
     }
 
     @Test
@@ -190,37 +195,52 @@ class AgentNetworkTest {
     }
 
     @Test
-    @DisplayName("discuss(Text) returns CompletableFuture")
-    void discuss_text_returnsCompletableFuture() {
+    @DisplayName("discuss(Text) returns NetworkResult")
+    void discuss_text_returnsNetworkResult() {
       AgentNetwork network = createTestNetwork();
+      // 2 peers x 2 rounds = 4 responses needed
+      enqueueSuccessResponse("Response 1");
+      enqueueSuccessResponse("Response 2");
+      enqueueSuccessResponse("Response 3");
+      enqueueSuccessResponse("Response 4");
 
-      CompletableFuture<AgentNetwork.NetworkResult> future =
+      AgentNetwork.NetworkResult result =
           network.discuss(Text.valueOf("Topic"));
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
-    @DisplayName("discuss(Message) returns CompletableFuture")
-    void discuss_message_returnsCompletableFuture() {
+    @DisplayName("discuss(Message) returns NetworkResult")
+    void discuss_message_returnsNetworkResult() {
       AgentNetwork network = createTestNetwork();
+      // 2 peers x 2 rounds = 4 responses needed
+      enqueueSuccessResponse("Response 1");
+      enqueueSuccessResponse("Response 2");
+      enqueueSuccessResponse("Response 3");
+      enqueueSuccessResponse("Response 4");
 
-      CompletableFuture<AgentNetwork.NetworkResult> future =
+      AgentNetwork.NetworkResult result =
           network.discuss(Message.user("Topic"));
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
 
     @Test
-    @DisplayName("discuss(AgentContext) returns CompletableFuture")
-    void discuss_context_returnsCompletableFuture() {
+    @DisplayName("discuss(AgentContext) returns NetworkResult")
+    void discuss_context_returnsNetworkResult() {
       AgentNetwork network = createTestNetwork();
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Topic"));
+      // 2 peers x 2 rounds = 4 responses needed
+      enqueueSuccessResponse("Response 1");
+      enqueueSuccessResponse("Response 2");
+      enqueueSuccessResponse("Response 3");
+      enqueueSuccessResponse("Response 4");
 
-      CompletableFuture<AgentNetwork.NetworkResult> future = network.discuss(context);
+      AgentNetwork.NetworkResult result = network.discuss(context);
 
-      assertNotNull(future);
+      assertNotNull(result);
     }
   }
 
@@ -229,15 +249,15 @@ class AgentNetworkTest {
   class BroadcastTests {
 
     @Test
-    @DisplayName("broadcast() returns CompletableFuture with contributions")
+    @DisplayName("broadcast() returns List of contributions")
     void broadcast_returnsContributions() {
       AgentNetwork network = createTestNetwork();
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
 
-      CompletableFuture<List<AgentNetwork.Contribution>> future = network.broadcast("Message");
+      List<AgentNetwork.Contribution> contributions = network.broadcast("Message");
 
-      assertNotNull(future);
+      assertNotNull(contributions);
     }
 
     @Test

@@ -108,7 +108,7 @@ class AgentStructuredOutputTest {
 
       enqueueStructuredResponse("{\"name\": \"John Doe\", \"age\": 30}");
 
-      StructuredAgentResult<PersonInfo> result = structured.interact("Tell me about John").join();
+      StructuredAgentResult<PersonInfo> result = structured.interact("Tell me about John");
 
       assertNotNull(result);
       assertFalse(result.isError());
@@ -121,7 +121,7 @@ class AgentStructuredOutputTest {
 
       enqueueStructuredResponse("{\"name\": \"John Doe\", \"age\": 30}");
 
-      StructuredAgentResult<PersonInfo> result = structured.interact("Tell me about John").join();
+      StructuredAgentResult<PersonInfo> result = structured.interact("Tell me about John");
 
       assertNotNull(result.output());
       assertEquals("John Doe", result.output().name());
@@ -137,7 +137,7 @@ class AgentStructuredOutputTest {
       enqueueStructuredResponse("{\"name\": \"Jane\", \"age\": 25}");
 
       context.addInput(com.paragon.responses.spec.Message.user("Tell me about Jane"));
-      StructuredAgentResult<PersonInfo> result = structured.interact(context).join();
+      StructuredAgentResult<PersonInfo> result = structured.interact(context);
 
       assertNotNull(result);
       assertFalse(result.isError());
@@ -160,7 +160,7 @@ class AgentStructuredOutputTest {
 
       enqueueStructuredResponse("{\"name\": \"Alice\", \"age\": 28}");
 
-      StructuredAgentResult<PersonInfo> result = structured.interact("Who is Alice?").join();
+      StructuredAgentResult<PersonInfo> result = structured.interact("Who is Alice?");
 
       assertNotNull(result.rawOutput());
       assertTrue(result.rawOutput().contains("Alice"));
@@ -173,7 +173,7 @@ class AgentStructuredOutputTest {
 
       enqueueStructuredResponse("{\"name\": \"Bob\", \"age\": 35}");
 
-      StructuredAgentResult<PersonInfo> result = structured.interact("Who is Bob?").join();
+      StructuredAgentResult<PersonInfo> result = structured.interact("Who is Bob?");
 
       assertEquals(1, result.turnsUsed());
     }

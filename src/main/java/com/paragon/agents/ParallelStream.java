@@ -5,10 +5,11 @@ import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import com.paragon.telemetry.processors.TraceIdGenerator;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.jspecify.annotations.NonNull;
@@ -143,219 +144,212 @@ public final class ParallelStream {
   }
 
   /**
-   * Starts the streaming parallel execution.
+   * Starts the streaming parallel execution. Blocks until completion.
    *
-   * @return future completing with results based on mode
+   * <p>On virtual threads, blocking is efficient and does not consume platform threads.
+   *
+   * @return results based on mode: List&lt;AgentResult&gt; for ALL, AgentResult for FIRST/SYNTHESIZE
    */
-  public @NonNull CompletableFuture<?> start() {
-    return switch (mode) {
-      case ALL -> startAll();
-      case FIRST -> startFirst();
-      case SYNTHESIZE -> startSynthesize();
-    };
+  public @NonNull Object start() {
+    try {
+      return switch (mode) {
+        case ALL -> startAll();
+        case FIRST -> startFirst();
+        case SYNTHESIZE -> startSynthesize();
+      };
+    } catch (Exception ex) {
+      if (onError != null) {
+        onError.accept(ex);
+      }
+      throw new RuntimeException(ex);
+    }
   }
 
-  private CompletableFuture<List<AgentResult>> startAll() {
+  private List<AgentResult> startAll() {
     List<Agent> agents = orchestrator.agents();
-    List<CompletableFuture<AgentResult>> futures = new ArrayList<>();
-    List<AgentResult> results = new ArrayList<>();
+    List<AgentResult> results = Collections.synchronizedList(new ArrayList<>());
 
     String parentTraceId = TraceIdGenerator.generateTraceId();
     String parentSpanId = TraceIdGenerator.generateSpanId();
 
+    // Run all agents in parallel using virtual threads
+    List<Thread> threads = new ArrayList<>();
+
     for (Agent agent : agents) {
-      AgentContext ctx = context.copy();
-      ctx.withTraceContext(parentTraceId, parentSpanId);
+      Thread thread = Thread.startVirtualThread(() -> {
+        AgentContext ctx = context.copy();
+        ctx.withTraceContext(parentTraceId, parentSpanId);
 
-      CompletableFuture<AgentResult> future = new CompletableFuture<>();
-      futures.add(future);
+        AgentStream stream = agent.interactStream(ctx);
 
-      AgentStream stream = agent.interactStream(ctx);
+        if (onAgentTextDelta != null) {
+          stream.onTextDelta(delta -> onAgentTextDelta.accept(agent, delta));
+        }
 
-      if (onAgentTextDelta != null) {
-        final Agent currentAgent = agent;
-        stream.onTextDelta(delta -> onAgentTextDelta.accept(currentAgent, delta));
-      }
+        if (onAgentTurnStart != null) {
+          stream.onTurnStart(turn -> onAgentTurnStart.accept(agent, turn));
+        }
 
-      if (onAgentTurnStart != null) {
-        final Agent currentAgent = agent;
-        stream.onTurnStart(turn -> onAgentTurnStart.accept(currentAgent, turn));
-      }
+        AgentResult result = stream.start();
+        results.add(result);
 
-      final Agent currentAgent = agent;
-      stream.onComplete(
-          result -> {
-            synchronized (results) {
-              results.add(result);
-            }
-            if (onAgentComplete != null) {
-              onAgentComplete.accept(currentAgent, result);
-            }
-            future.complete(result);
-          });
-
-      if (onError != null) {
-        stream.onError(onError);
-      }
-
-      stream.start();
+        if (onAgentComplete != null) {
+          onAgentComplete.accept(agent, result);
+        }
+      });
+      threads.add(thread);
     }
 
-    return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-        .thenApply(
-            v -> {
-              if (onAllComplete != null) {
-                onAllComplete.accept(results);
-              }
-              return results;
-            });
+    // Wait for all threads to complete
+    for (Thread thread : threads) {
+      try {
+        thread.join();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new RuntimeException("Parallel execution interrupted", e);
+      }
+    }
+
+    if (onAllComplete != null) {
+      onAllComplete.accept(results);
+    }
+
+    return results;
   }
 
-  private CompletableFuture<AgentResult> startFirst() {
+  private AgentResult startFirst() {
     List<Agent> agents = orchestrator.agents();
-    List<CompletableFuture<AgentResult>> futures = new ArrayList<>();
     AtomicBoolean firstCompleted = new AtomicBoolean(false);
-    CompletableFuture<AgentResult> resultFuture = new CompletableFuture<>();
+    AtomicReference<AgentResult> firstResult = new AtomicReference<>();
+
+    // Run all agents in parallel using virtual threads
+    List<Thread> threads = new ArrayList<>();
 
     for (Agent agent : agents) {
-      AgentContext ctx = context.copy();
-      CompletableFuture<AgentResult> future = new CompletableFuture<>();
-      futures.add(future);
+      Thread thread = Thread.startVirtualThread(() -> {
+        AgentContext ctx = context.copy();
+        AgentStream stream = agent.interactStream(ctx);
 
-      AgentStream stream = agent.interactStream(ctx);
+        if (onAgentTextDelta != null) {
+          stream.onTextDelta(delta -> onAgentTextDelta.accept(agent, delta));
+        }
 
-      if (onAgentTextDelta != null) {
-        final Agent currentAgent = agent;
-        stream.onTextDelta(delta -> onAgentTextDelta.accept(currentAgent, delta));
-      }
+        AgentResult result = stream.start();
 
-      final Agent currentAgent = agent;
-      stream.onComplete(
-          result -> {
-            if (onAgentComplete != null) {
-              onAgentComplete.accept(currentAgent, result);
-            }
-            future.complete(result);
+        if (onAgentComplete != null) {
+          onAgentComplete.accept(agent, result);
+        }
 
-            if (firstCompleted.compareAndSet(false, true)) {
-              if (onFirstComplete != null) {
-                onFirstComplete.accept(result);
-              }
-              resultFuture.complete(result);
-            }
-          });
-
-      if (onError != null) {
-        stream.onError(onError);
-      }
-
-      stream.start();
+        // Only the first to complete wins
+        if (firstCompleted.compareAndSet(false, true)) {
+          firstResult.set(result);
+          if (onFirstComplete != null) {
+            onFirstComplete.accept(result);
+          }
+        }
+      });
+      threads.add(thread);
     }
 
-    return resultFuture;
+    // Wait for first result (polling)
+    while (firstResult.get() == null) {
+      try {
+        Thread.sleep(10);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new RuntimeException("Wait for first result interrupted", e);
+      }
+    }
+
+    return firstResult.get();
   }
 
-  private CompletableFuture<AgentResult> startSynthesize() {
+  private AgentResult startSynthesize() {
     if (synthesizer == null) {
-      return CompletableFuture.failedFuture(
-          new IllegalStateException("Synthesizer is required for SYNTHESIZE mode"));
+      throw new IllegalStateException("Synthesizer is required for SYNTHESIZE mode");
     }
 
     List<Agent> agents = orchestrator.agents();
-    List<CompletableFuture<AgentResult>> futures = new ArrayList<>();
-    List<AgentResult> results = new ArrayList<>();
+    List<AgentResult> results = Collections.synchronizedList(new ArrayList<>());
 
     String parentTraceId = TraceIdGenerator.generateTraceId();
     String parentSpanId = TraceIdGenerator.generateSpanId();
 
-    // First phase: run all agents in parallel
+    // First phase: run all agents in parallel using virtual threads
+    List<Thread> threads = new ArrayList<>();
+
     for (Agent agent : agents) {
-      AgentContext ctx = context.copy();
-      ctx.withTraceContext(parentTraceId, parentSpanId);
+      Thread thread = Thread.startVirtualThread(() -> {
+        AgentContext ctx = context.copy();
+        ctx.withTraceContext(parentTraceId, parentSpanId);
 
-      CompletableFuture<AgentResult> future = new CompletableFuture<>();
-      futures.add(future);
+        AgentStream stream = agent.interactStream(ctx);
 
-      AgentStream stream = agent.interactStream(ctx);
+        if (onAgentTextDelta != null) {
+          stream.onTextDelta(delta -> onAgentTextDelta.accept(agent, delta));
+        }
 
-      if (onAgentTextDelta != null) {
-        final Agent currentAgent = agent;
-        stream.onTextDelta(delta -> onAgentTextDelta.accept(currentAgent, delta));
+        AgentResult result = stream.start();
+        results.add(result);
+
+        if (onAgentComplete != null) {
+          onAgentComplete.accept(agent, result);
+        }
+      });
+      threads.add(thread);
+    }
+
+    // Wait for all threads to complete
+    for (Thread thread : threads) {
+      try {
+        thread.join();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new RuntimeException("Parallel execution interrupted", e);
       }
-
-      final Agent currentAgent = agent;
-      stream.onComplete(
-          result -> {
-            synchronized (results) {
-              results.add(result);
-            }
-            if (onAgentComplete != null) {
-              onAgentComplete.accept(currentAgent, result);
-            }
-            future.complete(result);
-          });
-
-      if (onError != null) {
-        stream.onError(onError);
-      }
-
-      stream.start();
     }
 
     // Second phase: synthesize results
-    return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-        .thenCompose(
-            v -> {
-              // Build synthesis prompt
-              String originalQuery = extractLastUserMessage();
-              StringBuilder synthesisPrompt = new StringBuilder();
-              synthesisPrompt.append("Original query: ").append(originalQuery).append("\n\n");
-              synthesisPrompt.append("The following agents have provided their outputs:\n\n");
+    String originalQuery = extractLastUserMessage();
+    StringBuilder synthesisPrompt = new StringBuilder();
+    synthesisPrompt.append("Original query: ").append(originalQuery).append("\n\n");
+    synthesisPrompt.append("The following agents have provided their outputs:\n\n");
 
-              for (int i = 0; i < agents.size(); i++) {
-                Agent agent = agents.get(i);
-                AgentResult result = results.get(i);
-                synthesisPrompt.append("--- ").append(agent.name()).append(" ---\n");
-                if (result.isError()) {
-                  synthesisPrompt
-                      .append("[ERROR: ")
-                      .append(result.error().getMessage())
-                      .append("]\n");
-                } else {
-                  synthesisPrompt
-                      .append(result.output() != null ? result.output() : "[No output]")
-                      .append("\n");
-                }
-                synthesisPrompt.append("\n");
-              }
-              synthesisPrompt.append("Please synthesize these outputs into a coherent response.");
+    for (int i = 0; i < agents.size(); i++) {
+      Agent agent = agents.get(i);
+      AgentResult result = results.get(i);
+      synthesisPrompt.append("--- ").append(agent.name()).append(" ---\n");
+      if (result.isError()) {
+        synthesisPrompt
+            .append("[ERROR: ")
+            .append(result.error().getMessage())
+            .append("]\n");
+      } else {
+        synthesisPrompt
+            .append(result.output() != null ? result.output() : "[No output]")
+            .append("\n");
+      }
+      synthesisPrompt.append("\n");
+    }
+    synthesisPrompt.append("Please synthesize these outputs into a coherent response.");
 
-              // Stream synthesizer
-              AgentContext synthContext = AgentContext.create();
-              synthContext.addInput(Message.user(synthesisPrompt.toString()));
+    // Stream synthesizer
+    AgentContext synthContext = AgentContext.create();
+    synthContext.addInput(Message.user(synthesisPrompt.toString()));
 
-              CompletableFuture<AgentResult> synthFuture = new CompletableFuture<>();
-              AgentStream synthStream = synthesizer.interactStream(synthContext);
+    AgentStream synthStream = synthesizer.interactStream(synthContext);
 
-              if (onAgentTextDelta != null) {
-                synthStream.onTextDelta(delta -> onAgentTextDelta.accept(synthesizer, delta));
-              }
+    if (onAgentTextDelta != null) {
+      synthStream.onTextDelta(delta -> onAgentTextDelta.accept(synthesizer, delta));
+    }
 
-              synthStream.onComplete(
-                  synthResult -> {
-                    if (onSynthesisComplete != null) {
-                      onSynthesisComplete.accept(synthResult);
-                    }
-                    synthFuture.complete(synthResult);
-                  });
+    AgentResult synthResult = synthStream.start();
 
-              if (onError != null) {
-                synthStream.onError(onError);
-              }
+    if (onSynthesisComplete != null) {
+      onSynthesisComplete.accept(synthResult);
+    }
 
-              synthStream.start();
-              return synthFuture;
-            });
+    return synthResult;
   }
 
   private String extractLastUserMessage() {
