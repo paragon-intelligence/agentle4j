@@ -878,35 +878,41 @@ public final class Agent implements Serializable {
       }
     }
 
+
     Instant start = Instant.now();
     try {
-      // Set current context for SubAgentTool context propagation
-      SubAgentTool.setCurrentContext(context);
-      FunctionToolCallOutput output = toolStore.execute(call);
+      // Execute tool with context using virtual-thread-safe ScopedValue
+      FunctionToolCallOutput output = SubAgentTool.callWithContext(
+          context,
+          () -> {
+            try {
+              return toolStore.execute(call);
+            } catch (JsonProcessingException e) {
+              throw new RuntimeException(e); // Will be handled in outer catch
+            }
+          });
+      
       Duration duration = Duration.between(start, Instant.now());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), output, duration);
-    } catch (JsonProcessingException e) {
+    } catch (RuntimeException e) {
       Duration duration = Duration.between(start, Instant.now());
-
-      // Create typed exception for tool execution failure
-      ToolExecutionException toolEx =
-          new ToolExecutionException(
-              call.name(),
-              call.callId(),
-              call.arguments(),
-              "Failed to parse tool arguments: " + e.getMessage(),
-              e);
-
-      // Broadcast failure event for telemetry
-      broadcastFailedEvent(toolEx, context);
-
-      FunctionToolCallOutput errorOutput =
-          FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + e.getMessage());
-      return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
-    } catch (Exception e) {
-      Duration duration = Duration.between(start, Instant.now());
-
-      // Create typed exception for unexpected tool execution failure
+      
+      // Unwrap if it's our wrapped JsonProcessingException
+      if (e.getCause() instanceof JsonProcessingException jpe) {
+        ToolExecutionException toolEx =
+            new ToolExecutionException(
+                call.name(),
+                call.callId(),
+                call.arguments(),
+                "Failed to parse tool arguments: " + jpe.getMessage(),
+                jpe);
+        broadcastFailedEvent(toolEx, context);
+        FunctionToolCallOutput errorOutput =
+            FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + jpe.getMessage());
+        return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
+      }
+      
+      // Other exceptions
       ToolExecutionException toolEx =
           new ToolExecutionException(
               call.name(),
@@ -914,16 +920,23 @@ public final class Agent implements Serializable {
               call.arguments(),
               "Tool execution failed: " + e.getMessage(),
               e);
-
-      // Broadcast failure event for telemetry
       broadcastFailedEvent(toolEx, context);
-
       FunctionToolCallOutput errorOutput =
           FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + e.getMessage());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
-    } finally {
-      // Clear context after tool execution
-      SubAgentTool.setCurrentContext(null);
+    } catch (Exception e) {
+      Duration duration = Duration.between(start, Instant.now());
+      ToolExecutionException toolEx =
+          new ToolExecutionException(
+              call.name(),
+              call.callId(),
+              call.arguments(),
+              "Tool execution failed: " + e.getMessage(),
+              e);
+      broadcastFailedEvent(toolEx, context);
+      FunctionToolCallOutput errorOutput =
+          FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + e.getMessage());
+      return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
     }
   }
 

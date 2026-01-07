@@ -59,8 +59,8 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
   private final boolean shareState;
   private final boolean shareHistory;
 
-  // Thread-local for context propagation during tool execution
-  private static final ThreadLocal<AgentContext> CURRENT_CONTEXT = new ThreadLocal<>();
+  // ScopedValue for context propagation - virtual thread optimized
+  private static final ScopedValue<AgentContext> CURRENT_CONTEXT = ScopedValue.newInstance();
 
   /**
    * Creates a SubAgentTool with default configuration.
@@ -149,7 +149,8 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
    * @return configured child context
    */
   private AgentContext buildChildContext(String request) {
-    AgentContext parentContext = CURRENT_CONTEXT.get();
+    // Safely check if CURRENT_CONTEXT is bound (only set when called from Agent)
+    AgentContext parentContext = CURRENT_CONTEXT.isBound() ? CURRENT_CONTEXT.get() : null;
     AgentContext childContext;
 
     if (parentContext != null && shareHistory) {
@@ -184,15 +185,37 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
   }
 
   /**
-   * Sets the current context for sub-agent execution. Package-private for Agent use.
+   * Runs a task with the current context set for sub-agent execution. Package-private for Agent
+   * use.
+   *
+   * <p>Uses ScopedValue for virtual-thread-safe context propagation.
    *
    * @param context the parent context to propagate
+   * @param task the task to run with the context (returns void)
    */
-  static void setCurrentContext(@Nullable AgentContext context) {
+  static void runWithContext(@Nullable AgentContext context, @NonNull Runnable task) {
     if (context != null) {
-      CURRENT_CONTEXT.set(context);
+      ScopedValue.where(CURRENT_CONTEXT, context).run(task);
     } else {
-      CURRENT_CONTEXT.remove();
+      task.run();
+    }
+  }
+
+  /**
+   * Runs a task with the current context set and returns a result. Package-private for Agent use.
+   *
+   * <p>Uses ScopedValue for virtual-thread-safe context propagation.
+   *
+   * @param context the parent context to propagate
+   * @param task the task to run with the context
+   * @param <T> the return type
+   * @return the result from the task
+   */
+  static <T> T callWithContext(@Nullable AgentContext context, java.util.concurrent.Callable<T> task) throws Exception {
+    if (context != null) {
+      return ScopedValue.where(CURRENT_CONTEXT, context).call(task);
+    } else {
+      return task.call();
     }
   }
 
