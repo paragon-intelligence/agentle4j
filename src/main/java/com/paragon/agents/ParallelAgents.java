@@ -1,5 +1,6 @@
 package com.paragon.agents;
 
+import com.paragon.prompts.Prompt;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
@@ -137,6 +138,19 @@ public final class ParallelAgents {
   }
 
   /**
+   * Runs all agents concurrently with a Prompt.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the prompt for all agents
+   * @return list of results
+   */
+  public @NonNull List<AgentResult> run(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return run(prompt.text());
+  }
+
+  /**
    * Runs all agents concurrently using an existing context.
    *
    * <p>Each agent receives a copy of the context to prevent interference. All parallel agents share
@@ -227,6 +241,19 @@ public final class ParallelAgents {
   }
 
   /**
+   * Runs all agents concurrently with a Prompt and returns the first to complete.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the prompt for all agents
+   * @return the first result
+   */
+  public @NonNull AgentResult runFirst(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return runFirst(prompt.text());
+  }
+
+  /**
    * Runs all agents concurrently using an existing context and returns the first to complete.
    *
    * <p>Uses structured concurrency with ShutdownOnSuccess to cancel other agents once one
@@ -308,6 +335,22 @@ public final class ParallelAgents {
   }
 
   /**
+   * Runs all agents concurrently with a Prompt, then synthesizes with a synthesizer agent.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the prompt for all agents
+   * @param synthesizer the agent that combines results
+   * @return the synthesized result
+   */
+  public @NonNull AgentResult runAndSynthesize(
+      @NonNull Prompt prompt, @NonNull Agent synthesizer) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
+    return runAndSynthesize(prompt.text(), synthesizer);
+  }
+
+  /**
    * Runs all agents concurrently using an existing context, then synthesizes with a synthesizer.
    *
    * <p>This is the core method. All other runAndSynthesize overloads delegate here.
@@ -370,6 +413,19 @@ public final class ParallelAgents {
   }
 
   /**
+   * Runs all agents concurrently with streaming using a Prompt.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the prompt for all agents
+   * @return a ParallelStream for processing streaming events
+   */
+  public @NonNull ParallelStream runStream(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return runStream(prompt.text());
+  }
+
+  /**
    * Runs all agents concurrently with streaming using an existing context.
    *
    * @param context the context to copy for each agent
@@ -391,6 +447,19 @@ public final class ParallelAgents {
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(input));
     return runFirstStream(context);
+  }
+
+  /**
+   * Runs all agents concurrently with streaming using a Prompt and returns when first completes.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the prompt for all agents
+   * @return a ParallelStream for processing streaming events
+   */
+  public @NonNull ParallelStream runFirstStream(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return runFirstStream(prompt.text());
   }
 
   /**
@@ -418,6 +487,22 @@ public final class ParallelAgents {
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(input));
     return runAndSynthesizeStream(context, synthesizer);
+  }
+
+  /**
+   * Runs all agents concurrently with streaming using a Prompt, then synthesizes results.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the prompt for all agents
+   * @param synthesizer the agent that combines results
+   * @return a ParallelStream for processing streaming events
+   */
+  public @NonNull ParallelStream runAndSynthesizeStream(
+      @NonNull Prompt prompt, @NonNull Agent synthesizer) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
+    return runAndSynthesizeStream(prompt.text(), synthesizer);
   }
 
   /**

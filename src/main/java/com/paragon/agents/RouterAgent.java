@@ -1,5 +1,6 @@
 package com.paragon.agents;
 
+import com.paragon.prompts.Prompt;
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.CreateResponsePayload;
 import com.paragon.responses.spec.Message;
@@ -122,6 +123,19 @@ public final class RouterAgent {
   }
 
   /**
+   * Routes the Prompt to the most appropriate agent and executes it.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the prompt to route
+   * @return the result from the selected agent
+   */
+  public @NonNull AgentResult route(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return route(prompt.text());
+  }
+
+  /**
    * Routes using an existing context. Extracts the last user message for classification.
    *
    * <p>This is the core routing method. All other route overloads delegate here.
@@ -168,6 +182,19 @@ public final class RouterAgent {
   }
 
   /**
+   * Routes the Prompt to the most appropriate agent and executes it with streaming.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the prompt to route
+   * @return a RouterStream for processing streaming events
+   */
+  public @NonNull RouterStream routeStream(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return routeStream(prompt.text());
+  }
+
+  /**
    * Routes using an existing context with streaming. Extracts the last user message for
    * classification.
    *
@@ -189,16 +216,32 @@ public final class RouterAgent {
    */
   public @NonNull Optional<Agent> classify(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
+    return classifyInternal(input);
+  }
 
+  /**
+   * Classifies the Prompt and returns the selected agent without executing.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the prompt to classify
+   * @return Optional containing the selected agent, or empty if no match and no fallback
+   */
+  public @NonNull Optional<Agent> classify(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return classifyInternal(prompt.text());
+  }
+
+  private @NonNull Optional<Agent> classifyInternal(String input) {
     // Build routing prompt
-    StringBuilder prompt = new StringBuilder();
-    prompt.append(
+    StringBuilder routingPrompt = new StringBuilder();
+    routingPrompt.append(
         "You are a routing classifier. Based on the user input, select the most appropriate"
             + " handler.\n\n");
-    prompt.append("Available handlers:\n");
+    routingPrompt.append("Available handlers:\n");
     for (int i = 0; i < routes.size(); i++) {
       Route route = routes.get(i);
-      prompt
+      routingPrompt
           .append(i + 1)
           .append(". ")
           .append(route.agent.name())
@@ -206,12 +249,12 @@ public final class RouterAgent {
           .append(route.description)
           .append("\n");
     }
-    prompt.append("\nUser input: \"").append(input).append("\"\n\n");
-    prompt.append("Respond with ONLY the handler number (e.g., \"1\" or \"2\"). Nothing else.");
+    routingPrompt.append("\nUser input: \"").append(input).append("\"\n\n");
+    routingPrompt.append("Respond with ONLY the handler number (e.g., \"1\" or \"2\"). Nothing else.");
 
     // Call LLM for classification
     CreateResponsePayload payload =
-        CreateResponsePayload.builder().model(model).addUserMessage(prompt.toString()).build();
+        CreateResponsePayload.builder().model(model).addUserMessage(routingPrompt.toString()).build();
 
     Response response = responder.respond(payload);
 

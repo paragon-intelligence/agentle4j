@@ -1,5 +1,6 @@
 package com.paragon.agents;
 
+import com.paragon.prompts.Prompt;
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.Text;
@@ -157,6 +158,19 @@ public final class SupervisorAgent {
   }
 
   /**
+   * Orchestrates workers with a Prompt.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the task prompt
+   * @return the orchestrated result
+   */
+  public @NonNull AgentResult orchestrate(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return orchestrate(prompt.text());
+  }
+
+  /**
    * Orchestrates workers using an existing context.
    *
    * @param context the context with task history
@@ -183,6 +197,19 @@ public final class SupervisorAgent {
   public @NonNull AgentStream orchestrateStream(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
     return supervisorAgent.interactStream(input);
+  }
+
+  /**
+   * Orchestrates workers with streaming using a Prompt.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the task prompt
+   * @return an AgentStream for processing streaming events
+   */
+  public @NonNull AgentStream orchestrateStream(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return orchestrateStream(prompt.text());
   }
 
   /**

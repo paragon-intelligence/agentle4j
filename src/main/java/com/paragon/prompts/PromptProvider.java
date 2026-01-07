@@ -1,6 +1,7 @@
 package com.paragon.prompts;
 
 import java.util.Map;
+import java.util.Set;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -56,4 +57,22 @@ public interface PromptProvider {
   default Prompt providePrompt(@NonNull String promptId) {
     return providePrompt(promptId, null);
   }
+
+  /**
+   * Checks if a prompt with the given identifier exists.
+   *
+   * @param promptId the unique identifier for the prompt
+   * @return {@code true} if the prompt exists, {@code false} otherwise
+   * @throws NullPointerException if promptId is null
+   * @throws PromptProviderException if the existence check fails
+   */
+  boolean exists(@NonNull String promptId);
+
+  /**
+   * Lists all available prompt identifiers.
+   *
+   * @return an unmodifiable set of all available prompt identifiers
+   * @throws PromptProviderException if the listing fails
+   */
+  Set<String> listPromptIds();
 }

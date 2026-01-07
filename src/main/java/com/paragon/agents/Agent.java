@@ -355,6 +355,34 @@ public final class Agent implements Serializable {
   }
 
   /**
+   * Interacts with the agent using a Prompt. Creates a fresh context.
+   *
+   * <p>The prompt's text content is extracted and used as the input. If the prompt contains
+   * template variables, compile it first using {@link Prompt#compile(java.util.Map)}.
+   *
+   * @param prompt the prompt input
+   * @return the agent's result
+   */
+  public @NonNull AgentResult interact(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return interact(prompt.text());
+  }
+
+  /**
+   * Interacts with the agent using streaming with a Prompt. Creates a fresh context.
+   *
+   * <p>The prompt's text content is extracted and used as the input. If the prompt contains
+   * template variables, compile it first using {@link Prompt#compile(java.util.Map)}.
+   *
+   * @param prompt the prompt input
+   * @return an AgentStream for processing streaming events
+   */
+  public @NonNull AgentStream interactStream(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return interactStream(prompt.text());
+  }
+
+  /**
    * Interacts with the agent using streaming with full agentic loop. Creates a fresh context.
    *
    * <p>Returns an {@link AgentStream} that runs the complete agentic loop including guardrails,

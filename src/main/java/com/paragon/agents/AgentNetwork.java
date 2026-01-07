@@ -1,5 +1,6 @@
 package com.paragon.agents;
 
+import com.paragon.prompts.Prompt;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
@@ -148,6 +149,19 @@ public final class AgentNetwork {
   }
 
   /**
+   * Initiates a discussion with a Prompt.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the discussion prompt
+   * @return the network result
+   */
+  public @NonNull NetworkResult discuss(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return discuss(prompt.text());
+  }
+
+  /**
    * Initiates a discussion using an existing context.
    *
    * <p>This is the core discuss method. The context is shared across all agents, building up a
@@ -229,6 +243,19 @@ public final class AgentNetwork {
     }
   }
 
+  /**
+   * Broadcasts a Prompt to all peers simultaneously and collects responses.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the prompt to broadcast
+   * @return list of contributions
+   */
+  public @NonNull List<Contribution> broadcast(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return broadcast(prompt.text());
+  }
+
   // ===== Streaming Methods =====
 
   /**
@@ -245,6 +272,19 @@ public final class AgentNetwork {
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(topic));
     return discussStream(context);
+  }
+
+  /**
+   * Initiates a streaming discussion with a Prompt.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the discussion prompt
+   * @return a NetworkStream for processing streaming events
+   */
+  public @NonNull NetworkStream discussStream(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return discussStream(prompt.text());
   }
 
   /**
@@ -272,6 +312,19 @@ public final class AgentNetwork {
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(message));
     return new NetworkStream(this, context, NetworkStream.Mode.BROADCAST);
+  }
+
+  /**
+   * Broadcasts a Prompt to all peers simultaneously with streaming.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the prompt to broadcast
+   * @return a NetworkStream for processing streaming events
+   */
+  public @NonNull NetworkStream broadcastStream(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return broadcastStream(prompt.text());
   }
 
   private List<Contribution> runDiscussionRounds(

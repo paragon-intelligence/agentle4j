@@ -104,4 +104,39 @@ public final class FilesystemPromptProvider implements PromptProvider {
           "Failed to read prompt file: " + promptPath, promptId, e, true);
     }
   }
+
+  @Override
+  public boolean exists(@NonNull String promptId) {
+    Objects.requireNonNull(promptId, "promptId must not be null");
+
+    if (promptId.isEmpty()) {
+      return false;
+    }
+
+    Path promptPath = baseDirectory.resolve(promptId);
+
+    // Security check: prevent path traversal attacks
+    if (!promptPath.normalize().startsWith(baseDirectory.normalize())) {
+      return false;
+    }
+
+    return Files.exists(promptPath) && Files.isRegularFile(promptPath);
+  }
+
+  @Override
+  public java.util.Set<String> listPromptIds() {
+    if (!Files.exists(baseDirectory)) {
+      return java.util.Set.of();
+    }
+
+    try (java.util.stream.Stream<Path> paths = Files.walk(baseDirectory)) {
+      return paths
+          .filter(Files::isRegularFile)
+          .map(path -> baseDirectory.relativize(path).toString().replace('\\', '/'))
+          .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    } catch (IOException e) {
+      throw new PromptProviderException(
+          "Failed to list prompts in directory: " + baseDirectory, null, e, true);
+    }
+  }
 }

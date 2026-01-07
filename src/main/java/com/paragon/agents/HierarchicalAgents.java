@@ -1,5 +1,6 @@
 package com.paragon.agents;
 
+import com.paragon.prompts.Prompt;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.Text;
 import com.paragon.telemetry.processors.TraceIdGenerator;
@@ -138,6 +139,19 @@ public final class HierarchicalAgents {
   }
 
   /**
+   * Executes a task with a Prompt.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the task prompt
+   * @return the execution result
+   */
+  public @NonNull AgentResult execute(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return execute(prompt.text());
+  }
+
+  /**
    * Executes a task using an existing context.
    *
    * @param context the context with task history
@@ -164,6 +178,19 @@ public final class HierarchicalAgents {
   public @NonNull AgentStream executeStream(@NonNull String task) {
     Objects.requireNonNull(task, "task cannot be null");
     return rootSupervisor.orchestrateStream(task);
+  }
+
+  /**
+   * Executes a task with streaming using a Prompt.
+   *
+   * <p>The prompt's text content is extracted and used as the input.
+   *
+   * @param prompt the task prompt
+   * @return an AgentStream for processing streaming events
+   */
+  public @NonNull AgentStream executeStream(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return executeStream(prompt.text());
   }
 
   /**
@@ -198,6 +225,22 @@ public final class HierarchicalAgents {
     }
 
     return deptSupervisor.orchestrate(task);
+  }
+
+  /**
+   * Sends a Prompt directly to a specific department.
+   *
+   * <p>Bypasses the executive and sends the prompt directly to the department manager.
+   *
+   * @param departmentName the department name
+   * @param prompt the task prompt
+   * @return the department result
+   * @throws IllegalArgumentException if department doesn't exist
+   */
+  public @NonNull AgentResult sendToDepartment(
+      @NonNull String departmentName, @NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return sendToDepartment(departmentName, prompt.text());
   }
 
   private SupervisorAgent buildHierarchy() {

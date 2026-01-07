@@ -290,12 +290,33 @@ Exceeding these limits throws a `TemplateException`.
 
 ```java
 public interface PromptProvider {
+    // Retrieve prompts
     Prompt providePrompt(String promptId, Map<String, String> filters);
-    
-    // Convenience method without filters
     default Prompt providePrompt(String promptId);
+    
+    // Discovery
+    boolean exists(String promptId);
+    Set<String> listPromptIds();
 }
 ```
+
+## PromptStore Interface
+
+For implementations that support write operations (e.g., database-backed storage):
+
+```java
+public interface PromptStore {
+    void save(String promptId, Prompt prompt);
+    default void save(String promptId, String content);  // Convenience
+    void delete(String promptId);
+}
+```
+
+**Interface Segregation:**
+- `PromptProvider` — Read-only operations for agents and most consumers
+- `PromptStore` — Write operations for admin dashboards and management
+- Implementations needing full CRUD can implement both interfaces
+
 
 ## Filesystem Provider
 

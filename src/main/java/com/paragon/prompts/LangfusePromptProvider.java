@@ -238,6 +238,136 @@ public final class LangfusePromptProvider implements PromptProvider {
     return retryPolicy;
   }
 
+  @Override
+  public boolean exists(@NonNull String promptId) {
+    Objects.requireNonNull(promptId, "promptId must not be null");
+
+    if (promptId.isEmpty()) {
+      return false;
+    }
+
+    try {
+      // Use the list API with name filter to check existence
+      LangfusePromptListResponse response = fetchPromptListWithRetry(promptId, 1, 1, 0);
+      return response.getData().stream()
+          .anyMatch(meta -> promptId.equals(meta.getName()));
+    } catch (PromptProviderException e) {
+      if (e.getMessage() != null && e.getMessage().contains("not found")) {
+        return false;
+      }
+      throw e;
+    } catch (Exception e) {
+      throw new PromptProviderException(
+          "Failed to check prompt existence: " + e.getMessage(), promptId, e, isRetryable(e));
+    }
+  }
+
+  @Override
+  public java.util.Set<String> listPromptIds() {
+    java.util.Set<String> promptIds = new java.util.HashSet<>();
+    int page = 1;
+    int limit = 100; // Max items per page
+
+    try {
+      while (true) {
+        LangfusePromptListResponse response = fetchPromptListWithRetry(null, page, limit, 0);
+        
+        for (LangfusePromptListResponse.PromptMeta meta : response.getData()) {
+          if (meta.getName() != null) {
+            promptIds.add(meta.getName());
+          }
+        }
+
+        // Check if we've retrieved all pages
+        LangfusePromptListResponse.PageMeta pageMeta = response.getMeta();
+        if (pageMeta == null || page >= pageMeta.getTotalPages()) {
+          break;
+        }
+        page++;
+      }
+    } catch (Exception e) {
+      throw new PromptProviderException(
+          "Failed to list prompts from Langfuse: " + e.getMessage(), null, e, isRetryable(e));
+    }
+
+    return java.util.Collections.unmodifiableSet(promptIds);
+  }
+
+  private LangfusePromptListResponse fetchPromptListWithRetry(
+      @Nullable String name, int page, int limit, int attempt) {
+
+    try {
+      return fetchPromptList(name, page, limit);
+    } catch (PromptProviderException ppe) {
+      if (ppe.isRetryable() && attempt < retryPolicy.maxRetries()) {
+        sleepForRetry(attempt + 1);
+        return fetchPromptListWithRetry(name, page, limit, attempt + 1);
+      }
+      throw ppe;
+    } catch (Exception e) {
+      if (isRetryable(e) && attempt < retryPolicy.maxRetries()) {
+        sleepForRetry(attempt + 1);
+        return fetchPromptListWithRetry(name, page, limit, attempt + 1);
+      }
+      throw new PromptProviderException(
+          "Failed to fetch prompt list: " + e.getMessage(), null, e, false);
+    }
+  }
+
+  private LangfusePromptListResponse fetchPromptList(
+      @Nullable String name, int page, int limit) {
+
+    HttpUrl.Builder urlBuilder =
+        HttpUrl.parse(baseUrl + "/api/public/v2/prompts").newBuilder()
+            .addQueryParameter("page", String.valueOf(page))
+            .addQueryParameter("limit", String.valueOf(limit));
+
+    if (name != null && !name.isEmpty()) {
+      urlBuilder.addQueryParameter("name", name);
+    }
+
+    Request request =
+        new Request.Builder()
+            .url(urlBuilder.build())
+            .header("Authorization", authHeader)
+            .header("Accept", "application/json")
+            .get()
+            .build();
+
+    try {
+      Response response = httpClient.newCall(request).execute();
+
+      try (ResponseBody body = response.body()) {
+        int code = response.code();
+
+        if (!response.isSuccessful()) {
+          String errorBody = body != null ? body.string() : "";
+          boolean retryable = retryPolicy.isRetryable(code);
+
+          String message =
+              switch (code) {
+                case 401 -> "Unauthorized: Invalid Langfuse credentials";
+                case 403 -> "Forbidden: Access denied to prompts list";
+                case 429 -> "Rate limited by Langfuse API";
+                default -> "HTTP " + code + ": " + errorBody;
+              };
+
+          throw new PromptProviderException(message, null, null, retryable);
+        }
+
+        if (body == null) {
+          throw new PromptProviderException("Empty response body", null);
+        }
+
+        String json = body.string();
+        return objectMapper.readValue(json, LangfusePromptListResponse.class);
+      }
+    } catch (IOException e) {
+      throw new PromptProviderException(
+          "Network error fetching prompt list: " + e.getMessage(), null, e, true);
+    }
+  }
+
   /** Builder for creating {@link LangfusePromptProvider} instances. */
   public static final class Builder {
     private OkHttpClient httpClient;

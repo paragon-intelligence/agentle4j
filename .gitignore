@@ -33,7 +33,7 @@ Thumbs.db
 .env.local
 
 # Logs
-*.log
+#*.log
 
 # JaCoCo
 jacoco.exec
