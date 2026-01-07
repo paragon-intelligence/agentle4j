@@ -63,7 +63,7 @@ try (Playwright playwright = Playwright.create();
             .url("https://example.com/article")
             .prompt("Extract the main article content")
             .build()
-    ).join();
+    );
     
     System.out.println(result.combinedMarkdown());
 }
@@ -86,7 +86,7 @@ ExtractionResult result = extractor.extract(
             .removeBase64Images(true)
             .timeoutMs(15000))
         .build()
-).join();
+);
 
 // Access extracted content
 List<String> htmlPages = result.html();           // Raw HTML for each URL
@@ -104,7 +104,7 @@ ExtractionResult result = extractor.extract(
         .prompt("Extract content")
         .ignoreInvalidUrls(true)  // Continue if some URLs fail
         .build()
-).join();
+);
 
 // Check for errors
 for (ExtractionResult.ExtractionError error : result.errors()) {
@@ -135,7 +135,7 @@ ExtractionResult.Structured<Article> result = extractor.extract(
         .url("https://example.com/article")
         .prompt("Extract the article metadata")
         .build()
-).join();
+);
 
 // Get typed result
 Article article = result.requireOutput();  // Throws if extraction failed
@@ -172,7 +172,7 @@ ExtractionResult.Structured<Product> result = extractor.extract(
         .prompt("Extract product details including price and availability")
         .withPreferences(p -> p.onlyMainContent(true))
         .build()
-).join();
+);
 ```
 
 ---
@@ -232,7 +232,7 @@ ExtractPayload.builder()
 ## Error Handling
 
 ```java
-ExtractionResult result = extractor.extract(payload).join();
+ExtractionResult result = extractor.extract(payload);
 
 // Check for errors
 if (!result.errors().isEmpty()) {
@@ -357,7 +357,7 @@ public class ProductScraper {
                         .timeoutMs(15000)
                         .blockAds(true))
                     .build()
-            ).join();
+            );
             
             if (result.output() != null) {
                 Product product = result.output();

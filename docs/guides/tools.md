@@ -106,7 +106,7 @@ var payload = CreateResponsePayload.builder()
     .addTool(weatherTool)
     .build();
 
-Response response = responder.respond(payload).join();
+Response response = responder.respond(payload);
 
 // Check if the model wants to call a tool
 for (var toolCall : response.functionToolCalls(store)) {
@@ -328,9 +328,9 @@ return FunctionToolCallOutput.success(mapper.writeValueAsString(new SearchResult
 
 ---
 
-## Async Tools
+## Long-Running Tools
 
-For long-running operations, override `callAsync`:
+For long-running operations, use virtual threads for efficiency:
 
 ```java
 @FunctionMetadata(
@@ -340,22 +340,14 @@ For long-running operations, override `callAsync`:
 public class ReportGeneratorTool extends FunctionTool<ReportParams> {
     
     @Override
-    public CompletableFuture<FunctionToolCallOutput> callAsync(@Nullable ReportParams params) {
-        return CompletableFuture.supplyAsync(() -> {
-            // Long-running operation
-            Report report = generateDetailedReport(params);
-            try {
-                return FunctionToolCallOutput.success(new ObjectMapper().writeValueAsString(report));
-            } catch (Exception e) {
-                return FunctionToolCallOutput.error("Failed to serialize report");
-            }
-        });
-    }
-    
-    @Override
     public FunctionToolCallOutput call(@Nullable ReportParams params) {
-        // Fallback synchronous implementation
-        return callAsync(params).join();
+        // Long-running operation - virtual threads handle blocking efficiently
+        Report report = generateDetailedReport(params);
+        try {
+            return FunctionToolCallOutput.success(new ObjectMapper().writeValueAsString(report));
+        } catch (Exception e) {
+            return FunctionToolCallOutput.error("Failed to serialize report");
+        }
     }
 }
 ```
@@ -378,7 +370,7 @@ Agent agent = Agent.builder()
     .build();
 
 // Tools are called automatically when needed
-AgentResult result = agent.interact("What's the weather in Tokyo and calculate 15 * 7").join();
+AgentResult result = agent.interact("What's the weather in Tokyo and calculate 15 * 7");
 System.out.println(result.output());
 // "The weather in Tokyo is 25°C and sunny. 15 * 7 = 105"
 ```
@@ -424,7 +416,7 @@ var payload = CreateResponsePayload.builder()
 When using Responder directly, you need to handle the tool loop manually:
 
 ```java
-Response response = responder.respond(payload).join();
+Response response = responder.respond(payload);
 List<ResponseInputItem> conversationHistory = new ArrayList<>(response.output());
 
 // Keep executing tools until no more tool calls
@@ -443,7 +435,7 @@ while (!response.functionToolCalls(store).isEmpty()) {
         .addTools(store.getTools())
         .build();
     
-    response = responder.respond(continuePayload).join();
+    response = responder.respond(continuePayload);
     conversationHistory.addAll(response.output());
 }
 

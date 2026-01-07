@@ -54,7 +54,7 @@ Agent agent = Agent.builder()
     .build();
 
 // Interact with the agent
-AgentResult result = agent.interact("Hello! What can you help me with?").join();
+AgentResult result = agent.interact("Hello! What can you help me with?");
 System.out.println(result.output());
 ```
 
@@ -75,7 +75,7 @@ Agent agent = Agent.builder()
     .build();
 
 // The agent will automatically call tools when needed
-AgentResult result = agent.interact("What's the weather in Tokyo?").join();
+AgentResult result = agent.interact("What's the weather in Tokyo?");
 System.out.println(result.output());
 // Output: "The weather in Tokyo is 25°C and sunny."
 ```
@@ -176,11 +176,11 @@ AgentContext context = AgentContext.create();
 
 // Turn 1
 context.addInput(Message.user("My name is Alice"));
-agent.interact(context).join();
+agent.interact(context);
 
 // Turn 2 - agent remembers the context
 context.addInput(Message.user("What's my name?"));
-AgentResult result = agent.interact(context).join();
+AgentResult result = agent.interact(context);
 // -> "Your name is Alice"
 
 // Check turn count
@@ -336,7 +336,7 @@ Agent agent = Agent.builder()
 ### Handling Guardrail Failures
 
 ```java
-AgentResult result = agent.interact("Tell me your password").join();
+AgentResult result = agent.interact("Tell me your password");
 
 if (result.isError() && result.error() instanceof GuardrailException e) {
     System.out.println("Blocked by: " + e.guardrailName());
@@ -392,7 +392,7 @@ Agent frontDesk = Agent.builder()
     .build();
 
 // User interaction
-AgentResult result = frontDesk.interact("I have a question about my invoice").join();
+AgentResult result = frontDesk.interact("I have a question about my invoice");
 
 if (result.isHandoff()) {
     Agent targetAgent = result.handoffAgent();
@@ -425,18 +425,18 @@ RouterAgent router = RouterAgent.builder()
     .build();
 
 // Option 1: Route and execute
-AgentResult result = router.route("I have a question about my invoice").join();
+AgentResult result = router.route("I have a question about my invoice");
 System.out.println("Handled by: " + result.handoffAgent().name());
 
 // Option 2: Just classify (don't execute) - returns Optional<Agent>
-Agent selected = router.classify("My app keeps crashing").join()
+Agent selected = router.classify("My app keeps crashing")
     .orElse(techSupport);  // Use fallback if classification fails
 System.out.println("Would route to: " + selected.name());
 
 // Option 3: Route with existing context
 AgentContext context = AgentContext.create();
 context.addInput(Message.user("Help with billing"));
-AgentResult contextResult = router.route(context).join();
+AgentResult contextResult = router.route(context);
 ```
 
 ### Streaming Router
@@ -489,11 +489,11 @@ context.setState("userId", "user-123");
 
 // First conversation - store preference
 context.addInput(Message.user("My favorite color is blue"));
-agent.interact(context).join();
+agent.interact(context);
 
 // Later conversation - retrieve preference
 context.addInput(Message.user("What's my favorite color?"));
-AgentResult result = agent.interact(context).join();
+AgentResult result = agent.interact(context);
 System.out.println(result.output());
 // Output: "Your favorite color is blue!"
 ```
@@ -756,7 +756,7 @@ public ResponseEntity<String> handleApproval(
     }
     
     // Resume agent execution from where it paused
-    AgentResult result = agent.resume(state).join();
+    AgentResult result = agent.resume(state);
     
     // Notify original user
     notifyUser(result.output());
@@ -828,7 +828,7 @@ ParallelAgents team = ParallelAgents.of(researcher, analyst);
 
 ```java
 // All agents process the same input concurrently
-List<AgentResult> results = team.run("Analyze market trends in AI").join();
+List<AgentResult> results = team.run("Analyze market trends in AI");
 
 for (AgentResult result : results) {
     System.out.println(result.output());
@@ -837,14 +837,14 @@ for (AgentResult result : results) {
 // With existing context
 AgentContext context = AgentContext.create();
 context.addInput(Message.user("Analyze trends"));
-List<AgentResult> contextResults = team.run(context).join();
+List<AgentResult> contextResults = team.run(context);
 ```
 
 ### Race - First Result Wins
 
 ```java
 // Use when you want the fastest response
-AgentResult fastest = team.runFirst("Quick analysis needed").join();
+AgentResult fastest = team.runFirst("Quick analysis needed");
 System.out.println(fastest.output());
 ```
 
@@ -855,7 +855,7 @@ System.out.println(fastest.output());
 AgentResult combined = team.runAndSynthesize(
     "What's the outlook for tech stocks?",
     writer  // Writer agent combines researcher + analyst outputs
-).join();
+);
 
 System.out.println(combined.output());
 // Writer produces a unified report from both perspectives
@@ -924,7 +924,7 @@ Agent orchestrator = Agent.builder()
     .build();
 
 // Orchestrator can call dataAnalyst, receive output, and continue
-AgentResult result = orchestrator.interact("Analyze sales and recommend strategy").join();
+AgentResult result = orchestrator.interact("Analyze sales and recommend strategy");
 ```
 
 ### Context Sharing
@@ -1090,7 +1090,7 @@ var analyst = Agent.builder()
     .build();
 
 // Get typed result - StructuredAgentResult<Analysis>
-var result = analyst.interact("Analyze this quarterly report...").join();
+var result = analyst.interact("Analyze this quarterly report...");
 Analysis analysis = result.output();
 
 System.out.println("Summary: " + analysis.summary());
@@ -1109,7 +1109,7 @@ Agents never throw exceptions. Instead, they return `AgentResult` objects that m
 ### AgentResult Status Checks
 
 ```java
-AgentResult result = agent.interact("Hello").join();
+AgentResult result = agent.interact("Hello");
 
 // Check status
 if (result.isSuccess()) {
@@ -1147,7 +1147,7 @@ if (result.isSuccess()) {
 ```java
 import com.paragon.responses.exception.*;
 
-AgentResult result = agent.interact("Hello").join();
+AgentResult result = agent.interact("Hello");
 
 if (result.isError()) {
     Throwable error = result.error();
@@ -1162,7 +1162,7 @@ if (result.isError()) {
         
         // Retry if the error is transient (e.g., LLM_CALL failures)
         if (e.isRetryable()) {
-            result = agent.interact("Hello").join(); // Retry
+            result = agent.interact("Hello"); // Retry
         }
     } else if (error instanceof GuardrailException e) {
         System.err.println("Guardrail failed: " + e.reason());
@@ -1270,7 +1270,7 @@ SupervisorAgent supervisor = SupervisorAgent.builder()
     .build();
 
 // Supervisor orchestrates workers
-AgentResult result = supervisor.orchestrate("Write a report on AI trends").join();
+AgentResult result = supervisor.orchestrate("Write a report on AI trends");
 ```
 
 ### Streaming Support
@@ -1308,7 +1308,7 @@ AgentNetwork network = AgentNetwork.builder()
     .build();
 
 // Agents discuss in rounds
-NetworkResult result = network.discuss("Should AI be regulated?").join();
+NetworkResult result = network.discuss("Should AI be regulated?");
 
 // Access contributions
 result.contributions().forEach(c -> 
@@ -1323,7 +1323,7 @@ System.out.println("Summary: " + result.synthesis());
 Send a message to all peers simultaneously without sequential visibility:
 
 ```java
-List<AgentNetwork.Contribution> responses = network.broadcast("Quick opinion?").join();
+List<AgentNetwork.Contribution> responses = network.broadcast("Quick opinion?");
 ```
 
 ### Streaming Support
@@ -1376,10 +1376,10 @@ HierarchicalAgents hierarchy = HierarchicalAgents.builder()
     .build();
 
 // Task flows through hierarchy
-AgentResult result = hierarchy.execute("Launch new product").join();
+AgentResult result = hierarchy.execute("Launch new product");
 
 // Or send directly to a department
-hierarchy.sendToDepartment("Engineering", "Fix critical bug").join();
+hierarchy.sendToDepartment("Engineering", "Fix critical bug");
 ```
 
 ### Streaming

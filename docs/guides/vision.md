@@ -25,7 +25,7 @@ var payload = CreateResponsePayload.builder()
     .addMessage(message)
     .build();
 
-Response response = responder.respond(payload).join();
+Response response = responder.respond(payload);
 System.out.println(response.outputText());
 ```
 
@@ -117,7 +117,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(ReceiptData.class)
     .build();
 
-ReceiptData receipt = responder.respond(payload).join().outputParsed();
+ReceiptData receipt = responder.respond(payload).outputParsed();
 ```
 
 ### Image Classification
@@ -143,7 +143,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(Classification.class)
     .build();
 
-Classification result = responder.respond(payload).join().outputParsed();
+Classification result = responder.respond(payload).outputParsed();
 System.out.println("Category: " + result.category() + " (" + result.confidence() + ")");
 ```
 
@@ -167,7 +167,7 @@ var payload = CreateResponsePayload.builder()
     .addMessage(message)
     .build();
 
-System.out.println(responder.respond(payload).join().outputText());
+System.out.println(responder.respond(payload).outputText());
 ```
 
 ---
@@ -197,7 +197,7 @@ UserMessage message = Message.builder()
     .addContent(image)
     .asUser();
 
-AgentResult result = visionAssistant.interact(message).join();
+AgentResult result = visionAssistant.interact(message);
 ```
 
 ---

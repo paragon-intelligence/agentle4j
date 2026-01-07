@@ -132,7 +132,7 @@ var payload = CreateResponsePayload.builder()
     .build();
 
 // Get the response
-Response response = responder.respond(payload).join();
+Response response = responder.respond(payload);
 System.out.println(response.outputText());
 ```
 

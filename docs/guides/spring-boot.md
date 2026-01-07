@@ -112,11 +112,7 @@ public class CustomerSupportAgent {
     }
 
     public String chat(String userMessage) {
-        return agent.interact(userMessage).join().output();
-    }
-    
-    public CompletableFuture<AgentResult> chatAsync(String userMessage) {
-        return agent.interact(userMessage);
+        return agent.interact(userMessage).output();
     }
 }
 ```
@@ -304,7 +300,7 @@ public class CriarQuestaoUseCase {
     }
 
     public Questao criarQuestao(CriarQuestaoRequest input) {
-        var result = questionAgent.interact(input.content()).join();
+        var result = questionAgent.interact(input.content());
         return parseQuestaoFromResult(result);
     }
 }
@@ -321,9 +317,8 @@ public class SummarizeDocumentUseCase {
     }
 
     public Summary summarize(Document doc) {
-        return summarizationAgent.interact(doc.content())
-            .thenApply(result -> new Summary(result.output()))
-            .join();
+        AgentResult result = summarizationAgent.interact(doc.content());
+        return new Summary(result.output());
     }
 }
 ```
@@ -400,7 +395,7 @@ public class DynamicAgentUseCase {
 
     public String processWithAgent(String agentType, String input) {
         Agent agent = agentFactory.create(agentType);
-        return agent.interact(input).join().output();
+        return agent.interact(input).output();
     }
 }
 ```
@@ -471,7 +466,7 @@ public class FlexibleProcessingUseCase {
 
     public ProcessingResult process(String agentName, String input) {
         Agent agent = agentRegistry.get(agentName);
-        AgentResult result = agent.interact(input).join();
+        AgentResult result = agent.interact(input);
         return new ProcessingResult(result.output(), result.turnsUsed());
     }
 }
@@ -527,11 +522,11 @@ public class CustomerInquiryUseCase {
 
     public InquiryResponse handle(String customerMessage) {
         // Classify the message (returns Optional<Agent>)
-        Agent selectedAgent = router.classify(customerMessage).join()
+        Agent selectedAgent = router.classify(customerMessage)
             .orElseThrow(() -> new IllegalStateException("No agent found for message"));
         
         // Process with the appropriate agent
-        AgentResult result = selectedAgent.interact(customerMessage).join();
+        AgentResult result = selectedAgent.interact(customerMessage);
         
         return new InquiryResponse(
             selectedAgent.name(),
@@ -584,7 +579,7 @@ public class ConditionalUseCase {
         if (useExpensiveModel) {
             Agent agent = expensiveAgentProvider.getIfAvailable();
             if (agent != null) {
-                return agent.interact(input).join().output();
+                return agent.interact(input).output();
             }
         }
         // Fallback to cheaper processing
@@ -697,7 +692,6 @@ public class AgentConfigProperties {
 
 ```java
 import org.springframework.web.bind.annotation.*;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -709,18 +703,11 @@ public class ChatController {
         this.agent = agent;
     }
 
-    // Synchronous endpoint
+    // Synchronous endpoint (efficient with Virtual Threads)
     @PostMapping
     public ChatResponse chat(@RequestBody ChatRequest request) {
         String response = agent.chat(request.message());
         return new ChatResponse(response);
-    }
-
-    // Async endpoint (non-blocking)
-    @PostMapping("/async")
-    public CompletableFuture<ChatResponse> chatAsync(@RequestBody ChatRequest request) {
-        return agent.chatAsync(request.message())
-            .thenApply(result -> new ChatResponse(result.output()));
     }
 
     public record ChatRequest(String message) {}
@@ -748,15 +735,14 @@ public class AnalysisController {
 
     // Extract structured data
     @PostMapping("/sentiment")
-    public CompletableFuture<SentimentResult> analyzeSentiment(@RequestBody TextInput input) {
+    public SentimentResult analyzeSentiment(@RequestBody TextInput input) {
         var payload = CreateResponsePayload.builder()
             .model(props.getModel())
             .addUserMessage("Analyze sentiment: " + input.text())
             .withStructuredOutput(SentimentResult.class)
             .build();
 
-        return responder.respond(payload)
-            .thenApply(response -> response.outputParsed());
+        return responder.respond(payload).outputParsed();
     }
 
     public record TextInput(String text) {}
@@ -1692,7 +1678,7 @@ public class AIHealthIndicator implements HealthIndicator {
                 .maxTokens(1)
                 .build();
             
-            responder.respond(payload).join();
+            responder.respond(payload);
             return Health.up().build();
         } catch (Exception e) {
             return Health.down()
@@ -1872,20 +1858,20 @@ public class AsyncJobController {
         jobStore.get(jobId).ifPresent(job -> 
             jobStore.save(job.withStatus(JobStatus.RUNNING)));
 
-        // Fully async - no .join() blocking
-        analysisAgent.interact(input)
-            .thenAccept(result -> {
+        // Submit to virtual thread for background processing
+        Thread.startVirtualThread(() -> {
+            try {
+                var result = analysisAgent.interact(input);
                 if (result.isSuccess()) {
                     jobStore.save(new Job(jobId, input, JobStatus.COMPLETED, result.output(), null));
                 } else {
                     String error = result.error() != null ? result.error().getMessage() : "Unknown error";
                     jobStore.save(new Job(jobId, input, JobStatus.FAILED, null, error));
                 }
-            })
-            .exceptionally(e -> {
+            } catch (Exception e) {
                 jobStore.save(new Job(jobId, input, JobStatus.FAILED, null, e.getMessage()));
-                return null;
-            });
+            }
+        });
     }
 
     // DTOs

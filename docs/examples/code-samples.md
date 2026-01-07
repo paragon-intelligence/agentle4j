@@ -26,7 +26,7 @@ public class SimpleChatExample {
             .addUserMessage("Explain Java streams in 3 sentences.")
             .build();
 
-        Response response = responder.respond(payload).join();
+        Response response = responder.respond(payload);
         System.out.println(response.outputText());
     }
 }
@@ -179,7 +179,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(ProductInfo.class)
     .build();
 
-ProductInfo product = responder.respond(payload).join().outputParsed();
+ProductInfo product = responder.respond(payload).outputParsed();
 System.out.println("Product: " + product.name());
 System.out.println("Price: " + product.currency() + product.price());
 System.out.println("In Stock: " + product.inStock());
@@ -208,7 +208,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(SentimentAnalysis.class)
     .build();
 
-SentimentAnalysis analysis = responder.respond(payload).join().outputParsed();
+SentimentAnalysis analysis = responder.respond(payload).outputParsed();
 System.out.println("Sentiment: " + analysis.sentiment());
 System.out.println("Confidence: " + (analysis.confidence() * 100) + "%");
 System.out.println("Keywords: " + String.join(", ", analysis.keywords()));
@@ -250,7 +250,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(CodeReview.class)
     .build();
 
-CodeReview review = responder.respond(payload).join().outputParsed();
+CodeReview review = responder.respond(payload).outputParsed();
 System.out.println("Score: " + review.overallScore() + "/10");
 System.out.println("\nIssues found:");
 for (CodeIssue issue : review.issues()) {
@@ -296,7 +296,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(MarketAnalysis.class)
     .build();
 
-MarketAnalysis analysis = responder.respond(payload).join().outputParsed();
+MarketAnalysis analysis = responder.respond(payload).outputParsed();
 ```
 
 ---
@@ -333,7 +333,7 @@ public class ConversationManager {
             .build();
         
         // Get response
-        Response response = responder.respond(payload).join();
+        Response response = responder.respond(payload);
         String assistantMessage = response.outputText();
         
         // Add assistant response to history
@@ -384,7 +384,7 @@ public class SmartConversation {
             .inputItems(history)
             .build();
         
-        Response response = responder.respond(payload).join();
+        Response response = responder.respond(payload);
         history.add(new AssistantMessage(response.outputText()));
         
         return response.outputText();
@@ -396,12 +396,11 @@ public class SmartConversation {
 
 ## Batch Processing Examples
 
-### Parallel API Calls
+### Parallel API Calls with Virtual Threads
 
 ```java
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import java.util.concurrent.*;
 
 List<String> topics = List.of(
     "Machine Learning",
@@ -411,54 +410,56 @@ List<String> topics = List.of(
     "5G Networks"
 );
 
-// Create all requests in parallel
-List<CompletableFuture<Response>> futures = topics.stream()
-    .map(topic -> {
-        var payload = CreateResponsePayload.builder()
-            .model("openai/gpt-4o-mini")
-            .addUserMessage("Explain " + topic + " in 2 sentences.")
-            .build();
-        return responder.respond(payload);
-    })
-    .collect(Collectors.toList());
-
-// Wait for all to complete
-CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-
-// Process results
-for (int i = 0; i < topics.size(); i++) {
-    System.out.println("## " + topics.get(i));
-    System.out.println(futures.get(i).join().outputText());
-    System.out.println();
+// Run requests in parallel with virtual threads
+try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    var futures = topics.stream()
+        .map(topic -> executor.submit(() -> {
+            var payload = CreateResponsePayload.builder()
+                .model("openai/gpt-4o-mini")
+                .addUserMessage("Explain " + topic + " in 2 sentences.")
+                .build();
+            return responder.respond(payload).outputText();
+        }))
+        .toList();
+    
+    // Process results
+    for (int i = 0; i < topics.size(); i++) {
+        System.out.println("## " + topics.get(i));
+        System.out.println(futures.get(i).get());
+        System.out.println();
+    }
 }
 ```
 
 ### Rate-Limited Batch Processing
 
 ```java
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.*;
 
 // Limit to 5 concurrent requests
 Semaphore rateLimiter = new Semaphore(5);
-
 List<String> prompts = List.of(/* many prompts */);
 
-List<CompletableFuture<String>> results = prompts.stream()
-    .map(prompt -> CompletableFuture.supplyAsync(() -> {
-        try {
-            rateLimiter.acquire();
-            var payload = CreateResponsePayload.builder()
-                .model("openai/gpt-4o-mini")
-                .addUserMessage(prompt)
-                .build();
-            return responder.respond(payload).join().outputText();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } finally {
-            rateLimiter.release();
-        }
-    }))
-    .collect(Collectors.toList());
+try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    var results = prompts.stream()
+        .map(prompt -> executor.submit(() -> {
+            try {
+                rateLimiter.acquire();
+                var payload = CreateResponsePayload.builder()
+                    .model("openai/gpt-4o-mini")
+                    .addUserMessage(prompt)
+                    .build();
+                return responder.respond(payload).outputText();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } finally {
+                rateLimiter.release();
+            }
+        }))
+        .toList();
+    
+    // Process results...
+}
 ```
 
 ---
@@ -468,29 +469,22 @@ List<CompletableFuture<String>> results = prompts.stream()
 ### Comprehensive Error Handling
 
 ```java
-responder.respond(payload)
-    .handle((response, error) -> {
-        if (error != null) {
-            Throwable cause = error.getCause();
-            
-            if (cause instanceof java.net.SocketTimeoutException) {
-                System.err.println("Request timed out. Please try again.");
-            } else if (cause instanceof java.net.UnknownHostException) {
-                System.err.println("Network error. Check your internet connection.");
-            } else if (cause.getMessage().contains("401")) {
-                System.err.println("Invalid API key. Please check your credentials.");
-            } else if (cause.getMessage().contains("429")) {
-                System.err.println("Rate limited. Please wait and try again.");
-            } else if (cause.getMessage().contains("500")) {
-                System.err.println("Server error. The API is temporarily unavailable.");
-            } else {
-                System.err.println("Unexpected error: " + cause.getMessage());
-            }
-            return null;
-        }
-        
-        return response.outputText();
-    });
+try {
+    Response response = responder.respond(payload);
+    System.out.println(response.outputText());
+} catch (java.net.SocketTimeoutException e) {
+    System.err.println("Request timed out. Please try again.");
+} catch (java.net.UnknownHostException e) {
+    System.err.println("Network error. Check your internet connection.");
+} catch (RateLimitException e) {
+    System.err.println("Rate limited. Please wait and try again.");
+} catch (AuthenticationException e) {
+    System.err.println("Invalid API key. Please check your credentials.");
+} catch (ServerException e) {
+    System.err.println("Server error. The API is temporarily unavailable.");
+} catch (RuntimeException e) {
+    System.err.println("Unexpected error: " + e.getMessage());
+}
 ```
 
 ### Retry with Exponential Backoff
@@ -504,8 +498,8 @@ public Response callWithRetry(Responder responder, CreateResponsePayload payload
     
     while (retries < maxRetries) {
         try {
-            return responder.respond(payload).join();
-        } catch (Exception e) {
+            return responder.respond(payload);
+        } catch (RuntimeException e) {
             retries++;
             if (retries >= maxRetries) {
                 throw e;
@@ -548,29 +542,28 @@ public class AIController {
     }
     
     @PostMapping("/chat")
-    public CompletableFuture<Map<String, String>> chat(@RequestBody ChatRequest request) {
+    public Map<String, String> chat(@RequestBody ChatRequest request) {
         var payload = CreateResponsePayload.builder()
             .model("openai/gpt-4o-mini")
             .addUserMessage(request.message())
             .build();
         
-        return responder.respond(payload)
-            .thenApply(response -> Map.of(
-                "response", response.outputText(),
-                "tokens", String.valueOf(response.usage().totalTokens())
-            ));
+        Response response = responder.respond(payload);
+        return Map.of(
+            "response", response.outputText(),
+            "tokens", String.valueOf(response.usage().totalTokens())
+        );
     }
     
     @PostMapping("/analyze")
-    public CompletableFuture<SentimentAnalysis> analyzeSentiment(@RequestBody TextRequest request) {
+    public SentimentAnalysis analyzeSentiment(@RequestBody TextRequest request) {
         var payload = CreateResponsePayload.builder()
             .model("openai/gpt-4o")
             .addUserMessage("Analyze sentiment: " + request.text())
             .withStructuredOutput(SentimentAnalysis.class)
             .build();
         
-        return responder.respond(payload)
-            .thenApply(ParsedResponse::outputParsed);
+        return responder.respond(payload).outputParsed();
     }
 }
 
@@ -645,7 +638,7 @@ public class DocumentSummarizer {
             .withStructuredOutput(Summary.class)
             .build();
         
-        return responder.respond(payload).join().outputParsed();
+        return responder.respond(payload).outputParsed();
     }
     
     public static void main(String[] args) throws Exception {

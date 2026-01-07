@@ -34,8 +34,8 @@ public class HelloAgentle {
             .addUserMessage("What is the capital of France?")
             .build();
 
-        // 3. Get the response (blocking with .join())
-        Response response = responder.respond(payload).join();
+        // 3. Get the response (synchronous, blocking call)
+        Response response = responder.respond(payload);
         
         // 4. Print the output
         System.out.println(response.outputText());
@@ -52,50 +52,35 @@ public class HelloAgentle {
 | `CreateResponsePayload` | A builder to construct your request |
 | `.addDeveloperMessage()` | Sets the system prompt (AI's behavior) |
 | `.addUserMessage()` | The user's input message |
-| `.respond()` | Returns `CompletableFuture<Response>` |
-| `.join()` | Blocks until the response is ready |
+| `.respond()` | Returns `Response` directly (blocking) |
 
 ---
 
-## Async vs Blocking
+## Synchronous and Streaming
 
-Agentle4j is **async by default**. Choose your style:
+Agentle4j uses **Java 21 Virtual Threads** for efficient blocking operations:
 
-### Blocking (Simple)
+### Synchronous (Default)
 
 ```java
-// Use .join() to block and wait for the result
-Response response = responder.respond(payload).join();
+// Simple blocking call - leverages virtual threads for efficiency
+Response response = responder.respond(payload);
 System.out.println(response.outputText());
 ```
 
-### Async with Callbacks
+### Streaming (Real-time)
 
 ```java
-// Non-blocking with callbacks
-responder.respond(payload)
-    .thenAccept(response -> {
-        System.out.println("Got response: " + response.outputText());
+// Stream tokens as they arrive
+responder.respond(payload.toBuilder().streaming().build())
+    .onTextDelta(delta -> {
+        System.out.print(delta);
+        System.out.flush();
     })
-    .exceptionally(error -> {
-        System.err.println("Error: " + error.getMessage());
-        return null;
-    });
-
-// Continue doing other work while waiting...
-System.out.println("Request sent, doing other work...");
-```
-
-### Async with CompletableFuture
-
-```java
-// Chain multiple operations
-CompletableFuture<String> result = responder.respond(payload)
-    .thenApply(Response::outputText)
-    .thenApply(text -> text.toUpperCase());
-
-// Use the result later
-String upperCaseResponse = result.join();
+    .onComplete(response -> {
+        System.out.println("\n\nDone!");
+    })
+    .start();  // Blocks until streaming completes
 ```
 
 ---
@@ -160,7 +145,7 @@ var payload = CreateResponsePayload.builder()
     .build();
 
 // 3. Get the parsed response
-ParsedResponse<Person> response = responder.respond(payload).join();
+ParsedResponse<Person> response = responder.respond(payload);
 Person person = response.outputParsed();
 
 // 4. Use the strongly-typed object
@@ -194,7 +179,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(ContactInfo.class)
     .build();
 
-ContactInfo contact = responder.respond(payload).join().outputParsed();
+ContactInfo contact = responder.respond(payload).outputParsed();
 
 System.out.println("Name: " + contact.name());      // John Smith
 System.out.println("Email: " + contact.email());    // john.smith@acme.com
@@ -221,7 +206,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(Employee.class)
     .build();
 
-Employee emp = responder.respond(payload).join().outputParsed();
+Employee emp = responder.respond(payload).outputParsed();
 System.out.println(emp.name() + " works in " + emp.department());
 System.out.println("Located at: " + emp.address().city() + ", " + emp.address().country());
 ```
@@ -255,7 +240,7 @@ Response response1 = responder.respond(
         .model("openai/gpt-4o-mini")
         .inputItems(conversation)
         .build()
-).join();
+);
 addAssistantMessage(response1.outputText());
 System.out.println("Assistant: " + response1.outputText());
 
@@ -266,7 +251,7 @@ Response response2 = responder.respond(
         .model("openai/gpt-4o-mini")
         .inputItems(conversation)
         .build()
-).join();
+);
 System.out.println("Assistant: " + response2.outputText());
 // Output: Your name is Alice and you're a Java developer!
 ```

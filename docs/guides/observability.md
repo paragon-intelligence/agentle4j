@@ -73,7 +73,7 @@ Responder responder = Responder.builder()
     .build();
 
 // Response includes cost information
-Response response = responder.respond(payload).join();
+Response response = responder.respond(payload);
 // Cost is automatically added to telemetry
 ```
 
@@ -188,7 +188,7 @@ AgentContext ctx = AgentContext.create()
     .withRequestId("user-session-12345");  // Optional high-level correlation
 
 ctx.addInput(Message.user("Help me"));
-AgentResult result = agent.interact(ctx).join();
+AgentResult result = agent.interact(ctx);
 ```
 
 ### Viewing Traces

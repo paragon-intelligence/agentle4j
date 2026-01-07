@@ -44,7 +44,7 @@ var payload = CreateResponsePayload.builder()
     .addUserMessage("Hello!")
     .build();
 
-Response response = responder.respond(payload).join();
+Response response = responder.respond(payload);
 System.out.println(response.outputText());
 ```
 
@@ -75,7 +75,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(Person.class)
     .build();
 
-ParsedResponse<Person> response = responder.respond(payload).join();
+ParsedResponse<Person> response = responder.respond(payload);
 Person person = response.outputParsed();
 ```
 
@@ -123,7 +123,7 @@ Agent agent = Agent.builder()
     .addTool(weatherTool)
     .build();
 
-AgentResult result = agent.interact("What's the weather in Tokyo?").join();
+AgentResult result = agent.interact("What's the weather in Tokyo?");
 ```
 
 ### AgentContext
@@ -139,10 +139,10 @@ context.setState("orderId", 42);
 
 // Multi-turn conversation (reuse context)
 context.addInput(Message.user("My name is Alice"));
-agent.interact(context).join();
+agent.interact(context);
 
 context.addInput(Message.user("What's my name?"));
-agent.interact(context).join();  // -> "Your name is Alice"
+agent.interact(context);  // -> "Your name is Alice"
 
 // Retrieve state (returns Optional)
 String userId = context.getState("userId", String.class).orElse(null);
@@ -197,7 +197,7 @@ var payload = CreateResponsePayload.builder()
     .addTool(weatherTool)
     .build();
 
-Response response = responder.respond(payload).join();
+Response response = responder.respond(payload);
 for (var toolCall : response.functionToolCalls(store)) {
     System.out.println(toolCall.call());
 }
@@ -238,7 +238,7 @@ Agent frontDesk = Agent.builder()
     .addHandoff(Handoff.to(billingAgent).description("billing issues").build())
     .build();
 
-AgentResult result = frontDesk.interact("I have a question about my invoice").join();
+AgentResult result = frontDesk.interact("I have a question about my invoice");
 if (result.isHandoff()) {
     System.out.println("Handled by: " + result.handoffAgent().name());
 }
@@ -260,12 +260,12 @@ RouterAgent router = RouterAgent.builder()
     .fallback(techSupport)
     .build();
 
-// Classify only (doesn't execute) - returns Optional<Agent>
-Agent selected = router.classify("My app keeps crashing").join()
+// Classify only (doesn't execute) - returns Optional
+agent selected = router.classify("My app keeps crashing")
     .orElse(techSupport);  // Use fallback if classification fails
 
 // Route and execute
-AgentResult result = router.route("I need help with billing").join();
+AgentResult result = router.route("I need help with billing");
 
 // Streaming
 router.routeStream("Help with my invoice")
@@ -285,13 +285,13 @@ Run multiple agents concurrently:
 ParallelAgents team = ParallelAgents.of(researcher, analyst);
 
 // Run all agents
-List<AgentResult> results = team.run("Analyze market trends").join();
+List<AgentResult> results = team.run("Analyze market trends");
 
 // Or get just the first to complete
-AgentResult fastest = team.runFirst("Quick analysis needed").join();
+AgentResult fastest = team.runFirst("Quick analysis needed");
 
 // Or combine outputs with a synthesizer agent
-AgentResult combined = team.runAndSynthesize("What's the outlook?", writerAgent).join();
+AgentResult combined = team.runAndSynthesize("What's the outlook?", writerAgent);
 
 // Streaming
 team.runStream("Analyze trends")
@@ -321,7 +321,7 @@ Agent orchestrator = Agent.builder()
     .build();
 
 // Orchestrator can call dataAnalyst like a tool, receive output, and continue
-AgentResult result = orchestrator.interact("Analyze these sales figures...").join();
+AgentResult result = orchestrator.interact("Analyze these sales figures...");
 ```
 
 **Context Sharing Options**:
@@ -390,7 +390,7 @@ public class SendEmailTool extends FunctionTool<EmailParams> { ... }
 When the agent hits this tool, it pauses:
 
 ```java
-AgentResult result = agent.interact("Send an email to John").join();
+AgentResult result = agent.interact("Send an email to John");
 
 if (result.isPaused()) {
     AgentRunState state = result.pausedState();
@@ -464,7 +464,7 @@ EmbeddingProvider embeddings = OpenRouterEmbeddingProvider.builder()
 List<Embedding> results = embeddings.createEmbeddings(
     List.of("Hello world", "AI is amazing"),
     "openai/text-embedding-3-small"
-).join();
+);
 ```
 
 **Automatic retry on:**
@@ -489,7 +489,7 @@ var payload = CreateResponsePayload.builder()
     .addMessage(message)
     .build();
 
-Response response = responder.respond(payload).join();
+Response response = responder.respond(payload);
 System.out.println(response.outputText());
 ```
 
@@ -514,7 +514,7 @@ try (Playwright playwright = Playwright.create();
             .prompt("Extract the article title, author, and summary")
             .withPreferences(p -> p.onlyMainContent(true))
             .build()
-    ).join();
+    );
     
     Article article = result.requireOutput();
 }
@@ -569,9 +569,9 @@ Typed exceptions for Responder failures:
 
 ```java
 try {
-    Response response = responder.respond(payload).join();
-} catch (CompletionException e) {
-    switch (e.getCause()) {
+    Response response = responder.respond(payload);
+} catch (RuntimeException e) {
+    switch (e) {
         case RateLimitException ex -> System.err.println("Retry after: " + ex.retryAfter());
         case AuthenticationException ex -> System.err.println("Auth: " + ex.suggestion());
         case ServerException ex -> System.err.println("Server: " + ex.statusCode());
@@ -591,7 +591,7 @@ Responder.builder().maxRetries(5).retryPolicy(RetryPolicy.builder()...build()).b
 Agents **never throw exceptions**. Errors are returned in `AgentResult`:
 
 ```java
-AgentResult result = agent.interact("Hello").join();
+AgentResult result = agent.interact("Hello");
 
 if (result.isError()) {
     Throwable error = result.error();
@@ -661,7 +661,7 @@ LangChain4J and Spring AI are more mature and have broader provider support. Age
 1. **Responses API focus** — cleaner API design, built-in conversation state
 2. **Structured streaming** — partial JSON parsing during generation
 3. **Streaming tool calls** — `onToolCall` callbacks during streaming
-4. **Simpler async model** — virtual thread callbacks instead of Reactor
+4. **Simpler sync model** — virtual thread blocking instead of Reactor
 
 Pick based on what matters for your use case.
 
@@ -700,7 +700,7 @@ Agent agent = Agent.builder()
     .responder(responder)
     .build();
 
-AgentResult result = agent.interact("What's the weather?").join();
+AgentResult result = agent.interact("What's the weather?");
 ```
 
 ### Network Pattern
@@ -716,7 +716,7 @@ AgentNetwork network = AgentNetwork.builder()
     .synthesizer(summarizer)  // Optional: combines viewpoints
     .build();
 
-NetworkResult result = network.discuss("Should we adopt AI widely?").join();
+NetworkResult result = network.discuss("Should we adopt AI widely?");
 result.contributions().forEach(c -> 
     System.out.println(c.agent().name() + ": " + c.output()));
 
@@ -743,7 +743,7 @@ SupervisorAgent supervisor = SupervisorAgent.builder()
     .responder(responder)
     .build();
 
-AgentResult result = supervisor.orchestrate("Create a market analysis report").join();
+AgentResult result = supervisor.orchestrate("Create a market analysis report");
 ```
 
 ### Hierarchical Pattern
@@ -758,10 +758,10 @@ HierarchicalAgents hierarchy = HierarchicalAgents.builder()
     .build();
 
 // Task flows: Executive → Managers → Workers
-AgentResult result = hierarchy.execute("Launch new product").join();
+AgentResult result = hierarchy.execute("Launch new product");
 
 // Or bypass executive and send directly to a department
-hierarchy.sendToDepartment("Engineering", "Fix the bug").join();
+hierarchy.sendToDepartment("Engineering", "Fix the bug");
 ```
 
 ### Pattern Selection Guide

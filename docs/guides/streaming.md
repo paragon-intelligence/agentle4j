@@ -382,8 +382,8 @@ public void handleApproval(@PathVariable String id, @RequestBody boolean approve
         state.rejectToolCall("Manager denied");
     }
     
-    // Resume agent
-    AgentResult result = agent.resume(state).join();
+    // Resume agent\n    AgentResult result = agent.resume(state);", "StartLine": 385}
+
     
     // Notify user
     sendResultToUser(result.output());

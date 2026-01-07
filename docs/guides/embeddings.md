@@ -18,7 +18,7 @@ EmbeddingProvider embeddings = OpenRouterEmbeddingProvider.builder()
 List<Embedding> results = embeddings.createEmbeddings(
     List.of("Hello world", "AI is amazing"),
     "openai/text-embedding-3-small"
-).join();
+);
 
 // Access the vector
 float[] vector = results.get(0).embedding();
@@ -47,7 +47,7 @@ System.out.println("Dimensions: " + vector.length);  // 1536 for text-embedding-
 List<Embedding> results = embeddings.createEmbeddings(
     List.of("Hello world"),
     "openai/text-embedding-3-small"
-).join();
+);
 
 Embedding embedding = results.get(0);
 float[] vector = embedding.embedding();
@@ -67,7 +67,7 @@ List<String> documents = List.of(
 List<Embedding> embeddings = provider.createEmbeddings(
     documents,
     "openai/text-embedding-3-small"
-).join();
+);
 
 // Each embedding corresponds to the input at the same index
 for (int i = 0; i < embeddings.size(); i++) {
@@ -164,7 +164,7 @@ public static double cosineSimilarity(float[] a, float[] b) {
 List<Embedding> embeddings = provider.createEmbeddings(
     List.of("cats are great pets", "dogs are loyal companions", "java programming"),
     "openai/text-embedding-3-small"
-).join();
+);
 
 double catsDogs = cosineSimilarity(
     embeddings.get(0).embedding(),
@@ -208,7 +208,7 @@ try {
 List<Embedding> batch = provider.createEmbeddings(
     largeDocumentList,  // Process many at once
     model
-).join();
+);
 
 // Use appropriate model for your use case
 .model("openai/text-embedding-3-small")  // Good balance
@@ -222,7 +222,7 @@ List<Embedding> batch = provider.createEmbeddings(
 ```java
 // Don't create embeddings one at a time in a loop
 for (String doc : documents) {
-    provider.createEmbeddings(List.of(doc), model).join();  // Slow!
+    provider.createEmbeddings(List.of(doc), model);  // Slow!
 }
 
 // Don't ignore cleanup

@@ -149,7 +149,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ParallelAgents` for concurrent execution
 - OpenTelemetry integration for observability
 - Vision support (image input)
-- Async-first API with `CompletableFuture`
+- Synchronous-first API with Java 21 Virtual Threads
 
 ### Dependencies
 

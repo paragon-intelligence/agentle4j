@@ -265,45 +265,31 @@ var payload = CreateResponsePayload.builder()
 
 ## Making Requests
 
-### Synchronous (Blocking)
+### Synchronous (Default)
 
 ```java
-// Simple blocking call
-Response response = responder.respond(payload).join();
+// Simple blocking call - efficient with Virtual Threads
+Response response = responder.respond(payload);
 System.out.println(response.outputText());
-```
-
-### Asynchronous (Non-Blocking)
-
-```java
-// With callbacks
-responder.respond(payload)
-    .thenAccept(response -> {
-        System.out.println("Response: " + response.outputText());
-    })
-    .exceptionally(error -> {
-        System.err.println("Error: " + error.getMessage());
-        return null;
-    });
-
-// With chaining
-CompletableFuture<String> upperCase = responder.respond(payload)
-    .thenApply(Response::outputText)
-    .thenApply(String::toUpperCase);
 ```
 
 ### Parallel Requests
 
+With Java 21 Virtual Threads, you can efficiently run parallel requests:
+
 ```java
-CompletableFuture<Response> response1 = responder.respond(payload1);
-CompletableFuture<Response> response2 = responder.respond(payload2);
-CompletableFuture<Response> response3 = responder.respond(payload3);
+import java.util.concurrent.*;
 
-// Wait for all
-CompletableFuture.allOf(response1, response2, response3).join();
-
-// Or race - first to complete wins
-CompletableFuture<Object> first = CompletableFuture.anyOf(response1, response2, response3);
+// Run requests in parallel using virtual threads
+try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    var future1 = executor.submit(() -> responder.respond(payload1));
+    var future2 = executor.submit(() -> responder.respond(payload2));
+    var future3 = executor.submit(() -> responder.respond(payload3));
+    
+    Response response1 = future1.get();
+    Response response2 = future2.get();
+    Response response3 = future3.get();
+}
 ```
 
 ---
@@ -354,7 +340,7 @@ var payload = CreateResponsePayload.builder()
     .withStructuredOutput(Person.class)
     .build();
 
-ParsedResponse<Person> response = responder.respond(payload).join();
+ParsedResponse<Person> response = responder.respond(payload);
 Person person = response.outputParsed();
 ```
 
@@ -365,7 +351,7 @@ Person person = response.outputParsed();
 The `Response` contains all available information:
 
 ```java
-Response response = responder.respond(payload).join();
+Response response = responder.respond(payload);
 
 // Text output
 String text = response.outputText();
@@ -405,27 +391,17 @@ Agentle provides a **structured exception hierarchy** for type-safe error handli
 ### Type-Safe Error Handling
 
 ```java
-responder.respond(payload)
-    .exceptionally(error -> {
-        Throwable cause = error.getCause();
-        
-        switch (cause) {
-            case RateLimitException e -> {
-                System.err.println("Rate limited. Retry after: " + e.retryAfter());
-            }
-            case AuthenticationException e -> {
-                System.err.println("Auth failed: " + e.suggestion());
-            }
-            case ServerException e -> {
-                System.err.println("Server error " + e.statusCode());
-            }
-            case ApiException e -> {
-                System.err.println("API error: " + e.getMessage());
-            }
-            default -> System.err.println("Unexpected: " + cause.getMessage());
-        }
-        return null;
-    });
+try {
+    Response response = responder.respond(payload);
+} catch (RateLimitException e) {
+    System.err.println("Rate limited. Retry after: " + e.retryAfter());
+} catch (AuthenticationException e) {
+    System.err.println("Auth failed: " + e.suggestion());
+} catch (ServerException e) {
+    System.err.println("Server error " + e.statusCode());
+} catch (ApiException e) {
+    System.err.println("API error: " + e.getMessage());
+}
 ```
 
 ### Checking if Retryable
@@ -480,8 +456,11 @@ public MyService(String apiKey) {
 String apiKey = System.getenv("OPENROUTER_API_KEY");
 
 // Handle errors appropriately
-responder.respond(payload)
-    .exceptionally(e -> { /* handle */ return null; });
+try {
+    Response response = responder.respond(payload);
+} catch (ApiException e) {
+    // handle
+}
 ```
 
 ### ❌ Don't
@@ -499,7 +478,7 @@ Responder responder = Responder.builder()
     .build();
 
 // Don't ignore errors
-responder.respond(payload).join();  // Uncaught exceptions!
+Response response = responder.respond(payload);  // Add error handling!
 ```
 
 ---
