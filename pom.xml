@@ -305,6 +305,10 @@
                 <configuration>
                     <source>21</source>
                     <doclint>none</doclint>
+                    <!-- Enable preview features for Javadoc (required for StructuredTaskScope, ScopedValue) -->
+                    <additionalJOptions>
+                        <additionalJOption>--enable-preview</additionalJOption>
+                    </additionalJOptions>
                 </configuration>
                 <executions>
                     <execution>
