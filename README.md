@@ -4,7 +4,7 @@
 
 Building agents with the simplicity of Python, in Java!
 
-I created this library to make it easier to build agents with OpenAI's Responses API. It came up that I started to create the Agent classes and realised I could build a cool library with that. So I started to build it and it's been a lot of fun!
+I created this library to make it easier to build AI calls with OpenAI's Responses API. It came up that I started to create the Agent classes and realised I could build a cool library with that. So I started to build it and it's been a lot of fun!
 
 It Requires Java 21+ because the code tries to take advantage of virtual threads.
 
