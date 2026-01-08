@@ -55,7 +55,7 @@ import org.jspecify.annotations.Nullable;
  *
  * @since 1.0
  */
-public final class RouterAgent {
+public final class RouterAgent implements Interactable {
 
   private final @NonNull String model;
   private final @NonNull List<Route> routes;
@@ -316,6 +316,85 @@ public final class RouterAgent {
 
   @NonNull Responder getResponder() {
     return responder;
+  }
+
+  // ===== Interactable Interface Implementation =====
+
+  /** {@inheritDoc} Delegates to {@link #route(String)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull String input) {
+    return route(input);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #route(Text)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Text text) {
+    return route(text);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #route(Message)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Message message) {
+    return route(message);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #route(Prompt)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Prompt prompt) {
+    return route(prompt);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #route(AgentContext)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull AgentContext context) {
+    return route(context);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Classifies the input and returns the selected agent's stream. If classification fails,
+   * returns a failed AgentStream.
+   */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull String input) {
+    Objects.requireNonNull(input, "input cannot be null");
+    Optional<Agent> selected = classify(input);
+    if (selected.isEmpty()) {
+      AgentContext ctx = AgentContext.create();
+      return AgentStream.failed(
+          AgentResult.error(
+              new IllegalStateException("No suitable agent found for input"), ctx, 0));
+    }
+    return selected.get().interactStream(input);
+  }
+
+  /** {@inheritDoc} Classifies the prompt and returns the selected agent's stream. */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return runStream(prompt.text());
+  }
+
+  /** {@inheritDoc} Extracts the last user message for classification and streams from the selected agent. */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull AgentContext context) {
+    Objects.requireNonNull(context, "context cannot be null");
+    Optional<String> inputTextOpt = extractLastUserMessage(context);
+    if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
+      return AgentStream.failed(
+          AgentResult.error(
+              new IllegalStateException("No user message found in context for routing"),
+              context,
+              0));
+    }
+    Optional<Agent> selected = classify(inputTextOpt.get());
+    if (selected.isEmpty()) {
+      return AgentStream.failed(
+          AgentResult.error(
+              new IllegalStateException("No suitable agent found for input"), context, 0));
+    }
+    return selected.get().interactStream(context);
   }
 
   // ===== Inner Classes =====

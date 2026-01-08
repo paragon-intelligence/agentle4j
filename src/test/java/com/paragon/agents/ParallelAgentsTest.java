@@ -98,21 +98,21 @@ class ParallelAgentsTest {
   class RunString {
 
     @Test
-    @DisplayName("run(String) returns List<AgentResult>")
-    void run_returnsListOfAgentResult() {
+    @DisplayName("runAll(String) returns List<AgentResult>")
+    void runAll_returnsListOfAgentResult() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
       enqueueSuccessResponse("Hello");
 
-      List<AgentResult> results = orchestrator.run("Test input");
+      List<AgentResult> results = orchestrator.runAll("Test input");
 
       assertNotNull(results);
       assertInstanceOf(List.class, results);
     }
 
     @Test
-    @DisplayName("run(String) returns result for each agent in order")
-    void run_returnsResultsInOrder() throws Exception {
+    @DisplayName("runAll(String) returns result for each agent in order")
+    void runAll_returnsResultsInOrder() throws Exception {
       Agent agent1 = createTestAgent("First");
       Agent agent2 = createTestAgent("Second");
       ParallelAgents orchestrator = ParallelAgents.of(agent1, agent2);
@@ -120,18 +120,18 @@ class ParallelAgentsTest {
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
 
-      List<AgentResult> results = orchestrator.run("Test");
+      List<AgentResult> results = orchestrator.runAll("Test");
 
       assertEquals(2, results.size());
     }
 
     @Test
-    @DisplayName("run(String) throws when input is null")
-    void run_throwsWhenInputNull() {
+    @DisplayName("runAll(String) throws when input is null")
+    void runAll_throwsWhenInputNull() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
-      assertThrows(NullPointerException.class, () -> orchestrator.run((String) null));
+      assertThrows(NullPointerException.class, () -> orchestrator.runAll((String) null));
     }
   }
 
@@ -140,24 +140,24 @@ class ParallelAgentsTest {
   class RunText {
 
     @Test
-    @DisplayName("run(Text) creates context and runs")
-    void run_text_createsContextAndRuns() {
+    @DisplayName("runAll(Text) creates context and runs")
+    void runAll_text_createsContextAndRuns() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
       enqueueSuccessResponse("Hello");
 
-      List<AgentResult> results = orchestrator.run(Text.valueOf("Test text"));
+      List<AgentResult> results = orchestrator.runAll(Text.valueOf("Test text"));
 
       assertNotNull(results);
     }
 
     @Test
-    @DisplayName("run(Text) throws when text is null")
-    void run_text_throwsWhenNull() {
+    @DisplayName("runAll(Text) throws when text is null")
+    void runAll_text_throwsWhenNull() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
-      assertThrows(NullPointerException.class, () -> orchestrator.run((Text) null));
+      assertThrows(NullPointerException.class, () -> orchestrator.runAll((Text) null));
     }
   }
 
@@ -166,24 +166,24 @@ class ParallelAgentsTest {
   class RunMessage {
 
     @Test
-    @DisplayName("run(Message) creates context and runs")
-    void run_message_createsContextAndRuns() {
+    @DisplayName("runAll(Message) creates context and runs")
+    void runAll_message_createsContextAndRuns() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
       enqueueSuccessResponse("Hello");
 
-      List<AgentResult> results = orchestrator.run(Message.user("Test message"));
+      List<AgentResult> results = orchestrator.runAll(Message.user("Test message"));
 
       assertNotNull(results);
     }
 
     @Test
-    @DisplayName("run(Message) throws when message is null")
-    void run_message_throwsWhenNull() {
+    @DisplayName("runAll(Message) throws when message is null")
+    void runAll_message_throwsWhenNull() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
-      assertThrows(NullPointerException.class, () -> orchestrator.run((Message) null));
+      assertThrows(NullPointerException.class, () -> orchestrator.runAll((Message) null));
     }
   }
 
@@ -192,8 +192,8 @@ class ParallelAgentsTest {
   class RunContext {
 
     @Test
-    @DisplayName("run(AgentContext) uses context for all agents")
-    void run_context_usesContextForAllAgents() throws Exception {
+    @DisplayName("runAll(AgentContext) uses context for all agents")
+    void runAll_context_usesContextForAllAgents() throws Exception {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
@@ -201,19 +201,19 @@ class ParallelAgentsTest {
       context.addInput(Message.user("Context input"));
       enqueueSuccessResponse("Response");
 
-      List<AgentResult> results = orchestrator.run(context);
+      List<AgentResult> results = orchestrator.runAll(context);
 
       assertNotNull(results);
       assertEquals(1, results.size());
     }
 
     @Test
-    @DisplayName("run(AgentContext) throws when context is null")
-    void run_context_throwsWhenNull() {
+    @DisplayName("runAll(AgentContext) throws when context is null")
+    void runAll_context_throwsWhenNull() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
-      assertThrows(NullPointerException.class, () -> orchestrator.run((AgentContext) null));
+      assertThrows(NullPointerException.class, () -> orchestrator.runAll((AgentContext) null));
     }
   }
 
@@ -383,27 +383,27 @@ class ParallelAgentsTest {
   class Streaming {
 
     @Test
-    @DisplayName("runStream(String) returns ParallelStream")
-    void runStream_string_returnsParallelStream() {
+    @DisplayName("runAllStream(String) returns ParallelStream")
+    void runAllStream_string_returnsParallelStream() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
-      ParallelStream stream = orchestrator.runStream("Test");
+      ParallelStream stream = orchestrator.runAllStream("Test");
 
       assertNotNull(stream);
       assertInstanceOf(ParallelStream.class, stream);
     }
 
     @Test
-    @DisplayName("runStream(AgentContext) returns ParallelStream")
-    void runStream_context_returnsParallelStream() {
+    @DisplayName("runAllStream(AgentContext) returns ParallelStream")
+    void runAllStream_context_returnsParallelStream() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Test"));
 
-      ParallelStream stream = orchestrator.runStream(context);
+      ParallelStream stream = orchestrator.runAllStream(context);
 
       assertNotNull(stream);
     }
@@ -461,21 +461,21 @@ class ParallelAgentsTest {
     }
 
     @Test
-    @DisplayName("runStream(String) throws when input is null")
-    void runStream_throwsWhenInputNull() {
+    @DisplayName("runAllStream(String) throws when input is null")
+    void runAllStream_throwsWhenInputNull() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
-      assertThrows(NullPointerException.class, () -> orchestrator.runStream((String) null));
+      assertThrows(NullPointerException.class, () -> orchestrator.runAllStream((String) null));
     }
 
     @Test
-    @DisplayName("runStream(AgentContext) throws when context is null")
-    void runStream_throwsWhenContextNull() {
+    @DisplayName("runAllStream(AgentContext) throws when context is null")
+    void runAllStream_throwsWhenContextNull() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
-      assertThrows(NullPointerException.class, () -> orchestrator.runStream((AgentContext) null));
+      assertThrows(NullPointerException.class, () -> orchestrator.runAllStream((AgentContext) null));
     }
   }
 

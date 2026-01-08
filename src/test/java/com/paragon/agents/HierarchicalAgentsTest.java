@@ -396,7 +396,7 @@ class HierarchicalAgentsTest {
       HierarchicalAgents hierarchy = createTestHierarchy();
 
       assertThrows(
-          NullPointerException.class, () -> hierarchy.sendToDepartment("Engineering", null));
+          NullPointerException.class, () -> hierarchy.sendToDepartment("Engineering", (String) null));
     }
   }
 

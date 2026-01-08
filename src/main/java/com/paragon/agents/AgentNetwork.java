@@ -58,7 +58,7 @@ import org.jspecify.annotations.Nullable;
  *
  * @since 1.0
  */
-public final class AgentNetwork {
+public final class AgentNetwork implements Interactable {
 
   private final @NonNull List<Agent> peers;
   private final int maxRounds;
@@ -413,6 +413,108 @@ public final class AgentNetwork {
       }
     }
     return "[No topic provided]";
+  }
+
+  // ===== Interactable Interface Implementation =====
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Runs a discussion and returns an AgentResult. If a synthesizer is configured, returns the
+   * synthesized output. Otherwise, returns the last contribution's output.
+   */
+  @Override
+  public @NonNull AgentResult run(@NonNull String input) {
+    return toAgentResult(discuss(input));
+  }
+
+  /** {@inheritDoc} Delegates to {@link #discuss(Text)} and converts to AgentResult. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Text text) {
+    return toAgentResult(discuss(text));
+  }
+
+  /** {@inheritDoc} Delegates to {@link #discuss(Message)} and converts to AgentResult. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Message message) {
+    return toAgentResult(discuss(message));
+  }
+
+  /** {@inheritDoc} Delegates to {@link #discuss(Prompt)} and converts to AgentResult. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Prompt prompt) {
+    return toAgentResult(discuss(prompt));
+  }
+
+  /** {@inheritDoc} Delegates to {@link #discuss(AgentContext)} and converts to AgentResult. */
+  @Override
+  public @NonNull AgentResult run(@NonNull AgentContext context) {
+    return toAgentResult(discuss(context));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>If a synthesizer is configured, runs the discussion and streams the synthesis. Otherwise,
+   * returns a failed stream with an error indicating no synthesizer is configured for streaming.
+   */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull String input) {
+    if (synthesizer == null) {
+      NetworkResult result = discuss(input);
+      return AgentStream.completed(toAgentResult(result));
+    }
+    // Run discussion synchronously, then stream synthesis
+    NetworkResult result = discuss(input);
+    String synthesisPrompt = buildSynthesisPrompt(result);
+    return synthesizer.interactStream(synthesisPrompt);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return runStream(prompt.text());
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull AgentContext context) {
+    if (synthesizer == null) {
+      NetworkResult result = discuss(context);
+      return AgentStream.completed(toAgentResult(result));
+    }
+    NetworkResult result = discuss(context);
+    String synthesisPrompt = buildSynthesisPrompt(result);
+    return synthesizer.interactStream(synthesisPrompt);
+  }
+
+  private AgentResult toAgentResult(NetworkResult networkResult) {
+    String output;
+    if (networkResult.synthesis() != null) {
+      output = networkResult.synthesis();
+    } else {
+      Contribution last = networkResult.lastContribution();
+      output = last != null ? last.output() : "";
+    }
+    AgentContext ctx = AgentContext.create();
+    return AgentResult.success(output, null, ctx, List.of(), 0);
+  }
+
+  private String buildSynthesisPrompt(NetworkResult result) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("The following contributions were made in a discussion:\n\n");
+    for (Contribution c : result.contributions()) {
+      sb.append("**").append(c.agent().name()).append("** (Round ").append(c.round()).append("): ");
+      if (c.isError()) {
+        sb.append("[Error occurred]\n");
+      } else {
+        sb.append(c.output()).append("\n");
+      }
+      sb.append("\n");
+    }
+    sb.append("Please synthesize these viewpoints into a coherent summary.");
+    return sb.toString();
   }
 
   /** Represents a contribution from a peer agent. */

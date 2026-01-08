@@ -57,7 +57,7 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      ParallelStream stream = parallel.runStream(context);
+      ParallelStream stream = parallel.runAllStream(context);
       List<String> deltas = new ArrayList<>();
 
       ParallelStream result = stream.onAgentTextDelta((agent, delta) -> deltas.add(delta));
@@ -73,7 +73,7 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      ParallelStream stream = parallel.runStream(context);
+      ParallelStream stream = parallel.runAllStream(context);
       List<AgentResult> results = new ArrayList<>();
 
       ParallelStream result = stream.onAgentComplete((agent, res) -> results.add(res));
@@ -89,7 +89,7 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      ParallelStream stream = parallel.runStream(context);
+      ParallelStream stream = parallel.runAllStream(context);
       AtomicReference<List<AgentResult>> resultsRef = new AtomicReference<>();
 
       ParallelStream result = stream.onComplete(resultsRef::set);
@@ -105,7 +105,7 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      ParallelStream stream = parallel.runStream(context);
+      ParallelStream stream = parallel.runAllStream(context);
       AtomicReference<AgentResult> resultRef = new AtomicReference<>();
 
       ParallelStream result = stream.onFirstComplete(resultRef::set);
@@ -121,7 +121,7 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      ParallelStream stream = parallel.runStream(context);
+      ParallelStream stream = parallel.runAllStream(context);
       AtomicReference<AgentResult> resultRef = new AtomicReference<>();
 
       ParallelStream result = stream.onSynthesisComplete(resultRef::set);
@@ -137,7 +137,7 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      ParallelStream stream = parallel.runStream(context);
+      ParallelStream stream = parallel.runAllStream(context);
       AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
       ParallelStream result = stream.onError(errorRef::set);
@@ -153,7 +153,7 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      ParallelStream stream = parallel.runStream(context);
+      ParallelStream stream = parallel.runAllStream(context);
       List<Integer> turns = new ArrayList<>();
 
       ParallelStream result = stream.onAgentTurnStart((agent, turn) -> turns.add(turn));
@@ -171,7 +171,7 @@ class ParallelStreamTest {
 
       ParallelStream stream =
           parallel
-              .runStream(context)
+              .runAllStream(context)
               .onAgentTextDelta((agent, delta) -> {})
               .onAgentComplete((agent, result) -> {})
               .onComplete(results -> {})
@@ -202,7 +202,7 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      Object result = parallel.runStream(context).start();
+      Object result = parallel.runAllStream(context).start();
 
       assertNotNull(result);
     }
@@ -223,7 +223,7 @@ class ParallelStreamTest {
       context.addInput(Message.user("Hello all"));
 
       Object result =
-          parallel.runStream(context).onComplete(collectedResults::addAll).start();
+          parallel.runAllStream(context).onComplete(collectedResults::addAll).start();
 
 
       // In ALL mode, both agents should complete
@@ -248,7 +248,7 @@ class ParallelStreamTest {
 
       Object result =
           parallel
-              .runStream(context)
+              .runAllStream(context)
               .onFirstComplete(
                   r -> {
                     firstResult.set(r);
@@ -291,7 +291,7 @@ class ParallelStreamTest {
       AgentContext context = AgentContext.create();
       context.addInput(Message.user("Hello"));
 
-      parallel.runStream(context).onError(errorRef::set).start();
+      parallel.runAllStream(context).onError(errorRef::set).start();
 
       // Give it time to process
       Thread.sleep(2000);
@@ -326,7 +326,7 @@ class ParallelStreamTest {
 
       Object result =
           parallel
-              .runStream(context)
+              .runAllStream(context)
               .onAgentComplete((agent, r) -> completedAgents.add(agent.name()))
               .start();
 
@@ -347,7 +347,7 @@ class ParallelStreamTest {
       context.addInput(Message.user("Hello"));
 
       Object result =
-          parallel.runStream(context).onAgentTurnStart((agent, turn) -> turns.add(turn)).start();
+          parallel.runAllStream(context).onAgentTurnStart((agent, turn) -> turns.add(turn)).start();
 
 
       // At least one turn should start

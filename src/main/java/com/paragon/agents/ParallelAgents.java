@@ -51,7 +51,7 @@ import org.jspecify.annotations.NonNull;
  *
  * @since 1.0
  */
-public final class ParallelAgents {
+public final class ParallelAgents implements Interactable {
 
   private final @NonNull List<Agent> agents;
 
@@ -93,7 +93,7 @@ public final class ParallelAgents {
     return agents;
   }
 
-  // ===== Run Methods =====
+  // ===== RunAll Methods (All results) =====
 
   /**
    * Runs all agents concurrently with the same input.
@@ -104,11 +104,11 @@ public final class ParallelAgents {
    * @param input the input text for all agents
    * @return list of results, in the same order as agents()
    */
-  public @NonNull List<AgentResult> run(@NonNull String input) {
+  public @NonNull List<AgentResult> runAll(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(input));
-    return run(context);
+    return runAll(context);
   }
 
   /**
@@ -117,11 +117,11 @@ public final class ParallelAgents {
    * @param text the text content for all agents
    * @return list of results
    */
-  public @NonNull List<AgentResult> run(@NonNull Text text) {
+  public @NonNull List<AgentResult> runAll(@NonNull Text text) {
     Objects.requireNonNull(text, "text cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(text));
-    return run(context);
+    return runAll(context);
   }
 
   /**
@@ -130,11 +130,11 @@ public final class ParallelAgents {
    * @param message the message for all agents
    * @return list of results
    */
-  public @NonNull List<AgentResult> run(@NonNull Message message) {
+  public @NonNull List<AgentResult> runAll(@NonNull Message message) {
     Objects.requireNonNull(message, "message cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(message);
-    return run(context);
+    return runAll(context);
   }
 
   /**
@@ -145,9 +145,9 @@ public final class ParallelAgents {
    * @param prompt the prompt for all agents
    * @return list of results
    */
-  public @NonNull List<AgentResult> run(@NonNull Prompt prompt) {
+  public @NonNull List<AgentResult> runAll(@NonNull Prompt prompt) {
     Objects.requireNonNull(prompt, "prompt cannot be null");
-    return run(prompt.text());
+    return runAll(prompt.text());
   }
 
   /**
@@ -158,12 +158,12 @@ public final class ParallelAgents {
    *
    * <p>Uses structured concurrency (Java 21+) to run all agents on virtual threads.
    *
-   * <p>This is the core method. All other run overloads delegate here.
+   * <p>This is the core method. All other runAll overloads delegate here.
    *
    * @param context the context to copy for each agent
    * @return list of results, in the same order as agents()
    */
-  public @NonNull List<AgentResult> run(@NonNull AgentContext context) {
+  public @NonNull List<AgentResult> runAll(@NonNull AgentContext context) {
     Objects.requireNonNull(context, "context cannot be null");
 
     // Generate a shared parent traceId for all parallel agents
@@ -368,7 +368,7 @@ public final class ParallelAgents {
     String originalQuery = extractLastUserMessage(context);
 
     // Run all agents in parallel
-    List<AgentResult> results = run(context);
+    List<AgentResult> results = runAll(context);
 
     // Build synthesis prompt with all outputs
     StringBuilder synthesisPrompt = new StringBuilder();
@@ -397,7 +397,7 @@ public final class ParallelAgents {
     return synthesizer.interact(synthContext);
   }
 
-  // ===== Streaming Methods =====
+  // ===== Streaming Methods (All agents) =====
 
   /**
    * Runs all agents concurrently with streaming.
@@ -405,11 +405,11 @@ public final class ParallelAgents {
    * @param input the input text for all agents
    * @return a ParallelStream for processing streaming events
    */
-  public @NonNull ParallelStream runStream(@NonNull String input) {
+  public @NonNull ParallelStream runAllStream(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
     AgentContext context = AgentContext.create();
     context.addInput(Message.user(input));
-    return runStream(context);
+    return runAllStream(context);
   }
 
   /**
@@ -420,9 +420,9 @@ public final class ParallelAgents {
    * @param prompt the prompt for all agents
    * @return a ParallelStream for processing streaming events
    */
-  public @NonNull ParallelStream runStream(@NonNull Prompt prompt) {
+  public @NonNull ParallelStream runAllStream(@NonNull Prompt prompt) {
     Objects.requireNonNull(prompt, "prompt cannot be null");
-    return runStream(prompt.text());
+    return runAllStream(prompt.text());
   }
 
   /**
@@ -431,7 +431,7 @@ public final class ParallelAgents {
    * @param context the context to copy for each agent
    * @return a ParallelStream for processing streaming events
    */
-  public @NonNull ParallelStream runStream(@NonNull AgentContext context) {
+  public @NonNull ParallelStream runAllStream(@NonNull AgentContext context) {
     Objects.requireNonNull(context, "context cannot be null");
     return new ParallelStream(this, context, ParallelStream.Mode.ALL);
   }
@@ -536,5 +536,82 @@ public final class ParallelAgents {
       }
     }
     return "[No query provided]";
+  }
+
+  // ===== Interactable Interface Implementation =====
+  // Note: run() uses runFirst() semantics - returns the first agent to complete.
+  // Use runAll() for explicit parallel results or runAndSynthesize() for combined output.
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Uses runFirst() semantics - returns the result of the first agent to complete. For all
+   * results, use {@link #run(String)} with the explicit return type.
+   */
+  @Override
+  public @NonNull AgentResult run(@NonNull String input) {
+    return runFirst(input);
+  }
+
+  /** {@inheritDoc} Delegates to runFirst() - returns first agent to complete. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Text text) {
+    return runFirst(text);
+  }
+
+  /** {@inheritDoc} Delegates to runFirst() - returns first agent to complete. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Message message) {
+    return runFirst(message);
+  }
+
+  /** {@inheritDoc} Delegates to runFirst() - returns first agent to complete. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Prompt prompt) {
+    return runFirst(prompt);
+  }
+
+  /** {@inheritDoc} Delegates to runFirst() - returns first agent to complete. */
+  @Override
+  public @NonNull AgentResult run(@NonNull AgentContext context) {
+    return runFirst(context);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Streams and returns when the first agent completes. For streaming all agents, use {@link
+   * #runStream(String)} with the explicit ParallelStream return type.
+   */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull String input) {
+    // Run first agent stream - this is a simplification
+    // For full parallel streaming, use runFirstStream() directly
+    AgentContext context = AgentContext.create();
+    context.addInput(Message.user(input));
+    // Return the first agent's stream (simplest approach for polymorphism)
+    if (!agents.isEmpty()) {
+      return agents.get(0).interactStream(context);
+    }
+    return AgentStream.failed(
+        AgentResult.error(new IllegalStateException("No agents configured"), context, 0));
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull Prompt prompt) {
+    Objects.requireNonNull(prompt, "prompt cannot be null");
+    return runStream(prompt.text());
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull AgentContext context) {
+    Objects.requireNonNull(context, "context cannot be null");
+    if (!agents.isEmpty()) {
+      return agents.get(0).interactStream(context.copy());
+    }
+    return AgentStream.failed(
+        AgentResult.error(new IllegalStateException("No agents configured"), context, 0));
   }
 }

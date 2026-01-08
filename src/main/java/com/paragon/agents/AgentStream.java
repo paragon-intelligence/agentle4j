@@ -126,6 +126,11 @@ public final class AgentStream {
     return new AgentStream(failedResult);
   }
 
+  /** Creates a pre-completed stream that immediately returns the given result. */
+  static @NonNull AgentStream completed(@NonNull AgentResult completedResult) {
+    return new AgentStream(completedResult);
+  }
+
   // ===== Event Registration =====
 
   /**

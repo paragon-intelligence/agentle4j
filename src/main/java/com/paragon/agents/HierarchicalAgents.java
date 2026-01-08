@@ -58,7 +58,7 @@ import org.jspecify.annotations.Nullable;
  *
  * @since 1.0
  */
-public final class HierarchicalAgents {
+public final class HierarchicalAgents implements Interactable {
 
   private final @NonNull Agent executive;
   private final @NonNull Map<String, Department> departments;
@@ -241,6 +241,56 @@ public final class HierarchicalAgents {
       @NonNull String departmentName, @NonNull Prompt prompt) {
     Objects.requireNonNull(prompt, "prompt cannot be null");
     return sendToDepartment(departmentName, prompt.text());
+  }
+
+  // ===== Interactable Interface Implementation =====
+
+  /** {@inheritDoc} Delegates to {@link #execute(String)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull String input) {
+    return execute(input);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #execute(Text)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Text text) {
+    return execute(text);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #execute(Message)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Message message) {
+    return execute(message);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #execute(Prompt)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Prompt prompt) {
+    return execute(prompt);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #execute(AgentContext)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull AgentContext context) {
+    return execute(context);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #executeStream(String)}. */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull String input) {
+    return executeStream(input);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #executeStream(Prompt)}. */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull Prompt prompt) {
+    return executeStream(prompt);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #executeStream(AgentContext)}. */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull AgentContext context) {
+    return executeStream(context);
   }
 
   private SupervisorAgent buildHierarchy() {

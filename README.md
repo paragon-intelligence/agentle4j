@@ -2,9 +2,11 @@
 
 ![Coverage](https://img.shields.io/badge/coverage-88%25-brightgreen)
 
-A Java library for the OpenAI Responses API, with first-class support for agents, streaming, and structured outputs.
+Building agents with the simplicity of Python, in Java!
 
-Requires Java 21+.
+I created this library to make it easier to build agents with OpenAI's Responses API. It came up that I started to create the Agent classes and realised I could build a cool library with that. So I started to build it and it's been a lot of fun!
+
+It Requires Java 21+ because the code tries to take advantage of virtual threads.
 
 ## Installation
 
@@ -13,20 +15,18 @@ Maven:
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.2.2</version>
+    <version>0.5.0</version>
 </dependency>
 ```
 
 Gradle:
 ```groovy
-implementation 'io.github.paragon-intelligence:agentle4j:0.2.2'
+implementation 'io.github.paragon-intelligence:agentle4j:0.5.0'
 ```
 
 ## Why Agentle?
 
-Most Java GenAI libraries (LangChain4J, Spring AI) are built around the Chat Completions API. Agentle focuses exclusively on OpenAI's newer [Responses API](https://platform.openai.com/docs/api-reference/responses), which has built-in conversation state and a cleaner item-based design.
-
-The tradeoff is clear: if you need Chat Completions compatibility or extensive RAG infrastructure, use LangChain4J or Spring AI. If you want Responses API support with proper streaming, agents, and observability, Agentle is worth considering.
+Most Java GenAI libraries (LangChain4J, Spring AI) are built around the Chat Completions API. Agentle focuses exclusively on OpenAI's newer [Responses API](https://platform.openai.com/docs/api-reference/responses), which has a cleaner item-based design and was designed for agentic systems.
 
 ## Quick examples
 

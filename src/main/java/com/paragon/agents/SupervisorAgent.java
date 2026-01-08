@@ -53,7 +53,7 @@ import org.jspecify.annotations.Nullable;
  * @see SubAgentTool
  * @since 1.0
  */
-public final class SupervisorAgent {
+public final class SupervisorAgent implements Interactable {
 
   private final @NonNull String name;
   private final @NonNull String model;
@@ -227,6 +227,56 @@ public final class SupervisorAgent {
   @NonNull
   Agent underlyingAgent() {
     return supervisorAgent;
+  }
+
+  // ===== Interactable Interface Implementation =====
+
+  /** {@inheritDoc} Delegates to {@link #orchestrate(String)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull String input) {
+    return orchestrate(input);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #orchestrate(Text)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Text text) {
+    return orchestrate(text);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #orchestrate(Message)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Message message) {
+    return orchestrate(message);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #orchestrate(Prompt)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull Prompt prompt) {
+    return orchestrate(prompt);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #orchestrate(AgentContext)}. */
+  @Override
+  public @NonNull AgentResult run(@NonNull AgentContext context) {
+    return orchestrate(context);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #orchestrateStream(String)}. */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull String input) {
+    return orchestrateStream(input);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #orchestrateStream(Prompt)}. */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull Prompt prompt) {
+    return orchestrateStream(prompt);
+  }
+
+  /** {@inheritDoc} Delegates to {@link #orchestrateStream(AgentContext)}. */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull AgentContext context) {
+    return orchestrateStream(context);
   }
 
   private String buildSupervisorInstructions() {

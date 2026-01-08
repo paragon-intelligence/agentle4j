@@ -276,7 +276,7 @@ class RouterAgentTest {
       Agent target = createTestAgent("Target");
       RouterAgent router = createRouter(target);
 
-      assertThrows(NullPointerException.class, () -> router.classify(null));
+      assertThrows(NullPointerException.class, () -> router.classify((String) null));
     }
   }
 

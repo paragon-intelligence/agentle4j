@@ -112,7 +112,7 @@ import org.jspecify.annotations.Nullable;
  * @see Responder
  * @since 1.0
  */
-public final class Agent implements Serializable {
+public final class Agent implements Serializable, Interactable {
 
   // ===== Configuration (Immutable) =====
   private final @NonNull String name;
@@ -555,6 +555,88 @@ public final class Agent implements Serializable {
    */
   public @NonNull AgentResult interact(@NonNull AgentContext context) {
     return interactBlocking(context, null);
+  }
+
+  // ===== Interactable Interface Implementation =====
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Delegates to {@link #interact(String)}.
+   */
+  @Override
+  public @NonNull AgentResult run(@NonNull String input) {
+    return interact(input);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Delegates to {@link #interact(Text)}.
+   */
+  @Override
+  public @NonNull AgentResult run(@NonNull Text text) {
+    return interact(text);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Delegates to {@link #interact(Message)}.
+   */
+  @Override
+  public @NonNull AgentResult run(@NonNull Message message) {
+    return interact(message);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Delegates to {@link #interact(Prompt)}.
+   */
+  @Override
+  public @NonNull AgentResult run(@NonNull Prompt prompt) {
+    return interact(prompt);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Delegates to {@link #interact(AgentContext)}.
+   */
+  @Override
+  public @NonNull AgentResult run(@NonNull AgentContext context) {
+    return interact(context);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Delegates to {@link #interactStream(String)}.
+   */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull String input) {
+    return interactStream(input);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Delegates to {@link #interactStream(Prompt)}.
+   */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull Prompt prompt) {
+    return interactStream(prompt);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Delegates to {@link #interactStream(AgentContext)}.
+   */
+  @Override
+  public @NonNull AgentStream runStream(@NonNull AgentContext context) {
+    return interactStream(context);
   }
 
   // ===== Core Interaction Methods =====

@@ -125,7 +125,7 @@ class TraceCorrelationIntegrationTest {
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
 
-      List<AgentResult> results = parallel.run("Test input");
+      List<AgentResult> results = parallel.runAll("Test input");
 
       assertEquals(2, results.size(), "Should have 2 results");
       assertFalse(results.get(0).isError(), "First result should not be error");
@@ -149,7 +149,7 @@ class TraceCorrelationIntegrationTest {
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
 
-      List<AgentResult> results = parallel.run(sharedContext);
+      List<AgentResult> results = parallel.runAll(sharedContext);
 
       assertEquals(2, results.size());
       // Original context should still have its trace (copy was made)

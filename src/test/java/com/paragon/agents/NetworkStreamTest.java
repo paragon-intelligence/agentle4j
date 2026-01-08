@@ -280,7 +280,7 @@ class NetworkStreamTest {
     void broadcastStream_nullString_throws() {
       AgentNetwork network = createTestNetwork();
 
-      assertThrows(NullPointerException.class, () -> network.broadcastStream(null));
+      assertThrows(NullPointerException.class, () -> network.broadcastStream((String) null));
     }
 
     @Test

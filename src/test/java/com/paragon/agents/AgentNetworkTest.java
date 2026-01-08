@@ -264,7 +264,7 @@ class AgentNetworkTest {
     void broadcast_nullMessage_throws() {
       AgentNetwork network = createTestNetwork();
 
-      assertThrows(NullPointerException.class, () -> network.broadcast(null));
+      assertThrows(NullPointerException.class, () -> network.broadcast((String) null));
     }
   }
 
