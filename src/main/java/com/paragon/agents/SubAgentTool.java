@@ -193,7 +193,7 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
    * @param context the parent context to propagate
    * @param task the task to run with the context (returns void)
    */
-  static void runWithContext(@Nullable AgentContext context, @NonNull Runnable task) {
+  static void runWithContext(@Nullable AgentContext context, java.lang.Runnable task) {
     if (context != null) {
       ScopedValue.where(CURRENT_CONTEXT, context).run(task);
     } else {

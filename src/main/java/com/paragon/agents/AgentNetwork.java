@@ -424,31 +424,31 @@ public final class AgentNetwork implements Interactable {
    * synthesized output. Otherwise, returns the last contribution's output.
    */
   @Override
-  public @NonNull AgentResult run(@NonNull String input) {
+  public @NonNull AgentResult interact(@NonNull String input) {
     return toAgentResult(discuss(input));
   }
 
   /** {@inheritDoc} Delegates to {@link #discuss(Text)} and converts to AgentResult. */
   @Override
-  public @NonNull AgentResult run(@NonNull Text text) {
+  public @NonNull AgentResult interact(@NonNull Text text) {
     return toAgentResult(discuss(text));
   }
 
   /** {@inheritDoc} Delegates to {@link #discuss(Message)} and converts to AgentResult. */
   @Override
-  public @NonNull AgentResult run(@NonNull Message message) {
+  public @NonNull AgentResult interact(@NonNull Message message) {
     return toAgentResult(discuss(message));
   }
 
   /** {@inheritDoc} Delegates to {@link #discuss(Prompt)} and converts to AgentResult. */
   @Override
-  public @NonNull AgentResult run(@NonNull Prompt prompt) {
+  public @NonNull AgentResult interact(@NonNull Prompt prompt) {
     return toAgentResult(discuss(prompt));
   }
 
   /** {@inheritDoc} Delegates to {@link #discuss(AgentContext)} and converts to AgentResult. */
   @Override
-  public @NonNull AgentResult run(@NonNull AgentContext context) {
+  public @NonNull AgentResult interact(@NonNull AgentContext context) {
     return toAgentResult(discuss(context));
   }
 
@@ -459,7 +459,7 @@ public final class AgentNetwork implements Interactable {
    * returns a failed stream with an error indicating no synthesizer is configured for streaming.
    */
   @Override
-  public @NonNull AgentStream runStream(@NonNull String input) {
+  public @NonNull AgentStream interactStream(@NonNull String input) {
     if (synthesizer == null) {
       NetworkResult result = discuss(input);
       return AgentStream.completed(toAgentResult(result));
@@ -472,14 +472,14 @@ public final class AgentNetwork implements Interactable {
 
   /** {@inheritDoc} */
   @Override
-  public @NonNull AgentStream runStream(@NonNull Prompt prompt) {
+  public @NonNull AgentStream interactStream(@NonNull Prompt prompt) {
     Objects.requireNonNull(prompt, "prompt cannot be null");
-    return runStream(prompt.text());
+    return interactStream(prompt.text());
   }
 
   /** {@inheritDoc} */
   @Override
-  public @NonNull AgentStream runStream(@NonNull AgentContext context) {
+  public @NonNull AgentStream interactStream(@NonNull AgentContext context) {
     if (synthesizer == null) {
       NetworkResult result = discuss(context);
       return AgentStream.completed(toAgentResult(result));

@@ -285,7 +285,7 @@ Run multiple agents concurrently:
 ParallelAgents team = ParallelAgents.of(researcher, analyst);
 
 // Run all agents
-List<AgentResult> results = team.run("Analyze market trends");
+List<AgentResult> results = team.runAll("Analyze market trends");
 
 // Or get just the first to complete
 AgentResult fastest = team.runFirst("Quick analysis needed");
@@ -294,7 +294,7 @@ AgentResult fastest = team.runFirst("Quick analysis needed");
 AgentResult combined = team.runAndSynthesize("What's the outlook?", writerAgent);
 
 // Streaming
-team.runStream("Analyze trends")
+team.runAllStream("Analyze trends")
     .onAgentTextDelta((agent, delta) -> System.out.print("[" + agent.name() + "] " + delta))
     .onComplete(r -> System.out.println("Done!"))
     .start();
@@ -348,6 +348,34 @@ AgentResult result = orchestrator.interact("Analyze these sales figures...");
 | **Sub-agent** | Delegate → Return → Continue | Need output to continue processing |
 | **Handoff** | Transfer → End | Permanently route to specialist |
 | **Parallel** | Run concurrently | Get multiple perspectives |
+
+### Interactable Interface
+
+All agent patterns implement the `Interactable` interface, enabling polymorphic usage:
+
+```java
+// Service that works with any agent pattern
+public class AgentService {
+    private final Interactable agent;
+
+    public AgentService(Interactable agent) {
+        this.agent = agent;
+    }
+
+    public String process(String input) {
+        AgentResult result = agent.interact(input);
+        return result.output();
+    }
+}
+
+// Works with any agent type
+new AgentService(singleAgent);
+new AgentService(supervisorAgent);
+new AgentService(router);
+new AgentService(network);
+new AgentService(parallel);
+new AgentService(hierarchy);
+```
 
 ## Guardrails
 

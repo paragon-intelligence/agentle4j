@@ -539,41 +539,41 @@ public final class ParallelAgents implements Interactable {
   }
 
   // ===== Interactable Interface Implementation =====
-  // Note: run() uses runFirst() semantics - returns the first agent to complete.
+  // Note: interact() uses runFirst() semantics - returns the first agent to complete.
   // Use runAll() for explicit parallel results or runAndSynthesize() for combined output.
 
   /**
    * {@inheritDoc}
    *
    * <p>Uses runFirst() semantics - returns the result of the first agent to complete. For all
-   * results, use {@link #run(String)} with the explicit return type.
+   * results, use {@link #runAll(String)} with the explicit return type.
    */
   @Override
-  public @NonNull AgentResult run(@NonNull String input) {
+  public @NonNull AgentResult interact(@NonNull String input) {
     return runFirst(input);
   }
 
   /** {@inheritDoc} Delegates to runFirst() - returns first agent to complete. */
   @Override
-  public @NonNull AgentResult run(@NonNull Text text) {
+  public @NonNull AgentResult interact(@NonNull Text text) {
     return runFirst(text);
   }
 
   /** {@inheritDoc} Delegates to runFirst() - returns first agent to complete. */
   @Override
-  public @NonNull AgentResult run(@NonNull Message message) {
+  public @NonNull AgentResult interact(@NonNull Message message) {
     return runFirst(message);
   }
 
   /** {@inheritDoc} Delegates to runFirst() - returns first agent to complete. */
   @Override
-  public @NonNull AgentResult run(@NonNull Prompt prompt) {
+  public @NonNull AgentResult interact(@NonNull Prompt prompt) {
     return runFirst(prompt);
   }
 
   /** {@inheritDoc} Delegates to runFirst() - returns first agent to complete. */
   @Override
-  public @NonNull AgentResult run(@NonNull AgentContext context) {
+  public @NonNull AgentResult interact(@NonNull AgentContext context) {
     return runFirst(context);
   }
 
@@ -581,10 +581,10 @@ public final class ParallelAgents implements Interactable {
    * {@inheritDoc}
    *
    * <p>Streams and returns when the first agent completes. For streaming all agents, use {@link
-   * #runStream(String)} with the explicit ParallelStream return type.
+   * #runAllStream(String)} with the explicit ParallelStream return type.
    */
   @Override
-  public @NonNull AgentStream runStream(@NonNull String input) {
+  public @NonNull AgentStream interactStream(@NonNull String input) {
     // Run first agent stream - this is a simplification
     // For full parallel streaming, use runFirstStream() directly
     AgentContext context = AgentContext.create();
@@ -599,14 +599,14 @@ public final class ParallelAgents implements Interactable {
 
   /** {@inheritDoc} */
   @Override
-  public @NonNull AgentStream runStream(@NonNull Prompt prompt) {
+  public @NonNull AgentStream interactStream(@NonNull Prompt prompt) {
     Objects.requireNonNull(prompt, "prompt cannot be null");
-    return runStream(prompt.text());
+    return interactStream(prompt.text());
   }
 
   /** {@inheritDoc} */
   @Override
-  public @NonNull AgentStream runStream(@NonNull AgentContext context) {
+  public @NonNull AgentStream interactStream(@NonNull AgentContext context) {
     Objects.requireNonNull(context, "context cannot be null");
     if (!agents.isEmpty()) {
       return agents.get(0).interactStream(context.copy());

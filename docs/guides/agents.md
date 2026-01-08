@@ -1437,6 +1437,58 @@ agent.interact(input).join();  // Uncaught exceptions!
 
 ---
 
+## 🔌 Interactable Interface
+
+All agent patterns implement the `Interactable` interface, enabling polymorphic usage:
+
+```java
+import com.paragon.agents.Interactable;
+
+// Service that works with any agent pattern
+public class AgentService {
+    private final Interactable agent;
+
+    public AgentService(Interactable agent) {
+        this.agent = agent;
+    }
+
+    public String process(String input) {
+        AgentResult result = agent.interact(input);
+        return result.output();
+    }
+
+    public AgentStream processStream(String input) {
+        return agent.interactStream(input);
+    }
+}
+
+// Works with any agent type
+new AgentService(singleAgent);
+new AgentService(supervisorAgent);
+new AgentService(router);
+new AgentService(network);
+new AgentService(parallel);
+new AgentService(hierarchy);
+```
+
+### Available Methods
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `interact(String)` | `AgentResult` | Interact with text input |
+| `interact(Text)` | `AgentResult` | Interact with Text content |
+| `interact(Message)` | `AgentResult` | Interact with Message |
+| `interact(Prompt)` | `AgentResult` | Interact with Prompt |
+| `interact(AgentContext)` | `AgentResult` | Interact with existing context |
+| `interactStream(String)` | `AgentStream` | Streaming with text input |
+| `interactStream(Prompt)` | `AgentStream` | Streaming with Prompt |
+| `interactStream(AgentContext)` | `AgentStream` | Streaming with context |
+
+> [!NOTE]
+> For `ParallelAgents`, the `interact()` method uses **first-to-complete** semantics (returns when the first agent finishes). Use `runAll()` to get results from all agents.
+
+---
+
 ## Next Steps
 
 - [Function Tools Guide](tools.md) - Create custom tools

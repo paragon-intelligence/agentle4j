@@ -32,7 +32,7 @@ import org.jspecify.annotations.NonNull;
  *     }
  *
  *     public String process(String input) {
- *         AgentResult result = agent.run(input);
+ *         AgentResult result = agent.interact(input);
  *         return result.output();
  *     }
  * }
@@ -49,7 +49,7 @@ import org.jspecify.annotations.NonNull;
  *
  * <pre>{@code
  * Interactable.Structured<Person> agent = ...;
- * StructuredAgentResult<Person> result = agent.runStructured("Extract person info");
+ * StructuredAgentResult<Person> result = agent.interactStructured("Extract person info");
  * Person person = result.output();
  * }</pre>
  *
@@ -64,72 +64,72 @@ import org.jspecify.annotations.NonNull;
 public interface Interactable {
 
   /**
-   * Runs the agent with a text input.
+   * Interacts with the agent using a text input.
    *
    * @param input the user's text input
    * @return the agent's result
    */
-  @NonNull AgentResult run(@NonNull String input);
+  @NonNull AgentResult interact(@NonNull String input);
 
   /**
-   * Runs the agent with Text content.
+   * Interacts with the agent using Text content.
    *
    * @param text the text content
    * @return the agent's result
    */
-  @NonNull AgentResult run(@NonNull Text text);
+  @NonNull AgentResult interact(@NonNull Text text);
 
   /**
-   * Runs the agent with a Message.
+   * Interacts with the agent using a Message.
    *
    * @param message the message input
    * @return the agent's result
    */
-  @NonNull AgentResult run(@NonNull Message message);
+  @NonNull AgentResult interact(@NonNull Message message);
 
   /**
-   * Runs the agent with a Prompt.
+   * Interacts with the agent using a Prompt.
    *
    * <p>The prompt's text content is extracted and used as the input.
    *
    * @param prompt the prompt input
    * @return the agent's result
    */
-  @NonNull AgentResult run(@NonNull Prompt prompt);
+  @NonNull AgentResult interact(@NonNull Prompt prompt);
 
   /**
-   * Runs the agent with an existing context.
+   * Interacts with the agent using an existing context.
    *
    * @param context the conversation context containing history
    * @return the agent's result
    */
-  @NonNull AgentResult run(@NonNull AgentContext context);
+  @NonNull AgentResult interact(@NonNull AgentContext context);
 
   /**
-   * Runs the agent with streaming support.
+   * Interacts with the agent with streaming support.
    *
    * @param input the user's text input
    * @return an AgentStream for processing streaming events
    */
-  @NonNull AgentStream runStream(@NonNull String input);
+  @NonNull AgentStream interactStream(@NonNull String input);
 
   /**
-   * Runs the agent with streaming using a Prompt.
+   * Interacts with the agent with streaming using a Prompt.
    *
    * <p>The prompt's text content is extracted and used as the input.
    *
    * @param prompt the prompt input
    * @return an AgentStream for processing streaming events
    */
-  @NonNull AgentStream runStream(@NonNull Prompt prompt);
+  @NonNull AgentStream interactStream(@NonNull Prompt prompt);
 
   /**
-   * Runs the agent with streaming using an existing context.
+   * Interacts with the agent with streaming using an existing context.
    *
    * @param context the conversation context containing history
    * @return an AgentStream for processing streaming events
    */
-  @NonNull AgentStream runStream(@NonNull AgentContext context);
+  @NonNull AgentStream interactStream(@NonNull AgentContext context);
 
   /**
    * Extended interface for agents that return structured (typed) output.
@@ -151,7 +151,7 @@ public interface Interactable {
    *     .build();
    *
    * // Get typed result
-   * StructuredAgentResult<Person> result = agent.runStructured("John is 30 years old");
+   * StructuredAgentResult<Person> result = agent.interactStructured("John is 30 years old");
    * Person person = result.output();
    * }</pre>
    *
@@ -160,43 +160,43 @@ public interface Interactable {
   interface Structured<T> extends Interactable {
 
     /**
-     * Runs the agent and returns a structured result.
+     * Interacts with the agent and returns a structured result.
      *
      * @param input the user's text input
      * @return the structured result with parsed output
      */
-    @NonNull StructuredAgentResult<T> runStructured(@NonNull String input);
+    @NonNull StructuredAgentResult<T> interactStructured(@NonNull String input);
 
     /**
-     * Runs the agent with Text content and returns a structured result.
+     * Interacts with the agent with Text content and returns a structured result.
      *
      * @param text the text content
      * @return the structured result with parsed output
      */
-    @NonNull StructuredAgentResult<T> runStructured(@NonNull Text text);
+    @NonNull StructuredAgentResult<T> interactStructured(@NonNull Text text);
 
     /**
-     * Runs the agent with a Message and returns a structured result.
+     * Interacts with the agent with a Message and returns a structured result.
      *
      * @param message the message input
      * @return the structured result with parsed output
      */
-    @NonNull StructuredAgentResult<T> runStructured(@NonNull Message message);
+    @NonNull StructuredAgentResult<T> interactStructured(@NonNull Message message);
 
     /**
-     * Runs the agent with a Prompt and returns a structured result.
+     * Interacts with the agent with a Prompt and returns a structured result.
      *
      * @param prompt the prompt input
      * @return the structured result with parsed output
      */
-    @NonNull StructuredAgentResult<T> runStructured(@NonNull Prompt prompt);
+    @NonNull StructuredAgentResult<T> interactStructured(@NonNull Prompt prompt);
 
     /**
-     * Runs the agent with an existing context and returns a structured result.
+     * Interacts with the agent with an existing context and returns a structured result.
      *
      * @param context the conversation context
      * @return the structured result with parsed output
      */
-    @NonNull StructuredAgentResult<T> runStructured(@NonNull AgentContext context);
+    @NonNull StructuredAgentResult<T> interactStructured(@NonNull AgentContext context);
   }
 }

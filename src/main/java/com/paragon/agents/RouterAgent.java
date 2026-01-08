@@ -322,31 +322,31 @@ public final class RouterAgent implements Interactable {
 
   /** {@inheritDoc} Delegates to {@link #route(String)}. */
   @Override
-  public @NonNull AgentResult run(@NonNull String input) {
+  public @NonNull AgentResult interact(@NonNull String input) {
     return route(input);
   }
 
   /** {@inheritDoc} Delegates to {@link #route(Text)}. */
   @Override
-  public @NonNull AgentResult run(@NonNull Text text) {
+  public @NonNull AgentResult interact(@NonNull Text text) {
     return route(text);
   }
 
   /** {@inheritDoc} Delegates to {@link #route(Message)}. */
   @Override
-  public @NonNull AgentResult run(@NonNull Message message) {
+  public @NonNull AgentResult interact(@NonNull Message message) {
     return route(message);
   }
 
   /** {@inheritDoc} Delegates to {@link #route(Prompt)}. */
   @Override
-  public @NonNull AgentResult run(@NonNull Prompt prompt) {
+  public @NonNull AgentResult interact(@NonNull Prompt prompt) {
     return route(prompt);
   }
 
   /** {@inheritDoc} Delegates to {@link #route(AgentContext)}. */
   @Override
-  public @NonNull AgentResult run(@NonNull AgentContext context) {
+  public @NonNull AgentResult interact(@NonNull AgentContext context) {
     return route(context);
   }
 
@@ -357,7 +357,7 @@ public final class RouterAgent implements Interactable {
    * returns a failed AgentStream.
    */
   @Override
-  public @NonNull AgentStream runStream(@NonNull String input) {
+  public @NonNull AgentStream interactStream(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
     Optional<Agent> selected = classify(input);
     if (selected.isEmpty()) {
@@ -371,14 +371,14 @@ public final class RouterAgent implements Interactable {
 
   /** {@inheritDoc} Classifies the prompt and returns the selected agent's stream. */
   @Override
-  public @NonNull AgentStream runStream(@NonNull Prompt prompt) {
+  public @NonNull AgentStream interactStream(@NonNull Prompt prompt) {
     Objects.requireNonNull(prompt, "prompt cannot be null");
-    return runStream(prompt.text());
+    return interactStream(prompt.text());
   }
 
   /** {@inheritDoc} Extracts the last user message for classification and streams from the selected agent. */
   @Override
-  public @NonNull AgentStream runStream(@NonNull AgentContext context) {
+  public @NonNull AgentStream interactStream(@NonNull AgentContext context) {
     Objects.requireNonNull(context, "context cannot be null");
     Optional<String> inputTextOpt = extractLastUserMessage(context);
     if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {

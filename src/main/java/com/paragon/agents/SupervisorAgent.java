@@ -233,49 +233,49 @@ public final class SupervisorAgent implements Interactable {
 
   /** {@inheritDoc} Delegates to {@link #orchestrate(String)}. */
   @Override
-  public @NonNull AgentResult run(@NonNull String input) {
+  public @NonNull AgentResult interact(@NonNull String input) {
     return orchestrate(input);
   }
 
   /** {@inheritDoc} Delegates to {@link #orchestrate(Text)}. */
   @Override
-  public @NonNull AgentResult run(@NonNull Text text) {
+  public @NonNull AgentResult interact(@NonNull Text text) {
     return orchestrate(text);
   }
 
   /** {@inheritDoc} Delegates to {@link #orchestrate(Message)}. */
   @Override
-  public @NonNull AgentResult run(@NonNull Message message) {
+  public @NonNull AgentResult interact(@NonNull Message message) {
     return orchestrate(message);
   }
 
   /** {@inheritDoc} Delegates to {@link #orchestrate(Prompt)}. */
   @Override
-  public @NonNull AgentResult run(@NonNull Prompt prompt) {
+  public @NonNull AgentResult interact(@NonNull Prompt prompt) {
     return orchestrate(prompt);
   }
 
   /** {@inheritDoc} Delegates to {@link #orchestrate(AgentContext)}. */
   @Override
-  public @NonNull AgentResult run(@NonNull AgentContext context) {
+  public @NonNull AgentResult interact(@NonNull AgentContext context) {
     return orchestrate(context);
   }
 
   /** {@inheritDoc} Delegates to {@link #orchestrateStream(String)}. */
   @Override
-  public @NonNull AgentStream runStream(@NonNull String input) {
+  public @NonNull AgentStream interactStream(@NonNull String input) {
     return orchestrateStream(input);
   }
 
   /** {@inheritDoc} Delegates to {@link #orchestrateStream(Prompt)}. */
   @Override
-  public @NonNull AgentStream runStream(@NonNull Prompt prompt) {
+  public @NonNull AgentStream interactStream(@NonNull Prompt prompt) {
     return orchestrateStream(prompt);
   }
 
   /** {@inheritDoc} Delegates to {@link #orchestrateStream(AgentContext)}. */
   @Override
-  public @NonNull AgentStream runStream(@NonNull AgentContext context) {
+  public @NonNull AgentStream interactStream(@NonNull AgentContext context) {
     return orchestrateStream(context);
   }
 
