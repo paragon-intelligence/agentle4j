@@ -478,6 +478,40 @@ agent.interact("What's my favorite color?");
 // -> "Your favorite color is blue"
 ```
 
+## MCP Client
+
+Connect to external MCP (Model Context Protocol) servers:
+
+```java
+// Stdio transport (subprocess)
+try (var mcp = StdioMcpClient.builder()
+        .command("npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp")
+        .build()) {
+    mcp.connect();
+    
+    // List available tools
+    List<McpRemoteTool> tools = mcp.asTools();
+    
+    // Call a tool
+    McpToolResult result = mcp.callTool("read_file", Map.of("path", "/tmp/file.txt"));
+}
+
+// HTTP transport with authentication
+var mcp = StreamableHttpMcpClient.builder()
+    .serverUrl("https://mcp.example.com/api")
+    .headerProvider(McpHeaderProvider.bearer(() -> authService.getToken()))
+    .build();
+```
+
+Filter tools by name:
+
+```java
+// Only expose specific tools
+var tools = mcp.asTools(Set.of("read_file", "list_directory"));
+```
+
+See the [MCP Client Guide](docs/guides/mcp-client.md) for full documentation.
+
 ## Embeddings
 
 Text embedding with built-in retry and fallback support:
