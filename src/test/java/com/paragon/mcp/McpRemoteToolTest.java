@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.paragon.mcp.dto.McpContent;
 import com.paragon.mcp.dto.McpTextContent;
 import com.paragon.mcp.dto.McpToolDefinition;
 import com.paragon.mcp.dto.McpToolResult;
+import com.paragon.responses.spec.FunctionTool;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +30,16 @@ class McpRemoteToolTest {
   }
 
   @Test
-  void shouldCallToolSuccessfully() throws Exception {
+  void shouldExtendFunctionTool() {
+    var definition = McpToolDefinition.of("test_tool", "A test tool", Map.of("type", "object"));
+    var tool = new McpRemoteTool(mockClient, definition, objectMapper);
+
+    // Verify it extends FunctionTool
+    assertInstanceOf(FunctionTool.class, tool);
+  }
+
+  @Test
+  void shouldCallToolWithMapSuccessfully() throws Exception {
     var definition = McpToolDefinition.of("test_tool", "A test tool", Map.of("type", "object"));
     var tool = new McpRemoteTool(mockClient, definition, objectMapper);
 
@@ -38,7 +47,7 @@ class McpRemoteToolTest {
     when(mockClient.callTool(eq("test_tool"), any())).thenReturn(result);
 
     var arguments = Map.<String, Object>of("key", "value");
-    FunctionToolCallOutput output = tool.call(arguments);
+    FunctionToolCallOutput output = tool.callWithMap(arguments);
 
     assertEquals("Success!", output.output().toString());
     verify(mockClient).callTool("test_tool", arguments);
@@ -52,7 +61,7 @@ class McpRemoteToolTest {
     var result = new McpToolResult(List.of(McpTextContent.of("Error occurred")), true, null);
     when(mockClient.callTool(eq("failing_tool"), any())).thenReturn(result);
 
-    FunctionToolCallOutput output = tool.call(null);
+    FunctionToolCallOutput output = tool.callWithMap(null);
 
     assertTrue(output.output().toString().contains("Error"));
     verify(mockClient).callTool("failing_tool", null);
@@ -66,20 +75,20 @@ class McpRemoteToolTest {
     when(mockClient.callTool(eq("exception_tool"), any()))
         .thenThrow(new McpException("Connection failed"));
 
-    FunctionToolCallOutput output = tool.call(null);
+    FunctionToolCallOutput output = tool.callWithMap(null);
 
     assertTrue(output.output().toString().contains("Connection failed"));
   }
 
   @Test
-  void shouldCallWithJsonArguments() throws Exception {
+  void shouldCallWithRawJsonArguments() throws Exception {
     var definition = McpToolDefinition.of("json_tool", Map.of("type", "object"));
     var tool = new McpRemoteTool(mockClient, definition, objectMapper);
 
     var result = new McpToolResult(List.of(McpTextContent.of("OK")), false, null);
     when(mockClient.callTool(eq("json_tool"), any())).thenReturn(result);
 
-    FunctionToolCallOutput output = tool.callWithJson("{\"foo\": \"bar\"}");
+    FunctionToolCallOutput output = tool.callWithRawArguments("{\"foo\": \"bar\"}");
 
     assertEquals("OK", output.output().toString());
     verify(mockClient).callTool(eq("json_tool"), argThat(map -> "bar".equals(map.get("foo"))));
@@ -90,7 +99,7 @@ class McpRemoteToolTest {
     var definition = McpToolDefinition.of("json_tool", Map.of("type", "object"));
     var tool = new McpRemoteTool(mockClient, definition, objectMapper);
 
-    FunctionToolCallOutput output = tool.callWithJson("not valid json");
+    FunctionToolCallOutput output = tool.callWithRawArguments("not valid json");
 
     assertTrue(output.output().toString().contains("Invalid JSON"));
     verifyNoInteractions(mockClient);
@@ -104,6 +113,7 @@ class McpRemoteToolTest {
 
     assertEquals("my_tool", tool.getName());
     assertEquals("My tool description", tool.getDescription());
+    assertEquals(schema, tool.getParameters());
     assertEquals(schema, tool.getInputSchema());
     assertEquals(definition, tool.getDefinition());
   }
@@ -117,5 +127,32 @@ class McpRemoteToolTest {
 
     assertTrue(str.contains("readable_tool"));
     assertTrue(str.contains("McpRemoteTool"));
+  }
+
+  @Test
+  void shouldReturnFunctionType() {
+    var definition = McpToolDefinition.of("test_tool", Map.of("type", "object"));
+    var tool = new McpRemoteTool(mockClient, definition, objectMapper);
+
+    assertEquals("function", tool.getType());
+  }
+
+  @Test
+  void shouldReturnStrictMode() {
+    var definition = McpToolDefinition.of("test_tool", Map.of("type", "object"));
+    var tool = new McpRemoteTool(mockClient, definition, objectMapper);
+
+    assertTrue(tool.getStrict());
+  }
+
+  @Test
+  void shouldWarnWhenCalledWithMcpParams() {
+    var definition = McpToolDefinition.of("test_tool", Map.of("type", "object"));
+    var tool = new McpRemoteTool(mockClient, definition, objectMapper);
+
+    // When called with empty params (normal FunctionTool flow), it should return error
+    FunctionToolCallOutput output = tool.call(new McpRemoteTool.McpParams());
+
+    assertTrue(output.output().toString().contains("raw JSON"));
   }
 }

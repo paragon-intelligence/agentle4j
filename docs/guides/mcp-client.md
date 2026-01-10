@@ -56,6 +56,29 @@ Filter which tools are exposed:
 var tools = mcp.asTools(Set.of("read_file", "list_directory"));
 ```
 
+## Agent Integration
+
+Since `McpRemoteTool` extends `FunctionTool`, MCP tools work seamlessly with agents:
+
+```java
+var mcp = StdioMcpClient.builder()
+    .command("npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp")
+    .build();
+mcp.connect();
+
+Agent agent = Agent.builder()
+    .name("FileAgent")
+    .model("openai/gpt-4o")
+    .instructions("You can read and write files.")
+    .responder(responder)
+    .addTools(mcp.asTools())  // Add all MCP tools to agent
+    .build();
+
+AgentResult result = agent.interact("What files are in /tmp?");
+```
+
+See the [Agents Guide](agents.md#mcp-tools) for more examples.
+
 ## Header Provider
 
 Inject runtime headers for authentication:
@@ -71,24 +94,27 @@ McpHeaderProvider.bearer(() -> authService.getAccessToken());
 var combined = bearerProvider.and(customHeaderProvider);
 ```
 
-## Using MCP Tools
+## Using MCP Tools Directly
 
-Each `McpRemoteTool` can be called with a Map or JSON string:
+For direct tool calls (without an agent), use `callWithMap` or `callWithRawArguments`:
 
 ```java
 McpRemoteTool tool = mcp.asTools().get(0);
 
 // Call with Map
-FunctionToolCallOutput output = tool.call(Map.of("query", "search term"));
+FunctionToolCallOutput output = tool.callWithMap(Map.of("query", "search term"));
 
-// Call with JSON
-FunctionToolCallOutput output = tool.callWithJson("{\"query\": \"search term\"}");
+// Call with JSON string
+FunctionToolCallOutput output = tool.callWithRawArguments("{\"query\": \"search term\"}");
 
 // Check result
 if (output.output().toString().contains("error")) {
     // Handle error
 }
 ```
+
+> [!TIP]
+> When using MCP tools with agents, you don't need to call these methods directly—the agent handles tool execution automatically.
 
 ## Builder Options
 
