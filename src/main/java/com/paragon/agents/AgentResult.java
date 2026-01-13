@@ -19,6 +19,7 @@ import org.jspecify.annotations.Nullable;
  *   <li>Number of LLM turns used
  *   <li>Any handoff that was triggered
  *   <li>Any error that occurred
+ *   <li>Related results from parallel/composite execution
  * </ul>
  *
  * <h2>Usage Example</h2>
@@ -51,6 +52,7 @@ public final class AgentResult {
   private final @Nullable Throwable error;
   private final @Nullable Object parsed;
   private final @Nullable AgentRunState pausedState;
+  private final @NonNull List<AgentResult> relatedResults;
 
   private AgentResult(Builder builder) {
     this.output = builder.output;
@@ -63,6 +65,8 @@ public final class AgentResult {
     this.error = builder.error;
     this.parsed = builder.parsed;
     this.pausedState = builder.pausedState;
+    this.relatedResults =
+        builder.relatedResults != null ? List.copyOf(builder.relatedResults) : List.of();
   }
 
   // ===== Factory Methods =====
@@ -188,6 +192,32 @@ public final class AgentResult {
         .pausedState(state)
         .history(context.getHistory())
         .turnsUsed(context.getTurnCount())
+        .build();
+  }
+
+  /**
+   * Creates a composite result containing a primary result and related results.
+   *
+   * <p>This is useful for patterns like ParallelAgents where multiple agents run concurrently
+   * and one result is selected as primary while the others are preserved as related results.
+   *
+   * @param primary the primary result (e.g., first to complete)
+   * @param related the other related results
+   * @return a result containing both primary and related results
+   */
+  public static @NonNull AgentResult composite(
+      @NonNull AgentResult primary, @NonNull List<AgentResult> related) {
+    return new Builder()
+        .output(primary.output)
+        .finalResponse(primary.finalResponse)
+        .history(primary.history)
+        .toolExecutions(primary.toolExecutions)
+        .turnsUsed(primary.turnsUsed)
+        .handoffAgent(primary.handoffAgent)
+        .error(primary.error)
+        .parsed(primary.parsed)
+        .pausedState(primary.pausedState)
+        .relatedResults(related)
         .build();
   }
 
@@ -323,6 +353,27 @@ public final class AgentResult {
     return pausedState;
   }
 
+  /**
+   * Returns related results from parallel or composite execution.
+   *
+   * <p>When using patterns like parallel execution, this contains the results
+   * from other agents that ran alongside the primary result.
+   *
+   * @return an unmodifiable list of related results (empty if none)
+   */
+  public @NonNull List<AgentResult> relatedResults() {
+    return relatedResults;
+  }
+
+  /**
+   * Checks if this result has related results from parallel execution.
+   *
+   * @return true if related results are present
+   */
+  public boolean hasRelatedResults() {
+    return !relatedResults.isEmpty();
+  }
+
   // ===== Builder =====
 
   private static final class Builder {
@@ -335,6 +386,7 @@ public final class AgentResult {
     private @Nullable Throwable error;
     private @Nullable Object parsed;
     private @Nullable AgentRunState pausedState;
+    private @Nullable List<AgentResult> relatedResults;
 
     Builder output(String output) {
       this.output = output;
@@ -378,6 +430,11 @@ public final class AgentResult {
 
     Builder pausedState(AgentRunState state) {
       this.pausedState = state;
+      return this;
+    }
+
+    Builder relatedResults(List<AgentResult> relatedResults) {
+      this.relatedResults = relatedResults;
       return this;
     }
 

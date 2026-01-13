@@ -1485,7 +1485,7 @@ new AgentService(hierarchy);
 | `interactStream(AgentContext)` | `AgentStream` | Streaming with context |
 
 > [!NOTE]
-> For `ParallelAgents`, the `interact()` method uses **first-to-complete** semantics (returns when the first agent finishes). Use `runAll()` to get results from all agents.
+> For `ParallelAgents`, the `interact()` method runs all agents in parallel. The first result is the primary output; use `result.relatedResults()` to access results from other agents.
 
 ---
 

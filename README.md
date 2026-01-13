@@ -375,6 +375,13 @@ new AgentService(router);
 new AgentService(network);
 new AgentService(parallel);
 new AgentService(hierarchy);
+
+// For parallel execution, access all results:
+AgentResult result = parallel.interact("Analyze trends");
+System.out.println("Primary: " + result.output());
+for (AgentResult related : result.relatedResults()) {
+    System.out.println("Also: " + related.output());
+}
 ```
 
 ## Guardrails

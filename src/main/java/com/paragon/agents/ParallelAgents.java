@@ -539,42 +539,59 @@ public final class ParallelAgents implements Interactable {
   }
 
   // ===== Interactable Interface Implementation =====
-  // Note: interact() uses runFirst() semantics - returns the first agent to complete.
-  // Use runAll() for explicit parallel results or runAndSynthesize() for combined output.
+  // Note: interact() runs all agents and returns a composite result.
+  // The primary result is the first to complete; all others are in relatedResults().
 
   /**
    * {@inheritDoc}
    *
-   * <p>Uses runFirst() semantics - returns the result of the first agent to complete. For all
-   * results, use {@link #runAll(String)} with the explicit return type.
+   * <p>Runs all agents in parallel. Returns the first-to-complete result as primary,
+   * with all other results accessible via {@link AgentResult#relatedResults()}.
    */
   @Override
   public @NonNull AgentResult interact(@NonNull String input) {
-    return runFirst(input);
+    List<AgentResult> allResults = runAll(input);
+    return toCompositeResult(allResults);
   }
 
-  /** {@inheritDoc} Delegates to runFirst() - returns first agent to complete. */
+  /** {@inheritDoc} Runs all agents; first to complete is primary, others in relatedResults(). */
   @Override
   public @NonNull AgentResult interact(@NonNull Text text) {
-    return runFirst(text);
+    List<AgentResult> allResults = runAll(text);
+    return toCompositeResult(allResults);
   }
 
-  /** {@inheritDoc} Delegates to runFirst() - returns first agent to complete. */
+  /** {@inheritDoc} Runs all agents; first to complete is primary, others in relatedResults(). */
   @Override
   public @NonNull AgentResult interact(@NonNull Message message) {
-    return runFirst(message);
+    List<AgentResult> allResults = runAll(message);
+    return toCompositeResult(allResults);
   }
 
-  /** {@inheritDoc} Delegates to runFirst() - returns first agent to complete. */
+  /** {@inheritDoc} Runs all agents; first to complete is primary, others in relatedResults(). */
   @Override
   public @NonNull AgentResult interact(@NonNull Prompt prompt) {
-    return runFirst(prompt);
+    List<AgentResult> allResults = runAll(prompt);
+    return toCompositeResult(allResults);
   }
 
-  /** {@inheritDoc} Delegates to runFirst() - returns first agent to complete. */
+  /** {@inheritDoc} Runs all agents; first to complete is primary, others in relatedResults(). */
   @Override
   public @NonNull AgentResult interact(@NonNull AgentContext context) {
-    return runFirst(context);
+    List<AgentResult> allResults = runAll(context);
+    return toCompositeResult(allResults);
+  }
+
+  private AgentResult toCompositeResult(List<AgentResult> allResults) {
+    if (allResults.isEmpty()) {
+      AgentContext ctx = AgentContext.create();
+      return AgentResult.error(new IllegalStateException("No agents configured"), ctx, 0);
+    }
+    AgentResult primary = allResults.get(0);
+    List<AgentResult> related = allResults.size() > 1 
+        ? allResults.subList(1, allResults.size()) 
+        : List.of();
+    return AgentResult.composite(primary, related);
   }
 
   /**
