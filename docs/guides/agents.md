@@ -525,6 +525,84 @@ public class RedisMemory implements Memory {
 
 ---
 
+## 🌐 MCP Tools
+
+Connect agents to external MCP (Model Context Protocol) servers. `McpRemoteTool` extends `FunctionTool`, so MCP tools integrate seamlessly with agents.
+
+### Basic Usage
+
+```java
+// Connect to MCP server
+var mcp = StdioMcpClient.builder()
+    .command("npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp")
+    .build();
+mcp.connect();
+
+// Get tools as FunctionTool instances
+List<McpRemoteTool> tools = mcp.asTools();
+
+// Add to agent
+Agent agent = Agent.builder()
+    .name("FileAgent")
+    .model("openai/gpt-4o")
+    .instructions("You can read and write files using the available tools.")
+    .responder(responder)
+    .addTools(tools)  // McpRemoteTool extends FunctionTool
+    .build();
+
+AgentResult result = agent.interact("List all files in /tmp");
+```
+
+### HTTP Transport with Authentication
+
+```java
+var mcp = StreamableHttpMcpClient.builder()
+    .serverUrl("https://mcp.example.com/api")
+    .headerProvider(McpHeaderProvider.bearer(() -> authService.getToken()))
+    .build();
+mcp.connect();
+
+Agent agent = Agent.builder()
+    .name("ApiAgent")
+    .addTools(mcp.asTools())
+    .responder(responder)
+    .build();
+```
+
+### Filtering Tools
+
+```java
+// Only expose specific tools
+List<McpRemoteTool> filteredTools = mcp.asTools(Set.of("read_file", "list_directory"));
+
+Agent agent = Agent.builder()
+    .name("ReadOnlyAgent")
+    .addTools(filteredTools)
+    .responder(responder)
+    .build();
+```
+
+### Lifecycle Management
+
+```java
+// Use try-with-resources for automatic cleanup
+try (var mcp = StdioMcpClient.builder()
+        .command("npx", "-y", "@my-mcp-server")
+        .build()) {
+    mcp.connect();
+    
+    Agent agent = Agent.builder()
+        .addTools(mcp.asTools())
+        .build();
+    
+    agent.interact("Do something");
+}  // MCP client automatically closed
+```
+
+See the [MCP Client Guide](mcp-client.md) for full configuration options.
+
+---
+
 ## 🧑‍💻 Human-in-the-Loop
 
 Control tool execution with **per-tool** approval workflows for sensitive operations.
