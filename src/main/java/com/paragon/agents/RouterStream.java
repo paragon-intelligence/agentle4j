@@ -32,7 +32,7 @@ public final class RouterStream {
   private final Responder responder;
 
   // Callbacks
-  private Consumer<Agent> onRouteSelected;
+  private Consumer<Interactable> onRouteSelected;
   private Consumer<String> onTextDelta;
   private Consumer<AgentResult> onComplete;
   private Consumer<Throwable> onError;
@@ -47,12 +47,12 @@ public final class RouterStream {
   }
 
   /**
-   * Called when an agent is selected for routing.
+   * Called when a route is selected.
    *
-   * @param callback receives the selected agent
+   * @param callback receives the selected Interactable
    * @return this stream
    */
-  public @NonNull RouterStream onRouteSelected(@NonNull Consumer<Agent> callback) {
+  public @NonNull RouterStream onRouteSelected(@NonNull Consumer<Interactable> callback) {
     this.onRouteSelected = Objects.requireNonNull(callback);
     return this;
   }
@@ -150,13 +150,13 @@ public final class RouterStream {
 
     String inputText = inputTextOpt.get();
 
-    // Classify synchronously (returns Optional<Agent> directly)
-    Optional<Agent> selectedAgentOpt = router.classify(inputText);
+    // Classify synchronously (returns Optional<Interactable> directly)
+    Optional<Interactable> selectedOpt = router.classify(inputText);
 
-    if (selectedAgentOpt.isEmpty()) {
+    if (selectedOpt.isEmpty()) {
       AgentResult errorResult =
           AgentResult.error(
-              new IllegalStateException("No suitable agent found for input"), context, 0);
+              new IllegalStateException("No suitable route found for input"), context, 0);
       if (onError != null) {
         onError.accept(errorResult.error());
       }
@@ -166,15 +166,15 @@ public final class RouterStream {
       return errorResult;
     }
 
-    Agent selectedAgent = selectedAgentOpt.get();
+    Interactable selected = selectedOpt.get();
 
     // Notify about route selection
     if (onRouteSelected != null) {
-      onRouteSelected.accept(selectedAgent);
+      onRouteSelected.accept(selected);
     }
 
-    // Execute the selected agent with streaming
-    AgentStream agentStream = selectedAgent.interactStream(context);
+    // Execute the selected Interactable with streaming
+    AgentStream agentStream = selected.interactStream(context);
 
     // Wire up callbacks
     if (onTextDelta != null) {
@@ -194,15 +194,14 @@ public final class RouterStream {
       agentStream.onError(onError);
     }
 
-    // Execute and wrap result as handoff
+    // Execute and wrap result
     AgentResult innerResult = agentStream.start();
-    AgentResult handoffResult = AgentResult.handoff(selectedAgent, innerResult, context);
     
     if (onComplete != null) {
-      onComplete.accept(handoffResult);
+      onComplete.accept(innerResult);
     }
     
-    return handoffResult;
+    return innerResult;
   }
 
   private Optional<String> extractLastUserMessage() {

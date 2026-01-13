@@ -98,7 +98,7 @@ class RouterAgentTest {
               .build();
 
       assertEquals(1, router.routes().size());
-      assertEquals(target, router.routes().getFirst().agent());
+      assertEquals(target, router.routes().getFirst().target());
       assertEquals("test description", router.routes().getFirst().description());
     }
 
@@ -162,7 +162,7 @@ class RouterAgentTest {
       Agent agent = createTestAgent("Test");
       RouterAgent.Route route = new RouterAgent.Route(agent, "test description");
 
-      assertEquals(agent, route.agent());
+      assertEquals(agent, route.target());
       assertEquals("test description", route.description());
     }
 
@@ -201,7 +201,7 @@ class RouterAgentTest {
 
       enqueueResponse("1"); // Mock LLM response
 
-      Optional<Agent> result = router.classify("test input");
+      Optional<Interactable> result = router.classify("test input");
 
       assertNotNull(result);
       assertInstanceOf(Optional.class, result);
@@ -223,7 +223,7 @@ class RouterAgentTest {
 
       enqueueResponse("1"); // LLM says route to first agent
 
-      Optional<Agent> selected = router.classify("Invoice question");
+      Optional<Interactable> selected = router.classify("Invoice question");
 
       assertTrue(selected.isPresent());
       assertEquals(billing, selected.get());
@@ -245,7 +245,7 @@ class RouterAgentTest {
 
       enqueueResponse("invalid"); // LLM returns unparseable response
 
-      Optional<Agent> selected = router.classify("test");
+      Optional<Interactable> selected = router.classify("test");
 
       assertTrue(selected.isPresent());
       assertEquals(fallback, selected.get());
@@ -265,7 +265,7 @@ class RouterAgentTest {
 
       enqueueResponse("invalid");
 
-      Optional<Agent> selected = router.classify("test");
+      Optional<Interactable> selected = router.classify("test");
 
       assertTrue(selected.isEmpty());
     }

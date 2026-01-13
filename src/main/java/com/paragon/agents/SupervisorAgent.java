@@ -75,7 +75,7 @@ public final class SupervisorAgent implements Interactable {
       throw new IllegalArgumentException("At least one worker is required");
     }
 
-    // Build internal supervisor agent with workers as sub-agents
+    // Build internal supervisor agent with workers as tools
     Agent.Builder agentBuilder =
         Agent.builder()
             .name(name)
@@ -84,15 +84,16 @@ public final class SupervisorAgent implements Interactable {
             .responder(responder)
             .maxTurns(maxTurns);
 
-    // Add workers as sub-agents (tools)
+    // Add workers as interactable tools
     for (Worker worker : workers) {
-      agentBuilder.addSubAgent(
-          worker.agent(),
-          SubAgentTool.Config.builder()
-              .description(worker.description())
-              .shareState(true)
-              .shareHistory(false)
-              .build());
+      agentBuilder.addTool(
+          new InteractableSubAgentTool(
+              worker.worker(),
+              InteractableSubAgentTool.Config.builder()
+                  .description(worker.description())
+                  .shareState(true)
+                  .shareHistory(false)
+                  .build()));
     }
 
     this.supervisorAgent = agentBuilder.build();
@@ -285,7 +286,7 @@ public final class SupervisorAgent implements Interactable {
     sb.append("You are a supervisor agent with the following workers available:\n\n");
 
     for (Worker worker : workers) {
-      sb.append("- **").append(worker.agent().name()).append("**: ");
+      sb.append("- **").append(worker.worker().name()).append("**: ");
       sb.append(worker.description()).append("\n");
     }
 
@@ -298,10 +299,10 @@ public final class SupervisorAgent implements Interactable {
     return sb.toString();
   }
 
-  /** Represents a worker agent with its description. */
-  public record Worker(@NonNull Agent agent, @NonNull String description) {
+  /** Represents a worker with its description. */
+  public record Worker(@NonNull Interactable worker, @NonNull String description) {
     public Worker {
-      Objects.requireNonNull(agent, "agent cannot be null");
+      Objects.requireNonNull(worker, "worker cannot be null");
       Objects.requireNonNull(description, "description cannot be null");
     }
   }
@@ -362,13 +363,15 @@ public final class SupervisorAgent implements Interactable {
     }
 
     /**
-     * Adds a worker agent with a description of its capabilities.
+     * Adds a worker with a description of its capabilities.
      *
-     * @param worker the worker agent
+     * <p>Workers can be any Interactable: Agent, RouterAgent, ParallelAgents, etc.
+     *
+     * @param worker the worker
      * @param description when to use this worker
      * @return this builder
      */
-    public @NonNull Builder addWorker(@NonNull Agent worker, @NonNull String description) {
+    public @NonNull Builder addWorker(@NonNull Interactable worker, @NonNull String description) {
       Objects.requireNonNull(worker, "worker cannot be null");
       Objects.requireNonNull(description, "description cannot be null");
       this.workers.add(new Worker(worker, description));

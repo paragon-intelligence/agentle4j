@@ -674,7 +674,7 @@ public class Main {
     // Classify without executing
     var classified = router.classify(techQuery);
     System.out.println(
-        "📍 Would route to: " + classified.map(Agent::name).orElse("fallback"));
+        "📍 Would route to: " + classified.map(Interactable::name).orElse("fallback"));
 
     // Route and execute
     AgentResult result = router.route(techQuery);

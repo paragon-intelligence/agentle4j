@@ -43,23 +43,23 @@ public final class ParallelStream {
   private final ParallelAgents orchestrator;
   private final AgentContext context;
   private final Mode mode;
-  private final @Nullable Agent synthesizer;
+  private final @Nullable Interactable synthesizer;
 
   // Callbacks
-  private BiConsumer<Agent, String> onAgentTextDelta;
-  private BiConsumer<Agent, AgentResult> onAgentComplete;
+  private BiConsumer<Interactable, String> onAgentTextDelta;
+  private BiConsumer<Interactable, AgentResult> onAgentComplete;
   private Consumer<List<AgentResult>> onAllComplete;
   private Consumer<AgentResult> onFirstComplete;
   private Consumer<AgentResult> onSynthesisComplete;
   private Consumer<Throwable> onError;
-  private BiConsumer<Agent, Integer> onAgentTurnStart;
+  private BiConsumer<Interactable, Integer> onAgentTurnStart;
 
   ParallelStream(ParallelAgents orchestrator, AgentContext context, Mode mode) {
     this(orchestrator, context, mode, null);
   }
 
   ParallelStream(
-      ParallelAgents orchestrator, AgentContext context, Mode mode, @Nullable Agent synthesizer) {
+      ParallelAgents orchestrator, AgentContext context, Mode mode, @Nullable Interactable synthesizer) {
     this.orchestrator = Objects.requireNonNull(orchestrator);
     this.context = Objects.requireNonNull(context);
     this.mode = Objects.requireNonNull(mode);
@@ -67,23 +67,23 @@ public final class ParallelStream {
   }
 
   /**
-   * Called for each text delta from any agent.
+   * Called for each text delta from any member.
    *
-   * @param callback receives the agent and text chunk
+   * @param callback receives the member and text chunk
    * @return this stream
    */
-  public @NonNull ParallelStream onAgentTextDelta(@NonNull BiConsumer<Agent, String> callback) {
+  public @NonNull ParallelStream onAgentTextDelta(@NonNull BiConsumer<Interactable, String> callback) {
     this.onAgentTextDelta = Objects.requireNonNull(callback);
     return this;
   }
 
   /**
-   * Called when an individual agent completes.
+   * Called when an individual member completes.
    *
-   * @param callback receives the agent and its result
+   * @param callback receives the member and its result
    * @return this stream
    */
-  public @NonNull ParallelStream onAgentComplete(@NonNull BiConsumer<Agent, AgentResult> callback) {
+  public @NonNull ParallelStream onAgentComplete(@NonNull BiConsumer<Interactable, AgentResult> callback) {
     this.onAgentComplete = Objects.requireNonNull(callback);
     return this;
   }
@@ -133,12 +133,12 @@ public final class ParallelStream {
   }
 
   /**
-   * Called at the start of each turn for any agent.
+   * Called at the start of each turn for any member.
    *
-   * @param callback receives the agent and turn number
+   * @param callback receives the member and turn number
    * @return this stream
    */
-  public @NonNull ParallelStream onAgentTurnStart(@NonNull BiConsumer<Agent, Integer> callback) {
+  public @NonNull ParallelStream onAgentTurnStart(@NonNull BiConsumer<Interactable, Integer> callback) {
     this.onAgentTurnStart = Objects.requireNonNull(callback);
     return this;
   }
@@ -166,35 +166,35 @@ public final class ParallelStream {
   }
 
   private List<AgentResult> startAll() {
-    List<Agent> agents = orchestrator.agents();
+    List<Interactable> members = orchestrator.members();
     List<AgentResult> results = Collections.synchronizedList(new ArrayList<>());
 
     String parentTraceId = TraceIdGenerator.generateTraceId();
     String parentSpanId = TraceIdGenerator.generateSpanId();
 
-    // Run all agents in parallel using virtual threads
+    // Run all members in parallel using virtual threads
     List<Thread> threads = new ArrayList<>();
 
-    for (Agent agent : agents) {
+    for (Interactable member : members) {
       Thread thread = Thread.startVirtualThread(() -> {
         AgentContext ctx = context.copy();
         ctx.withTraceContext(parentTraceId, parentSpanId);
 
-        AgentStream stream = agent.interactStream(ctx);
+        AgentStream stream = member.interactStream(ctx);
 
         if (onAgentTextDelta != null) {
-          stream.onTextDelta(delta -> onAgentTextDelta.accept(agent, delta));
+          stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
         }
 
         if (onAgentTurnStart != null) {
-          stream.onTurnStart(turn -> onAgentTurnStart.accept(agent, turn));
+          stream.onTurnStart(turn -> onAgentTurnStart.accept(member, turn));
         }
 
         AgentResult result = stream.start();
         results.add(result);
 
         if (onAgentComplete != null) {
-          onAgentComplete.accept(agent, result);
+          onAgentComplete.accept(member, result);
         }
       });
       threads.add(thread);
@@ -218,26 +218,26 @@ public final class ParallelStream {
   }
 
   private AgentResult startFirst() {
-    List<Agent> agents = orchestrator.agents();
+    List<Interactable> members = orchestrator.members();
     AtomicBoolean firstCompleted = new AtomicBoolean(false);
     AtomicReference<AgentResult> firstResult = new AtomicReference<>();
 
-    // Run all agents in parallel using virtual threads
+    // Run all members in parallel using virtual threads
     List<Thread> threads = new ArrayList<>();
 
-    for (Agent agent : agents) {
+    for (Interactable member : members) {
       Thread thread = Thread.startVirtualThread(() -> {
         AgentContext ctx = context.copy();
-        AgentStream stream = agent.interactStream(ctx);
+        AgentStream stream = member.interactStream(ctx);
 
         if (onAgentTextDelta != null) {
-          stream.onTextDelta(delta -> onAgentTextDelta.accept(agent, delta));
+          stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
         }
 
         AgentResult result = stream.start();
 
         if (onAgentComplete != null) {
-          onAgentComplete.accept(agent, result);
+          onAgentComplete.accept(member, result);
         }
 
         // Only the first to complete wins
@@ -269,31 +269,31 @@ public final class ParallelStream {
       throw new IllegalStateException("Synthesizer is required for SYNTHESIZE mode");
     }
 
-    List<Agent> agents = orchestrator.agents();
+    List<Interactable> members = orchestrator.members();
     List<AgentResult> results = Collections.synchronizedList(new ArrayList<>());
 
     String parentTraceId = TraceIdGenerator.generateTraceId();
     String parentSpanId = TraceIdGenerator.generateSpanId();
 
-    // First phase: run all agents in parallel using virtual threads
+    // First phase: run all members in parallel using virtual threads
     List<Thread> threads = new ArrayList<>();
 
-    for (Agent agent : agents) {
+    for (Interactable member : members) {
       Thread thread = Thread.startVirtualThread(() -> {
         AgentContext ctx = context.copy();
         ctx.withTraceContext(parentTraceId, parentSpanId);
 
-        AgentStream stream = agent.interactStream(ctx);
+        AgentStream stream = member.interactStream(ctx);
 
         if (onAgentTextDelta != null) {
-          stream.onTextDelta(delta -> onAgentTextDelta.accept(agent, delta));
+          stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
         }
 
         AgentResult result = stream.start();
         results.add(result);
 
         if (onAgentComplete != null) {
-          onAgentComplete.accept(agent, result);
+          onAgentComplete.accept(member, result);
         }
       });
       threads.add(thread);
@@ -313,12 +313,12 @@ public final class ParallelStream {
     String originalQuery = extractLastUserMessage();
     StringBuilder synthesisPrompt = new StringBuilder();
     synthesisPrompt.append("Original query: ").append(originalQuery).append("\n\n");
-    synthesisPrompt.append("The following agents have provided their outputs:\n\n");
+    synthesisPrompt.append("The following participants have provided their outputs:\n\n");
 
-    for (int i = 0; i < agents.size(); i++) {
-      Agent agent = agents.get(i);
+    for (int i = 0; i < members.size(); i++) {
+      Interactable member = members.get(i);
       AgentResult result = results.get(i);
-      synthesisPrompt.append("--- ").append(agent.name()).append(" ---\n");
+      synthesisPrompt.append("--- ").append(member.name()).append(" ---\n");
       if (result.isError()) {
         synthesisPrompt
             .append("[ERROR: ")

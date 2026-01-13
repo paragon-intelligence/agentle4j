@@ -39,8 +39,8 @@ public final class NetworkStream {
   private final Mode mode;
 
   // Callbacks
-  private BiConsumer<Agent, String> onPeerTextDelta;
-  private BiConsumer<Agent, AgentResult> onPeerComplete;
+  private BiConsumer<Interactable, String> onPeerTextDelta;
+  private BiConsumer<Interactable, AgentResult> onPeerComplete;
   private Consumer<Integer> onRoundStart;
   private Consumer<List<AgentNetwork.Contribution>> onRoundComplete;
   private Consumer<String> onSynthesisTextDelta;
@@ -54,23 +54,23 @@ public final class NetworkStream {
   }
 
   /**
-   * Called for each text delta from any peer agent.
+   * Called for each text delta from any peer.
    *
-   * @param callback receives the peer agent and text chunk
+   * @param callback receives the peer and text chunk
    * @return this stream
    */
-  public @NonNull NetworkStream onPeerTextDelta(@NonNull BiConsumer<Agent, String> callback) {
+  public @NonNull NetworkStream onPeerTextDelta(@NonNull BiConsumer<Interactable, String> callback) {
     this.onPeerTextDelta = Objects.requireNonNull(callback);
     return this;
   }
 
   /**
-   * Called when an individual peer agent completes its contribution.
+   * Called when an individual peer completes its contribution.
    *
-   * @param callback receives the peer agent and its result
+   * @param callback receives the peer and its result
    * @return this stream
    */
-  public @NonNull NetworkStream onPeerComplete(@NonNull BiConsumer<Agent, AgentResult> callback) {
+  public @NonNull NetworkStream onPeerComplete(@NonNull BiConsumer<Interactable, AgentResult> callback) {
     this.onPeerComplete = Objects.requireNonNull(callback);
     return this;
   }
@@ -164,7 +164,7 @@ public final class NetworkStream {
     runStreamingRounds(allContributions, parentTraceId, parentSpanId);
 
     // Synthesize if configured
-    Agent synthesizer = network.getSynthesizer();
+    Interactable synthesizer = network.getSynthesizer();
     if (synthesizer != null) {
       return synthesizeWithStreaming(allContributions, originalTopic, synthesizer);
     }
@@ -181,7 +181,7 @@ public final class NetworkStream {
       String parentTraceId,
       String parentSpanId) {
 
-    List<Agent> peers = network.peers();
+    List<Interactable> peers = network.peers();
     int maxRounds = network.maxRounds();
 
     for (int round = 1; round <= maxRounds; round++) {
@@ -194,7 +194,7 @@ public final class NetworkStream {
       }
 
       // Process each peer sequentially within the round
-      for (Agent peer : peers) {
+      for (Interactable peer : peers) {
         AgentContext peerContext = buildPeerContext(peer, currentRound);
         peerContext.withTraceContext(parentTraceId, parentSpanId);
 
@@ -235,14 +235,14 @@ public final class NetworkStream {
   }
 
   private AgentNetwork.NetworkResult synthesizeWithStreaming(
-      List<AgentNetwork.Contribution> contributions, String originalTopic, Agent synthesizer) {
+      List<AgentNetwork.Contribution> contributions, String originalTopic, Interactable synthesizer) {
 
     StringBuilder synthPrompt = new StringBuilder();
     synthPrompt.append("Original discussion topic: ").append(originalTopic).append("\n\n");
     synthPrompt.append("The following contributions were made:\n\n");
 
     for (AgentNetwork.Contribution c : contributions) {
-      synthPrompt.append("**").append(c.agent().name()).append("** (Round ").append(c.round());
+      synthPrompt.append("**").append(c.peer().name()).append("** (Round ").append(c.round());
       synthPrompt.append("): ");
       if (c.isError()) {
         synthPrompt.append("[Error occurred]\n");
@@ -281,7 +281,7 @@ public final class NetworkStream {
     String parentTraceId = TraceIdGenerator.generateTraceId();
     String parentSpanId = TraceIdGenerator.generateSpanId();
 
-    List<Agent> peers = network.peers();
+    List<Interactable> peers = network.peers();
     List<AgentNetwork.Contribution> contributions = new ArrayList<>();
 
     // Run all peers in parallel using virtual threads
@@ -289,7 +289,7 @@ public final class NetworkStream {
     List<AgentNetwork.Contribution> syncContributions =
         java.util.Collections.synchronizedList(contributions);
 
-    for (Agent peer : peers) {
+    for (Interactable peer : peers) {
       Thread thread = Thread.startVirtualThread(() -> {
         AgentContext peerContext = context.copy();
         peerContext.withTraceContext(parentTraceId, parentSpanId);
@@ -330,7 +330,7 @@ public final class NetworkStream {
     return result;
   }
 
-  private AgentContext buildPeerContext(Agent peer, int round) {
+  private AgentContext buildPeerContext(Interactable peer, int round) {
     AgentContext peerContext = context.copy();
 
     String roleReminder =

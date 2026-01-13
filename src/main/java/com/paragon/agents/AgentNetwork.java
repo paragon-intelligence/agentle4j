@@ -222,7 +222,7 @@ public final class AgentNetwork implements Interactable {
     try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
       List<StructuredTaskScope.Subtask<Contribution>> subtasks = new ArrayList<>();
 
-      for (Agent peer : peers) {
+      for (Interactable peer : peers) {
         AgentContext ctx = AgentContext.create();
         ctx.addInput(Message.user(message));
         ctx.withTraceContext(parentTraceId, parentSpanId);

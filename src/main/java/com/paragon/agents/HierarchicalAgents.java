@@ -94,6 +94,12 @@ public final class HierarchicalAgents implements Interactable {
     return executive;
   }
 
+  /** {@inheritDoc} */
+  @Override
+  public @NonNull String name() {
+    return executive.name() + "_Hierarchy";
+  }
+
   /**
    * Returns all departments in this hierarchy.
    *
@@ -309,8 +315,8 @@ public final class HierarchicalAgents implements Interactable {
               .maxTurns(maxTurns);
 
       // Add workers to department supervisor
-      for (Agent worker : dept.workers()) {
-        deptSupervisorBuilder.addWorker(worker, worker.instructions().text());
+      for (Interactable worker : dept.workers()) {
+        deptSupervisorBuilder.addWorker(worker, "Worker in " + deptName + " department");
       }
 
       departmentSupervisors.put(deptName, deptSupervisorBuilder.build());
@@ -357,9 +363,8 @@ public final class HierarchicalAgents implements Interactable {
     sb.append(dept.manager().instructions().text()).append("\n\n");
     sb.append("You manage the following team:\n\n");
 
-    for (Agent worker : dept.workers()) {
-      sb.append("- **").append(worker.name()).append("**: ");
-      sb.append(worker.instructions().text()).append("\n");
+    for (Interactable worker : dept.workers()) {
+      sb.append("- **").append(worker.name()).append("\n");
     }
 
     sb.append("\nDelegate subtasks to your team members. ");
@@ -383,7 +388,7 @@ public final class HierarchicalAgents implements Interactable {
 
   /** Represents a department with a manager and workers. */
   public record Department(
-      @NonNull Agent manager, @NonNull List<Agent> workers, @Nullable SupervisorAgent supervisor) {
+      @NonNull Agent manager, @NonNull List<Interactable> workers, @Nullable SupervisorAgent supervisor) {
     public Department {
       Objects.requireNonNull(manager, "manager cannot be null");
       Objects.requireNonNull(workers, "workers cannot be null");
@@ -393,7 +398,7 @@ public final class HierarchicalAgents implements Interactable {
     }
 
     /** Creates a department (supervisor is set internally). */
-    public Department(@NonNull Agent manager, @NonNull List<Agent> workers) {
+    public Department(@NonNull Agent manager, @NonNull List<Interactable> workers) {
       this(manager, List.copyOf(workers), null);
     }
   }
@@ -420,19 +425,21 @@ public final class HierarchicalAgents implements Interactable {
     /**
      * Adds a department with a manager and workers.
      *
+     * <p>Workers can be any Interactable: Agent, RouterAgent, ParallelAgents, etc.
+     *
      * @param name the department name
-     * @param manager the department manager
+     * @param manager the department manager (must be an Agent for responder/model access)
      * @param workers the workers in this department
      * @return this builder
      */
     public @NonNull Builder addDepartment(
-        @NonNull String name, @NonNull Agent manager, @NonNull Agent... workers) {
+        @NonNull String name, @NonNull Agent manager, @NonNull Interactable... workers) {
       Objects.requireNonNull(name, "name cannot be null");
       Objects.requireNonNull(manager, "manager cannot be null");
       Objects.requireNonNull(workers, "workers cannot be null");
 
-      List<Agent> workerList = new ArrayList<>();
-      for (Agent worker : workers) {
+      List<Interactable> workerList = new ArrayList<>();
+      for (Interactable worker : workers) {
         Objects.requireNonNull(worker, "worker cannot be null");
         workerList.add(worker);
       }
@@ -449,12 +456,12 @@ public final class HierarchicalAgents implements Interactable {
      * Adds a department with a manager and worker list.
      *
      * @param name the department name
-     * @param manager the department manager
+     * @param manager the department manager (must be an Agent for responder/model access)
      * @param workers the workers in this department
      * @return this builder
      */
     public @NonNull Builder addDepartment(
-        @NonNull String name, @NonNull Agent manager, @NonNull List<Agent> workers) {
+        @NonNull String name, @NonNull Agent manager, @NonNull List<Interactable> workers) {
       Objects.requireNonNull(name, "name cannot be null");
       Objects.requireNonNull(manager, "manager cannot be null");
       Objects.requireNonNull(workers, "workers cannot be null");

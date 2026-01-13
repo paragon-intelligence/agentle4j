@@ -45,28 +45,28 @@ class ParallelAgentsTest {
   class FactoryMethods {
 
     @Test
-    @DisplayName("of(Agent...) creates orchestrator with agents")
+    @DisplayName("of(Agent...) creates orchestrator with members")
     void of_varargs_createsOrchestrator() {
       Agent agent1 = createTestAgent("Agent1");
       Agent agent2 = createTestAgent("Agent2");
 
       ParallelAgents orchestrator = ParallelAgents.of(agent1, agent2);
 
-      assertEquals(2, orchestrator.agents().size());
-      assertTrue(orchestrator.agents().contains(agent1));
-      assertTrue(orchestrator.agents().contains(agent2));
+      assertEquals(2, orchestrator.members().size());
+      assertTrue(orchestrator.members().contains(agent1));
+      assertTrue(orchestrator.members().contains(agent2));
     }
 
     @Test
-    @DisplayName("of(List<Agent>) creates orchestrator from list")
+    @DisplayName("of(List<Interactable>) creates orchestrator from list")
     void of_list_createsOrchestrator() {
       Agent agent1 = createTestAgent("Agent1");
       Agent agent2 = createTestAgent("Agent2");
-      List<Agent> agents = List.of(agent1, agent2);
+      List<Interactable> members = List.of(agent1, agent2);
 
-      ParallelAgents orchestrator = ParallelAgents.of(agents);
+      ParallelAgents orchestrator = ParallelAgents.of(members);
 
-      assertEquals(2, orchestrator.agents().size());
+      assertEquals(2, orchestrator.members().size());
     }
 
     @Test
@@ -82,14 +82,14 @@ class ParallelAgentsTest {
     }
 
     @Test
-    @DisplayName("agents() returns unmodifiable list")
-    void agents_returnsUnmodifiableList() {
+    @DisplayName("members() returns unmodifiable list")
+    void members_returnsUnmodifiableList() {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
       assertThrows(
           UnsupportedOperationException.class,
-          () -> orchestrator.agents().add(createTestAgent("New")));
+          () -> orchestrator.members().add(createTestAgent("New")));
     }
   }
 
