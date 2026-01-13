@@ -64,6 +64,16 @@ import org.jspecify.annotations.NonNull;
 public interface Interactable {
 
   /**
+   * Returns the name of this interactable.
+   *
+   * <p>The name is used for identification in multi-agent systems, logging, and user-facing
+   * messages. It should be concise and descriptive.
+   *
+   * @return the name of this interactable
+   */
+  @NonNull String name();
+
+  /**
    * Interacts with the agent using a text input.
    *
    * @param input the user's text input

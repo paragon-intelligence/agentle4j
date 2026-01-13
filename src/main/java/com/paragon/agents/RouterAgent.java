@@ -57,19 +57,21 @@ import org.jspecify.annotations.Nullable;
  */
 public final class RouterAgent implements Interactable {
 
+  private final @NonNull String name;
   private final @NonNull String model;
   private final @NonNull List<Route> routes;
   private final @NonNull Responder responder;
-  private final @Nullable Agent fallbackAgent;
+  private final @Nullable Interactable fallback;
 
   private RouterAgent(Builder builder) {
     if (builder.routes.isEmpty()) {
       throw new IllegalArgumentException("At least one route is required");
     }
+    this.name = builder.name != null ? builder.name : "RouterAgent";
     this.model = Objects.requireNonNull(builder.model, "model is required");
     this.responder = Objects.requireNonNull(builder.responder, "responder is required");
     this.routes = List.copyOf(builder.routes);
-    this.fallbackAgent = builder.fallbackAgent;
+    this.fallback = builder.fallback;
   }
 
   /**
@@ -81,7 +83,11 @@ public final class RouterAgent implements Interactable {
     return new Builder();
   }
 
-  // ===== Route Methods =====
+  /** {@inheritDoc} */
+  @Override
+  public @NonNull String name() {
+    return name;
+  }
 
   /**
    * Routes the input to the most appropriate agent and executes it.
@@ -154,16 +160,15 @@ public final class RouterAgent implements Interactable {
     }
 
     String inputText = inputTextOpt.get();
-    Optional<Agent> selectedOpt = classify(inputText);
+    Optional<Interactable> selectedOpt = classify(inputText);
 
     if (selectedOpt.isEmpty()) {
       return AgentResult.error(
-          new IllegalStateException("No suitable agent found for input"), context, 0);
+          new IllegalStateException("No suitable route found for input"), context, 0);
     }
 
-    Agent selected = selectedOpt.get();
-    AgentResult result = selected.interact(context);
-    return AgentResult.handoff(selected, result, context);
+    Interactable selected = selectedOpt.get();
+    return selected.interact(context);
   }
 
   // ===== Streaming Route Methods =====
@@ -207,32 +212,32 @@ public final class RouterAgent implements Interactable {
   }
 
   /**
-   * Classifies the input and returns the selected agent without executing.
+   * Classifies the input and returns the selected route target without executing.
    *
-   * <p>Useful when you need to know which agent would handle the input before committing.
+   * <p>Useful when you need to know which target would handle the input before committing.
    *
    * @param input the user input to classify
-   * @return Optional containing the selected agent, or empty if no match and no fallback
+   * @return Optional containing the selected Interactable, or empty if no match and no fallback
    */
-  public @NonNull Optional<Agent> classify(@NonNull String input) {
+  public @NonNull Optional<Interactable> classify(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
     return classifyInternal(input);
   }
 
   /**
-   * Classifies the Prompt and returns the selected agent without executing.
+   * Classifies the Prompt and returns the selected route target without executing.
    *
    * <p>The prompt's text content is extracted and used as the input.
    *
    * @param prompt the prompt to classify
-   * @return Optional containing the selected agent, or empty if no match and no fallback
+   * @return Optional containing the selected Interactable, or empty if no match and no fallback
    */
-  public @NonNull Optional<Agent> classify(@NonNull Prompt prompt) {
+  public @NonNull Optional<Interactable> classify(@NonNull Prompt prompt) {
     Objects.requireNonNull(prompt, "prompt cannot be null");
     return classifyInternal(prompt.text());
   }
 
-  private @NonNull Optional<Agent> classifyInternal(String input) {
+  private @NonNull Optional<Interactable> classifyInternal(String input) {
     // Build routing prompt
     StringBuilder routingPrompt = new StringBuilder();
     routingPrompt.append(
@@ -244,7 +249,7 @@ public final class RouterAgent implements Interactable {
       routingPrompt
           .append(i + 1)
           .append(". ")
-          .append(route.agent.name())
+          .append(route.target.name())
           .append(" - handles: ")
           .append(route.description)
           .append("\n");
@@ -262,12 +267,12 @@ public final class RouterAgent implements Interactable {
       String output = response.outputText().trim();
       int selectedIndex = Integer.parseInt(output) - 1;
       if (selectedIndex >= 0 && selectedIndex < routes.size()) {
-        return Optional.of(routes.get(selectedIndex).agent);
+        return Optional.of(routes.get(selectedIndex).target);
       }
     } catch (Exception e) {
       // Fall through to fallback
     }
-    return Optional.ofNullable(fallbackAgent);
+    return Optional.ofNullable(fallback);
   }
 
   /**
@@ -306,8 +311,8 @@ public final class RouterAgent implements Interactable {
     return routes;
   }
 
-  Optional<Agent> getFallbackAgent() {
-    return Optional.ofNullable(fallbackAgent);
+  Optional<Interactable> getFallback() {
+    return Optional.ofNullable(fallback);
   }
 
   @NonNull String getModel() {
@@ -359,12 +364,12 @@ public final class RouterAgent implements Interactable {
   @Override
   public @NonNull AgentStream interactStream(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
-    Optional<Agent> selected = classify(input);
+    Optional<Interactable> selected = classify(input);
     if (selected.isEmpty()) {
       AgentContext ctx = AgentContext.create();
       return AgentStream.failed(
           AgentResult.error(
-              new IllegalStateException("No suitable agent found for input"), ctx, 0));
+              new IllegalStateException("No suitable route found for input"), ctx, 0));
     }
     return selected.get().interactStream(input);
   }
@@ -388,33 +393,45 @@ public final class RouterAgent implements Interactable {
               context,
               0));
     }
-    Optional<Agent> selected = classify(inputTextOpt.get());
+    Optional<Interactable> selected = classify(inputTextOpt.get());
     if (selected.isEmpty()) {
       return AgentStream.failed(
           AgentResult.error(
-              new IllegalStateException("No suitable agent found for input"), context, 0));
+              new IllegalStateException("No suitable route found for input"), context, 0));
     }
     return selected.get().interactStream(context);
   }
 
   // ===== Inner Classes =====
 
-  /** Represents a route to a target agent. */
-  public record Route(@NonNull Agent agent, @NonNull String description) {
+  /** Represents a route to a target. */
+  public record Route(@NonNull Interactable target, @NonNull String description) {
     public Route {
-      Objects.requireNonNull(agent, "agent cannot be null");
+      Objects.requireNonNull(target, "target cannot be null");
       Objects.requireNonNull(description, "description cannot be null");
     }
   }
 
   /** Builder for RouterAgent. */
   public static final class Builder {
+    private @Nullable String name;
     private String model;
     private Responder responder;
     private final List<Route> routes = new ArrayList<>();
-    private Agent fallbackAgent;
+    private Interactable fallback;
 
     private Builder() {}
+
+    /**
+     * Sets the name for this router.
+     *
+     * @param name the router name
+     * @return this builder
+     */
+    public @NonNull Builder name(@NonNull String name) {
+      this.name = Objects.requireNonNull(name, "name cannot be null");
+      return this;
+    }
 
     /**
      * Sets the model for classification.
@@ -439,25 +456,29 @@ public final class RouterAgent implements Interactable {
     }
 
     /**
-     * Adds a route to a target agent.
+     * Adds a route to a target.
      *
-     * @param agent the target agent
-     * @param description keywords/phrases this agent handles (e.g., "billing, invoices, payments")
+     * <p>The target can be any Interactable: Agent, RouterAgent, ParallelAgents, etc.
+     *
+     * @param target the target Interactable
+     * @param description keywords/phrases this target handles (e.g., "billing, invoices, payments")
      * @return this builder
      */
-    public @NonNull Builder addRoute(@NonNull Agent agent, @NonNull String description) {
-      routes.add(new Route(agent, description));
+    public @NonNull Builder addRoute(@NonNull Interactable target, @NonNull String description) {
+      routes.add(new Route(target, description));
       return this;
     }
 
     /**
-     * Sets the fallback agent when no route matches.
+     * Sets the fallback when no route matches.
      *
-     * @param fallback the fallback agent
+     * <p>The fallback can be any Interactable.
+     *
+     * @param fallback the fallback Interactable
      * @return this builder
      */
-    public @NonNull Builder fallback(@NonNull Agent fallback) {
-      this.fallbackAgent = fallback;
+    public @NonNull Builder fallback(@NonNull Interactable fallback) {
+      this.fallback = fallback;
       return this;
     }
 
