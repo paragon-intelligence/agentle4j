@@ -60,11 +60,13 @@ import org.jspecify.annotations.Nullable;
  */
 public final class AgentNetwork implements Interactable {
 
-  private final @NonNull List<Agent> peers;
+  private final @NonNull String name;
+  private final @NonNull List<Interactable> peers;
   private final int maxRounds;
-  private final @Nullable Agent synthesizer;
+  private final @Nullable Interactable synthesizer;
 
   private AgentNetwork(Builder builder) {
+    this.name = builder.name != null ? builder.name : "AgentNetwork";
     this.peers = List.copyOf(builder.peers);
     this.maxRounds = builder.maxRounds;
     this.synthesizer = builder.synthesizer;
@@ -79,12 +81,18 @@ public final class AgentNetwork implements Interactable {
     return new Builder();
   }
 
+  /** {@inheritDoc} */
+  @Override
+  public @NonNull String name() {
+    return name;
+  }
+
   /**
-   * Returns the peer agents in this network.
+   * Returns the peers in this network.
    *
    * @return unmodifiable list of peers
    */
-  public @NonNull List<Agent> peers() {
+  public @NonNull List<Interactable> peers() {
     return peers;
   }
 
@@ -98,11 +106,11 @@ public final class AgentNetwork implements Interactable {
   }
 
   /**
-   * Returns the synthesizer agent if configured.
+   * Returns the synthesizer if configured.
    *
-   * @return the synthesizer agent, or null if not set
+   * @return the synthesizer, or null if not set
    */
-  @Nullable Agent getSynthesizer() {
+  @Nullable Interactable getSynthesizer() {
     return synthesizer;
   }
 
@@ -334,8 +342,8 @@ public final class AgentNetwork implements Interactable {
 
     // Run rounds sequentially
     for (int round = 1; round <= maxRounds; round++) {
-      // Within each round, agents contribute sequentially so they can see previous contributions
-      for (Agent peer : peers) {
+      // Within each round, peers contribute sequentially so they can see previous contributions
+      for (Interactable peer : peers) {
         // Build context with discussion history and role-specific prompt
         AgentContext peerContext = buildPeerContext(sharedContext, peer, round);
         peerContext.withTraceContext(parentTraceId, parentSpanId);
@@ -344,7 +352,7 @@ public final class AgentNetwork implements Interactable {
         String output = result.output();
         boolean isError = result.isError();
 
-        // Add contribution to shared context for next agents
+        // Add contribution to shared context for next peers
         if (!isError && output != null) {
           Message contribution =
               Message.assistant(Text.valueOf("[" + peer.name() + "]: " + output));
@@ -358,7 +366,7 @@ public final class AgentNetwork implements Interactable {
     return new ArrayList<>(allContributions);
   }
 
-  private AgentContext buildPeerContext(AgentContext sharedContext, Agent peer, int round) {
+  private AgentContext buildPeerContext(AgentContext sharedContext, Interactable peer, int round) {
     AgentContext peerContext = sharedContext.copy();
 
     // Add role reminder for this peer
@@ -381,7 +389,7 @@ public final class AgentNetwork implements Interactable {
     synthPrompt.append("The following contributions were made:\n\n");
 
     for (Contribution c : contributions) {
-      synthPrompt.append("**").append(c.agent().name()).append("** (Round ").append(c.round());
+      synthPrompt.append("**").append(c.peer().name()).append("** (Round ").append(c.round());
       synthPrompt.append("): ");
       if (c.isError()) {
         synthPrompt.append("[Error occurred]\n");
@@ -505,7 +513,7 @@ public final class AgentNetwork implements Interactable {
     StringBuilder sb = new StringBuilder();
     sb.append("The following contributions were made in a discussion:\n\n");
     for (Contribution c : result.contributions()) {
-      sb.append("**").append(c.agent().name()).append("** (Round ").append(c.round()).append("): ");
+      sb.append("**").append(c.peer().name()).append("** (Round ").append(c.round()).append("): ");
       if (c.isError()) {
         sb.append("[Error occurred]\n");
       } else {
@@ -517,11 +525,11 @@ public final class AgentNetwork implements Interactable {
     return sb.toString();
   }
 
-  /** Represents a contribution from a peer agent. */
+  /** Represents a contribution from a peer. */
   public record Contribution(
-      @NonNull Agent agent, int round, @Nullable String output, boolean isError) {
+      @NonNull Interactable peer, int round, @Nullable String output, boolean isError) {
     public Contribution {
-      Objects.requireNonNull(agent, "agent cannot be null");
+      Objects.requireNonNull(peer, "peer cannot be null");
       if (round < 1) {
         throw new IllegalArgumentException("round must be at least 1");
       }
@@ -535,10 +543,10 @@ public final class AgentNetwork implements Interactable {
       Objects.requireNonNull(contributions, "contributions cannot be null");
     }
 
-    /** Returns all contributions from a specific agent. */
-    public @NonNull List<Contribution> contributionsFrom(@NonNull Agent agent) {
-      Objects.requireNonNull(agent, "agent cannot be null");
-      return contributions.stream().filter(c -> c.agent().equals(agent)).toList();
+    /** Returns all contributions from a specific peer. */
+    public @NonNull List<Contribution> contributionsFrom(@NonNull Interactable peer) {
+      Objects.requireNonNull(peer, "peer cannot be null");
+      return contributions.stream().filter(c -> c.peer().equals(peer)).toList();
     }
 
     /** Returns all contributions from a specific round. */
@@ -554,31 +562,45 @@ public final class AgentNetwork implements Interactable {
 
   /** Builder for AgentNetwork. */
   public static final class Builder {
-    private final List<Agent> peers = new ArrayList<>();
+    private @Nullable String name;
+    private final List<Interactable> peers = new ArrayList<>();
     private int maxRounds = 2;
-    private @Nullable Agent synthesizer;
+    private @Nullable Interactable synthesizer;
 
     private Builder() {}
 
     /**
-     * Adds a peer agent to the network.
+     * Sets the name for this network.
      *
-     * @param peer the agent to add
+     * @param name the network name
      * @return this builder
      */
-    public @NonNull Builder addPeer(@NonNull Agent peer) {
+    public @NonNull Builder name(@NonNull String name) {
+      this.name = Objects.requireNonNull(name, "name cannot be null");
+      return this;
+    }
+
+    /**
+     * Adds a peer to the network.
+     *
+     * <p>Peers can be any Interactable: Agent, RouterAgent, ParallelAgents, etc.
+     *
+     * @param peer the peer to add
+     * @return this builder
+     */
+    public @NonNull Builder addPeer(@NonNull Interactable peer) {
       Objects.requireNonNull(peer, "peer cannot be null");
       this.peers.add(peer);
       return this;
     }
 
     /**
-     * Adds multiple peer agents to the network.
+     * Adds multiple peers to the network.
      *
-     * @param peers the agents to add
+     * @param peers the peers to add
      * @return this builder
      */
-    public @NonNull Builder addPeers(@NonNull Agent... peers) {
+    public @NonNull Builder addPeers(@NonNull Interactable... peers) {
       Objects.requireNonNull(peers, "peers cannot be null");
       this.peers.addAll(Arrays.asList(peers));
       return this;
@@ -601,12 +623,14 @@ public final class AgentNetwork implements Interactable {
     }
 
     /**
-     * Sets an optional synthesizer agent that combines all contributions.
+     * Sets an optional synthesizer that combines all contributions.
      *
-     * @param synthesizer the synthesizer agent
+     * <p>The synthesizer can be any Interactable: Agent, RouterAgent, etc.
+     *
+     * @param synthesizer the synthesizer
      * @return this builder
      */
-    public @NonNull Builder synthesizer(@NonNull Agent synthesizer) {
+    public @NonNull Builder synthesizer(@NonNull Interactable synthesizer) {
       this.synthesizer = Objects.requireNonNull(synthesizer);
       return this;
     }
