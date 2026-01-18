@@ -9,6 +9,10 @@ import com.paragon.responses.exception.AgentExecutionException;
 import com.paragon.responses.exception.GuardrailException;
 import com.paragon.responses.exception.ToolExecutionException;
 import com.paragon.responses.spec.*;
+import com.paragon.skills.Skill;
+import com.paragon.skills.SkillProvider;
+import com.paragon.skills.SkillStore;
+import com.paragon.skills.SkillTool;
 import com.paragon.telemetry.TelemetryContext;
 import com.paragon.telemetry.events.AgentFailedEvent;
 import com.paragon.telemetry.processors.ProcessorRegistry;
@@ -154,8 +158,19 @@ public final class Agent implements Serializable, Interactable {
     // Context management
     this.contextManagementConfig = builder.contextManagementConfig;
 
-    // Copy tools
-    this.tools = List.copyOf(builder.tools);
+    // Create SkillTools from pending skills
+    List<FunctionTool<?>> allTools = new ArrayList<>(builder.tools);
+    for (Builder.PendingSkill pendingSkill : builder.pendingSkills) {
+      SkillTool skillTool = new SkillTool(
+          pendingSkill.skill(),
+          this.responder,
+          this.model,
+          pendingSkill.config());
+      allTools.add(skillTool);
+    }
+
+    // Copy tools (including skill tools)
+    this.tools = List.copyOf(allTools);
     this.handoffs = List.copyOf(builder.handoffs);
     this.inputGuardrails = List.copyOf(builder.inputGuardrails);
     this.outputGuardrails = List.copyOf(builder.outputGuardrails);
@@ -1297,6 +1312,146 @@ public final class Agent implements Serializable, Interactable {
     }
 
     /**
+     * Adds a skill that can be invoked on-demand by the agent.
+     *
+     * <p>Skills are wrapped as tools that the LLM can call when needed.
+     * When invoked, the skill's instructions and tools are loaded and
+     * a sub-agent processes the request.
+     *
+     * <p>By default, skills execute in isolation for security. Use
+     * {@link #addSkill(Skill, SkillTool.Config)} for trusted skills that
+     * need context access.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * Agent agent = Agent.builder()
+     *     .name("Assistant")
+     *     .addSkill(pdfProcessorSkill)
+     *     .addSkill(dataAnalyzerSkill)
+     *     .build();
+     * }</pre>
+     *
+     * @param skill the skill to add
+     * @return this builder
+     * @see Skill
+     * @see SkillTool
+     */
+    public @NonNull Builder addSkill(@NonNull Skill skill) {
+      Objects.requireNonNull(skill, "skill cannot be null");
+      // SkillTool needs responder and model - defer creation to build()
+      // For now, store skill and create SkillTool in build() when we have responder/model
+      this.pendingSkills.add(new PendingSkill(skill, SkillTool.Config.defaults()));
+      return this;
+    }
+
+    /**
+     * Adds a skill with custom configuration for context sharing.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * Agent agent = Agent.builder()
+     *     .name("Assistant")
+     *     .addSkill(trustedSkill, SkillTool.Config.builder()
+     *         .shareState(true)   // Share userId, sessionId, etc.
+     *         .shareHistory(true) // Include conversation history
+     *         .build())
+     *     .build();
+     * }</pre>
+     *
+     * @param skill the skill to add
+     * @param config configuration for context sharing
+     * @return this builder
+     * @see SkillTool.Config
+     */
+    public @NonNull Builder addSkill(@NonNull Skill skill, SkillTool.Config config) {
+      Objects.requireNonNull(skill, "skill cannot be null");
+      Objects.requireNonNull(config, "config cannot be null");
+      this.pendingSkills.add(new PendingSkill(skill, config));
+      return this;
+    }
+
+    /**
+     * Loads and adds a skill from a provider.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * SkillProvider provider = FilesystemSkillProvider.create(Path.of("./skills"));
+     *
+     * Agent agent = Agent.builder()
+     *     .name("Assistant")
+     *     .addSkillFrom(provider, "pdf-processor")
+     *     .addSkillFrom(provider, "data-analyzer")
+     *     .build();
+     * }</pre>
+     *
+     * @param provider the skill provider
+     * @param skillId the skill identifier
+     * @return this builder
+     * @see SkillProvider
+     */
+    public @NonNull Builder addSkillFrom(
+        @NonNull SkillProvider provider, @NonNull String skillId) {
+      Objects.requireNonNull(provider, "provider cannot be null");
+      Objects.requireNonNull(skillId, "skillId cannot be null");
+      return addSkill(provider.provide(skillId));
+    }
+
+    /**
+     * Loads and adds a skill from a provider with custom configuration.
+     *
+     * @param provider the skill provider
+     * @param skillId the skill identifier
+     * @param config configuration for context sharing
+     * @return this builder
+     */
+    public @NonNull Builder addSkillFrom(
+        @NonNull SkillProvider provider,
+        @NonNull String skillId,
+        SkillTool.Config config) {
+      Objects.requireNonNull(provider, "provider cannot be null");
+      Objects.requireNonNull(skillId, "skillId cannot be null");
+      Objects.requireNonNull(config, "config cannot be null");
+      return addSkill(provider.provide(skillId), config);
+    }
+
+    /**
+     * Registers all skills from a SkillStore.
+     *
+     * <p>Each skill in the store is added as a tool that can be invoked on-demand.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * SkillStore store = new SkillStore();
+     * store.register(pdfSkill);
+     * store.register(dataSkill);
+     *
+     * Agent agent = Agent.builder()
+     *     .name("MultiSkillAgent")
+     *     .skillStore(store)
+     *     .build();
+     * }</pre>
+     *
+     * @param store the skill store containing skills to add
+     * @return this builder
+     * @see SkillStore
+     */
+    public @NonNull Builder skillStore(@NonNull SkillStore store) {
+      Objects.requireNonNull(store, "store cannot be null");
+      for (Skill skill : store.all()) {
+        addSkill(skill);
+      }
+      return this;
+    }
+
+    // Internal record for pending skills (created as SkillTools in build())
+    private record PendingSkill(Skill skill, SkillTool.Config config) {}
+    private final List<PendingSkill> pendingSkills = new ArrayList<>();
+
+    /**
      * Sets the telemetry context for agent runs.
      *
      * <p>This context is used as the default for all runs. Can be overridden per-run.
@@ -1570,6 +1725,26 @@ public final class Agent implements Serializable, Interactable {
     public @NonNull StructuredBuilder<T> contextManagement(
         @NonNull ContextManagementConfig config) {
       parentBuilder.contextManagement(config);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> addSkill(@NonNull Skill skill) {
+      parentBuilder.addSkill(skill);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> addSkill(@NonNull Skill skill, SkillTool.Config config) {
+      parentBuilder.addSkill(skill, config);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> addSkillFrom(@NonNull SkillProvider provider, @NonNull String skillId) {
+      parentBuilder.addSkillFrom(provider, skillId);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> skillStore(@NonNull SkillStore store) {
+      parentBuilder.skillStore(store);
       return this;
     }
 

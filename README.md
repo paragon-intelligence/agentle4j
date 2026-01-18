@@ -847,6 +847,74 @@ hierarchy.sendToDepartment("Engineering", "Fix the bug");
 
 All patterns support **streaming**, **trace correlation**, and **context sharing** for production use.
 
+## Skills
+
+<img src="docs/media/skills.png" width="600" alt="Skills">
+
+Skills are self-contained, reusable capabilities that can be shared across agents. A skill packages instructions, tools, and resources into a standardized format.
+
+### Structure
+
+A skill is defined by a `SKILL.md` file:
+
+```markdown
+---
+name: pdf-processor
+description: Extract text and answer questions about PDF files.
+---
+
+# PDF Processing Guide
+
+You are an expert at processing PDF documents.
+When asked to summarize, extract the full text and generate a concise summary.
+
+## Capabilities
+
+- Text extraction
+- Table parsing
+- Form filling
+```
+
+### Loading Skills
+
+Load skills from the filesystem, URLs, or create them programmatically:
+
+```java
+// 1. Filesystem (loads from "skills" directory)
+SkillStore store = new SkillStore();
+store.register(FilesystemSkillProvider.create(Path.of("./skills")));
+
+// 2. Programmatic
+Skill skill = Skill.builder()
+    .name("data-analysis")
+    .description("Analyze CSV files")
+    .instructions("Use Python to analyze data...")
+    .addTool(new PythonTool())
+    .build();
+
+// 3. Add to Agent
+Agent agent = Agent.builder()
+    .name("Assistant")
+    .skillStore(store)           // Register store
+    .addSkillFrom(store, "pdf-processor") // Add specific skill by ID
+    .addSkill(skill)             // Add manual skill
+    .build();
+```
+
+### Context Sharing & Usage
+
+Skills execute as specialized sub-agents. You can control how much context they share with the parent agent:
+
+```java
+agent.addSkill(skill, SkillTool.Config.builder()
+    .shareHistory(true)  // Pass full conversation history (default: false)
+    .shareState(true)    // Pass custom state/memory (default: false)
+    .maxTurns(10)        // Limit execution turns (default: 5)
+    .build());
+```
+
+Skills are loaded lazily—resources and heavy tools are only initialized when the agent decides to use the skill.
+
 ## Development
 
 ```bash
