@@ -211,7 +211,7 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
    * @param <T> the return type
    * @return the result from the task
    */
-  static <T> T callWithContext(@Nullable AgentContext context, java.util.concurrent.Callable<T> task) throws Exception {
+  static <T> T callWithContext(@Nullable AgentContext context, ScopedValue.CallableOp<T, Exception> task) throws Exception {
     if (context != null) {
       return ScopedValue.where(CURRENT_CONTEXT, context).call(task);
     } else {

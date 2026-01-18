@@ -193,7 +193,7 @@ public final class ParallelAgents implements Interactable {
     String parentTraceId = TraceIdGenerator.generateTraceId();
     String parentSpanId = TraceIdGenerator.generateSpanId();
 
-    try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+    try (var scope = StructuredTaskScope.open(StructuredTaskScope.Joiner.awaitAllSuccessfulOrThrow())) {
       // Fork all members as subtasks
       List<StructuredTaskScope.Subtask<AgentResult>> subtasks = new ArrayList<>();
       for (Interactable member : members) {
@@ -204,7 +204,6 @@ public final class ParallelAgents implements Interactable {
 
       // Wait for all to complete
       scope.join();
-      scope.throwIfFailed();
 
       // Collect results in order
       List<AgentResult> results = new ArrayList<>();
@@ -215,8 +214,6 @@ public final class ParallelAgents implements Interactable {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new RuntimeException("Parallel execution interrupted", e);
-    } catch (java.util.concurrent.ExecutionException e) {
-      throw new RuntimeException("Parallel execution failed", e.getCause() != null ? e.getCause() : e);
     }
   }
 
@@ -288,7 +285,7 @@ public final class ParallelAgents implements Interactable {
   public @NonNull AgentResult runFirst(@NonNull AgentContext context) {
     Objects.requireNonNull(context, "context cannot be null");
 
-    try (var scope = new StructuredTaskScope.ShutdownOnSuccess<AgentResult>()) {
+    try (var scope = StructuredTaskScope.open(StructuredTaskScope.Joiner.<AgentResult>anySuccessfulResultOrThrow())) {
       // Fork all members as subtasks
       for (Interactable member : members) {
         AgentContext ctx = context.copy();
@@ -296,13 +293,10 @@ public final class ParallelAgents implements Interactable {
       }
 
       // Wait for first to complete
-      scope.join();
-      return scope.result();
+      return scope.join();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new RuntimeException("Parallel execution interrupted", e);
-    } catch (java.util.concurrent.ExecutionException e) {
-      throw new RuntimeException("Parallel execution failed", e.getCause() != null ? e.getCause() : e);
     }
   }
 

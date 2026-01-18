@@ -219,7 +219,7 @@ public final class AgentNetwork implements Interactable {
     String parentTraceId = TraceIdGenerator.generateTraceId();
     String parentSpanId = TraceIdGenerator.generateSpanId();
 
-    try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+    try (var scope = StructuredTaskScope.open(StructuredTaskScope.Joiner.awaitAllSuccessfulOrThrow())) {
       List<StructuredTaskScope.Subtask<Contribution>> subtasks = new ArrayList<>();
 
       for (Interactable peer : peers) {
@@ -236,7 +236,6 @@ public final class AgentNetwork implements Interactable {
       }
 
       scope.join();
-      scope.throwIfFailed();
 
       List<Contribution> contributions = new ArrayList<>();
       for (var subtask : subtasks) {
@@ -246,8 +245,6 @@ public final class AgentNetwork implements Interactable {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new RuntimeException("Broadcast interrupted", e);
-    } catch (java.util.concurrent.ExecutionException e) {
-      throw new RuntimeException("Broadcast failed", e.getCause() != null ? e.getCause() : e);
     }
   }
 
