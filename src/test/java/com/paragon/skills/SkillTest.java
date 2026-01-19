@@ -3,10 +3,6 @@ package com.paragon.skills;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.paragon.prompts.Prompt;
-import com.paragon.responses.annotations.FunctionMetadata;
-import com.paragon.responses.spec.FunctionTool;
-import com.paragon.responses.spec.FunctionToolCallOutput;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -125,21 +121,6 @@ class SkillTest {
     }
 
     @Test
-    @DisplayName("addTool adds tool to skill")
-    void addTool_addsToolToSkill() {
-      FunctionTool<?> tool = createMockTool();
-      Skill skill = Skill.builder()
-          .name("test-skill")
-          .description("A test skill")
-          .instructions("Instructions")
-          .addTool(tool)
-          .build();
-
-      assertEquals(1, skill.tools().size());
-      assertTrue(skill.hasTools());
-    }
-
-    @Test
     @DisplayName("addResource adds resource to skill")
     void addResource_addsResourceToSkill() {
       Skill skill = Skill.builder()
@@ -184,16 +165,6 @@ class SkillTest {
   class Immutability {
 
     @Test
-    @DisplayName("tools() returns unmodifiable list")
-    void tools_returnsUnmodifiableList() {
-      Skill skill = Skill.of("test-skill", "A test skill", "Instructions");
-
-      assertThrows(UnsupportedOperationException.class, () -> {
-        skill.tools().add(createMockTool());
-      });
-    }
-
-    @Test
     @DisplayName("resources() returns unmodifiable map")
     void resources_returnsUnmodifiableMap() {
       Skill skill = Skill.of("test-skill", "A test skill", "Instructions");
@@ -229,6 +200,39 @@ class SkillTest {
   }
 
   @Nested
+  @DisplayName("Prompt Generation")
+  class PromptGeneration {
+
+    @Test
+    @DisplayName("toPromptSection includes name and description")
+    void toPromptSection_includesNameAndDescription() {
+      Skill skill = Skill.of("test-skill", "A test skill", "You help with tasks.");
+
+      String section = skill.toPromptSection();
+      
+      assertTrue(section.contains("## Skill: test-skill"));
+      assertTrue(section.contains("**When to use**: A test skill"));
+      assertTrue(section.contains("You help with tasks."));
+    }
+
+    @Test
+    @DisplayName("toPromptSection includes resources")
+    void toPromptSection_includesResources() {
+      Skill skill = Skill.builder()
+          .name("test-skill")
+          .description("A test skill")
+          .instructions("Instructions")
+          .addResource("FORMS.md", "Form filling guide")
+          .build();
+
+      String section = skill.toPromptSection();
+      
+      assertTrue(section.contains("### FORMS.md"));
+      assertTrue(section.contains("Form filling guide"));
+    }
+  }
+
+  @Nested
   @DisplayName("ToString")
   class ToStringTests {
 
@@ -246,21 +250,5 @@ class SkillTest {
       assertTrue(str.contains("test-skill"));
       assertTrue(str.contains("resources=1"));
     }
-  }
-
-  // Helper methods
-
-  @FunctionMetadata(name = "mock_tool", description = "A mock tool for testing")
-  static class MockTool extends FunctionTool<MockTool.Params> {
-    public record Params(String input) {}
-
-    @Override
-    public FunctionToolCallOutput call(Params params) {
-      return FunctionToolCallOutput.success("mock output");
-    }
-  }
-
-  private FunctionTool<?> createMockTool() {
-    return new MockTool();
   }
 }

@@ -7,7 +7,6 @@ import com.paragon.responses.spec.Text;
 import com.paragon.skills.Skill;
 import com.paragon.skills.SkillProvider;
 import com.paragon.skills.SkillStore;
-import com.paragon.skills.SkillTool;
 import com.paragon.telemetry.processors.TraceIdGenerator;
 import java.util.ArrayList;
 import java.util.List;
@@ -101,8 +100,8 @@ public final class SupervisorAgent implements Interactable {
     }
 
     // Add skills
-    for (Builder.PendingSkill pendingSkill : builder.pendingSkills) {
-      agentBuilder.addSkill(pendingSkill.skill(), pendingSkill.config());
+    for (Skill skill : builder.pendingSkills) {
+      agentBuilder.addSkill(skill);
     }
 
     this.supervisorAgent = agentBuilder.build();
@@ -323,11 +322,9 @@ public final class SupervisorAgent implements Interactable {
     private @Nullable String instructions;
     private @Nullable Responder responder;
     private final List<Worker> workers = new ArrayList<>();
-    private final List<PendingSkill> pendingSkills = new ArrayList<>();
+    // Skills to pass to the internal Agent
+    private final List<Skill> pendingSkills = new ArrayList<>();
     private int maxTurns = 10;
-
-    // Internal record for pending skills
-    private record PendingSkill(Skill skill, SkillTool.Config config) {}
 
     private Builder() {}
 
@@ -406,7 +403,7 @@ public final class SupervisorAgent implements Interactable {
     }
 
     /**
-     * Adds a skill that the supervisor can invoke on-demand.
+     * Adds a skill that augments the supervisor's capabilities.
      *
      * @param skill the skill to add
      * @return this builder
@@ -414,21 +411,7 @@ public final class SupervisorAgent implements Interactable {
      */
     public @NonNull Builder addSkill(@NonNull Skill skill) {
       Objects.requireNonNull(skill, "skill cannot be null");
-      this.pendingSkills.add(new PendingSkill(skill, SkillTool.Config.defaults()));
-      return this;
-    }
-
-    /**
-     * Adds a skill with custom configuration for context sharing.
-     *
-     * @param skill the skill to add
-     * @param config configuration for context sharing
-     * @return this builder
-     */
-    public @NonNull Builder addSkill(@NonNull Skill skill, SkillTool.Config config) {
-      Objects.requireNonNull(skill, "skill cannot be null");
-      Objects.requireNonNull(config, "config cannot be null");
-      this.pendingSkills.add(new PendingSkill(skill, config));
+      this.pendingSkills.add(skill);
       return this;
     }
 

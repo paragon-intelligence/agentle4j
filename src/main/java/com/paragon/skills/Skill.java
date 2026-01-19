@@ -1,26 +1,25 @@
 package com.paragon.skills;
 
 import com.paragon.prompts.Prompt;
-import com.paragon.responses.spec.FunctionTool;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Represents a modular capability that extends agent functionality.
+ * Represents a modular expertise that augments an agent's capabilities.
  *
- * <p>A Skill packages instructions, metadata, and optional tools that an agent can use on-demand.
- * Skills follow the progressive disclosure pattern: only the name and description are loaded upfront,
- * while instructions and tools are loaded when the skill is invoked.
+ * <p>A Skill packages instructions and resources that are injected into the agent's system prompt.
+ * When a skill is added to an agent, its instructions become part of the agent's knowledge,
+ * allowing the LLM to automatically apply the skill's expertise when relevant.
+ *
+ * <p>Unlike sub-agents, skills share the main agent's context window. They extend the agent's
+ * capabilities without creating separate execution contexts.
  *
  * <h2>Usage Examples</h2>
  *
- * <h3>Via Code (Inline Definition)</h3>
+ * <h3>Via Code</h3>
  *
  * <pre>{@code
  * Skill pdfSkill = Skill.builder()
@@ -32,8 +31,6 @@ import org.jspecify.annotations.Nullable;
  *         2. Extract or modify content as requested
  *         3. Return well-formatted results
  *         """)
- *     .addTool(new ExtractTextTool())
- *     .addTool(new FillFormTool())
  *     .build();
  * }</pre>
  *
@@ -53,12 +50,11 @@ import org.jspecify.annotations.Nullable;
  * Agent agent = Agent.builder()
  *     .name("DocumentAssistant")
  *     .instructions("You help users with document tasks.")
- *     .addSkill(pdfSkill)
+ *     .addSkill(pdfSkill)  // Skill instructions are added to agent's prompt
  *     .responder(responder)
  *     .build();
  * }</pre>
  *
- * @see SkillTool
  * @see SkillProvider
  * @see SkillStore
  * @since 1.0
@@ -68,7 +64,6 @@ public final class Skill {
   private final @NonNull String name;
   private final @NonNull String description;
   private final @NonNull Prompt instructions;
-  private final @NonNull List<FunctionTool<?>> tools;
   private final @NonNull Map<String, Prompt> resources;
 
   private Skill(Builder builder) {
@@ -76,7 +71,6 @@ public final class Skill {
     this.description = Objects.requireNonNull(builder.description, "description cannot be null");
     this.instructions =
         builder.instructions != null ? builder.instructions : Prompt.of(builder.instructionsText);
-    this.tools = List.copyOf(builder.tools);
     this.resources = Map.copyOf(builder.resources);
 
     // Validate name format (lowercase, numbers, hyphens only)
@@ -134,9 +128,6 @@ public final class Skill {
   /**
    * Returns the skill's unique name.
    *
-   * <p>The name is used as the tool name when the skill is registered with an agent.
-   * It must contain only lowercase letters, numbers, and hyphens.
-   *
    * @return the skill name
    */
   public @NonNull String name() {
@@ -146,8 +137,7 @@ public final class Skill {
   /**
    * Returns the skill's description.
    *
-   * <p>This description helps the LLM decide when to use this skill.
-   * It should clearly explain what the skill does and when it's appropriate.
+   * <p>This description helps the LLM understand when to apply this skill's expertise.
    *
    * @return the skill description
    */
@@ -158,8 +148,7 @@ public final class Skill {
   /**
    * Returns the skill's instructions.
    *
-   * <p>These instructions are injected into the sub-agent's system prompt
-   * when the skill is invoked.
+   * <p>These instructions are injected into the agent's system prompt.
    *
    * @return the skill instructions
    */
@@ -168,20 +157,9 @@ public final class Skill {
   }
 
   /**
-   * Returns the tools bundled with this skill.
-   *
-   * <p>These tools are made available to the sub-agent when the skill is invoked.
-   *
-   * @return unmodifiable list of tools
-   */
-  public @NonNull List<FunctionTool<?>> tools() {
-    return tools;
-  }
-
-  /**
    * Returns additional resources (context files) for this skill.
    *
-   * <p>Resources are named Prompts that can be referenced from the skill instructions.
+   * <p>Resources are named Prompts that provide supplementary context.
    * For example, a PDF skill might have a "FORMS.md" resource with form-filling guidance.
    *
    * @return unmodifiable map of resource name to content
@@ -191,21 +169,36 @@ public final class Skill {
   }
 
   /**
-   * Returns whether this skill has any bundled tools.
-   *
-   * @return true if the skill has tools
-   */
-  public boolean hasTools() {
-    return !tools.isEmpty();
-  }
-
-  /**
    * Returns whether this skill has any additional resources.
    *
    * @return true if the skill has resources
    */
   public boolean hasResources() {
     return !resources.isEmpty();
+  }
+
+  /**
+   * Generates the prompt section for this skill.
+   *
+   * <p>This produces a formatted text block that can be appended to an agent's system prompt.
+   * The format includes the skill name, description, instructions, and any resources.
+   *
+   * @return the formatted skill prompt section
+   */
+  public @NonNull String toPromptSection() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("\n\n## Skill: ").append(name).append("\n");
+    sb.append("**When to use**: ").append(description).append("\n\n");
+    sb.append(instructions.text());
+
+    if (!resources.isEmpty()) {
+      for (Map.Entry<String, Prompt> entry : resources.entrySet()) {
+        sb.append("\n\n### ").append(entry.getKey()).append("\n");
+        sb.append(entry.getValue().text());
+      }
+    }
+
+    return sb.toString();
   }
 
   @Override
@@ -229,8 +222,6 @@ public final class Skill {
         + ", description='"
         + (description.length() > 50 ? description.substring(0, 50) + "..." : description)
         + '\''
-        + ", tools="
-        + tools.size()
         + ", resources="
         + resources.size()
         + ']';
@@ -242,7 +233,6 @@ public final class Skill {
     private @Nullable String description;
     private @Nullable Prompt instructions;
     private @Nullable String instructionsText;
-    private final List<FunctionTool<?>> tools = new ArrayList<>();
     private final Map<String, Prompt> resources = new HashMap<>();
 
     private Builder() {}
@@ -296,45 +286,6 @@ public final class Skill {
     public @NonNull Builder instructions(@NonNull String instructions) {
       this.instructionsText = Objects.requireNonNull(instructions);
       this.instructions = null;
-      return this;
-    }
-
-    /**
-     * Adds a tool to the skill.
-     *
-     * <p>These tools will be available to the sub-agent when the skill is invoked.
-     *
-     * @param tool the tool to add
-     * @return this builder
-     */
-    public @NonNull Builder addTool(@NonNull FunctionTool<?> tool) {
-      this.tools.add(Objects.requireNonNull(tool));
-      return this;
-    }
-
-    /**
-     * Adds multiple tools to the skill.
-     *
-     * @param tools the tools to add
-     * @return this builder
-     */
-    public @NonNull Builder addTools(@NonNull FunctionTool<?>... tools) {
-      for (FunctionTool<?> tool : tools) {
-        addTool(tool);
-      }
-      return this;
-    }
-
-    /**
-     * Adds multiple tools to the skill.
-     *
-     * @param tools the tools to add
-     * @return this builder
-     */
-    public @NonNull Builder addTools(@NonNull List<FunctionTool<?>> tools) {
-      for (FunctionTool<?> tool : tools) {
-        addTool(tool);
-      }
       return this;
     }
 

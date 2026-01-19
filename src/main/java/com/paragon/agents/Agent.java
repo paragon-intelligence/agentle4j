@@ -12,7 +12,6 @@ import com.paragon.responses.spec.*;
 import com.paragon.skills.Skill;
 import com.paragon.skills.SkillProvider;
 import com.paragon.skills.SkillStore;
-import com.paragon.skills.SkillTool;
 import com.paragon.telemetry.TelemetryContext;
 import com.paragon.telemetry.events.AgentFailedEvent;
 import com.paragon.telemetry.processors.ProcessorRegistry;
@@ -142,7 +141,6 @@ public final class Agent implements Serializable, Interactable {
 
   private Agent(Builder builder) {
     this.name = Objects.requireNonNull(builder.name, "name is required");
-    this.instructions = Objects.requireNonNull(builder.instructions, "instructions are required");
     this.model = Objects.requireNonNull(builder.model, "model is required");
     this.responder = Objects.requireNonNull(builder.responder, "responder is required");
     this.maxTurns = builder.maxTurns > 0 ? builder.maxTurns : 10;
@@ -158,19 +156,22 @@ public final class Agent implements Serializable, Interactable {
     // Context management
     this.contextManagementConfig = builder.contextManagementConfig;
 
-    // Create SkillTools from pending skills
-    List<FunctionTool<?>> allTools = new ArrayList<>(builder.tools);
-    for (Builder.PendingSkill pendingSkill : builder.pendingSkills) {
-      SkillTool skillTool = new SkillTool(
-          pendingSkill.skill(),
-          this.responder,
-          this.model,
-          pendingSkill.config());
-      allTools.add(skillTool);
+    // Build augmented instructions with skills
+    Prompt baseInstructions = Objects.requireNonNull(builder.instructions, "instructions are required");
+    if (!builder.pendingSkills.isEmpty()) {
+      StringBuilder augmented = new StringBuilder(baseInstructions.text());
+      augmented.append("\n\n# Skills\n");
+      augmented.append("You have the following skills available. Apply them when relevant:\n");
+      for (Skill skill : builder.pendingSkills) {
+        augmented.append(skill.toPromptSection());
+      }
+      this.instructions = Prompt.of(augmented.toString());
+    } else {
+      this.instructions = baseInstructions;
     }
 
-    // Copy tools (including skill tools)
-    this.tools = List.copyOf(allTools);
+    // Copy tools (no skills here - skills augment prompt, not tools)
+    this.tools = List.copyOf(builder.tools);
     this.handoffs = List.copyOf(builder.handoffs);
     this.inputGuardrails = List.copyOf(builder.inputGuardrails);
     this.outputGuardrails = List.copyOf(builder.outputGuardrails);
@@ -1312,15 +1313,11 @@ public final class Agent implements Serializable, Interactable {
     }
 
     /**
-     * Adds a skill that can be invoked on-demand by the agent.
+     * Adds a skill that augments this agent's capabilities.
      *
-     * <p>Skills are wrapped as tools that the LLM can call when needed.
-     * When invoked, the skill's instructions and tools are loaded and
-     * a sub-agent processes the request.
-     *
-     * <p>By default, skills execute in isolation for security. Use
-     * {@link #addSkill(Skill, SkillTool.Config)} for trusted skills that
-     * need context access.
+     * <p>Skills extend the agent's knowledge by adding their instructions
+     * to the agent's system prompt. When the skill's expertise is relevant,
+     * the LLM can automatically apply it.
      *
      * <p>Example:
      *
@@ -1335,40 +1332,10 @@ public final class Agent implements Serializable, Interactable {
      * @param skill the skill to add
      * @return this builder
      * @see Skill
-     * @see SkillTool
      */
     public @NonNull Builder addSkill(@NonNull Skill skill) {
       Objects.requireNonNull(skill, "skill cannot be null");
-      // SkillTool needs responder and model - defer creation to build()
-      // For now, store skill and create SkillTool in build() when we have responder/model
-      this.pendingSkills.add(new PendingSkill(skill, SkillTool.Config.defaults()));
-      return this;
-    }
-
-    /**
-     * Adds a skill with custom configuration for context sharing.
-     *
-     * <p>Example:
-     *
-     * <pre>{@code
-     * Agent agent = Agent.builder()
-     *     .name("Assistant")
-     *     .addSkill(trustedSkill, SkillTool.Config.builder()
-     *         .shareState(true)   // Share userId, sessionId, etc.
-     *         .shareHistory(true) // Include conversation history
-     *         .build())
-     *     .build();
-     * }</pre>
-     *
-     * @param skill the skill to add
-     * @param config configuration for context sharing
-     * @return this builder
-     * @see SkillTool.Config
-     */
-    public @NonNull Builder addSkill(@NonNull Skill skill, SkillTool.Config config) {
-      Objects.requireNonNull(skill, "skill cannot be null");
-      Objects.requireNonNull(config, "config cannot be null");
-      this.pendingSkills.add(new PendingSkill(skill, config));
+      this.pendingSkills.add(skill);
       return this;
     }
 
@@ -1400,27 +1367,9 @@ public final class Agent implements Serializable, Interactable {
     }
 
     /**
-     * Loads and adds a skill from a provider with custom configuration.
-     *
-     * @param provider the skill provider
-     * @param skillId the skill identifier
-     * @param config configuration for context sharing
-     * @return this builder
-     */
-    public @NonNull Builder addSkillFrom(
-        @NonNull SkillProvider provider,
-        @NonNull String skillId,
-        SkillTool.Config config) {
-      Objects.requireNonNull(provider, "provider cannot be null");
-      Objects.requireNonNull(skillId, "skillId cannot be null");
-      Objects.requireNonNull(config, "config cannot be null");
-      return addSkill(provider.provide(skillId), config);
-    }
-
-    /**
      * Registers all skills from a SkillStore.
      *
-     * <p>Each skill in the store is added as a tool that can be invoked on-demand.
+     * <p>Each skill's instructions are merged into the agent's system prompt.
      *
      * <p>Example:
      *
@@ -1447,9 +1396,8 @@ public final class Agent implements Serializable, Interactable {
       return this;
     }
 
-    // Internal record for pending skills (created as SkillTools in build())
-    private record PendingSkill(Skill skill, SkillTool.Config config) {}
-    private final List<PendingSkill> pendingSkills = new ArrayList<>();
+    // Skills to merge into agent's prompt
+    private final List<Skill> pendingSkills = new ArrayList<>();
 
     /**
      * Sets the telemetry context for agent runs.
@@ -1730,11 +1678,6 @@ public final class Agent implements Serializable, Interactable {
 
     public @NonNull StructuredBuilder<T> addSkill(@NonNull Skill skill) {
       parentBuilder.addSkill(skill);
-      return this;
-    }
-
-    public @NonNull StructuredBuilder<T> addSkill(@NonNull Skill skill, SkillTool.Config config) {
-      parentBuilder.addSkill(skill, config);
       return this;
     }
 

@@ -851,7 +851,9 @@ All patterns support **streaming**, **trace correlation**, and **context sharing
 
 <img src="docs/media/skills.png" width="600" alt="Skills">
 
-Skills are self-contained, reusable capabilities that can be shared across agents. A skill packages instructions, tools, and resources into a standardized format.
+Skills are modular expertise that augment an agent's capabilities. When added to an agent, skill instructions are merged into the system prompt, enabling the LLM to automatically apply the skill's knowledge when relevant.
+
+> **Skills vs Sub-agents**: Skills enrich the main agent's context (shared knowledge). Sub-agents delegate to isolated specialists (separate context). Use skills for reusable expertise, sub-agents for complex isolated work.
 
 ### Structure
 
@@ -877,43 +879,47 @@ When asked to summarize, extract the full text and generate a concise summary.
 
 ### Loading Skills
 
-Load skills from the filesystem, URLs, or create them programmatically:
+Load skills from the filesystem or create them programmatically:
 
 ```java
-// 1. Filesystem (loads from "skills" directory)
-SkillStore store = new SkillStore();
-store.register(FilesystemSkillProvider.create(Path.of("./skills")));
-
-// 2. Programmatic
+// 1. Programmatic
 Skill skill = Skill.builder()
     .name("data-analysis")
     .description("Analyze CSV files")
-    .instructions("Use Python to analyze data...")
-    .addTool(new PythonTool())
+    .instructions("You are an expert data analyst...")
+    .addResource("EXAMPLES.md", "Example analyses...")
     .build();
 
-// 3. Add to Agent
+// 2. From filesystem
+SkillProvider provider = FilesystemSkillProvider.create(Path.of("./skills"));
+Skill pdfSkill = provider.provide("pdf-processor");
+
+// 3. Add to Agent (instructions merged into system prompt)
 Agent agent = Agent.builder()
     .name("Assistant")
-    .skillStore(store)           // Register store
-    .addSkillFrom(store, "pdf-processor") // Add specific skill by ID
-    .addSkill(skill)             // Add manual skill
+    .instructions("You are a helpful assistant.")
+    .addSkill(skill)
+    .addSkillFrom(provider, "pdf-processor")
     .build();
 ```
 
-### Context Sharing & Usage
+### How It Works
 
-Skills execute as specialized sub-agents. You can control how much context they share with the parent agent:
+When skills are added, the agent's system prompt becomes:
 
-```java
-agent.addSkill(skill, SkillTool.Config.builder()
-    .shareHistory(true)  // Pass full conversation history (default: false)
-    .shareState(true)    // Pass custom state/memory (default: false)
-    .maxTurns(10)        // Limit execution turns (default: 5)
-    .build());
+```
+You are a helpful assistant.
+
+# Skills
+You have the following skills available. Apply them when relevant:
+
+## Skill: data-analysis
+**When to use**: Analyze CSV files
+
+You are an expert data analyst...
 ```
 
-Skills are loaded lazily—resources and heavy tools are only initialized when the agent decides to use the skill.
+The LLM automatically applies skill knowledge when the user's request is relevant.
 
 ## Development
 
