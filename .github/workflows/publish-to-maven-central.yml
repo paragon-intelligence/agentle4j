@@ -51,12 +51,41 @@ jobs:
         run: mvn clean verify
         
       - name: Publish to Maven Central
+        id: maven_publish
+        continue-on-error: true
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           mvn deploy -Dgpg.skip=false -Dgpg.passphrase=$GPG_PASSPHRASE
+          
+      - name: Verify publication (even if status check failed)
+        if: steps.maven_publish.outcome == 'failure'
+        run: |
+          echo "Maven publish step failed, but checking if artifact was actually published..."
+          
+          # Extract version from pom.xml
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "Checking for version: $VERSION"
+          
+          # Wait a bit for Maven Central to update
+          sleep 30
+          
+          # Check if artifact exists on Maven Central
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://repo1.maven.org/maven2/com/paragon/agentle4j/$VERSION/agentle4j-$VERSION.pom")
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Artifact successfully published to Maven Central!"
+            echo "The deployment succeeded, but the status API check failed (HTTP 500)."
+            echo "This is a known transient issue with Maven Central's infrastructure."
+            exit 0
+          else
+            echo "❌ Artifact not found on Maven Central (HTTP $HTTP_CODE)"
+            echo "The publish genuinely failed."
+            exit 1
+          fi
           
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
