@@ -88,7 +88,7 @@ Measures **time to create an agent instance** (not API calls). Lower is better.
 
 Framework        │  Time (μs) │  Memory (KiB) │ Language
 ─────────────────┼────────────┼───────────────┼─────────────────────
-🚀 Agentle4j     │       0.50 │         0.39  │ Java 21+ (this lib)
+🚀 Agentle4j     │       0.6.0 │         0.39  │ Java 25+ (this lib)
 AGNO             │       3.00 │         6.60  │ Python
 PydanticAI       │     170.00 │        28.71  │ Python
 CrewAI           │     210.00 │        65.65  │ Python

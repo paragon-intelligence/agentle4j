@@ -275,7 +275,7 @@ System.out.println(response.outputText());
 
 ### Parallel Requests
 
-With Java 21 Virtual Threads, you can efficiently run parallel requests:
+With Java 25 Virtual Threads, you can efficiently run parallel requests:
 
 ```java
 import java.util.concurrent.*;

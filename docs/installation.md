@@ -4,7 +4,7 @@ This guide covers how to add Agentle4j to your Java project.
 
 ## Requirements
 
-- **Java 21+** (with preview features for some advanced features)
+- **Java 25+** (preview features enabled)
 - **Maven 3.8+** or **Gradle 8+**
 
 ## Maven

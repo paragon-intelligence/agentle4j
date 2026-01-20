@@ -221,7 +221,7 @@
                 <version>3.2.5</version>
                 <configuration>
                     <useModulePath>false</useModulePath>
-                    <!-- JVM args for Mockito/ByteBuddy compatibility with Java 21+/25 -->
+                    <!-- JVM args for Mockito/ByteBuddy compatibility with Java 25 -->
                     <argLine>@{argLine} 
                         --enable-preview
                         --add-opens java.base/java.lang=ALL-UNNAMED 
@@ -301,7 +301,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.11.2</version>
                 <configuration>
-                    <source>21</source>
+                    <source>25</source>
                     <doclint>none</doclint>
                     <!-- Enable preview features for Javadoc (required for StructuredTaskScope, ScopedValue) -->
                     <additionalJOptions>

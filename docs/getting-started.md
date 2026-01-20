@@ -4,7 +4,7 @@ This comprehensive guide will help you master Agentle4j step by step.
 
 ## Prerequisites
 
-- **Java 21+** installed
+- **Java 25+** installed
 - **Maven** or **Gradle** build tool
 - An API key from [OpenRouter](https://openrouter.ai/keys), [OpenAI](https://platform.openai.com/api-keys), or another supported provider
 
@@ -56,9 +56,9 @@ public class HelloAgentle {
 
 ---
 
-## Synchronous and Streaming
+## Async & Streaming
 
-Agentle4j uses **Java 21 Virtual Threads** for efficient blocking operations:
+Agentle4j uses **Java 25 Virtual Threads** for efficient blocking operations:
 
 ### Synchronous (Default)
 
