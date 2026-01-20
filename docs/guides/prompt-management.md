@@ -1,6 +1,301 @@
 # Prompt Management
 
-Agentle provides a flexible system for managing and retrieving prompts from various sources, including local files and external services like Langfuse.
+Agentle provides a flexible system for managing and retrieving prompts from various sources, including local files and external services like Langfuse. It also includes a comprehensive Prompt Builder API for constructing high-quality prompts following best practices.
+
+## Prompt Builder Pattern
+
+The Prompt Builder provides a fluent, order-independent API for creating structured prompts with built-in best practices.
+
+### Key Features
+
+- **Order Independent**: All builder methods can be called in any order
+- **60+ Builder Methods**: Comprehensive API for all prompt construction needs
+- **Multi-language**: English (US) and Portuguese (BR) support
+- **Pre-built Templates**: Domain-specific starting points
+- **Reasoning Strategies**: Chain-of-thought, self-verification, etc.
+- **Output Controls**: JSON, Markdown, CSV, step-by-step formats
+
+### Basic Usage
+
+```java
+// Simple task-based prompt
+Prompt prompt = Prompt.builder()
+    .role("data analyst")
+    .task("Analyze the sales data")
+    .instructions("Focus on trends", "Identify anomalies")
+    .outputAs(OutputFormat.JSON)
+    .build();
+
+// With reasoning strategy
+Prompt withReasoning = Prompt.builder()
+    .task("Solve the math problem")
+    .withChainOfThought()
+    .withSelfVerification()
+    .build();
+```
+
+### Static Factory Methods
+
+```java
+// Task-based
+Prompt taskPrompt = Prompt.forTask("Summarize the document")
+    .input(documentText)
+    .concise()
+    .build();
+
+// Extraction
+Prompt extraction = Prompt.forExtraction("name, email, phone")
+    .input(unstructuredText)
+    .build();
+
+// Classification
+Prompt classifier = Prompt.forClassification("urgent", "normal", "low")
+    .input("Customer complaint")
+    .build();
+```
+
+### Pre-built Templates
+
+```java
+// Code review
+Prompt codeReview = Prompt.forCodeReview()
+    .input(sourceCode)
+    .build();
+
+// SWOT analysis
+Prompt swot = Prompt.forSWOTAnalysis()
+    .input("Product launch strategy")
+    .build();
+
+// Data analysis
+Prompt analysis = Prompt.forDataAnalysis()
+    .input(csvData)
+    .build();
+
+// Email drafting
+Prompt email = Prompt.forEmailDrafting(EmailTone.PROFESSIONAL)
+    .input("Request for product demo")
+    .build();
+```
+
+### Multi-language Support
+
+```java
+// English (default)
+Prompt english = Prompt.builder()
+    .role("financial analyst")
+    .task("Analyze the quarterly report")
+    .build();
+
+// Portuguese (Brazil)
+Prompt portuguese = Prompt.builder(Language.PT_BR)
+    .role("analista financeiro")
+    .task("Analise o relatório trimestral")
+    .withChainOfThought()
+    .build();
+```
+
+### Reasoning Strategies
+
+```java
+Prompt reasoning = Prompt.builder()
+    .task("Complex problem solving")
+    .withChainOfThought()        // Step-by-step reasoning
+    .withStepBack()              // Consider underlying principles
+    .withSelfVerification()      // Verify the answer
+    .withDecomposition()         // Break into sub-problems
+    .withTreeOfThoughts()        // Explore multiple approaches
+    .withMultiplePerspectives()  // Different viewpoints
+    .build();
+```
+
+### Output Formats
+
+```java
+// JSON output with schema
+Prompt jsonPrompt = Prompt.builder()
+    .task("Extract user data")
+    .outputAs(OutputFormat.JSON)
+    .outputSchema("{\"name\": \"string\", \"age\": \"number\"}")
+    .build();
+
+// Markdown table
+Prompt tablePrompt = Prompt.builder()
+    .task("Compare products")
+    .outputAs(OutputFormat.TABLE)
+    .build();
+
+// Step-by-step instructions
+Prompt tutorial = Prompt.builder()
+    .task("Explain deployment process")
+    .stepByStep()
+    .build();
+```
+
+### Few-Shot Learning
+
+```java
+Prompt fewShot = Prompt.builder()
+    .task("Classify sentiment")
+    .fewShot()
+        .example("Great product!", "POSITIVE")
+        .example("Terrible experience", "NEGATIVE")
+        .example("It's okay", "NEUTRAL")
+        .shuffled()  // Randomize example order
+    .done()
+    .input("This is amazing!")
+    .build();
+```
+
+### Context & Documents
+
+```java
+Prompt withContext = Prompt.builder()
+    .role("customer support specialist")
+    .context()
+        .document("product_manual.md", manualContent)
+        .document("faq.md", faqContent)
+        .background("Customer: Premium tier, Account: 3 years")
+    .done()
+    .task("Help customer with their issue")
+    .input(customerMessage)
+    .build();
+```
+
+### Specialized Modes
+
+```java
+// Code debugging
+Prompt debug = Prompt.forCodeDebugging("NullPointerException at line 42")
+    .input(sourceCode)
+    .build();
+
+// Code refactoring
+Prompt refactor = Prompt.forCodeRefactoring("improve readability")
+    .input(legacyCode)
+    .build();
+
+// Decision making
+Prompt decision = Prompt.forDecisionMaking()
+    .input("Should we migrate to microservices?")
+    .build();
+
+// Root cause analysis
+Prompt rootCause = Prompt.forRootCauseAnalysis()
+    .input("Production outage on 2026-01-20")
+    .build();
+```
+
+### Audience Targeting
+
+```java
+// For beginners
+Prompt beginner = Prompt.forELI5()
+    .input("Explain quantum computing")
+    .build();
+
+// For experts
+Prompt expert = Prompt.forExpertExplanation()
+    .input("Explain quantum computing")
+    .difficultyLevel(DifficultyLevel.EXPERT)
+    .build();
+
+// Custom audience
+Prompt custom = Prompt.builder()
+    .forAudience("software engineering managers")
+    .audienceLevel("intermediate technical knowledge")
+    .task("Explain CI/CD benefits")
+    .build();
+```
+
+### Response Control
+
+```java
+// Concise responses
+Prompt brief = Prompt.builder()
+    .task("Summarize the article")
+    .concise()
+    .maxTokens(100)
+    .build();
+
+// Detailed responses
+Prompt detailed = Prompt.builder()
+    .task("Explain the algorithm")
+    .detailed()
+    .comprehensive()
+    .build();
+
+// Word count limit
+Prompt limited = Prompt.builder()
+    .task("Write a summary")
+    .wordCount(200, 300)
+    .build();
+
+// With TL;DR
+Prompt withTldr = Prompt.builder()
+    .task("Analyze the report")
+    .withTLDR()
+    .build();
+```
+
+### Order Independence Example
+
+All builder methods can be called in any order:
+
+```java
+// These are equivalent
+Prompt p1 = Prompt.builder()
+    .task("Analyze data")
+    .role("analyst")
+    .withChainOfThought()
+    .outputAs(OutputFormat.JSON)
+    .build();
+
+Prompt p2 = Prompt.builder()
+    .outputAs(OutputFormat.JSON)
+    .withChainOfThought()
+    .role("analyst")
+    .task("Analyze data")
+    .build();
+```
+
+### Conditional Configuration
+
+```java
+Prompt conditional = Prompt.builder()
+    .task("Process user request")
+    .when(userIsPremium, b -> b.addPersonality("VIP-focused"))
+    .when(requiresAnalysis, b -> b.withChainOfThought())
+    .build();
+```
+
+### Available Templates
+
+**Analysis & Decision Making**:
+- `forSWOTAnalysis()`, `forProsConsAnalysis()`, `forDecisionMaking()`
+- `forRootCauseAnalysis()`, `forComparison()`, `forDataAnalysis()`
+
+**Code & Development**:
+- `forCode(lang)`, `forCodeReview()`, `forCodeDebugging(error)`
+- `forCodeRefactoring(goal)`, `forCodeTranslation(from, to)`
+- `forAPIDocumentation()`, `forChangelog()`, `forUserStories()`
+
+**Writing & Content**:
+- `forEmailDrafting(tone)`, `forTechnicalWriting()`, `forAcademicWriting(style)`
+- `forMarketingCopy()`, `forStorytelling()`, `forSummarization()`
+- `forTranslation(from, to)`, `forBrainstorming()`
+
+**Education & Learning**:
+- `forELI5()`, `forExpertExplanation()`, `forTutorial()`
+- `forLanguageLearning(target, native)`, `forQuizGeneration(n, type)`
+- `asSocraticTutor()`
+
+**Specialized**:
+- `forExtraction(fields)`, `forClassification(categories)`
+- `forRAG()`, `forQA()`, `forFactChecking()`
+- `forAccessibilityReview()`, `forSecurityReview()`, `forPerformanceOptimization()`
+
+---
 
 ## Overview
 

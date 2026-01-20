@@ -15,13 +15,13 @@ Maven:
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.5.0</version>
+    <version>0.6.0</version>
 </dependency>
 ```
 
 Gradle:
 ```groovy
-implementation 'io.github.paragon-intelligence:agentle4j:0.5.0'
+implementation 'io.github.paragon-intelligence:agentle4j:0.6.0'
 ```
 
 ## Why Agentle?
@@ -216,6 +216,167 @@ responder.respond(streamingPayload)
     })
     .start();
 ```
+
+## Prompt Builder
+
+Construct high-quality prompts with a comprehensive builder API:
+
+```java
+// Simple task-based prompt
+Prompt prompt = Prompt.forTask("Analyze the sentiment of the following review")
+    .input("This product exceeded my expectations!")
+    .outputAs(OutputFormat.JSON)
+    .outputSchema("{\"sentiment\": \"POSITIVE|NEUTRAL|NEGATIVE\", \"confidence\": \"0-1\"}")
+    .build();
+
+// Advanced prompt with reasoning
+Prompt complexPrompt = Prompt.builder()
+    .role("expert data analyst")
+    .task("Analyze sales data and provide recommendations")
+    .withChainOfThought()
+    .outputAs(OutputFormat.MARKDOWN)
+    .includeExamples(2)
+    .build();
+```
+
+### Multi-language Support
+
+```java
+// Portuguese (Brazil)
+Prompt promptPtBr = Prompt.builder(Language.PT_BR)
+    .role("analista de dados")
+    .task("Analise os dados de vendas")
+    .withChainOfThought()
+    .build();
+```
+
+### Pre-built Templates
+
+Use domain-specific templates:
+
+```java
+// Code review
+Prompt codeReview = Prompt.forCodeReview()
+    .input(sourceCode)
+    .build();
+
+// Data extraction
+Prompt extraction = Prompt.forExtraction("name, email, phone number")
+    .input(unstructuredText)
+    .build();
+
+// SWOT analysis
+Prompt swot = Prompt.forSWOTAnalysis()
+    .input("New product launch: AI-powered task manager")
+    .build();
+
+// Classification
+Prompt classifier = Prompt.forClassification("urgent", "normal", "low-priority")
+    .input("Customer complaint about billing error")
+    .build();
+```
+
+### Available Templates
+
+- **Analysis**: `forSWOTAnalysis()`, `forProsConsAnalysis()`, `forDataAnalysis()`
+- **Code**: `forCode(lang)`, `forCodeReview()`, `forCodeDebugging(error)`, `forCodeRefactoring()`
+- **Writing**: `forEmailDrafting(tone)`, `forTechnicalWriting()`, `forAcademicWriting(style)`, `forStorytelling()`
+- **Education**: `forELI5()`, `forExpertExplanation()`, `forLanguageLearning()`, `forQuizGeneration()`
+- **Decision Making**: `forDecisionMaking()`, `forRootCauseAnalysis()`, `forComparison()`
+- **Content**: `forSummarization()`, `forTranslation()`, `forBrainstorming()`
+
+### Reasoning Strategies
+
+```java
+Prompt withReasoning = Prompt.builder()
+    .task("Solve this math problem: ...")
+    .withChainOfThought()        // Step-by-step reasoning
+    .withSelfVerification()      // Verify answer
+    .withDecomposition()         // Break into sub-problems
+    .build();
+```
+
+Available strategies:
+- `withChainOfThought()` - Step-by-step reasoning
+- `withStepBack()` - Consider underlying principles first
+- `withSelfVerification()` - Verify the answer
+- `withDecomposition()` - Break into smaller parts
+- `withTreeOfThoughts()` - Explore multiple approaches
+- `withMultiplePerspectives()` - Consider different viewpoints
+
+### Output Control
+
+```java
+Prompt structuredOutput = Prompt.builder()
+    .task("Extract user information")
+    .outputAs(OutputFormat.JSON)
+    .outputSchema("{\"name\": \"string\", \"age\": \"number\"}")
+    .outputConstraints("Only extract explicitly stated information")
+    .build();
+
+// Concise responses
+Prompt brief = Prompt.builder()
+    .task("Summarize the document")
+    .concise()
+    .maxTokens(100)
+    .build();
+
+// Step-by-step format
+Prompt tutorial = Prompt.builder()
+    .task("Explain how to deploy a Spring Boot app")
+    .stepByStep()
+    .build();
+```
+
+### Few-Shot Examples
+
+```java
+Prompt fewShot = Prompt.builder()
+    .task("Classify customer sentiment")
+    .fewShot()
+        .example("Great service!", "POSITIVE")
+        .example("Terrible experience", "NEGATIVE")
+        .example("It's okay", "NEUTRAL")
+    .done()
+    .input("This product is amazing!")
+    .build();
+```
+
+### Custom Sections & Context
+
+```java
+Prompt withContext = Prompt.builder()
+    .role("customer support specialist")
+    .context()
+        .document("product_guide.md", productGuideContent)
+        .document("faq.md", faqContent)
+        .background("Customer tier: Premium, Account age: 3 years")
+    .done()
+    .task("Help the customer with their issue")
+    .input(customerMessage)
+    .build();
+```
+
+### Order Independence
+
+All builder methods are order-independent:
+
+```java
+// These produce identical prompts
+Prompt p1 = Prompt.builder()
+    .task("Analyze data")
+    .role("analyst")
+    .withChainOfThought()
+    .build();
+
+Prompt p2 = Prompt.builder()
+    .withChainOfThought()
+    .role("analyst")
+    .task("Analyze data")
+    .build();
+```
+
+See the [Prompt Management Guide](docs/guides/prompt-management.md) for template syntax and advanced usage.
 
 ## Multi-agent patterns
 
