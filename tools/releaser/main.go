@@ -987,7 +987,7 @@ func promptForChangelog(version Version) (*ChangelogEntry, error) {
 
 // stepUpdateChangelog ensures changelog is updated for the new version
 func stepUpdateChangelog(state *ReleaseState) bool {
-	fmt.Println(stepStyle.Render("Step 1/6: ") + "Checking changelog")
+	fmt.Println(stepStyle.Render("Step 1/7: ") + "Checking changelog")
 
 	// Check if version is already documented
 	if hasVersionInChangelog(state.NewVersion) {
@@ -1135,11 +1135,71 @@ func rollback(state *ReleaseState) {
 }
 
 // ============================================================================
+// Documentation Update
+// ============================================================================
+
+func updateDocsVersion(oldVersion, newVersion Version) error {
+	docsFiles := []string{
+		"README.md",
+		"docs/installation.md",
+		"docs/index.md",
+		"docs/guides/spring-boot.md",
+	}
+
+	for _, path := range docsFiles {
+		content, err := os.ReadFile(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return fmt.Errorf("could not read %s: %w", path, err)
+		}
+
+		oldStr := oldVersion.PomString()
+		newStr := newVersion.PomString()
+		
+		// Skip if old version string is not present
+		if !strings.Contains(string(content), oldStr) {
+			continue
+		}
+
+		newContent := strings.ReplaceAll(string(content), oldStr, newStr)
+		
+		if string(content) != newContent {
+			if err := os.WriteFile(path, []byte(newContent), 0644); err != nil {
+				return fmt.Errorf("could not write %s: %w", path, err)
+			}
+			fmt.Println(checkmarkStyle.Render("✓") + " Updated " + path)
+		}
+	}
+	return nil
+}
+
+func stepUpdateDocs(state *ReleaseState, oldVersion Version) bool {
+	fmt.Println(stepStyle.Render("Step 3/7: ") + "Updating documentation versions")
+
+	if oldVersion.IsZero() {
+		fmt.Println(infoStyle.Render("ℹ No previous version detected, skipping docs update"))
+		return true
+	}
+
+	err := updateDocsVersion(oldVersion, state.NewVersion)
+	if err != nil {
+		action := askErrorAction("Update documentation", err.Error(), true, false)
+		if action == ActionAbort {
+			return false
+		}
+	}
+	
+	return true
+}
+
+// ============================================================================
 // Release Steps
 // ============================================================================
 
 func stepUpdatePom(state *ReleaseState) bool {
-	fmt.Println(stepStyle.Render("Step 2/6: ") + "Updating pom.xml version")
+	fmt.Println(stepStyle.Render("Step 2/7: ") + "Updating pom.xml version")
 
 	for {
 		err := updatePomVersion(state.NewVersion)
@@ -1163,7 +1223,25 @@ func stepUpdatePom(state *ReleaseState) bool {
 
 func stepStageChanges(state *ReleaseState) bool {
 	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 3/6: ") + "Staging changes")
+	fmt.Println(stepStyle.Render("Step 4/7: ") + "Staging changes")
+
+// ... (omitted)
+
+func stepCommit(state *ReleaseState) bool {
+	fmt.Println()
+	fmt.Println(stepStyle.Render("Step 5/7: ") + "Creating commit")
+
+// ... (omitted)
+
+func stepPush(state *ReleaseState) bool {
+	fmt.Println()
+	fmt.Println(stepStyle.Render("Step 6/7: ") + "Pushing to remote")
+
+// ... (omitted)
+
+func stepCreateRelease(state *ReleaseState) bool {
+	fmt.Println()
+	fmt.Println(stepStyle.Render("Step 7/7: ") + "Creating GitHub release")
 
 	for {
 		cmd := exec.Command("git", "add", ".")
@@ -2090,6 +2168,10 @@ func main() {
 	}
 
 	if !stepUpdatePom(state) {
+		os.Exit(1)
+	}
+
+	if !stepUpdateDocs(state, pomVersion) {
 		os.Exit(1)
 	}
 
