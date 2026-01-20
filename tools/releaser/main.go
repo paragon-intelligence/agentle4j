@@ -1176,9 +1176,6 @@ func updateDocsVersion(oldVersion, newVersion Version) error {
 	return nil
 }
 
-	return nil
-}
-
 func updateTimestampInFile(path string) error {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -1189,7 +1186,6 @@ func updateTimestampInFile(path string) error {
 	newLines := make([]string, 0, len(lines)+2)
 	
 	h1Found := false
-	timestampUpdated := false
 	timestampPrefix := "> This docs was updated at:"
 	today := time.Now().Format("2006-01-02")
 	newTimestampLine := fmt.Sprintf("%s %s", timestampPrefix, today)
@@ -1244,9 +1240,6 @@ func updateTimestampInFile(path string) error {
 	// Check if there is already a timestamp line afterwards (possibly separated by newlines)
 	// We scan forward from h1End
 	
-	rest := contentStr[h1End:]
-	// Regex that matches optional whitespace/newlines then the timestamp line
-	reTs := regexp.MustCompile(`^\s*` + regexp.QuoteMeta(timestampPrefix) + `.*$`)
 	
 	// Create new content
 	var sb strings.Builder
@@ -1404,23 +1397,6 @@ func stepStageChanges(state *ReleaseState) bool {
 	fmt.Println()
 	fmt.Println(stepStyle.Render("Step 5/8: ") + "Staging changes")
 
-// ... (omitted)
-
-func stepCommit(state *ReleaseState) bool {
-	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 6/8: ") + "Creating commit")
-
-// ... (omitted)
-
-func stepPush(state *ReleaseState) bool {
-	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 7/8: ") + "Pushing to remote")
-
-// ... (omitted)
-
-func stepCreateRelease(state *ReleaseState) bool {
-	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 8/8: ") + "Creating GitHub release")
 
 	for {
 		cmd := exec.Command("git", "add", ".")
@@ -1447,7 +1423,7 @@ func stepCreateRelease(state *ReleaseState) bool {
 
 func stepCommit(state *ReleaseState) bool {
 	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 4/6: ") + "Creating commit")
+	fmt.Println(stepStyle.Render("Step 6/8: ") + "Creating commit")
 
 	for {
 		cmd := exec.Command("git", "commit", "-m", fmt.Sprintf("Release %s", state.NewVersion.String()))
@@ -1484,7 +1460,7 @@ func stepCommit(state *ReleaseState) bool {
 
 func stepPush(state *ReleaseState) bool {
 	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 5/6: ") + "Pushing to remote")
+	fmt.Println(stepStyle.Render("Step 7/8: ") + "Pushing to remote")
 
 	for {
 		cmd := exec.Command("git", "push")
@@ -1515,7 +1491,7 @@ func stepPush(state *ReleaseState) bool {
 
 func stepCreateRelease(state *ReleaseState) bool {
 	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 6/6: ") + "Creating GitHub release")
+	fmt.Println(stepStyle.Render("Step 8/8: ") + "Creating GitHub release")
 
 	// Get release title
 	var releaseTitle string
