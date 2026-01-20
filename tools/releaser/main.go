@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -987,7 +988,7 @@ func promptForChangelog(version Version) (*ChangelogEntry, error) {
 
 // stepUpdateChangelog ensures changelog is updated for the new version
 func stepUpdateChangelog(state *ReleaseState) bool {
-	fmt.Println(stepStyle.Render("Step 1/7: ") + "Checking changelog")
+	fmt.Println(stepStyle.Render("Step 1/8: ") + "Checking changelog")
 
 	// Check if version is already documented
 	if hasVersionInChangelog(state.NewVersion) {
@@ -1175,8 +1176,186 @@ func updateDocsVersion(oldVersion, newVersion Version) error {
 	return nil
 }
 
+	return nil
+}
+
+func updateTimestampInFile(path string) error {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	
+	lines := strings.Split(string(content), "\n")
+	newLines := make([]string, 0, len(lines)+2)
+	
+	h1Found := false
+	timestampUpdated := false
+	timestampPrefix := "> This docs was updated at:"
+	today := time.Now().Format("2006-01-02")
+	newTimestampLine := fmt.Sprintf("%s %s", timestampPrefix, today)
+	
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		newLines = append(newLines, line)
+		
+		// Find the first H1 header
+		if !h1Found && strings.HasPrefix(line, "# ") {
+			h1Found = true
+			
+			// Check if next line(s) are blank or contain timestamp
+			// We want to skip blank lines immediately after H1 to find where to put/replace timestamp
+			j := i + 1
+			for j < len(lines) && strings.TrimSpace(lines[j]) == "" {
+				newLines = append(newLines, lines[j]) // Keep existing blank lines? Or normalize?
+				// Let's just keep them for now, but we need to insert *after* them if we insert.
+				// Actually, standardizing: H1 -> blank -> Timestamp -> blank is good.
+				j++
+			}
+			
+			// Now lines[j] is the first non-blank line (or EOF)
+			if j < len(lines) && strings.HasPrefix(strings.TrimSpace(lines[j]), timestampPrefix) {
+				// Found existing timestamp, replace it
+				// We need to modify the *last added* line if we were just appending blank lines...
+				// Actually this loop structure is tricky for lookahead replacement.
+				
+				// Simpler approach: constructing strictly.
+			}
+		}
+	}
+	
+	// Let's try a regex based approach for simplicity and robustness
+	// Replace: (^# .+\n)((?:\s*\n)*)(> This docs was updated at: .+\n)?
+	// With: $1\n> This docs was updated at: TODAY\n
+	
+	contentStr := string(content)
+	// Find first H1
+	reH1 := regexp.MustCompile(`(?m)^# .+$`)
+	loc := reH1.FindStringIndex(contentStr)
+	
+	if loc == nil {
+		return nil // No H1, skip
+	}
+	
+	h1End := loc[1]
+	
+	// Look ahead for existing timestamp
+	// We want to insert after H1 and a newline.
+	
+	// Check if there is already a timestamp line afterwards (possibly separated by newlines)
+	// We scan forward from h1End
+	
+	rest := contentStr[h1End:]
+	// Regex that matches optional whitespace/newlines then the timestamp line
+	reTs := regexp.MustCompile(`^\s*` + regexp.QuoteMeta(timestampPrefix) + `.*$`)
+	
+	// Create new content
+	var sb strings.Builder
+	sb.WriteString(contentStr[:h1End])
+	sb.WriteString("\n\n")
+	sb.WriteString(newTimestampLine)
+	
+	// If we find an existing timestamp nearby, we skip it in the "rest" part
+	// But "nearby" is subjective. Let's assume it's near the top.
+	// Actually, simpler: removing ANY existing timestamp line in the file is risky if there are multiple H1s (unlikely for top level doc info)
+	
+	// Let's iterate lines.
+	// 1. Write lines until H1.
+	// 2. Write H1.
+	// 3. Write blank line.
+	// 4. Write new timestamp.
+	// 5. Write blank line.
+	// 6. Continue writing lines, SKIPPING any encountered old timestamp line.
+	
+	finalLines := make([]string, 0, len(lines)+5)
+	
+	// Scan for H1
+	h1Index := -1
+	for i, line := range lines {
+		if strings.HasPrefix(line, "# ") {
+			h1Index = i
+			break
+		}
+	}
+	
+	if h1Index == -1 {
+		return nil
+	}
+	
+	// Copy up to H1 (inclusive)
+	for i := 0; i <= h1Index; i++ {
+		finalLines = append(finalLines, lines[i])
+	}
+	
+	// Add blank line + timestamp + blank line
+	finalLines = append(finalLines, "")
+	finalLines = append(finalLines, newTimestampLine)
+	finalLines = append(finalLines, "")
+	
+	// Copy rest, skipping blank lines immediately after H1 if they exist, 
+	// AND skipping any line that looks like a timestamp
+	
+	restIdx := h1Index + 1
+	// Skip initial blank lines after H1 to avoid double spacing
+	for restIdx < len(lines) && strings.TrimSpace(lines[restIdx]) == "" {
+		restIdx++
+	}
+	
+	for i := restIdx; i < len(lines); i++ {
+		line := lines[i]
+		if strings.HasPrefix(strings.TrimSpace(line), timestampPrefix) {
+			continue // Skip old timestamp
+		}
+		finalLines = append(finalLines, line)
+	}
+	
+	newContentStr := strings.Join(finalLines, "\n")
+	
+	if newContentStr != contentStr {
+		if err := os.WriteFile(path, []byte(newContentStr), 0644); err != nil {
+			return err
+		}
+		fmt.Println(checkmarkStyle.Render("✓") + " Updated timestamp in " + path)
+	}
+	return nil
+}
+
+func updateDocsTimestamp() error {
+	// 1. Update README.md
+	if err := updateTimestampInFile("README.md"); err != nil {
+		fmt.Println(warningStyle.Render("⚠ Could not update README.md timestamp: " + err.Error()))
+	}
+	
+	// 2. Walk docs/ directory
+	err := filepath.Walk("docs", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.HasSuffix(path, ".md") {
+			if err := updateTimestampInFile(path); err != nil {
+				// Just warn, don't stop the whole process
+				fmt.Println(warningStyle.Render("⚠ Could not update timestamp in " + path + ": " + err.Error()))
+			}
+		}
+		return nil
+	})
+	
+	return err
+}
+
+func stepUpdateTimestamp(state *ReleaseState) bool {
+	fmt.Println(stepStyle.Render("Step 4/8: ") + "Updating documentation timestamps")
+
+	err := updateDocsTimestamp()
+	if err != nil {
+		fmt.Println(warningStyle.Render("⚠ Check for docs timestamp updates failed: " + err.Error()))
+		// We don't abort release for this
+	}
+	
+	return true
+}
+
 func stepUpdateDocs(state *ReleaseState, oldVersion Version) bool {
-	fmt.Println(stepStyle.Render("Step 3/7: ") + "Updating documentation versions")
+	fmt.Println(stepStyle.Render("Step 3/8: ") + "Updating documentation versions")
 
 	if oldVersion.IsZero() {
 		fmt.Println(infoStyle.Render("ℹ No previous version detected, skipping docs update"))
@@ -1199,7 +1378,7 @@ func stepUpdateDocs(state *ReleaseState, oldVersion Version) bool {
 // ============================================================================
 
 func stepUpdatePom(state *ReleaseState) bool {
-	fmt.Println(stepStyle.Render("Step 2/7: ") + "Updating pom.xml version")
+	fmt.Println(stepStyle.Render("Step 2/8: ") + "Updating pom.xml version")
 
 	for {
 		err := updatePomVersion(state.NewVersion)
@@ -1223,25 +1402,25 @@ func stepUpdatePom(state *ReleaseState) bool {
 
 func stepStageChanges(state *ReleaseState) bool {
 	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 4/7: ") + "Staging changes")
+	fmt.Println(stepStyle.Render("Step 5/8: ") + "Staging changes")
 
 // ... (omitted)
 
 func stepCommit(state *ReleaseState) bool {
 	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 5/7: ") + "Creating commit")
+	fmt.Println(stepStyle.Render("Step 6/8: ") + "Creating commit")
 
 // ... (omitted)
 
 func stepPush(state *ReleaseState) bool {
 	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 6/7: ") + "Pushing to remote")
+	fmt.Println(stepStyle.Render("Step 7/8: ") + "Pushing to remote")
 
 // ... (omitted)
 
 func stepCreateRelease(state *ReleaseState) bool {
 	fmt.Println()
-	fmt.Println(stepStyle.Render("Step 7/7: ") + "Creating GitHub release")
+	fmt.Println(stepStyle.Render("Step 8/8: ") + "Creating GitHub release")
 
 	for {
 		cmd := exec.Command("git", "add", ".")
@@ -2172,6 +2351,10 @@ func main() {
 	}
 
 	if !stepUpdateDocs(state, pomVersion) {
+		os.Exit(1)
+	}
+
+	if !stepUpdateTimestamp(state) {
 		os.Exit(1)
 	}
 
