@@ -17,16 +17,13 @@ import com.paragon.telemetry.events.AgentFailedEvent;
 import com.paragon.telemetry.processors.ProcessorRegistry;
 import com.paragon.telemetry.processors.TelemetryProcessor;
 import com.paragon.telemetry.processors.TraceIdGenerator;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import java.util.*;
 
 /**
  * A stateful AI agent that can perceive, plan, and act using tools.
@@ -147,11 +144,11 @@ public final class Agent implements Serializable, Interactable {
     this.outputType = builder.outputType;
     this.temperature = builder.temperature;
     this.telemetryContext =
-        builder.telemetryContext != null ? builder.telemetryContext : TelemetryContext.empty();
+            builder.telemetryContext != null ? builder.telemetryContext : TelemetryContext.empty();
     this.telemetryProcessors =
-        builder.telemetryProcessors.isEmpty()
-            ? ProcessorRegistry.empty()
-            : ProcessorRegistry.of(builder.telemetryProcessors);
+            builder.telemetryProcessors.isEmpty()
+                    ? ProcessorRegistry.empty()
+                    : ProcessorRegistry.of(builder.telemetryProcessors);
 
     // Context management
     this.contextManagementConfig = builder.contextManagementConfig;
@@ -264,13 +261,19 @@ public final class Agent implements Serializable, Interactable {
     return handoffs;
   }
 
-  /** Returns the tool store. Package-private for AgentStream. */
-  @NonNull FunctionToolStore toolStore() {
+  /**
+   * Returns the tool store. Package-private for AgentStream.
+   */
+  @NonNull
+  FunctionToolStore toolStore() {
     return toolStore;
   }
 
-  /** Builds a payload from context. Package-private for AgentStream. */
-  @NonNull CreateResponsePayload buildPayloadInternal(@NonNull AgentContext context) {
+  /**
+   * Builds a payload from context. Package-private for AgentStream.
+   */
+  @NonNull
+  CreateResponsePayload buildPayloadInternal(@NonNull AgentContext context) {
     return buildPayload(context);
   }
 
@@ -489,7 +492,7 @@ public final class Agent implements Serializable, Interactable {
     AgentRunState.ToolApprovalResult approval = state.approvalResult();
     if (approval == null) {
       throw new IllegalStateException(
-          "Cannot resume: call approveToolCall() or rejectToolCall() first");
+              "Cannot resume: call approveToolCall() or rejectToolCall() first");
     }
 
     // Add the tool result to context
@@ -499,16 +502,16 @@ public final class Agent implements Serializable, Interactable {
       output = FunctionToolCallOutput.success(pendingCall.callId(), approval.outputOrReason());
     } else {
       String reason =
-          approval.outputOrReason() != null
-              ? approval.outputOrReason()
-              : "Tool execution was rejected by user";
+              approval.outputOrReason() != null
+                      ? approval.outputOrReason()
+                      : "Tool execution was rejected by user";
       output = FunctionToolCallOutput.error(pendingCall.callId(), reason);
     }
     state.context().addToolResult(output);
 
     // Continue the agentic loop from where we left off
     return continueAgenticLoop(
-        state.context(), state.lastResponse(), state.toolExecutions(), state.currentTurn());
+            state.context(), state.lastResponse(), state.toolExecutions(), state.currentTurn());
   }
 
   // ===== Resume Methods =====
@@ -529,7 +532,7 @@ public final class Agent implements Serializable, Interactable {
     AgentRunState.ToolApprovalResult approval = state.approvalResult();
     if (approval == null) {
       throw new IllegalStateException(
-          "Cannot resume: call approveToolCall() or rejectToolCall() first");
+              "Cannot resume: call approveToolCall() or rejectToolCall() first");
     }
 
     // Add the tool result to context
@@ -539,22 +542,22 @@ public final class Agent implements Serializable, Interactable {
       output = FunctionToolCallOutput.success(pendingCall.callId(), approval.outputOrReason());
     } else {
       String reason =
-          approval.outputOrReason() != null
-              ? approval.outputOrReason()
-              : "Tool execution was rejected by user";
+              approval.outputOrReason() != null
+                      ? approval.outputOrReason()
+                      : "Tool execution was rejected by user";
       output = FunctionToolCallOutput.error(pendingCall.callId(), reason);
     }
     state.context().addToolResult(output);
 
     // Return stream that continues from saved state
     return new AgentStream(
-        this,
-        List.of(), // No new input - resuming
-        state.context(),
-        responder,
-        objectMapper,
-        state.toolExecutions(),
-        state.currentTurn());
+            this,
+            List.of(), // No new input - resuming
+            state.context(),
+            responder,
+            objectMapper,
+            state.toolExecutions(),
+            state.currentTurn());
   }
 
   /**
@@ -578,12 +581,13 @@ public final class Agent implements Serializable, Interactable {
   /**
    * Core blocking interact method with callbacks. Package-private for AgentStream.
    *
-   * @param context the conversation context containing all history
+   * @param context   the conversation context containing all history
    * @param callbacks optional loop callbacks for streaming/events
    * @return the agent result
    */
-  @NonNull AgentResult interactBlocking(
-      @NonNull AgentContext context, @Nullable LoopCallbacks callbacks) {
+  @NonNull
+  AgentResult interactBlocking(
+          @NonNull AgentContext context, @Nullable LoopCallbacks callbacks) {
     Objects.requireNonNull(context, "context cannot be null");
 
     // Auto-initialize trace context if not set (enables automatic correlation)
@@ -609,12 +613,14 @@ public final class Agent implements Serializable, Interactable {
     return executeAgenticLoop(context, new ArrayList<>(), callbacks, "");
   }
 
-  /** Unified agentic loop. Shared by interact, resume, and AgentStream. */
+  /**
+   * Unified agentic loop. Shared by interact, resume, and AgentStream.
+   */
   private AgentResult executeAgenticLoop(
-      AgentContext context,
-      List<ToolExecution> initialExecutions,
-      @Nullable LoopCallbacks callbacks,
-      String fallbackHandoffText) {
+          AgentContext context,
+          List<ToolExecution> initialExecutions,
+          @Nullable LoopCallbacks callbacks,
+          String fallbackHandoffText) {
 
     List<ToolExecution> allToolExecutions = new ArrayList<>(initialExecutions);
     Response lastResponse = null;
@@ -632,11 +638,11 @@ public final class Agent implements Serializable, Interactable {
         CreateResponsePayload payload = buildPayload(context);
         try {
           lastResponse = responder.respond(payload, telemetryCtx);
-          lastResponseId = lastResponse.id();
+          //lastResponseId = lastResponse.id();
         } catch (Exception e) {
           // Wrap LLM call failures in AgentExecutionException
           AgentExecutionException agentEx =
-              AgentExecutionException.llmCallFailed(name, context.getTurnCount(), e);
+                  AgentExecutionException.llmCallFailed(name, context.getTurnCount(), e);
           broadcastFailedEvent(agentEx, context);
           return AgentResult.error(agentEx, context, context.getTurnCount());
         }
@@ -679,8 +685,8 @@ public final class Agent implements Serializable, Interactable {
             return AgentResult.handoff(handoff.targetAgent(), innerResult, context);
           } catch (Exception e) {
             AgentExecutionException agentEx =
-                AgentExecutionException.handoffFailed(
-                    name, handoff.targetAgent().name(), context.getTurnCount(), e);
+                    AgentExecutionException.handoffFailed(
+                            name, handoff.targetAgent().name(), context.getTurnCount(), e);
             broadcastFailedEvent(agentEx, context);
             return AgentResult.error(agentEx, context, context.getTurnCount());
           }
@@ -695,8 +701,8 @@ public final class Agent implements Serializable, Interactable {
             FunctionTool<?> tool = toolStore.get(call.name());
             if (tool != null && tool.requiresConfirmation()) {
               AgentRunState pauseState =
-                  AgentRunState.pendingApproval(
-                      name, context, call, lastResponse, allToolExecutions, turn);
+                      AgentRunState.pendingApproval(
+                              name, context, call, lastResponse, allToolExecutions, turn);
               return AgentResult.paused(pauseState, context);
             }
           }
@@ -704,7 +710,7 @@ public final class Agent implements Serializable, Interactable {
           // Check for pause request (streaming)
           if (callbacks != null) {
             AgentRunState pauseState =
-                callbacks.onPauseRequested(call, lastResponse, allToolExecutions, context);
+                    callbacks.onPauseRequested(call, lastResponse, allToolExecutions, context);
             if (pauseState != null) {
               return AgentResult.paused(pauseState, context);
             }
@@ -721,7 +727,7 @@ public final class Agent implements Serializable, Interactable {
           } else {
             // Tool rejected
             FunctionToolCallOutput rejectedOutput =
-                FunctionToolCallOutput.error(call.callId(), "Tool execution was rejected");
+                    FunctionToolCallOutput.error(call.callId(), "Tool execution was rejected");
             context.addToolResult(rejectedOutput);
           }
         }
@@ -730,7 +736,7 @@ public final class Agent implements Serializable, Interactable {
       // Check if max turns exceeded
       if (context.getTurnCount() > maxTurns) {
         AgentExecutionException agentEx =
-            AgentExecutionException.maxTurnsExceeded(name, maxTurns, context.getTurnCount());
+                AgentExecutionException.maxTurnsExceeded(name, maxTurns, context.getTurnCount());
         broadcastFailedEvent(agentEx, context);
         return AgentResult.error(agentEx, context, context.getTurnCount());
       }
@@ -757,55 +763,59 @@ public final class Agent implements Serializable, Interactable {
         try {
           Object parsed = lastResponse.parse(outputType, objectMapper);
           return AgentResult.successWithParsed(
-              output, parsed, lastResponse, context, allToolExecutions, context.getTurnCount());
+                  output, parsed, lastResponse, context, allToolExecutions, context.getTurnCount());
         } catch (JsonProcessingException e) {
           AgentExecutionException agentEx =
-              AgentExecutionException.parsingFailed(name, context.getTurnCount(), e);
+                  AgentExecutionException.parsingFailed(name, context.getTurnCount(), e);
           broadcastFailedEvent(agentEx, context);
           return AgentResult.error(agentEx, context, context.getTurnCount());
         }
       }
 
       return AgentResult.success(
-          output, lastResponse, context, allToolExecutions, context.getTurnCount());
+              output, lastResponse, context, allToolExecutions, context.getTurnCount());
 
     } catch (Exception e) {
       // Wrap unexpected exceptions in AgentExecutionException
       AgentExecutionException agentEx =
-          new AgentExecutionException(
-              name,
-              AgentExecutionException.Phase.LLM_CALL,
-              context.getTurnCount(),
-              String.format("Agent '%s' failed unexpectedly: %s", name, e.getMessage()),
-              e);
+              new AgentExecutionException(
+                      name,
+                      AgentExecutionException.Phase.LLM_CALL,
+                      context.getTurnCount(),
+                      String.format("Agent '%s' failed unexpectedly: %s", name, e.getMessage()),
+                      e);
       broadcastFailedEvent(agentEx, context);
       return AgentResult.error(agentEx, context, context.getTurnCount());
     }
   }
 
-  /** Broadcasts a failed event for telemetry. */
+  /**
+   * Broadcasts a failed event for telemetry.
+   */
   private void broadcastFailedEvent(Exception exception, AgentContext context) {
     if (telemetryProcessors != null) {
       String sessionId = context.requestId().orElseGet(() -> java.util.UUID.randomUUID().toString());
       AgentFailedEvent event =
-          AgentFailedEvent.from(
-              name,
-              context.getTurnCount(),
-              exception,
-              sessionId,
-              context.parentTraceId().orElse(null),
-              context.parentSpanId().orElse(null),
-              null);
+              AgentFailedEvent.from(
+                      name,
+                      context.getTurnCount(),
+                      exception,
+                      sessionId,
+                      context.parentTraceId().orElse(null),
+                      context.parentSpanId().orElse(null),
+                      null);
       telemetryProcessors.broadcast(event);
     }
   }
 
-  /** Continues the agentic loop from a saved state (used by resume). */
+  /**
+   * Continues the agentic loop from a saved state (used by resume).
+   */
   private AgentResult continueAgenticLoop(
-      AgentContext context,
-      Response lastResponse,
-      List<ToolExecution> previousExecutions,
-      int startTurn) {
+          AgentContext context,
+          Response lastResponse,
+          List<ToolExecution> previousExecutions,
+          int startTurn) {
     // Delegate to unified loop
     return executeAgenticLoop(context, previousExecutions, null, "");
   }
@@ -816,16 +826,16 @@ public final class Agent implements Serializable, Interactable {
     // Apply context management if configured
     if (contextManagementConfig != null) {
       input =
-          contextManagementConfig
-              .strategy()
-              .manage(
-                  input,
-                  contextManagementConfig.maxTokens(),
-                  contextManagementConfig.tokenCounter());
+              contextManagementConfig
+                      .strategy()
+                      .manage(
+                              input,
+                              contextManagementConfig.maxTokens(),
+                              contextManagementConfig.tokenCounter());
     }
 
     CreateResponsePayload.Builder builder =
-        CreateResponsePayload.builder().model(model).instructions(instructions.text()).input(input);
+            CreateResponsePayload.builder().model(model).instructions(instructions.text()).input(input);
 
     // Add tools
     for (FunctionTool<?> tool : tools) {
@@ -846,10 +856,12 @@ public final class Agent implements Serializable, Interactable {
 
   // ===== Private Helper Methods =====
 
-  /** Builds a TelemetryContext from AgentContext for trace correlation. */
+  /**
+   * Builds a TelemetryContext from AgentContext for trace correlation.
+   */
   private TelemetryContext buildTelemetryContext(AgentContext context) {
     TelemetryContext.Builder builder =
-        TelemetryContext.builder().traceName(name + ".turn-" + context.getTurnCount());
+            TelemetryContext.builder().traceName(name + ".turn-" + context.getTurnCount());
 
     context.parentTraceId().ifPresent(builder::parentTraceId);
     context.parentSpanId().ifPresent(builder::parentSpanId);
@@ -890,12 +902,12 @@ public final class Agent implements Serializable, Interactable {
   }
 
   private Optional<String> extractHandoffMessage(
-      List<FunctionToolCall> toolCalls, String handoffName) {
+          List<FunctionToolCall> toolCalls, String handoffName) {
     for (FunctionToolCall call : toolCalls) {
       if (handoffName.equals(call.name())) {
         try {
           Handoff.HandoffParams params =
-              objectMapper.readValue(call.arguments(), Handoff.HandoffParams.class);
+                  objectMapper.readValue(call.arguments(), Handoff.HandoffParams.class);
           return Optional.ofNullable(params.message());
         } catch (JsonProcessingException e) {
           return Optional.empty();
@@ -910,15 +922,15 @@ public final class Agent implements Serializable, Interactable {
    * ToolExecutionException for better diagnostics.
    */
   private ToolExecution executeSingleToolWithErrorHandling(
-      FunctionToolCall call, AgentContext context) {
+          FunctionToolCall call, AgentContext context) {
     // Skip handoff tools (handled separately)
     for (Handoff handoff : handoffs) {
       if (handoff.name().equals(call.name())) {
         FunctionToolCallOutput output =
-            FunctionToolCallOutput.error(
-                call.callId(), "Handoff tool should not be executed directly");
+                FunctionToolCallOutput.error(
+                        call.callId(), "Handoff tool should not be executed directly");
         return new ToolExecution(
-            call.name(), call.callId(), call.arguments(), output, Duration.ZERO);
+                call.name(), call.callId(), call.arguments(), output, Duration.ZERO);
       }
     }
 
@@ -927,59 +939,59 @@ public final class Agent implements Serializable, Interactable {
     try {
       // Execute tool with context using virtual-thread-safe ScopedValue
       FunctionToolCallOutput output = SubAgentTool.callWithContext(
-          context,
-          () -> {
-            try {
-              return toolStore.execute(call);
-            } catch (JsonProcessingException e) {
-              throw new RuntimeException(e); // Will be handled in outer catch
-            }
-          });
-      
+              context,
+              () -> {
+                try {
+                  return toolStore.execute(call);
+                } catch (JsonProcessingException e) {
+                  throw new RuntimeException(e); // Will be handled in outer catch
+                }
+              });
+
       Duration duration = Duration.between(start, Instant.now());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), output, duration);
     } catch (RuntimeException e) {
       Duration duration = Duration.between(start, Instant.now());
-      
+
       // Unwrap if it's our wrapped JsonProcessingException
       if (e.getCause() instanceof JsonProcessingException jpe) {
         ToolExecutionException toolEx =
-            new ToolExecutionException(
-                call.name(),
-                call.callId(),
-                call.arguments(),
-                "Failed to parse tool arguments: " + jpe.getMessage(),
-                jpe);
+                new ToolExecutionException(
+                        call.name(),
+                        call.callId(),
+                        call.arguments(),
+                        "Failed to parse tool arguments: " + jpe.getMessage(),
+                        jpe);
         broadcastFailedEvent(toolEx, context);
         FunctionToolCallOutput errorOutput =
-            FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + jpe.getMessage());
+                FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + jpe.getMessage());
         return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
       }
-      
+
       // Other exceptions
       ToolExecutionException toolEx =
-          new ToolExecutionException(
-              call.name(),
-              call.callId(),
-              call.arguments(),
-              "Tool execution failed: " + e.getMessage(),
-              e);
+              new ToolExecutionException(
+                      call.name(),
+                      call.callId(),
+                      call.arguments(),
+                      "Tool execution failed: " + e.getMessage(),
+                      e);
       broadcastFailedEvent(toolEx, context);
       FunctionToolCallOutput errorOutput =
-          FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + e.getMessage());
+              FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + e.getMessage());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
     } catch (Exception e) {
       Duration duration = Duration.between(start, Instant.now());
       ToolExecutionException toolEx =
-          new ToolExecutionException(
-              call.name(),
-              call.callId(),
-              call.arguments(),
-              "Tool execution failed: " + e.getMessage(),
-              e);
+              new ToolExecutionException(
+                      call.name(),
+                      call.callId(),
+                      call.arguments(),
+                      "Tool execution failed: " + e.getMessage(),
+                      e);
       broadcastFailedEvent(toolEx, context);
       FunctionToolCallOutput errorOutput =
-          FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + e.getMessage());
+              FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + e.getMessage());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
     }
   }
@@ -995,47 +1007,72 @@ public final class Agent implements Serializable, Interactable {
     return sb.toString();
   }
 
-  /** Callbacks for agentic loop events. Package-private for AgentStream. */
+  /**
+   * Callbacks for agentic loop events. Package-private for AgentStream.
+   */
   interface LoopCallbacks {
-    /** Called at start of each turn. */
-    default void onTurnStart(int turn) {}
+    /**
+     * Called at start of each turn.
+     */
+    default void onTurnStart(int turn) {
+    }
 
-    /** Called after LLM response received. */
-    default void onTurnComplete(Response response) {}
+    /**
+     * Called after LLM response received.
+     */
+    default void onTurnComplete(Response response) {
+    }
 
-    /** Called when tool call is detected. Returns true to execute, false to skip. */
+    /**
+     * Called when tool call is detected. Returns true to execute, false to skip.
+     */
     default boolean onToolCall(FunctionToolCall call) {
       return true;
     }
 
-    /** Called after tool is executed. */
-    default void onToolExecuted(ToolExecution execution) {}
+    /**
+     * Called after tool is executed.
+     */
+    default void onToolExecuted(ToolExecution execution) {
+    }
 
-    /** Called when handoff is detected. */
-    default void onHandoff(Handoff handoff) {}
+    /**
+     * Called when handoff is detected.
+     */
+    default void onHandoff(Handoff handoff) {
+    }
 
-    /** Called when guardrail fails. */
-    default void onGuardrailFailed(GuardrailResult.Failed failed) {}
+    /**
+     * Called when guardrail fails.
+     */
+    default void onGuardrailFailed(GuardrailResult.Failed failed) {
+    }
 
-    /** Called to pause for approval. Return non-null to pause. */
+    /**
+     * Called to pause for approval. Return non-null to pause.
+     */
     default AgentRunState onPauseRequested(
-        FunctionToolCall call,
-        Response lastResponse,
-        List<ToolExecution> executions,
-        AgentContext context) {
+            FunctionToolCall call,
+            Response lastResponse,
+            List<ToolExecution> executions,
+            AgentContext context) {
       return null;
     }
   }
 
   // ===== Builder =====
 
-  /** Builder for creating Agent instances. */
+  /**
+   * Builder for creating Agent instances.
+   */
   public static final class Builder {
     private final List<FunctionTool<?>> tools = new ArrayList<>();
     private final List<Handoff> handoffs = new ArrayList<>();
     private final List<InputGuardrail> inputGuardrails = new ArrayList<>();
     private final List<OutputGuardrail> outputGuardrails = new ArrayList<>();
     private final List<TelemetryProcessor> telemetryProcessors = new ArrayList<>();
+    // Skills to merge into agent's prompt
+    private final List<Skill> pendingSkills = new ArrayList<>();
     private @Nullable String name;
     private @Nullable Prompt instructions;
     private @Nullable String model;
@@ -1238,7 +1275,7 @@ public final class Agent implements Serializable, Interactable {
      *     .build();
      * }</pre>
      *
-     * @param subAgent the agent to add as a callable tool
+     * @param subAgent    the agent to add as a callable tool
      * @param description describes when to use this sub-agent
      * @return this builder
      * @see SubAgentTool
@@ -1264,7 +1301,7 @@ public final class Agent implements Serializable, Interactable {
      * }</pre>
      *
      * @param subAgent the agent to add as a callable tool
-     * @param config configuration for context sharing and description
+     * @param config   configuration for context sharing and description
      * @return this builder
      * @see SubAgentTool.Config
      */
@@ -1355,12 +1392,12 @@ public final class Agent implements Serializable, Interactable {
      * }</pre>
      *
      * @param provider the skill provider
-     * @param skillId the skill identifier
+     * @param skillId  the skill identifier
      * @return this builder
      * @see SkillProvider
      */
     public @NonNull Builder addSkillFrom(
-        @NonNull SkillProvider provider, @NonNull String skillId) {
+            @NonNull SkillProvider provider, @NonNull String skillId) {
       Objects.requireNonNull(provider, "provider cannot be null");
       Objects.requireNonNull(skillId, "skillId cannot be null");
       return addSkill(provider.provide(skillId));
@@ -1395,9 +1432,6 @@ public final class Agent implements Serializable, Interactable {
       }
       return this;
     }
-
-    // Skills to merge into agent's prompt
-    private final List<Skill> pendingSkills = new ArrayList<>();
 
     /**
      * Sets the telemetry context for agent runs.
@@ -1517,7 +1551,7 @@ public final class Agent implements Serializable, Interactable {
      * Person person = result.output();  // Type-safe!
      * }</pre>
      *
-     * @param <T> the output type
+     * @param <T>        the output type
      * @param outputType the class of the structured output
      * @return a structured builder that builds Agent.Structured
      */
@@ -1628,13 +1662,13 @@ public final class Agent implements Serializable, Interactable {
     }
 
     public @NonNull StructuredBuilder<T> addSubAgent(
-        @NonNull Agent subAgent, @NonNull String description) {
+            @NonNull Agent subAgent, @NonNull String description) {
       parentBuilder.addSubAgent(subAgent, description);
       return this;
     }
 
     public @NonNull StructuredBuilder<T> addSubAgent(
-        @NonNull Agent subAgent, SubAgentTool.Config config) {
+            @NonNull Agent subAgent, SubAgentTool.Config config) {
       parentBuilder.addSubAgent(subAgent, config);
       return this;
     }
@@ -1655,7 +1689,7 @@ public final class Agent implements Serializable, Interactable {
     }
 
     public @NonNull StructuredBuilder<T> addTelemetryProcessor(
-        @NonNull TelemetryProcessor processor) {
+            @NonNull TelemetryProcessor processor) {
       parentBuilder.addTelemetryProcessor(processor);
       return this;
     }
@@ -1671,7 +1705,7 @@ public final class Agent implements Serializable, Interactable {
     }
 
     public @NonNull StructuredBuilder<T> contextManagement(
-        @NonNull ContextManagementConfig config) {
+            @NonNull ContextManagementConfig config) {
       parentBuilder.contextManagement(config);
       return this;
     }
@@ -1734,12 +1768,16 @@ public final class Agent implements Serializable, Interactable {
       this.objectMapper = agent.objectMapper;
     }
 
-    /** Returns the wrapped agent's name. */
+    /**
+     * Returns the wrapped agent's name.
+     */
     public @NonNull String name() {
       return agent.name();
     }
 
-    /** Returns the structured output type. */
+    /**
+     * Returns the structured output type.
+     */
     public @NonNull Class<T> outputType() {
       return outputType;
     }
@@ -1757,12 +1795,12 @@ public final class Agent implements Serializable, Interactable {
     /**
      * Interacts with the agent with context and returns type-safe structured output.
      *
-     * @param input the user's text input
+     * @param input   the user's text input
      * @param context the conversation context
      * @return the typed result
      */
     public @NonNull StructuredAgentResult<T> interact(
-        @NonNull String input, @NonNull AgentContext context) {
+            @NonNull String input, @NonNull AgentContext context) {
       Objects.requireNonNull(input, "input cannot be null");
       context.addInput(Message.user(input));
       return interact(context);
@@ -1781,35 +1819,37 @@ public final class Agent implements Serializable, Interactable {
       return parseResult(result);
     }
 
-    /** Parses the AgentResult into a type-safe StructuredAgentResult. */
+    /**
+     * Parses the AgentResult into a type-safe StructuredAgentResult.
+     */
     private @NonNull StructuredAgentResult<T> parseResult(AgentResult result) {
       if (result.isError()) {
         return StructuredAgentResult.error(
-            result.error(),
-            result.output(),
-            result.finalResponse(),
-            result.history(),
-            result.toolExecutions(),
-            result.turnsUsed());
+                result.error(),
+                result.output(),
+                result.finalResponse(),
+                result.history(),
+                result.toolExecutions(),
+                result.turnsUsed());
       }
 
       try {
         T parsed = objectMapper.readValue(result.output(), outputType);
         return StructuredAgentResult.success(
-            parsed,
-            result.output(),
-            result.finalResponse(),
-            result.history(),
-            result.toolExecutions(),
-            result.turnsUsed());
+                parsed,
+                result.output(),
+                result.finalResponse(),
+                result.history(),
+                result.toolExecutions(),
+                result.turnsUsed());
       } catch (JsonProcessingException e) {
         return StructuredAgentResult.error(
-            new IllegalStateException("Failed to parse structured output: " + e.getMessage(), e),
-            result.output(),
-            result.finalResponse(),
-            result.history(),
-            result.toolExecutions(),
-            result.turnsUsed());
+                new IllegalStateException("Failed to parse structured output: " + e.getMessage(), e),
+                result.output(),
+                result.finalResponse(),
+                result.history(),
+                result.toolExecutions(),
+                result.turnsUsed());
       }
     }
   }

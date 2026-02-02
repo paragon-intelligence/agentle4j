@@ -192,6 +192,18 @@
             <artifactId>jsoup</artifactId>
             <version>1.21.2</version>
         </dependency>
+
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <version>3.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>9.1.0.Final</version>
+        </dependency>
+
     </dependencies>
 
     <distributionManagement>
@@ -222,9 +234,9 @@
                 <configuration>
                     <useModulePath>false</useModulePath>
                     <!-- JVM args for Mockito/ByteBuddy compatibility with Java 25 -->
-                    <argLine>@{argLine} 
+                    <argLine>@{argLine}
                         --enable-preview
-                        --add-opens java.base/java.lang=ALL-UNNAMED 
+                        --add-opens java.base/java.lang=ALL-UNNAMED
                         --add-opens java.base/java.lang.reflect=ALL-UNNAMED
                         --add-opens java.base/java.util=ALL-UNNAMED
                         -Dnet.bytebuddy.experimental=true
