@@ -1,5 +1,7 @@
 package com.paragon.messaging.whatsapp;
 
+import com.paragon.responses.spec.Message;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 

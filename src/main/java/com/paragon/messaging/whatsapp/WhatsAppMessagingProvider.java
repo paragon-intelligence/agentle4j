@@ -81,47 +81,28 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
    */
   private final Semaphore httpRateLimiter;
 
-  private final String phoneNumberId;
-  private final String accessToken;
+  private final WhatsAppConfig config;
+  private final Semaphore httpRateLimiter;
   private final OkHttpClient httpClient;
 
   /**
-   * Construtor com rate limiting customizável.
+   * Construtor com configuração centralizada.
    *
-   * @param phoneNumberId         ID do número de telefone WhatsApp Business
-   * @param accessToken           token de acesso permanente (System User Token)
-   * @param httpClient            cliente HTTP configurado (injetado)
-   * @param maxConcurrentRequests máximo de requisições HTTP simultâneas (padrão: 80)
+   * @param config     Configuração do WhatsApp
+   * @param httpClient cliente HTTP configurado (injetado)
    */
   public WhatsAppMessagingProvider(
-          String phoneNumberId,
-          String accessToken,
-          OkHttpClient httpClient,
-          int maxConcurrentRequests) {
+          WhatsAppConfig config,
+          OkHttpClient httpClient) {
 
-    this.phoneNumberId = Objects.requireNonNull(phoneNumberId, "Phone number ID cannot be null");
-    this.accessToken = Objects.requireNonNull(accessToken, "Access token cannot be null");
+    this.config = Objects.requireNonNull(config, "Config cannot be null");
     this.httpClient = Objects.requireNonNull(httpClient, "OkHttpClient cannot be null");
 
-    if (maxConcurrentRequests <= 0) {
-      throw new IllegalArgumentException("maxConcurrentRequests must be positive");
-    }
-
-    this.httpRateLimiter = new Semaphore(maxConcurrentRequests);
-  }
-
-  /**
-   * Construtor com rate limiting padrão (80 requisições simultâneas).
-   *
-   * @param phoneNumberId ID do número de telefone
-   * @param accessToken   token de acesso
-   * @param httpClient    cliente HTTP configurado
-   */
-  public WhatsAppMessagingProvider(
-          String phoneNumberId,
-          String accessToken,
-          OkHttpClient httpClient) {
-    this(phoneNumberId, accessToken, httpClient, 80);
+    // Limitar com base no bucket capacity para bursts controlados,
+    // mas o rate limit real é aplicado pela API. Aqui controlamos conexões simultâneas.
+    // Usamos um valor fixo alto o suficiente para permitir paralelismo,
+    // mas limitado para não exaurir recursos locais.
+    this.httpRateLimiter = new Semaphore(config.rateLimitConfig().bucketCapacity() * 2);
   }
 
   /**
@@ -130,11 +111,11 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
    * <p><b>Virtual Thread Optimization:</b> OkHttpClient usa seu próprio connection pool
    * e dispatcher. Configuração otimizada para uso com virtual threads.</p>
    */
-  public static OkHttpClient createDefaultHttpClient() {
+  public static OkHttpClient createDefaultHttpClient(WhatsAppConfig config) {
     return new OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(config.connectionTimeout())
+            .readTimeout(config.readTimeout())
+            .writeTimeout(config.readTimeout())
             // Connection pool para reutilização
             .connectionPool(new ConnectionPool(
                     50,  // max idle connections
@@ -162,7 +143,7 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
 
   @Override
   public boolean isConfigured() {
-    return !phoneNumberId.isBlank() && !accessToken.isBlank();
+    return !config.phoneNumberId().isBlank() && !config.accessToken().isBlank();
   }
 
   @Override
@@ -195,8 +176,8 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
 
       // Criar requisição HTTP
       Request request = new Request.Builder()
-              .url(BASE_URL + "/" + phoneNumberId + "/messages")
-              .addHeader("Authorization", "Bearer " + accessToken)
+              .url(BASE_URL + "/" + config.phoneNumberId() + "/messages")
+              .addHeader("Authorization", "Bearer " + config.accessToken())
               .post(RequestBody.create(jsonPayload, JSON))
               .build();
 

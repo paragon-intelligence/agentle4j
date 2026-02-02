@@ -66,6 +66,7 @@ public sealed interface WebhookEvent permits
           IncomingMessageContent.ListReplyContent {
   }
 
+
   /**
    * Evento de atualização de status de mensagem.
    *
@@ -73,18 +74,18 @@ public sealed interface WebhookEvent permits
    * @param recipientId    ID do destinatário
    * @param status         status da mensagem
    * @param timestamp      timestamp do evento
-   * @param conversationId ID da conversa (opcional)
-   * @param pricing        informações de cobrança (opcional)
-   * @param errors         erros ocorridos (opcional)
+   * @param conversationId ID da conversa (pode ser null)
+   * @param pricing        informações de cobrança (pode ser null)
+   * @param errors         erros ocorridos (pode ser null)
    */
   record MessageStatusEvent(
           String messageId,
           String recipientId,
           MessageResponse.MessageStatus status,
           Instant timestamp,
-          Optional<String> conversationId,
-          Optional<MessageResponse.PricingInfo> pricing,
-          Optional<List<MessageResponse.ErrorInfo>> errors
+          @Nullable String conversationId,
+          @Nullable MessageResponse.PricingInfo pricing,
+          @Nullable List<MessageResponse.ErrorInfo> errors
   ) implements WebhookEvent {
 
     public MessageStatusEvent {
@@ -92,16 +93,24 @@ public sealed interface WebhookEvent permits
       Objects.requireNonNull(recipientId, "Recipient ID cannot be null");
       Objects.requireNonNull(status, "Status cannot be null");
       Objects.requireNonNull(timestamp, "Timestamp cannot be null");
-      Objects.requireNonNull(conversationId, "Conversation ID cannot be null");
-      Objects.requireNonNull(pricing, "Pricing cannot be null");
-      Objects.requireNonNull(errors, "Errors cannot be null");
-
-      errors.ifPresent(List::copyOf);
+      // conversationId, pricing, errors can be null
     }
 
     @Override
     public WebhookEventType type() {
       return WebhookEventType.MESSAGE_STATUS;
+    }
+
+    public Optional<String> getConversationId() {
+      return Optional.ofNullable(conversationId);
+    }
+
+    public Optional<MessageResponse.PricingInfo> getPricing() {
+      return Optional.ofNullable(pricing);
+    }
+
+    public Optional<List<MessageResponse.ErrorInfo>> getErrors() {
+      return Optional.ofNullable(errors).map(List::copyOf);
     }
 
     /**
@@ -135,26 +144,25 @@ public sealed interface WebhookEvent permits
    * @param messageType tipo da mensagem recebida
    * @param content     conteúdo da mensagem
    * @param timestamp   timestamp da mensagem
-   * @param context     contexto da mensagem (se for resposta, etc.)
+   * @param context     contexto da mensagem (se for resposta, etc., pode ser null)
    */
   record IncomingMessageEvent(
           String messageId,
           String senderId,
-          Optional<String> senderName,
+          @Nullable String senderName,
           IncomingMessageType messageType,
           IncomingMessageContent content,
           Instant timestamp,
-          Optional<MessageContext> context
+          @Nullable MessageContext context
   ) implements WebhookEvent {
 
     public IncomingMessageEvent {
       Objects.requireNonNull(messageId, "Message ID cannot be null");
       Objects.requireNonNull(senderId, "Sender ID cannot be null");
-      Objects.requireNonNull(senderName, "Sender name cannot be null");
       Objects.requireNonNull(messageType, "Message type cannot be null");
       Objects.requireNonNull(content, "Content cannot be null");
       Objects.requireNonNull(timestamp, "Timestamp cannot be null");
-      Objects.requireNonNull(context, "Context cannot be null");
+      // senderName, context can be null
     }
 
     @Override
@@ -166,6 +174,14 @@ public sealed interface WebhookEvent permits
         case LIST_REPLY -> WebhookEventType.INCOMING_LIST_REPLY;
         default -> WebhookEventType.INCOMING_MESSAGE;
       };
+    }
+
+    public Optional<String> getSenderName() {
+      return Optional.ofNullable(senderName);
+    }
+
+    public Optional<MessageContext> getContext() {
+      return Optional.ofNullable(context);
     }
   }
 
@@ -184,14 +200,20 @@ public sealed interface WebhookEvent permits
   record MediaContent(
           String mediaId,
           String mimeType,
-          Optional<String> caption,
-          Optional<String> filename
+          @Nullable String caption,
+          @Nullable String filename
   ) implements IncomingMessageContent {
     public MediaContent {
       Objects.requireNonNull(mediaId, "Media ID cannot be null");
       Objects.requireNonNull(mimeType, "MIME type cannot be null");
-      Objects.requireNonNull(caption, "Caption cannot be null");
-      Objects.requireNonNull(filename, "Filename cannot be null");
+    }
+
+    public Optional<String> getCaption() {
+      return Optional.ofNullable(caption);
+    }
+
+    public Optional<String> getFilename() {
+      return Optional.ofNullable(filename);
     }
   }
 
@@ -201,12 +223,16 @@ public sealed interface WebhookEvent permits
   record LocationContent(
           double latitude,
           double longitude,
-          Optional<String> name,
-          Optional<String> address
+          @Nullable String name,
+          @Nullable String address
   ) implements IncomingMessageContent {
-    public LocationContent {
-      Objects.requireNonNull(name, "Name cannot be null");
-      Objects.requireNonNull(address, "Address cannot be null");
+
+    public Optional<String> getName() {
+      return Optional.ofNullable(name);
+    }
+
+    public Optional<String> getAddress() {
+      return Optional.ofNullable(address);
     }
   }
 
@@ -246,12 +272,15 @@ public sealed interface WebhookEvent permits
   record ListReplyContent(
           String listId,
           String listTitle,
-          Optional<String> listDescription
+          @Nullable String listDescription
   ) implements IncomingMessageContent {
     public ListReplyContent {
       Objects.requireNonNull(listId, "List ID cannot be null");
       Objects.requireNonNull(listTitle, "List title cannot be null");
-      Objects.requireNonNull(listDescription, "List description cannot be null");
+    }
+
+    public Optional<String> getListDescription() {
+      return Optional.ofNullable(listDescription);
     }
   }
 
@@ -259,13 +288,17 @@ public sealed interface WebhookEvent permits
    * Contexto da mensagem (se for resposta, reenvio, etc.).
    */
   record MessageContext(
-          Optional<String> referencedMessageId,
-          Optional<String> forwardedFrom,
+          @Nullable String referencedMessageId,
+          @Nullable String forwardedFrom,
           boolean isForwarded
   ) {
-    public MessageContext {
-      Objects.requireNonNull(referencedMessageId, "Referenced message ID cannot be null");
-      Objects.requireNonNull(forwardedFrom, "Forwarded from cannot be null");
+
+    public Optional<String> getReferencedMessageId() {
+      return Optional.ofNullable(referencedMessageId);
+    }
+
+    public Optional<String> getForwardedFrom() {
+      return Optional.ofNullable(forwardedFrom);
     }
   }
 }
