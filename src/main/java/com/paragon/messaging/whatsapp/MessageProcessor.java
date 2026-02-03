@@ -1,33 +1,36 @@
 package com.paragon.messaging.whatsapp;
 
+import com.paragon.messaging.whatsapp.payload.InboundMessage;
+import org.jspecify.annotations.NonNull;
+
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
- * Processa lote de mensagens de um usuário.
+ * Processes batched messages from a user.
  *
- * <p>Implementações tipicamente:</p>
+ * <p>Implementations typically:</p>
  * <ol>
- *   <li>Combinam mensagens em input único</li>
- *   <li>Chamam AI agent (Agentle)</li>
- *   <li>Enviam resposta via plataforma de mensageria</li>
- *   <li>Opcionalmente convertem para áudio (TTS)</li>
+ *   <li>Combine messages into a single input</li>
+ *   <li>Call AI agent (via {@link com.paragon.agents.Interactable})</li>
+ *   <li>Send response via messaging platform</li>
+ *   <li>Optionally convert to audio (TTS)</li>
  * </ol>
  *
- * <p><b>Exemplo Simples:</b></p>
+ * <h2>Simple Example</h2>
  * <pre>{@code
- * MessageProcessor processor = (userId, messages) -> {
- *     // 1. Combinar mensagens
+ * MessageProcessor processor = (userId, messages, context) -> {
+ *     // 1. Combine messages
  *     String input = messages.stream()
- *         .map(Message::content)
+ *         .map(InboundMessage::extractTextContent)
  *         .collect(Collectors.joining("\n"));
  *
- *     // 2. Processar com AI agent
+ *     // 2. Process with AI agent
  *     AgentResult result = agent.interact(input);
  *     String response = result.output();
  *
- *     // 3. Enviar resposta
+ *     // 3. Send response
  *     whatsappProvider.sendText(
  *         Recipient.ofPhoneNumber(userId),
  *         new TextMessage(response)
@@ -35,13 +38,13 @@ import java.util.stream.Collectors;
  * };
  * }</pre>
  *
- * <p><b>Exemplo com TTS:</b></p>
+ * <h2>Example with TTS</h2>
  * <pre>{@code
- * MessageProcessor processor = (userId, messages) -> {
+ * MessageProcessor processor = (userId, messages, context) -> {
  *     String input = combineMessages(messages);
  *     String response = agent.interact(input).output();
  *
- *     // Decidir texto vs áudio
+ *     // Decide text vs audio
  *     if (random.nextDouble() < speechPlayChance) {
  *         byte[] audio = ttsProvider.synthesize(response, ttsConfig);
  *         sendAudio(userId, audio);
@@ -51,58 +54,167 @@ import java.util.stream.Collectors;
  * };
  * }</pre>
  *
- * <p><b>Thread Safety:</b></p>
- * <p>Processors são chamados de virtual threads e podem ser invocados
- * concorrentemente para diferentes usuários. Implementações devem ser
- * thread-safe se acessarem estado mutável compartilhado.</p>
+ * <h2>Thread Safety</h2>
+ * <p>Processors are called from virtual threads and may be invoked
+ * concurrently for different users. Implementations must be
+ * thread-safe if accessing shared mutable state.</p>
  *
- * <p><b>Error Handling:</b></p>
- * <p>Exceções lançadas são capturadas por {@link MessageBatchingService}
- * e tratadas conforme {@link ErrorHandlingStrategy}.</p>
+ * <h2>Error Handling</h2>
+ * <p>Exceptions thrown are captured by {@link MessageBatchingService}
+ * and handled according to {@link ErrorHandlingStrategy}.</p>
  *
  * @author Agentle Team
  * @see MessageBatchingService
+ * @see AIAgentProcessor
  * @since 1.0
  */
 @FunctionalInterface
 public interface MessageProcessor {
 
-  /**
-   * Processor no-op que não faz nada.
-   *
-   * @return processor vazio
-   */
-  static MessageProcessor noOp() {
-    return (userId, messages) -> {
-    };
-  }
+    /**
+     * No-op processor that does nothing.
+     *
+     * @return empty processor
+     */
+    static MessageProcessor noOp() {
+        return (userId, messages, context) -> {
+        };
+    }
 
-  /**
-   * Processor de logging que apenas loga mensagens.
-   *
-   * @param logger consumidor de mensagens de log
-   * @return processor de logging
-   */
-  static MessageProcessor logging(Consumer<String> logger) {
-    return (userId, messages) -> {
-      String log = String.format(
-              "Processando %d mensagens para usuário %s: %s",
-              messages.size(),
-              userId,
-              messages.stream()
-                      .map(Message::content)
-                      .collect(Collectors.joining(", "))
-      );
-      logger.accept(log);
-    };
-  }
+    /**
+     * Logging processor that only logs messages.
+     *
+     * @param logger consumer for log messages
+     * @return logging processor
+     */
+    static MessageProcessor logging(Consumer<String> logger) {
+        return (userId, messages, context) -> {
+            String log = String.format(
+                    "Processing %d messages for user %s: %s",
+                    messages.size(),
+                    userId,
+                    messages.stream()
+                            .map(InboundMessage::extractTextContent)
+                            .collect(Collectors.joining(", "))
+            );
+            logger.accept(log);
+        };
+    }
 
-  /**
-   * Processa lote de mensagens de um usuário.
-   *
-   * @param userId   ID do usuário
-   * @param messages lote de mensagens (garantidamente não-vazio e ordenado por timestamp)
-   * @throws Exception se processamento falhar (será tratado por error strategy)
-   */
-  void process(String userId, List<Message> messages) throws Exception;
+    /**
+     * Processes a batch of messages from a user.
+     *
+     * @param userId   the user's unique identifier (e.g., WhatsApp phone number)
+     * @param messages batch of messages (guaranteed non-empty and ordered by timestamp)
+     * @param context  processing context with metadata about the batch
+     * @throws Exception if processing fails (will be handled by error strategy)
+     */
+    void process(
+            @NonNull String userId,
+            @NonNull List<? extends InboundMessage> messages,
+            @NonNull ProcessingContext context
+    ) throws Exception;
+
+    /**
+     * Simplified processing without context.
+     *
+     * <p>Delegates to {@link #process(String, List, ProcessingContext)} with
+     * an empty context.</p>
+     *
+     * @param userId   the user's unique identifier
+     * @param messages batch of messages
+     * @throws Exception if processing fails
+     */
+    default void process(
+            @NonNull String userId,
+            @NonNull List<? extends InboundMessage> messages
+    ) throws Exception {
+        process(userId, messages, ProcessingContext.empty());
+    }
+
+    /**
+     * Context information passed to the processor during batch processing.
+     *
+     * @param batchId           unique identifier for this batch
+     * @param firstMessageId    ID of the first message in the batch (for reply context)
+     * @param lastMessageId     ID of the last message in the batch
+     * @param processingReason  why the batch was triggered (timeout, silence, buffer full)
+     * @param retryAttempt      current retry attempt (0 for first try)
+     */
+    record ProcessingContext(
+            @NonNull String batchId,
+            @NonNull String firstMessageId,
+            @NonNull String lastMessageId,
+            @NonNull ProcessingReason processingReason,
+            int retryAttempt
+    ) {
+        /**
+         * Creates an empty context for simple processing.
+         *
+         * @return empty context
+         */
+        public static ProcessingContext empty() {
+            return new ProcessingContext("", "", "", ProcessingReason.UNKNOWN, 0);
+        }
+
+        /**
+         * Creates a context for a new batch.
+         *
+         * @param batchId        unique batch identifier
+         * @param firstMessageId first message ID
+         * @param lastMessageId  last message ID
+         * @param reason         processing trigger reason
+         * @return new context
+         */
+        public static ProcessingContext create(
+                String batchId,
+                String firstMessageId,
+                String lastMessageId,
+                ProcessingReason reason) {
+            return new ProcessingContext(batchId, firstMessageId, lastMessageId, reason, 0);
+        }
+
+        /**
+         * Creates a retry context from this context.
+         *
+         * @return context with incremented retry attempt
+         */
+        public ProcessingContext retry() {
+            return new ProcessingContext(batchId, firstMessageId, lastMessageId, processingReason, retryAttempt + 1);
+        }
+
+        /**
+         * Checks if this is a retry attempt.
+         *
+         * @return true if retryAttempt > 0
+         */
+        public boolean isRetry() {
+            return retryAttempt > 0;
+        }
+    }
+
+    /**
+     * Reason why a batch was triggered for processing.
+     */
+    enum ProcessingReason {
+        /**
+         * Maximum wait time (adaptive timeout) was reached.
+         */
+        TIMEOUT,
+
+        /**
+         * User stopped sending for the silence threshold duration.
+         */
+        SILENCE,
+
+        /**
+         * Buffer reached maximum size.
+         */
+        BUFFER_FULL,
+
+        /**
+         * Unknown or unspecified reason.
+         */
+        UNKNOWN
+    }
 }

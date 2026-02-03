@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Inbound image message from WhatsApp webhook.
+ * Inbound audio/voice message from WhatsApp webhook.
  */
-public final class ImageMessage extends AbstractInboundMessage {
+public final class AudioMessage extends AbstractInboundMessage {
 
     @Nullable
     public final String mediaId;
@@ -18,29 +18,28 @@ public final class ImageMessage extends AbstractInboundMessage {
     @Nullable
     public final String sha256;
 
-    @Nullable
-    public final String caption;
+    public final boolean voice;
 
     @JsonCreator
-    public ImageMessage(
+    public AudioMessage(
             @JsonProperty("from") String from,
             @JsonProperty("id") String id,
             @JsonProperty("timestamp") String timestamp,
             @JsonProperty("type") String type,
             @JsonProperty("context") MessageContext context,
-            @JsonProperty("image") MediaContent image
+            @JsonProperty("audio") MediaContent audio
     ) {
         super(from, id, timestamp, type, context);
-        if (image != null) {
-            this.mediaId = image.id();
-            this.mimeType = image.mimeType();
-            this.sha256 = image.sha256();
-            this.caption = image.caption();
+        if (audio != null) {
+            this.mediaId = audio.id();
+            this.mimeType = audio.mimeType();
+            this.sha256 = audio.sha256();
+            this.voice = audio.voice() != null && audio.voice();
         } else {
             this.mediaId = null;
             this.mimeType = null;
             this.sha256 = null;
-            this.caption = null;
+            this.voice = false;
         }
     }
 }

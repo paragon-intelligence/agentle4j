@@ -1,48 +1,39 @@
 package com.paragon.messaging.whatsapp;
 
-import com.paragon.messaging.whatsapp.payload.ContactMessage;
+import org.jspecify.annotations.NonNull;
+
+import java.time.Instant;
 
 /**
- * Interface selada que representa todos os tipos possíveis de mensagens.
+ * Immutable message data for batching.
  *
- * <p>Usando sealed interface para garantir que apenas tipos conhecidos
- * de mensagens sejam criados, facilitando pattern matching e validação.</p>
+ * <p>Represents a simplified message in the batching queue. The full message
+ * payload is available in {@link com.paragon.messaging.whatsapp.payload.InboundMessage}
+ * after processing.</p>
  *
- * @author Your Name
- * @since 2.0
+ * @param messageId unique message identifier (for deduplication)
+ * @param content textual content of the message
+ * @param timestamp when the message was received
+ * @author Agentle Team
+ * @since 2.1
  */
-public sealed interface Message permits
-        TextMessage,
-        MediaMessage,
-        TemplateMessage,
-        InteractiveMessage,
-        LocationMessage,
-        ContactMessage,
-        ReactionMessage {
-
-  /**
-   * Retorna o tipo da mensagem.
-   *
-   * @return tipo da mensagem
-   */
-  MessageType getType();
-
-  /**
-   * Enum representando todos os tipos de mensagens suportados.
-   */
-  enum MessageType {
-    TEXT,
-    IMAGE,
-    VIDEO,
-    AUDIO,
-    DOCUMENT,
-    STICKER,
-    TEMPLATE,
-    INTERACTIVE_BUTTON,
-    INTERACTIVE_LIST,
-    INTERACTIVE_CTA_URL,
-    LOCATION,
-    CONTACT,
-    REACTION
-  }
+public record Message(
+        @NonNull String messageId,
+        @NonNull String content,
+        @NonNull Instant timestamp
+) {
+    /**
+     * Canonical constructor with validation.
+     */
+    public Message {
+        if (messageId == null || messageId.isBlank()) {
+            throw new IllegalArgumentException("messageId cannot be null or blank");
+        }
+        if (content == null) {
+            throw new IllegalArgumentException("content cannot be null");
+        }
+        if (timestamp == null) {
+            throw new IllegalArgumentException("timestamp cannot be null");
+        }
+    }
 }

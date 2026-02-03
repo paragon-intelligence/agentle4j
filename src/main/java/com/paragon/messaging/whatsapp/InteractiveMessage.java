@@ -7,12 +7,12 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Interface selada para mensagens interativas (botões, listas, CTA URL).
+ * Sealed interface for interactive messages (buttons, lists, CTA URL).
  *
- * @author Your Name
+ * @author Agentle Team
  * @since 2.0
  */
-public sealed interface InteractiveMessage extends Message permits
+public sealed interface InteractiveMessage extends OutboundMessage permits
         InteractiveMessage.ButtonMessage,
         InteractiveMessage.ListMessage,
         InteractiveMessage.CtaUrlMessage {
@@ -81,8 +81,8 @@ public sealed interface InteractiveMessage extends Message permits
     }
 
     @Override
-    public MessageType getType() {
-      return MessageType.INTERACTIVE_BUTTON;
+    public OutboundMessageType type() {
+      return OutboundMessageType.INTERACTIVE_BUTTON;
     }
 
     public static class Builder {
@@ -181,8 +181,8 @@ public sealed interface InteractiveMessage extends Message permits
     }
 
     @Override
-    public MessageType getType() {
-      return MessageType.INTERACTIVE_LIST;
+    public OutboundMessageType type() {
+      return OutboundMessageType.INTERACTIVE_LIST;
     }
 
     public static class Builder {
@@ -263,8 +263,8 @@ public sealed interface InteractiveMessage extends Message permits
     }
 
     @Override
-    public MessageType getType() {
-      return MessageType.INTERACTIVE_CTA_URL;
+    public OutboundMessageType type() {
+      return OutboundMessageType.INTERACTIVE_CTA_URL;
     }
   }
 

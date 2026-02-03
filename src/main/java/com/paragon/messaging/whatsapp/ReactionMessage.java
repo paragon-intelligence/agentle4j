@@ -14,7 +14,7 @@ public record ReactionMessage(
 
         Optional<String> emoji
 
-) implements Message {
+) implements OutboundMessage {
 
   public ReactionMessage(String messageId, String emoji) {
     this(messageId, Optional.ofNullable(emoji));
@@ -29,7 +29,7 @@ public record ReactionMessage(
   }
 
   @Override
-  public MessageType getType() {
-    return MessageType.REACTION;
+  public OutboundMessageType type() {
+    return OutboundMessageType.REACTION;
   }
 }

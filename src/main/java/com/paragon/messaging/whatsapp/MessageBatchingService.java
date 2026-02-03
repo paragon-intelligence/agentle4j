@@ -1,10 +1,8 @@
 package com.paragon.messaging.whatsapp;
 
-import io.github.paragonintelligence.agentle.messaging.hooks.*;
-import io.github.paragonintelligence.agentle.messaging.internal.*;
-import io.github.paragonintelligence.agentle.messaging.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 import java.time.Duration;
 import java.time.Instant;

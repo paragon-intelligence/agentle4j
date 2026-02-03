@@ -1,6 +1,6 @@
 package com.paragon.messaging.whatsapp.payload;
 
-import com.paragon.messaging.whatsapp.Message;
+import com.paragon.messaging.whatsapp.OutboundMessage;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 /**
- * Mensagem de contato (vCard).
+ * Contact message (vCard) for outbound delivery.
  */
 public record ContactMessage(
 
@@ -18,7 +18,7 @@ public record ContactMessage(
         @Valid
         List<Contact> contacts
 
-) implements Message {
+) implements OutboundMessage {
 
   public ContactMessage {
     contacts = List.copyOf(contacts);
@@ -29,12 +29,12 @@ public record ContactMessage(
   }
 
   @Override
-  public MessageType getType() {
-    return MessageType.CONTACT;
+  public OutboundMessageType type() {
+    return OutboundMessageType.CONTACT;
   }
 
   /**
-   * Representa um contato individual.
+   * Represents an individual contact.
    */
   public record Contact(
           @NotBlank(message = "Name cannot be blank") String name,

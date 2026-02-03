@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Inbound image message from WhatsApp webhook.
+ * Inbound video message from WhatsApp webhook.
  */
-public final class ImageMessage extends AbstractInboundMessage {
+public final class VideoMessage extends AbstractInboundMessage {
 
     @Nullable
     public final String mediaId;
@@ -22,20 +22,20 @@ public final class ImageMessage extends AbstractInboundMessage {
     public final String caption;
 
     @JsonCreator
-    public ImageMessage(
+    public VideoMessage(
             @JsonProperty("from") String from,
             @JsonProperty("id") String id,
             @JsonProperty("timestamp") String timestamp,
             @JsonProperty("type") String type,
             @JsonProperty("context") MessageContext context,
-            @JsonProperty("image") MediaContent image
+            @JsonProperty("video") MediaContent video
     ) {
         super(from, id, timestamp, type, context);
-        if (image != null) {
-            this.mediaId = image.id();
-            this.mimeType = image.mimeType();
-            this.sha256 = image.sha256();
-            this.caption = image.caption();
+        if (video != null) {
+            this.mediaId = video.id();
+            this.mimeType = video.mimeType();
+            this.sha256 = video.sha256();
+            this.caption = video.caption();
         } else {
             this.mediaId = null;
             this.mimeType = null;

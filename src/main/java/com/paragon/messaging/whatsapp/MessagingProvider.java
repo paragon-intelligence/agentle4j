@@ -1,28 +1,25 @@
 package com.paragon.messaging.whatsapp;
 
-import com.example.messaging.api.exception.MessagingException;
-import com.example.messaging.model.common.Recipient;
-import com.example.messaging.model.message.*;
-import com.example.messaging.model.response.MessageResponse;
 import com.paragon.messaging.whatsapp.payload.ContactMessage;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
- * Interface principal para provedores de mensagens (WhatsApp, Facebook, Messenger, etc.).
+ * Interface for messaging providers (WhatsApp, Facebook Messenger, etc.).
  *
- * <p>Esta interface define o contrato para envio de mensagens através de diferentes
- * plataformas de mensageria. Com Java virtual threads, a API é síncrona e simples,
- * mas altamente escalável quando executada em virtual threads.</p>
+ * <p>This interface defines the contract for sending messages through different
+ * messaging platforms. With Java virtual threads, the API is synchronous and simple,
+ * but highly scalable when executed in virtual threads.</p>
  *
- * <h2>Uso com Virtual Threads</h2>
+ * <h2>Usage with Virtual Threads</h2>
  * <pre>{@code
- * // Forma 1: Virtual thread per task executor
+ * // Form 1: Virtual thread per task executor
  * try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
  *     executor.submit(() -> provider.sendMessage(recipient, message));
  * }
  *
- * // Forma 2: Direct virtual thread
+ * // Form 2: Direct virtual thread
  * Thread.startVirtualThread(() -> {
  *     try {
  *         MessageResponse response = provider.sendMessage(recipient, message);
@@ -32,7 +29,7 @@ import jakarta.validation.constraints.NotNull;
  *     }
  * });
  *
- * // Forma 3: Structured Concurrency (Java 21+)
+ * // Form 3: Structured Concurrency (Java 21+)
  * try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
  *     var task1 = scope.fork(() -> provider.sendMessage(recipient1, message));
  *     var task2 = scope.fork(() -> provider.sendMessage(recipient2, message));
@@ -45,48 +42,48 @@ import jakarta.validation.constraints.NotNull;
  * }
  * }</pre>
  *
- * @author Your Name
+ * @author Agentle Team
  * @since 2.0
  */
 public interface MessagingProvider {
 
   /**
-   * Retorna o tipo/nome do provedor (ex: "WHATSAPP_CLOUD", "FACEBOOK_MESSENGER").
+   * Returns the provider type/name (e.g., "WHATSAPP_CLOUD", "FACEBOOK_MESSENGER").
    *
-   * @return identificador único do provedor
+   * @return unique provider identifier
    */
   String getProviderType();
 
   /**
-   * Verifica se o provedor está configurado e pronto para enviar mensagens.
+   * Checks if the provider is configured and ready to send messages.
    *
-   * @return true se o provedor está pronto, false caso contrário
+   * @return true if the provider is ready, false otherwise
    */
   boolean isConfigured();
 
   /**
-   * Envia uma mensagem através do provedor.
+   * Sends a message through the provider.
    *
-   * <p>Este método é bloqueante mas pode ser executado de forma eficiente
-   * em virtual threads sem consumir threads da plataforma.</p>
+   * <p>This method is blocking but can be executed efficiently
+   * in virtual threads without consuming platform threads.</p>
    *
-   * @param recipient destinatário da mensagem (não pode ser null)
-   * @param message   conteúdo da mensagem (não pode ser null, será validado)
-   * @return resposta do envio contendo ID da mensagem e status
-   * @throws MessagingException se houver erro no envio
+   * @param recipient message recipient (cannot be null)
+   * @param message   message content (cannot be null, will be validated)
+   * @return send response containing message ID and status
+   * @throws MessagingException if there is a send error
    */
   MessageResponse sendMessage(
           @NotNull @Valid Recipient recipient,
-          @NotNull @Valid Message message
+          @NotNull @Valid OutboundMessage message
   ) throws MessagingException;
 
   /**
-   * Envia uma mensagem de texto simples.
+   * Sends a simple text message.
    *
-   * @param recipient   destinatário da mensagem
-   * @param textMessage mensagem de texto
-   * @return resposta do envio
-   * @throws MessagingException se houver erro no envio
+   * @param recipient   message recipient
+   * @param textMessage text message
+   * @return send response
+   * @throws MessagingException if there is a send error
    */
   default MessageResponse sendText(
           @NotNull @Valid Recipient recipient,
@@ -96,12 +93,12 @@ public interface MessagingProvider {
   }
 
   /**
-   * Envia uma mensagem de mídia (imagem, vídeo, áudio, documento).
+   * Sends a media message (image, video, audio, document).
    *
-   * @param recipient    destinatário da mensagem
-   * @param mediaMessage mensagem de mídia
-   * @return resposta do envio
-   * @throws MessagingException se houver erro no envio
+   * @param recipient    message recipient
+   * @param mediaMessage media message
+   * @return send response
+   * @throws MessagingException if there is a send error
    */
   default MessageResponse sendMedia(
           @NotNull @Valid Recipient recipient,
@@ -111,12 +108,12 @@ public interface MessagingProvider {
   }
 
   /**
-   * Envia uma mensagem de template (para mensagens fora da janela de 24h).
+   * Sends a template message (for messages outside the 24h window).
    *
-   * @param recipient       destinatário da mensagem
-   * @param templateMessage mensagem baseada em template
-   * @return resposta do envio
-   * @throws MessagingException se houver erro no envio
+   * @param recipient       message recipient
+   * @param templateMessage template-based message
+   * @return send response
+   * @throws MessagingException if there is a send error
    */
   default MessageResponse sendTemplate(
           @NotNull @Valid Recipient recipient,
@@ -126,12 +123,12 @@ public interface MessagingProvider {
   }
 
   /**
-   * Envia uma mensagem interativa (botões, listas, etc.).
+   * Sends an interactive message (buttons, lists, etc.).
    *
-   * @param recipient          destinatário da mensagem
-   * @param interactiveMessage mensagem interativa
-   * @return resposta do envio
-   * @throws MessagingException se houver erro no envio
+   * @param recipient          message recipient
+   * @param interactiveMessage interactive message
+   * @return send response
+   * @throws MessagingException if there is a send error
    */
   default MessageResponse sendInteractive(
           @NotNull @Valid Recipient recipient,
@@ -141,12 +138,12 @@ public interface MessagingProvider {
   }
 
   /**
-   * Envia uma localização.
+   * Sends a location.
    *
-   * @param recipient       destinatário da mensagem
-   * @param locationMessage mensagem de localização
-   * @return resposta do envio
-   * @throws MessagingException se houver erro no envio
+   * @param recipient       message recipient
+   * @param locationMessage location message
+   * @return send response
+   * @throws MessagingException if there is a send error
    */
   default MessageResponse sendLocation(
           @NotNull @Valid Recipient recipient,
@@ -156,12 +153,12 @@ public interface MessagingProvider {
   }
 
   /**
-   * Envia um ou mais contatos.
+   * Sends one or more contacts.
    *
-   * @param recipient      destinatário da mensagem
-   * @param contactMessage mensagem de contato
-   * @return resposta do envio
-   * @throws MessagingException se houver erro no envio
+   * @param recipient      message recipient
+   * @param contactMessage contact message
+   * @return send response
+   * @throws MessagingException if there is a send error
    */
   default MessageResponse sendContact(
           @NotNull @Valid Recipient recipient,
@@ -171,12 +168,12 @@ public interface MessagingProvider {
   }
 
   /**
-   * Envia uma reação a uma mensagem existente.
+   * Sends a reaction to an existing message.
    *
-   * @param recipient       destinatário da reação
-   * @param reactionMessage reação (emoji)
-   * @return resposta do envio
-   * @throws MessagingException se houver erro no envio
+   * @param recipient       reaction recipient
+   * @param reactionMessage reaction (emoji)
+   * @return send response
+   * @throws MessagingException if there is a send error
    */
   default MessageResponse sendReaction(
           @NotNull @Valid Recipient recipient,
@@ -186,40 +183,40 @@ public interface MessagingProvider {
   }
 
   /**
-   * Envia múltiplas mensagens em paralelo usando virtual threads.
+   * Sends multiple messages in parallel using virtual threads.
    *
-   * <p>Este método usa Structured Concurrency (Java 25 JEP 505) com o novo
-   * {@code Joiner.allSuccessfulOrThrow()} que falha se QUALQUER mensagem falhar.</p>
+   * <p>This method uses Structured Concurrency (Java 25 JEP 505) with the new
+   * {@code Joiner.allSuccessfulOrThrow()} that fails if ANY message fails.</p>
    *
-   * <p><b>Comportamento:</b></p>
+   * <p><b>Behavior:</b></p>
    * <ul>
-   *   <li>Todas as mensagens são enviadas em paralelo (uma virtual thread por mensagem)</li>
-   *   <li>Se UMA mensagem falhar, TODAS as demais são canceladas automaticamente</li>
-   *   <li>Retorna resultados na mesma ordem das mensagens de entrada</li>
+   *   <li>All messages are sent in parallel (one virtual thread per message)</li>
+   *   <li>If ONE message fails, ALL others are automatically cancelled</li>
+   *   <li>Returns results in the same order as input messages</li>
    * </ul>
    *
-   * @param recipient destinatário das mensagens
-   * @param messages  lista de mensagens a enviar
-   * @return lista de respostas na mesma ordem das mensagens
-   * @throws MessagingException se alguma mensagem falhar
+   * @param recipient message recipient
+   * @param messages  list of messages to send
+   * @return list of responses in the same order as messages
+   * @throws MessagingException if any message fails
    */
   default java.util.List<MessageResponse> sendBatch(
           @NotNull @Valid Recipient recipient,
-          @NotNull java.util.List<@Valid Message> messages
+          @NotNull java.util.List<@Valid ? extends OutboundMessage> messages
   ) throws MessagingException {
 
     try (var scope = java.util.concurrent.StructuredTaskScope.open(
             java.util.concurrent.StructuredTaskScope.Joiner.allSuccessfulOrThrow())) {
 
-      // Fork uma subtask para cada mensagem
+      // Fork a subtask for each message
       var subtasks = messages.stream()
               .map(msg -> scope.fork(() -> sendMessage(recipient, msg)))
               .toList();
 
-      // Aguardar todas (lança exceção se alguma falhar)
+      // Wait for all (throws exception if any fail)
       scope.join();
 
-      // Coletar resultados na ordem original
+      // Collect results in original order
       return subtasks.stream()
               .map(java.util.concurrent.StructuredTaskScope.Subtask::get)
               .toList();
@@ -233,40 +230,40 @@ public interface MessagingProvider {
   }
 
   /**
-   * Envia para múltiplos destinatários em paralelo, retorna apenas os sucessos.
+   * Sends to multiple recipients in parallel, returns only successes.
    *
-   * <p>Diferente de {@link #sendBatch}, este método NÃO falha se algumas mensagens
-   * falharem. Use quando quiser "melhor esforço" (ex: notificações em massa).</p>
+   * <p>Unlike {@link #sendBatch}, this method does NOT fail if some messages
+   * fail. Use when you want "best effort" (e.g., mass notifications).</p>
    *
-   * <p><b>Comportamento:</b></p>
+   * <p><b>Behavior:</b></p>
    * <ul>
-   *   <li>Todas as mensagens são enviadas em paralelo</li>
-   *   <li>Falhas individuais NÃO cancelam as demais</li>
-   *   <li>Retorna apenas os sucessos</li>
+   *   <li>All messages are sent in parallel</li>
+   *   <li>Individual failures do NOT cancel others</li>
+   *   <li>Returns only successes</li>
    * </ul>
    *
-   * @param recipients lista de destinatários
-   * @param message    mensagem a enviar para todos
-   * @return lista de respostas bem-sucedidas (pode estar vazia)
-   * @throws MessagingException apenas se o próprio processo de envio falhar
+   * @param recipients list of recipients
+   * @param message    message to send to all
+   * @return list of successful responses (may be empty)
+   * @throws MessagingException only if the send process itself fails
    */
   default java.util.List<MessageResponse> sendBroadcast(
           @NotNull java.util.List<@Valid Recipient> recipients,
-          @NotNull @Valid Message message
+          @NotNull @Valid OutboundMessage message
   ) throws MessagingException {
 
     try (var scope = java.util.concurrent.StructuredTaskScope.open(
             java.util.concurrent.StructuredTaskScope.Joiner.<MessageResponse>awaitAll())) {
 
-      // Fork uma subtask para cada destinatário
+      // Fork a subtask for each recipient
       var subtasks = recipients.stream()
               .map(recipient -> scope.fork(() -> sendMessage(recipient, message)))
               .toList();
 
-      // Aguardar todas (NÃO lança exceção se alguma falhar)
+      // Wait for all (does NOT throw exception if some fail)
       scope.join();
 
-      // Coletar apenas os sucessos
+      // Collect only successes
       return subtasks.stream()
               .filter(java.util.concurrent.StructuredTaskScope.Subtask::state)
               .map(java.util.concurrent.StructuredTaskScope.Subtask::get)
@@ -275,6 +272,73 @@ public interface MessagingProvider {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new MessagingException("Broadcast interrupted", e);
+    }
+  }
+
+  /**
+   * Response from sending a message.
+   *
+   * @param messageId the unique message ID assigned by the platform
+   * @param status    the delivery status
+   * @param timestamp the timestamp when the message was accepted
+   */
+  record MessageResponse(
+          @NonNull String messageId,
+          @NonNull String status,
+          @NonNull java.time.Instant timestamp
+  ) {
+    /**
+     * Creates a successful response with current timestamp.
+     *
+     * @param messageId the message ID
+     * @return successful response
+     */
+    public static MessageResponse success(String messageId) {
+      return new MessageResponse(messageId, "accepted", java.time.Instant.now());
+    }
+  }
+
+  /**
+   * Represents a message recipient.
+   *
+   * @param type  recipient type (phone_number, wa_id, etc.)
+   * @param value the recipient identifier value
+   */
+  record Recipient(
+          @NonNull String type,
+          @NonNull String value
+  ) {
+    /**
+     * Creates a recipient from a phone number.
+     *
+     * @param phoneNumber the E.164 formatted phone number
+     * @return phone number recipient
+     */
+    public static Recipient ofPhoneNumber(String phoneNumber) {
+      return new Recipient("phone_number", phoneNumber);
+    }
+
+    /**
+     * Creates a recipient from a WhatsApp ID.
+     *
+     * @param waId the WhatsApp ID
+     * @return WhatsApp ID recipient
+     */
+    public static Recipient ofWhatsAppId(String waId) {
+      return new Recipient("wa_id", waId);
+    }
+  }
+
+  /**
+   * Exception thrown when messaging operations fail.
+   */
+  class MessagingException extends RuntimeException {
+    public MessagingException(String message) {
+      super(message);
+    }
+
+    public MessagingException(String message, Throwable cause) {
+      super(message, cause);
     }
   }
 }

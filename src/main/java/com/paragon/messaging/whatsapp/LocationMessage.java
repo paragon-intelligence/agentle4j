@@ -32,7 +32,7 @@ public record LocationMessage(
         Optional<@Size(max = 1000, message = "Location name cannot exceed 1000 characters") String> name,
         Optional<@Size(max = 1000, message = "Location address cannot exceed 1000 characters") String> address
 
-) implements Message {
+) implements OutboundMessage {
 
   public LocationMessage(double latitude, double longitude) {
     this(latitude, longitude, Optional.empty(), Optional.empty());
@@ -47,8 +47,8 @@ public record LocationMessage(
   }
 
   @Override
-  public MessageType getType() {
-    return MessageType.LOCATION;
+  public OutboundMessageType type() {
+    return OutboundMessageType.LOCATION;
   }
 
   /**

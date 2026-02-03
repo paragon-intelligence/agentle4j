@@ -1,6 +1,9 @@
 package com.paragon.tts;
 
 
+import com.paragon.messaging.whatsapp.config.TTSConfig;
+import org.jspecify.annotations.NonNull;
+
 /**
  * Provider genérico de Text-to-Speech.
  *
@@ -42,7 +45,8 @@ public interface TTSProvider {
    * @return bytes do áudio (formato depende do provider)
    * @throws TTSException se síntese falhar
    */
-  byte[] synthesize(String text, TTSConfig config) throws TTSException;
+  @NonNull
+  Byte[] synthesize(String text, TTSConfig config) throws TTSException;
 
   /**
    * Verifica se provider está disponível.

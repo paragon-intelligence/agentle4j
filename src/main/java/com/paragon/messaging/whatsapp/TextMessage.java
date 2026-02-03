@@ -2,17 +2,34 @@ package com.paragon.messaging.whatsapp;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
- * Representa uma mensagem de texto simples.
+ * Represents a simple text message for outbound delivery.
  *
- * <p>Utiliza Bean Validation (Hibernate Validator) para validação declarativa
- * dos campos, garantindo que a mensagem atenda aos requisitos da API antes
- * do envio.</p>
+ * <p>Uses Bean Validation (Hibernate Validator) for declarative field validation,
+ * ensuring the message meets API requirements before sending.</p>
  *
- * @param body       conteúdo da mensagem (1-4096 caracteres)
- * @param previewUrl se true, gera preview de URLs no texto
- * @author Your Name
+ * <h2>Usage Example</h2>
+ * <pre>{@code
+ * // Simple text message
+ * TextMessage message = new TextMessage("Hello, World!");
+ *
+ * // With URL preview enabled
+ * TextMessage message = new TextMessage("Check out https://example.com", true);
+ *
+ * // As a reply to another message
+ * TextMessage reply = TextMessage.builder()
+ *     .body("Thanks for your message!")
+ *     .replyTo("wamid.xyz123")
+ *     .build();
+ * }</pre>
+ *
+ * @param body              message content (1-4096 characters)
+ * @param previewUrl        if true, generates URL previews in the text
+ * @param replyToMessageId  optional message ID to reply to
+ * @author Agentle Team
  * @since 2.0
  */
 public record TextMessage(
@@ -21,78 +38,137 @@ public record TextMessage(
         @Size(min = 1, max = 4096, message = "Message body must be between 1 and 4096 characters")
         String body,
 
-        boolean previewUrl
+        boolean previewUrl,
 
-) implements Message {
+        @Nullable String replyToMessageId
+
+) implements OutboundMessage {
 
   /**
-   * Tamanho máximo permitido para o corpo da mensagem.
+   * Maximum allowed length for message body.
    */
   public static final int MAX_BODY_LENGTH = 4096;
 
   /**
-   * Constructor conveniente sem preview de URL.
+   * Convenience constructor without URL preview or reply context.
    *
-   * @param body conteúdo da mensagem
+   * @param body message content
    */
   public TextMessage(String body) {
-    this(body, false);
+    this(body, false, null);
   }
 
   /**
-   * Cria um builder para construir TextMessage.
+   * Convenience constructor with URL preview but no reply context.
    *
-   * @return novo builder
+   * @param body       message content
+   * @param previewUrl whether to generate URL previews
+   */
+  public TextMessage(String body, boolean previewUrl) {
+    this(body, previewUrl, null);
+  }
+
+  /**
+   * Creates a builder for TextMessage.
+   *
+   * @return new builder
    */
   public static Builder builder() {
     return new Builder();
   }
 
   @Override
-  public MessageType getType() {
-    return MessageType.TEXT;
+  public OutboundMessageType type() {
+    return OutboundMessageType.TEXT;
+  }
+
+  @Override
+  public @Nullable String replyToMessageId() {
+    return replyToMessageId;
+  }
+
+  @Override
+  public @NonNull OutboundMessage withReplyTo(@NonNull String messageId) {
+    return new TextMessage(body, previewUrl, messageId);
   }
 
   /**
-   * Builder para TextMessage com validação fluente.
+   * Builder for TextMessage with fluent API.
    */
   public static class Builder {
     private String body;
     private boolean previewUrl = false;
+    private String replyToMessageId;
 
     private Builder() {
     }
 
+    /**
+     * Sets the message body text.
+     *
+     * @param body the message content
+     * @return this builder
+     */
     public Builder body(String body) {
       this.body = body;
       return this;
     }
 
+    /**
+     * Sets whether to generate URL previews.
+     *
+     * @param previewUrl true to enable URL previews
+     * @return this builder
+     */
     public Builder previewUrl(boolean previewUrl) {
       this.previewUrl = previewUrl;
       return this;
     }
 
+    /**
+     * Enables URL preview generation.
+     *
+     * @return this builder
+     */
     public Builder enablePreviewUrl() {
       this.previewUrl = true;
       return this;
     }
 
+    /**
+     * Disables URL preview generation.
+     *
+     * @return this builder
+     */
     public Builder disablePreviewUrl() {
       this.previewUrl = false;
       return this;
     }
 
     /**
-     * Constrói a mensagem.
+     * Sets the message ID to reply to.
      *
-     * <p>Nota: A validação será executada quando o objeto for passado
-     * para o MessagingProvider através da anotação @Valid.</p>
+     * <p>When set, the message will appear as a reply/quote in WhatsApp.</p>
      *
-     * @return TextMessage construída
+     * @param messageId the WhatsApp message ID to reply to
+     * @return this builder
+     */
+    public Builder replyTo(@Nullable String messageId) {
+      this.replyToMessageId = messageId;
+      return this;
+    }
+
+    /**
+     * Builds the TextMessage.
+     *
+     * <p>Note: Validation will be executed when the object is passed
+     * to MessagingProvider via the @Valid annotation.</p>
+     *
+     * @return the built TextMessage
      */
     public TextMessage build() {
-      return new TextMessage(body, previewUrl);
+      return new TextMessage(body, previewUrl, replyToMessageId);
     }
   }
 }
+

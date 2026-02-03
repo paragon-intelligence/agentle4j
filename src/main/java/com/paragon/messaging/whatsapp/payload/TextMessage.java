@@ -3,7 +3,7 @@ package com.paragon.messaging.whatsapp.payload;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public final class TextMessage extends AbstractMessage {
+public final class TextMessage extends AbstractInboundMessage {
 
   public final TextBody text;
 

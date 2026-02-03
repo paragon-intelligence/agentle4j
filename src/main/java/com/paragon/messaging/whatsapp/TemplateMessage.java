@@ -23,7 +23,7 @@ public record TemplateMessage(
         @Valid
         List<TemplateComponent> components
 
-) implements Message {
+) implements OutboundMessage {
 
   public TemplateMessage {
     components = List.copyOf(components);
@@ -34,8 +34,8 @@ public record TemplateMessage(
   }
 
   @Override
-  public MessageType getType() {
-    return MessageType.TEMPLATE;
+  public OutboundMessageType type() {
+    return OutboundMessageType.TEMPLATE;
   }
 
   /**

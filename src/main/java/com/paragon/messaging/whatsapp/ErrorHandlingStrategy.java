@@ -47,7 +47,7 @@ public record ErrorHandlingStrategy(
         boolean exponentialBackoff,
         boolean notifyUserOnFailure,
         Optional<String> userNotificationMessage,
-        Optional<BiConsumer<String, List<io.github.paragonintelligence.agentle.messaging.model.Message>>> deadLetterHandler
+        Optional<BiConsumer<String, List<Message>>> deadLetterHandler
 ) {
 
   public ErrorHandlingStrategy {
@@ -150,7 +150,7 @@ public record ErrorHandlingStrategy(
     private boolean exponentialBackoff = true;
     private boolean notifyUserOnFailure = true;
     private String userNotificationMessage;
-    private BiConsumer<String, List<io.github.paragonintelligence.agentle.messaging.model.Message>> deadLetterHandler;
+    private BiConsumer<String, List<Message>> deadLetterHandler;
 
     public Builder maxRetries(int maxRetries) {
       this.maxRetries = maxRetries;
@@ -178,7 +178,7 @@ public record ErrorHandlingStrategy(
     }
 
     public Builder deadLetterHandler(
-            BiConsumer<String, List<io.github.paragonintelligence.agentle.messaging.model.Message>> handler) {
+            BiConsumer<String, List<Message>> handler) {
       this.deadLetterHandler = handler;
       return this;
     }

@@ -8,9 +8,11 @@ import jakarta.validation.constraints.Size;
 import java.util.Optional;
 
 /**
- * Interface selada para mensagens de mídia com validação.
+ * Sealed interface for media messages with validation.
+ *
+ * <p>Supports image, video, audio, document, and sticker message types.</p>
  */
-public sealed interface MediaMessage extends Message permits
+public sealed interface MediaMessage extends OutboundMessage permits
         MediaMessage.Image,
         MediaMessage.Video,
         MediaMessage.Audio,
@@ -59,8 +61,8 @@ public sealed interface MediaMessage extends Message permits
     }
 
     @Override
-    public MessageType getType() {
-      return MessageType.IMAGE;
+    public OutboundMessageType type() {
+      return OutboundMessageType.IMAGE;
     }
   }
 
@@ -83,8 +85,8 @@ public sealed interface MediaMessage extends Message permits
     }
 
     @Override
-    public MessageType getType() {
-      return MessageType.VIDEO;
+    public OutboundMessageType type() {
+      return OutboundMessageType.VIDEO;
     }
   }
 
@@ -102,8 +104,8 @@ public sealed interface MediaMessage extends Message permits
     }
 
     @Override
-    public MessageType getType() {
-      return MessageType.AUDIO;
+    public OutboundMessageType type() {
+      return OutboundMessageType.AUDIO;
     }
   }
 
@@ -127,8 +129,8 @@ public sealed interface MediaMessage extends Message permits
     }
 
     @Override
-    public MessageType getType() {
-      return MessageType.DOCUMENT;
+    public OutboundMessageType type() {
+      return OutboundMessageType.DOCUMENT;
     }
   }
 
@@ -146,8 +148,8 @@ public sealed interface MediaMessage extends Message permits
     }
 
     @Override
-    public MessageType getType() {
-      return MessageType.STICKER;
+    public OutboundMessageType type() {
+      return OutboundMessageType.STICKER;
     }
   }
 }

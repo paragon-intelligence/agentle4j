@@ -1,17 +1,19 @@
 package com.paragon.messaging.whatsapp;
 
-import com.paragon.tts.TTSProvider;
+import com.paragon.messaging.whatsapp.config.SecurityConfig;
+import com.paragon.messaging.whatsapp.config.TTSConfig;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Duration;
-import java.util.Optional;
 
 /**
- * Configuração principal do {@link MessageBatchingService}.
+ * Main configuration for {@link MessageBatchingService}.
  *
- * <p>Agrega todas configurações de batching, rate limiting, backpressure,
- * error handling, TTS e persistência.</p>
+ * <p>Aggregates all configurations for batching, rate limiting, backpressure,
+ * error handling, TTS, security, and persistence.</p>
  *
- * <p><b>Exemplo Completo:</b></p>
+ * <h2>Usage Example</h2>
  * <pre>{@code
  * BatchingConfig config = BatchingConfig.builder()
  *     .adaptiveTimeout(Duration.ofSeconds(5))
@@ -21,225 +23,261 @@ import java.util.Optional;
  *     .backpressureStrategy(BackpressureStrategy.DROP_OLDEST)
  *     .errorHandlingStrategy(ErrorHandlingStrategy.defaults())
  *     .messageStore(RedisMessageStore.create(redisClient))
- *     .ttsProvider(ElevenLabsTTSProvider.create(apiKey))
- *     .speechPlayChance(0.3)
+ *     .ttsConfig(TTSConfig.builder()
+ *         .provider(elevenLabsProvider)
+ *         .speechChance(0.3)
+ *         .build())
+ *     .securityConfig(SecurityConfig.strict("verify-token", "app-secret"))
  *     .build();
  * }</pre>
  *
- * @param adaptiveTimeout       timeout máximo de espera antes de processar
- * @param silenceThreshold      silêncio necessário para processar antes do timeout
- * @param maxBufferSize         tamanho máximo do buffer por usuário
- * @param rateLimitConfig       configuração de rate limiting
- * @param backpressureStrategy  estratégia quando buffer cheio
- * @param errorHandlingStrategy estratégia de retry e error handling
- * @param messageStore          store opcional para persistência e deduplicação
- * @param ttsProvider           provider opcional de text-to-speech
- * @param speechPlayChance      probabilidade de resposta em áudio (0.0-1.0)
+ * @param adaptiveTimeout       Maximum wait time before processing
+ * @param silenceThreshold      Silence needed to process before timeout
+ * @param maxBufferSize         Maximum buffer size per user
+ * @param rateLimitConfig       Rate limiting configuration
+ * @param backpressureStrategy  Strategy when buffer is full
+ * @param errorHandlingStrategy Retry and error handling strategy
+ * @param messageStore          Optional store for persistence and deduplication
+ * @param ttsConfig             Text-to-speech configuration
+ * @param securityConfig        Optional security configuration
  * @author Agentle Team
- * @since 1.0
+ * @since 2.1
  */
 public record BatchingConfig(
-        Duration adaptiveTimeout,
-        Duration silenceThreshold,
+        @NonNull Duration adaptiveTimeout,
+        @NonNull Duration silenceThreshold,
         int maxBufferSize,
-        RateLimitConfig rateLimitConfig,
-        BackpressureStrategy backpressureStrategy,
-        ErrorHandlingStrategy errorHandlingStrategy,
-        Optional<MessageStore> messageStore,
-        Optional<TTSProvider> ttsProvider,
-        double speechPlayChance
+        @NonNull RateLimitConfig rateLimitConfig,
+        @NonNull BackpressureStrategy backpressureStrategy,
+        @NonNull ErrorHandlingStrategy errorHandlingStrategy,
+        @Nullable MessageStore messageStore,
+        @NonNull TTSConfig ttsConfig,
+        @Nullable SecurityConfig securityConfig
 ) {
 
-  public BatchingConfig {
-    if (adaptiveTimeout == null || adaptiveTimeout.isNegative() || adaptiveTimeout.isZero()) {
-      throw new IllegalArgumentException("adaptiveTimeout must be positive");
-    }
-    if (silenceThreshold == null || silenceThreshold.isNegative()) {
-      throw new IllegalArgumentException("silenceThreshold must be non-negative");
-    }
-    if (maxBufferSize <= 0) {
-      throw new IllegalArgumentException("maxBufferSize must be positive");
-    }
-    if (rateLimitConfig == null) {
-      throw new IllegalArgumentException("rateLimitConfig cannot be null");
-    }
-    if (backpressureStrategy == null) {
-      throw new IllegalArgumentException("backpressureStrategy cannot be null");
-    }
-    if (errorHandlingStrategy == null) {
-      throw new IllegalArgumentException("errorHandlingStrategy cannot be null");
-    }
-    if (speechPlayChance < 0.0 || speechPlayChance > 1.0) {
-      throw new IllegalArgumentException("speechPlayChance must be between 0.0 and 1.0");
-    }
-    if (silenceThreshold.compareTo(adaptiveTimeout) > 0) {
-      throw new IllegalArgumentException("silenceThreshold cannot be greater than adaptiveTimeout");
-    }
-
-    // Garantir Optional
-    if (messageStore == null) {
-      messageStore = Optional.empty();
-    }
-    if (ttsProvider == null) {
-      ttsProvider = Optional.empty();
-    }
-  }
-
-  /**
-   * Configuração padrão.
-   *
-   * <ul>
-   *   <li>Timeout adaptativo: 5 segundos</li>
-   *   <li>Silêncio: 2 segundos</li>
-   *   <li>Buffer: 50 mensagens</li>
-   *   <li>Rate limit: Leniente</li>
-   *   <li>Backpressure: DROP_OLDEST</li>
-   *   <li>Error handling: 3 retries com exponential backoff</li>
-   *   <li>Sem TTS, sem persistência</li>
-   * </ul>
-   *
-   * @return config padrão
-   */
-  public static BatchingConfig defaults() {
-    return builder().build();
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private Duration adaptiveTimeout = Duration.ofSeconds(5);
-    private Duration silenceThreshold = Duration.ofSeconds(2);
-    private int maxBufferSize = 50;
-    private RateLimitConfig rateLimitConfig = RateLimitConfig.lenient();
-    private BackpressureStrategy backpressureStrategy = BackpressureStrategy.DROP_OLDEST;
-    private ErrorHandlingStrategy errorHandlingStrategy = ErrorHandlingStrategy.defaults();
-    private MessageStore messageStore;
-    private TTSProvider ttsProvider;
-    private double speechPlayChance = 0.0;
-
     /**
-     * Define timeout máximo de espera antes de processar.
-     *
-     * <p>Mesmo que mensagens continuem chegando, após este tempo
-     * o buffer é processado.</p>
-     *
-     * @param adaptiveTimeout timeout máximo
-     * @return builder
+     * Canonical constructor with validation.
      */
-    public Builder adaptiveTimeout(Duration adaptiveTimeout) {
-      this.adaptiveTimeout = adaptiveTimeout;
-      return this;
+    public BatchingConfig {
+        if (adaptiveTimeout == null || adaptiveTimeout.isNegative() || adaptiveTimeout.isZero()) {
+            throw new IllegalArgumentException("adaptiveTimeout must be positive");
+        }
+        if (silenceThreshold == null || silenceThreshold.isNegative()) {
+            throw new IllegalArgumentException("silenceThreshold must be non-negative");
+        }
+        if (maxBufferSize <= 0) {
+            throw new IllegalArgumentException("maxBufferSize must be positive");
+        }
+        // rateLimitConfig is @NonNull, so no null check needed
+        if (backpressureStrategy == null) {
+            throw new IllegalArgumentException("backpressureStrategy cannot be null");
+        }
+        if (errorHandlingStrategy == null) {
+            throw new IllegalArgumentException("errorHandlingStrategy cannot be null");
+        }
+        if (silenceThreshold.compareTo(adaptiveTimeout) > 0) {
+            throw new IllegalArgumentException("silenceThreshold cannot be greater than adaptiveTimeout");
+        }
+        if (ttsConfig == null) {
+            ttsConfig = TTSConfig.disabled();
+        }
     }
 
     /**
-     * Define silêncio necessário para processar antes do timeout.
+     * Default configuration.
      *
-     * <p>Se usuário para de enviar por este tempo, buffer é processado
-     * imediatamente (não aguarda timeout completo).</p>
+     * <ul>
+     *   <li>Adaptive timeout: 5 seconds</li>
+     *   <li>Silence: 2 seconds</li>
+     *   <li>Buffer: 50 messages</li>
+     *   <li>Rate limit: Lenient</li>
+     *   <li>Backpressure: DROP_OLDEST</li>
+     *   <li>Error handling: 3 retries with exponential backoff</li>
+     *   <li>No TTS, no persistence, no security</li>
+     * </ul>
      *
-     * @param silenceThreshold duração do silêncio
-     * @return builder
+     * @return default config
      */
-    public Builder silenceThreshold(Duration silenceThreshold) {
-      this.silenceThreshold = silenceThreshold;
-      return this;
+    public static BatchingConfig defaults() {
+        return builder().build();
     }
 
     /**
-     * Define tamanho máximo do buffer por usuário.
+     * Creates a new builder for BatchingConfig.
      *
-     * <p>Quando atingido, backpressureStrategy entra em ação.</p>
-     *
-     * @param maxBufferSize tamanho máximo
-     * @return builder
+     * @return new builder
      */
-    public Builder maxBufferSize(int maxBufferSize) {
-      this.maxBufferSize = maxBufferSize;
-      return this;
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
-     * Define configuração de rate limiting.
+     * Checks if a message store is configured.
      *
-     * @param rateLimitConfig config de rate limit
-     * @return builder
+     * @return true if message store is present
      */
-    public Builder rateLimitConfig(RateLimitConfig rateLimitConfig) {
-      this.rateLimitConfig = rateLimitConfig;
-      return this;
+    public boolean hasMessageStore() {
+        return messageStore != null;
     }
 
     /**
-     * Define estratégia de backpressure.
+     * Checks if security configuration is present.
      *
-     * @param backpressureStrategy estratégia
-     * @return builder
+     * @return true if security config is present
      */
-    public Builder backpressureStrategy(BackpressureStrategy backpressureStrategy) {
-      this.backpressureStrategy = backpressureStrategy;
-      return this;
+    public boolean hasSecurity() {
+        return securityConfig != null;
     }
 
     /**
-     * Define estratégia de error handling.
+     * Checks if TTS is enabled.
      *
-     * @param errorHandlingStrategy estratégia
-     * @return builder
+     * @return true if TTS is configured and enabled
      */
-    public Builder errorHandlingStrategy(ErrorHandlingStrategy errorHandlingStrategy) {
-      this.errorHandlingStrategy = errorHandlingStrategy;
-      return this;
+    public boolean hasTTS() {
+        return ttsConfig.isEnabled();
     }
 
     /**
-     * Define message store para persistência e deduplicação.
-     *
-     * @param messageStore store (pode ser null)
-     * @return builder
+     * Builder for BatchingConfig with fluent API.
      */
-    public Builder messageStore(MessageStore messageStore) {
-      this.messageStore = messageStore;
-      return this;
-    }
+    public static final class Builder {
+        private Duration adaptiveTimeout = Duration.ofSeconds(5);
+        private Duration silenceThreshold = Duration.ofSeconds(2);
+        private int maxBufferSize = 50;
+        private RateLimitConfig rateLimitConfig = RateLimitConfig.lenient();
+        private BackpressureStrategy backpressureStrategy = BackpressureStrategy.DROP_OLDEST;
+        private ErrorHandlingStrategy errorHandlingStrategy = ErrorHandlingStrategy.defaults();
+        private MessageStore messageStore;
+        private TTSConfig ttsConfig = TTSConfig.disabled();
+        private SecurityConfig securityConfig;
 
-    /**
-     * Define provider de TTS.
-     *
-     * @param ttsProvider provider (pode ser null)
-     * @return builder
-     */
-    public Builder ttsProvider(TTSProvider ttsProvider) {
-      this.ttsProvider = ttsProvider;
-      return this;
-    }
+        private Builder() {}
 
-    /**
-     * Define probabilidade de resposta em áudio (0.0-1.0).
-     *
-     * <p>Requer ttsProvider configurado.</p>
-     *
-     * @param speechPlayChance probabilidade (0.0 = nunca, 1.0 = sempre)
-     * @return builder
-     */
-    public Builder speechPlayChance(double speechPlayChance) {
-      this.speechPlayChance = speechPlayChance;
-      return this;
-    }
+        /**
+         * Sets the maximum wait time before processing.
+         *
+         * <p>Even if messages continue arriving, after this time
+         * the buffer is processed.</p>
+         *
+         * @param timeout maximum timeout
+         * @return this builder
+         */
+        public Builder adaptiveTimeout(@NonNull Duration timeout) {
+            this.adaptiveTimeout = timeout;
+            return this;
+        }
 
-    public BatchingConfig build() {
-      return new BatchingConfig(
-              adaptiveTimeout,
-              silenceThreshold,
-              maxBufferSize,
-              rateLimitConfig,
-              backpressureStrategy,
-              errorHandlingStrategy,
-              Optional.ofNullable(messageStore),
-              Optional.ofNullable(ttsProvider),
-              speechPlayChance
-      );
+        /**
+         * Sets the silence threshold before processing.
+         *
+         * <p>If the user stops sending for this duration, the buffer
+         * is processed immediately (doesn't wait for full timeout).</p>
+         *
+         * @param threshold silence duration
+         * @return this builder
+         */
+        public Builder silenceThreshold(@NonNull Duration threshold) {
+            this.silenceThreshold = threshold;
+            return this;
+        }
+
+        /**
+         * Sets the maximum buffer size per user.
+         *
+         * <p>When reached, backpressureStrategy is applied.</p>
+         *
+         * @param size maximum size
+         * @return this builder
+         */
+        public Builder maxBufferSize(int size) {
+            this.maxBufferSize = size;
+            return this;
+        }
+
+        /**
+         * Sets the rate limiting configuration.
+         *
+         * @param config rate limit config
+         * @return this builder
+         */
+        public Builder rateLimitConfig(@NonNull RateLimitConfig config) {
+            this.rateLimitConfig = config;
+            return this;
+        }
+
+        /**
+         * Sets the backpressure strategy.
+         *
+         * @param strategy the strategy
+         * @return this builder
+         */
+        public Builder backpressureStrategy(@NonNull BackpressureStrategy strategy) {
+            this.backpressureStrategy = strategy;
+            return this;
+        }
+
+        /**
+         * Sets the error handling strategy.
+         *
+         * @param strategy the strategy
+         * @return this builder
+         */
+        public Builder errorHandlingStrategy(@NonNull ErrorHandlingStrategy strategy) {
+            this.errorHandlingStrategy = strategy;
+            return this;
+        }
+
+        /**
+         * Sets the message store for persistence and deduplication.
+         *
+         * @param store the store (can be null)
+         * @return this builder
+         */
+        public Builder messageStore(@Nullable MessageStore store) {
+            this.messageStore = store;
+            return this;
+        }
+
+        /**
+         * Sets the TTS configuration.
+         *
+         * @param config TTS config
+         * @return this builder
+         */
+        public Builder ttsConfig(@NonNull TTSConfig config) {
+            this.ttsConfig = config;
+            return this;
+        }
+
+        /**
+         * Sets the security configuration.
+         *
+         * @param config security config (can be null)
+         * @return this builder
+         */
+        public Builder securityConfig(@Nullable SecurityConfig config) {
+            this.securityConfig = config;
+            return this;
+        }
+
+        /**
+         * Builds the BatchingConfig.
+         *
+         * @return the built configuration
+         */
+        public BatchingConfig build() {
+            return new BatchingConfig(
+                    adaptiveTimeout,
+                    silenceThreshold,
+                    maxBufferSize,
+                    rateLimitConfig,
+                    backpressureStrategy,
+                    errorHandlingStrategy,
+                    messageStore,
+                    ttsConfig,
+                    securityConfig
+            );
+        }
     }
-  }
 }
