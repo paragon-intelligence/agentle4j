@@ -4,13 +4,19 @@ import com.paragon.agents.AgentContext;
 import com.paragon.agents.AgentResult;
 import com.paragon.agents.Interactable;
 import com.paragon.agents.StructuredAgentResult;
-import com.paragon.messaging.whatsapp.config.TTSConfig;
 import com.paragon.messaging.conversion.DefaultMessageConverter;
 import com.paragon.messaging.conversion.MessageConverter;
+import com.paragon.messaging.core.MessageProcessor;
+import com.paragon.messaging.core.MessagingProvider;
+import com.paragon.messaging.core.OutboundMessage;
 import com.paragon.messaging.store.history.ConversationHistoryStore;
 import com.paragon.messaging.store.history.InMemoryConversationHistoryStore;
+import com.paragon.messaging.whatsapp.config.TTSConfig;
+import com.paragon.messaging.whatsapp.messages.TextMessage;
+import com.paragon.messaging.whatsapp.messages.MediaMessage;
 import com.paragon.messaging.whatsapp.payload.InboundMessage;
 import com.paragon.messaging.whatsapp.response.WhatsAppResponse;
+import com.paragon.messaging.whatsapp.WhatsAppMediaUploader;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.UserMessage;
@@ -94,6 +100,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
   private final Interactable agent;
   private final Interactable.@Nullable Structured<T> structuredAgent;
   private final MessagingProvider messagingProvider;
+  private final @Nullable WhatsAppMediaUploader mediaUploader;
   private final MessageConverter messageConverter;
   private final @Nullable ConversationHistoryStore historyStore;
   private final @Nullable TTSProvider ttsProvider;
@@ -106,6 +113,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     this.agent = Objects.requireNonNull(builder.agent, "agent cannot be null");
     this.structuredAgent = builder.structuredAgent;
     this.messagingProvider = Objects.requireNonNull(builder.messagingProvider, "messagingProvider cannot be null");
+    this.mediaUploader = builder.mediaUploader;
     this.messageConverter = builder.messageConverter != null
             ? builder.messageConverter
             : DefaultMessageConverter.create();
@@ -264,13 +272,26 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
 
     byte[] audioBytes = ttsProvider.synthesize(response, ttsProviderConfig);
 
-    // In a real implementation, you would:
-    // 1. Upload the audio to WhatsApp Media API
-    // 2. Get the media ID
-    // 3. Send an audio message with that ID
+    // Upload audio if uploader is configured
+    if (mediaUploader != null) {
+      try {
+        // Upload audio to WhatsApp Media API
+        WhatsAppMediaUploader.MediaUploadResponse uploadResponse =
+                mediaUploader.uploadAudio(audioBytes, "audio/ogg; codecs=opus");
 
-    // For now, we fall back to text if audio upload isn't implemented
-    // TODO: Implement audio upload and sending
+        // Send audio message using media ID
+        MediaMessage.Audio audioMessage = new MediaMessage.Audio(
+                new MediaMessage.MediaSource.MediaId(uploadResponse.mediaId())
+        );
+        messagingProvider.sendMessage(recipient, audioMessage);
+        return;
+      } catch (Exception e) {
+        // Log error and fall back to text
+        System.err.println("Failed to upload audio, falling back to text: " + e.getMessage());
+      }
+    }
+
+    // Fallback to text if uploader not configured or upload failed
     sendTextResponse(recipient, response, null);
   }
 
@@ -335,6 +356,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     private final Interactable agent;
     private final @Nullable Interactable.Structured<T> structuredAgent;
     private MessagingProvider messagingProvider;
+    private WhatsAppMediaUploader mediaUploader;
     private MessageConverter messageConverter;
     private ConversationHistoryStore historyStore;
     private TTSConfig ttsConfig;
@@ -415,6 +437,19 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
      */
     public Builder<T> ttsConfig(@NonNull TTSConfig config) {
       this.ttsConfig = config;
+      return this;
+    }
+
+    /**
+     * Sets the media uploader for sending audio messages.
+     *
+     * <p>If not set, TTS audio will fall back to text messages.</p>
+     *
+     * @param uploader the WhatsApp media uploader
+     * @return this builder
+     */
+    public Builder<T> mediaUploader(@NonNull WhatsAppMediaUploader uploader) {
+      this.mediaUploader = uploader;
       return this;
     }
 

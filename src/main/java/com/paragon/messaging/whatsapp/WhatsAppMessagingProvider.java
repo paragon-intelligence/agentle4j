@@ -6,6 +6,10 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import okhttp3.*;
 
+import com.paragon.messaging.core.MessagingProvider;
+import com.paragon.messaging.core.OutboundMessage;
+import com.paragon.messaging.whatsapp.messages.*;
+
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Objects;
@@ -266,6 +270,23 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
                   }
                 }
                 """, escapeJson(to), sourceField, captionField);
+      }
+
+      case MediaMessage.Audio audio -> {
+        String sourceField = audio.source() instanceof MediaMessage.MediaSource.Url url
+                ? "\"link\": \"" + escapeJson(url.url()) + "\""
+                : "\"id\": \"" + escapeJson(((MediaMessage.MediaSource.MediaId) audio.source()).id()) + "\"";
+
+        yield String.format("""
+                {
+                  "messaging_product": "whatsapp",
+                  "to": "%s",
+                  "type": "audio",
+                  "audio": {
+                    %s
+                  }
+                }
+                """, escapeJson(to), sourceField);
       }
 
       case LocationMessage loc -> {
