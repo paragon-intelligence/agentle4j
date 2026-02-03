@@ -1,5 +1,7 @@
 package com.paragon.messaging.store;
 
+import com.paragon.messaging.core.OutboundMessage;
+
 import java.util.List;
 
 /**
@@ -26,11 +28,11 @@ public interface MessageStore {
   static MessageStore noOp() {
     return new MessageStore() {
       @Override
-      public void store(String userId, Message message) {
+      public void store(String userId, OutboundMessage message) {
       }
 
       @Override
-      public List<Message> retrieve(String userId) {
+      public List<OutboundMessage> retrieve(String userId) {
         return List.of();
       }
 
@@ -55,7 +57,7 @@ public interface MessageStore {
    * @param userId  ID do usuário
    * @param message mensagem
    */
-  void store(String userId, Message message);
+  void store(String userId, OutboundMessage message);
 
   /**
    * Recupera todas mensagens do usuário.
@@ -63,7 +65,7 @@ public interface MessageStore {
    * @param userId ID do usuário
    * @return lista de mensagens ordenadas
    */
-  List<Message> retrieve(String userId);
+  List<OutboundMessage> retrieve(String userId);
 
   /**
    * Remove todas mensagens do usuário.

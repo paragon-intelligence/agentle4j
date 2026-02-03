@@ -1,5 +1,6 @@
 package com.paragon.messaging.whatsapp.messages;
 
+import com.paragon.messaging.core.TemplateMessageInterface;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -25,7 +26,7 @@ public record TemplateMessage(
         @Valid
         List<TemplateComponent> components
 
-) implements OutboundMessage {
+) implements TemplateMessageInterface {
 
   public TemplateMessage {
     components = List.copyOf(components);

@@ -1,5 +1,16 @@
 package com.paragon.messaging.batching;
 
+import com.paragon.messaging.batching.Message;
+import com.paragon.messaging.core.MessageProcessor;
+import com.paragon.messaging.core.OutboundMessage;
+import com.paragon.messaging.whatsapp.payload.InboundMessage;
+import com.paragon.messaging.store.MessageStore;
+
+import com.paragon.messaging.error.ErrorHandlingStrategy;
+import com.paragon.messaging.hooks.HookContext;
+import com.paragon.messaging.hooks.HookInterruptedException;
+import com.paragon.messaging.hooks.ProcessingHook;
+import com.paragon.messaging.ratelimit.HybridRateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +96,9 @@ public class MessageBatchingService {
   }
 
   /**
-   * Recebe mensagem do webhook (retorna imediatamente).
+   * Recebe mensagem nova do usuário para batching.
+   *
+   * <p><b>Thread Safety:</b> Este método é thread-safe.</p>
    *
    * <p>Fluxo:</p>
    * <ol>
@@ -95,30 +108,24 @@ public class MessageBatchingService {
    *   <li>Agenda processamento adaptativo</li>
    * </ol>
    *
-   * @param userId    ID do usuário (ex: número WhatsApp)
-   * @param messageId ID único da mensagem (deduplicação)
-   * @param content   conteúdo textual da mensagem
-   * @param timestamp quando mensagem foi recebida
+   * @param userId  ID do usuário (ex: número WhatsApp)
+   * @param message mensagem completa recebida
    */
   public void receiveMessage(
           String userId,
-          String messageId,
-          String content,
-          Instant timestamp) {
+          InboundMessage message) {
 
     Objects.requireNonNull(userId, "userId cannot be null");
-    Objects.requireNonNull(messageId, "messageId cannot be null");
-    Objects.requireNonNull(content, "content cannot be null");
-    Objects.requireNonNull(timestamp, "timestamp cannot be null");
+    Objects.requireNonNull(message, "message cannot be null");
 
     try {
       // 1. Deduplicação
-      if (isDuplicate(userId, messageId)) {
-        log.debug("Duplicate message ignored: userId={}, messageId={}", userId, messageId);
+      if (isDuplicate(userId, message.id())) {
+        log.debug("Duplicate message ignored: userId={}, messageId={}", userId, message.id());
         return;
       }
 
-      // 2. Rate Limiting
+      // 2. Rate limiting
       if (isRateLimited(userId)) {
         log.warn("Rate limit exceeded: userId={}", userId);
         handleRateLimitExceeded(userId);
@@ -127,7 +134,6 @@ public class MessageBatchingService {
 
       // 3. Adicionar ao buffer
       UserMessageBuffer buffer = getOrCreateBuffer(userId);
-      Message message = new Message(messageId, content, timestamp);
 
       boolean added = buffer.add(message);
       if (!added) {
@@ -140,7 +146,7 @@ public class MessageBatchingService {
       scheduleAdaptiveProcessing(userId, buffer);
 
     } catch (Exception e) {
-      log.error("Error receiving message: userId={}, messageId={}", userId, messageId, e);
+      log.error("Error receiving message: userId={}, messageId={}", userId, message.id(), e);
     }
   }
 
@@ -148,9 +154,8 @@ public class MessageBatchingService {
    * Verifica se mensagem é duplicata.
    */
   private boolean isDuplicate(String userId, String messageId) {
-    return config.messageStore()
-            .map(store -> store.hasProcessed(userId, messageId))
-            .orElse(false);
+    MessageStore store = config.messageStore();
+    return store != null && store.hasProcessed(userId, messageId);
   }
 
   /**
@@ -225,7 +230,7 @@ public class MessageBatchingService {
    * Processa batch de mensagens em virtual thread.
    */
   private void processBatch(String userId, UserMessageBuffer buffer) {
-    List<Message> messages = buffer.drain();
+    List<InboundMessage> messages = buffer.drain();
 
     if (messages.isEmpty()) {
       return;
@@ -242,7 +247,7 @@ public class MessageBatchingService {
   /**
    * Processamento real em virtual thread (com retry).
    */
-  private void processInVirtualThread(String userId, List<Message> messages, int retryCount) {
+  private void processInVirtualThread(String userId, List<InboundMessage> messages, int retryCount) {
     HookContext context = createHookContext(userId, messages, retryCount);
 
     try {
@@ -273,7 +278,7 @@ public class MessageBatchingService {
   /**
    * Cria HookContext para hooks.
    */
-  private HookContext createHookContext(String userId, List<Message> messages, int retryCount) {
+  private HookContext createHookContext(String userId, List<InboundMessage> messages, int retryCount) {
     if (retryCount == 0) {
       return HookContext.create(userId, messages);
     } else {
@@ -296,10 +301,12 @@ public class MessageBatchingService {
   /**
    * Marca mensagens como processadas (deduplicação).
    */
-  private void markAsProcessed(String userId, List<Message> messages) {
-    config.messageStore().ifPresent(store -> {
-      messages.forEach(msg -> store.markProcessed(userId, msg.messageId()));
-    });
+  private void markAsProcessed(String userId, List<InboundMessage> messages) {
+    MessageStore store = config.messageStore();
+    if (store != null) {
+      messages.forEach(msg -> store.markProcessed(userId, msg.id()));
+    }
+
   }
 
   /**
@@ -307,7 +314,7 @@ public class MessageBatchingService {
    */
   private void handleProcessingError(
           String userId,
-          List<Message> messages,
+          List<InboundMessage> messages,
           int retryCount,
           Exception error,
           HookContext context) {
@@ -352,7 +359,7 @@ public class MessageBatchingService {
   /**
    * Trata backpressure quando buffer cheio.
    */
-  private void handleBackpressure(String userId, UserMessageBuffer buffer, Message newMessage) {
+  private void handleBackpressure(String userId, UserMessageBuffer buffer, InboundMessage newMessage) {
     BackpressureStrategy strategy = config.backpressureStrategy();
 
     log.warn("Buffer full for user {}, applying strategy: {}", userId, strategy);
@@ -364,9 +371,9 @@ public class MessageBatchingService {
       }
 
       case DROP_OLDEST -> {
-        Message dropped = buffer.removeOldest();
+        InboundMessage dropped = buffer.removeOldest();
         log.debug("Dropped oldest message: userId={}, droppedId={}",
-                userId, dropped != null ? dropped.messageId() : "none");
+                userId, dropped != null ? dropped.id() : "none");
         buffer.add(newMessage);
       }
 

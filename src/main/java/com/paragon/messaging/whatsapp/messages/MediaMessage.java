@@ -1,5 +1,7 @@
 package com.paragon.messaging.whatsapp.messages;
 
+import com.paragon.messaging.core.MediaMessageInterface;
+import com.paragon.messaging.core.OutboundMessage;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -12,7 +14,7 @@ import java.util.Optional;
  *
  * <p>Supports image, video, audio, document, and sticker message types.</p>
  */
-public sealed interface MediaMessage extends OutboundMessage permits
+public sealed interface MediaMessage extends MediaMessageInterface permits
         MediaMessage.Image,
         MediaMessage.Video,
         MediaMessage.Audio,

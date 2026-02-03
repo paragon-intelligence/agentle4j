@@ -1,5 +1,6 @@
 package com.paragon.messaging.whatsapp.messages;
 
+import com.paragon.messaging.core.ReactionMessageInterface;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -15,7 +16,7 @@ public record ReactionMessage(
 
         Optional<@Size(max = 10, message = "Emoji cannot exceed 10 characters") String> emoji
 
-) implements OutboundMessage {
+) implements ReactionMessageInterface {
 
   public ReactionMessage(String messageId, String emoji) {
     this(messageId, Optional.ofNullable(emoji));

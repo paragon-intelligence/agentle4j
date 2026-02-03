@@ -1,5 +1,7 @@
 package com.paragon.messaging.whatsapp.messages;
 
+import com.paragon.messaging.core.OutboundMessage;
+import com.paragon.messaging.core.TextMessageInterface;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.jspecify.annotations.NonNull;
@@ -42,7 +44,7 @@ public record TextMessage(
 
         @Nullable String replyToMessageId
 
-) implements OutboundMessage {
+) implements TextMessageInterface {
 
   /**
    * Maximum allowed length for message body.

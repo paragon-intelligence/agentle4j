@@ -172,15 +172,15 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
   @Override
   public MessageResponse sendMessage(
           @Valid Recipient recipient,
-          @Valid Message message) throws MessagingException {
+          @Valid OutboundMessage message) throws MessagingException {
 
     // Validar inputs
     validateInput(recipient);
     validateInput(message);
 
     // Validar que é número de telefone
-    if (recipient.type() != Recipient.RecipientType.PHONE_NUMBER) {
-      throw new MessagingException("WhatsApp only supports phone numbers");
+    if (!"phone_number".equals(recipient.type()) && !"wa_id".equals(recipient.type())) {
+      throw new MessagingException("WhatsApp only supports phone numbers and WhatsApp IDs");
     }
 
     // Adquirir permissão do rate limiter
@@ -235,8 +235,8 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
   /**
    * Cria o payload JSON baseado no tipo de mensagem.
    */
-  private String createPayload(Recipient recipient, Message message) {
-    String to = recipient.identifier();
+  private String createPayload(Recipient recipient, OutboundMessage message) {
+    String to = recipient.value();
 
     return switch (message) {
       case TextMessage text -> String.format("""
@@ -349,13 +349,12 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
       String messageId = extractMessageId(body);
       return new MessageResponse(
               messageId,
-              MessageResponse.MessageStatus.SENT,
+              "SENT",
               Instant.now()
       );
     } else {
       throw new MessagingException(
-              "API error: " + statusCode + " - " + body,
-              statusCode
+              "API error: " + statusCode + " - " + body
       );
     }
   }

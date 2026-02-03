@@ -1,5 +1,6 @@
 package com.paragon.messaging.whatsapp.messages;
 
+import com.paragon.messaging.core.LocationMessageInterface;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -22,17 +23,17 @@ public record LocationMessage(
         @NotNull(message = "Latitude cannot be null")
         @DecimalMin(value = "-90.0", message = "Latitude must be >= -90")
         @DecimalMax(value = "90.0", message = "Latitude must be <= 90")
-        Double latitude,
+        double latitude,
 
         @NotNull(message = "Longitude cannot be null")
         @DecimalMin(value = "-180.0", message = "Longitude must be >= -180")
         @DecimalMax(value = "180.0", message = "Longitude must be <= 180")
-        Double longitude,
+        double longitude,
 
         Optional<@Size(max = 256, message = "Location name cannot exceed 256 characters") String> name,
         Optional<@Size(max = 512, message = "Location address cannot exceed 512 characters") String> address
 
-) implements OutboundMessage {
+) implements LocationMessageInterface {
 
   public LocationMessage(double latitude, double longitude) {
     this(latitude, longitude, Optional.empty(), Optional.empty());
@@ -108,8 +109,8 @@ public record LocationMessage(
   }
 
   public static class Builder {
-    private Double latitude;
-    private Double longitude;
+    private double latitude;
+    private double longitude;
     private String name;
     private String address;
 

@@ -1,5 +1,7 @@
 package com.paragon.messaging.whatsapp.messages;
 
+import com.paragon.messaging.core.InteractiveMessageInterface;
+import com.paragon.messaging.core.OutboundMessage;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
@@ -12,7 +14,7 @@ import java.util.Optional;
  * @author Agentle Team
  * @since 2.0
  */
-public sealed interface InteractiveMessage extends OutboundMessage permits
+public sealed interface InteractiveMessage extends InteractiveMessageInterface permits
         InteractiveMessage.ButtonMessage,
         InteractiveMessage.ListMessage,
         InteractiveMessage.CtaUrlMessage {

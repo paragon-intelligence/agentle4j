@@ -66,10 +66,10 @@ public record RequestContext(
       timestamp = Instant.now();
     }
     if (clientIp == null) {
-      clientIp = Optional.empty();
+      clientIp = "unknown";
     }
     if (userAgent == null) {
-      userAgent = Optional.empty();
+      userAgent = "unknown";
     }
   }
 
@@ -126,8 +126,4 @@ public record RequestContext(
    * @param <T>       tipo do retorno
    * @return resultado da operação
    */
-  public static <T> T callInContext(RequestContext context,
-                                    java.util.concurrent.Callable<T> operation) throws Exception {
-    return ScopedValue.where(CURRENT, context).call(operation);
-  }
 }

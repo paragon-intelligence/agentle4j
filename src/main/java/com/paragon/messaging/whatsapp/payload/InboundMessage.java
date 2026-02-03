@@ -54,10 +54,8 @@ import org.jspecify.annotations.Nullable;
         @JsonSubTypes.Type(value = SystemMessage.class, name = "system"),
         @JsonSubTypes.Type(value = OrderMessage.class, name = "order")
 })
-public sealed interface InboundMessage permits
-        AbstractInboundMessage, TextMessage, ImageMessage, VideoMessage, AudioMessage,
-        DocumentMessage, StickerMessage, InteractiveMessage, LocationMessage,
-        ReactionMessage, SystemMessage, OrderMessage {
+public sealed interface InboundMessage permits AbstractInboundMessage {
+
 
     /**
      * Returns the sender's WhatsApp ID (phone number).

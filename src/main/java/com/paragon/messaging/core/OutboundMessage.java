@@ -1,5 +1,11 @@
 package com.paragon.messaging.core;
 
+import com.paragon.messaging.whatsapp.messages.InteractiveMessage;
+import com.paragon.messaging.whatsapp.messages.LocationMessage;
+import com.paragon.messaging.whatsapp.messages.MediaMessage;
+import com.paragon.messaging.whatsapp.messages.ReactionMessage;
+import com.paragon.messaging.whatsapp.messages.TemplateMessage;
+import com.paragon.messaging.whatsapp.messages.TextMessage;
 import com.paragon.messaging.whatsapp.payload.ContactMessage;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -42,13 +48,13 @@ import org.jspecify.annotations.Nullable;
  * @since 2.1
  */
 public sealed interface OutboundMessage permits
-        TextMessage,
-        MediaMessage,
-        TemplateMessage,
-        InteractiveMessage,
-        LocationMessage,
-        ContactMessage,
-        ReactionMessage {
+        TextMessageInterface,
+        MediaMessageInterface,
+        TemplateMessageInterface,
+        InteractiveMessageInterface,
+        LocationMessageInterface,
+        ContactMessageInterface,
+        ReactionMessageInterface {
 
     /**
      * Returns the message type for API serialization.
@@ -81,17 +87,14 @@ public sealed interface OutboundMessage permits
      */
     default @NonNull String extractTextContent() {
         return switch (this) {
-            case TextMessage text -> text.body();
-            case LocationMessage loc -> loc.name()
+            case TextMessageInterface text -> text.body();
+            case LocationMessageInterface loc -> loc.name()
                     .orElseGet(() -> "Location at " + loc.toCoordinatesString());
-            case ReactionMessage react -> react.emoji().orElse("");
-            case InteractiveMessage interactive -> interactive.body();
-            case MediaMessage media -> extractMediaContent(media);
-            case TemplateMessage template -> "Template: " + template.name();
-            case ContactMessage contact -> "Contact: " + contact.contacts().stream()
-                    .map(ContactMessage.Contact::name)
-                    .reduce((a, b) -> a + ", " + b)
-                    .orElse("");
+            case ReactionMessageInterface react -> react.emoji().orElse("");
+            case InteractiveMessageInterface interactive -> interactive.body();
+            case MediaMessageInterface media -> extractMediaContent(media);
+            case TemplateMessageInterface template -> "Template: " + template.name();
+            case ContactMessageInterface contact -> "Contact: [contact]"; // ContactMessage details handled by implementation
         };
     }
 
@@ -129,21 +132,19 @@ public sealed interface OutboundMessage permits
         return !extractTextContent().isBlank();
     }
 
-    private static String extractMediaContent(MediaMessage media) {
-        return switch (media) {
-            case MediaMessage.Image img -> img.caption()
-                    .map(c -> "[Image: " + c + "]")
-                    .orElse("[Image]");
-            case MediaMessage.Video vid -> vid.caption()
-                    .map(c -> "[Video: " + c + "]")
-                    .orElse("[Video]");
-            case MediaMessage.Audio __ -> "[Audio message]";
-            case MediaMessage.Document doc -> doc.filename()
-                    .map(f -> "[Document: " + f + "]")
-                    .orElse("[Document]");
-            case MediaMessage.Sticker __ -> "[Sticker]";
-        };
+    private static String extractMediaContent(MediaMessageInterface media) {
+        if (media instanceof com.paragon.messaging.whatsapp.messages.MediaMessage concreteMedia) {
+            return switch (concreteMedia) {
+                case com.paragon.messaging.whatsapp.messages.MediaMessage.Image img -> img.caption().map(c -> "[Image: " + c + "]").orElse("[Image]");
+                case com.paragon.messaging.whatsapp.messages.MediaMessage.Video vid -> vid.caption().map(c -> "[Video: " + c + "]").orElse("[Video]");
+                case com.paragon.messaging.whatsapp.messages.MediaMessage.Audio __ -> "[Audio message]";
+                case com.paragon.messaging.whatsapp.messages.MediaMessage.Document doc -> doc.filename().map(f -> "[Document: " + f + "]").orElse("[Document]");
+                case com.paragon.messaging.whatsapp.messages.MediaMessage.Sticker __ -> "[Sticker]";
+            };
+        }
+        return "[Media]";
     }
+
 
     /**
      * Enum representing all outbound message types supported by WhatsApp.

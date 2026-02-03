@@ -11,12 +11,13 @@ import com.paragon.messaging.core.MessagingProvider;
 import com.paragon.messaging.core.OutboundMessage;
 import com.paragon.messaging.store.history.ConversationHistoryStore;
 import com.paragon.messaging.store.history.InMemoryConversationHistoryStore;
+import com.paragon.messaging.whatsapp.WhatsAppMediaUploader;
 import com.paragon.messaging.whatsapp.config.TTSConfig;
-import com.paragon.messaging.whatsapp.messages.TextMessage;
 import com.paragon.messaging.whatsapp.messages.MediaMessage;
+import com.paragon.messaging.whatsapp.messages.ReactionMessage;
+import com.paragon.messaging.whatsapp.messages.TextMessage;
 import com.paragon.messaging.whatsapp.payload.InboundMessage;
 import com.paragon.messaging.whatsapp.response.WhatsAppResponse;
-import com.paragon.messaging.whatsapp.WhatsAppMediaUploader;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.UserMessage;
@@ -265,12 +266,16 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
 
   private void sendAudioResponse(MessagingProvider.Recipient recipient, String response) throws Exception {
     // Generate TTS audio
-    com.paragon.tts.TTSConfig ttsProviderConfig = com.paragon.tts.TTSConfig.builder()
-            .voiceId(ttsConfig.defaultVoiceId())
+    TTSConfig ttsProviderConfig = TTSConfig.builder()
+            .defaultVoiceId(ttsConfig.defaultVoiceId())
             .languageCode(ttsConfig.languageCode())
             .build();
 
-    byte[] audioBytes = ttsProvider.synthesize(response, ttsProviderConfig);
+    Byte[] audioByteObjects = ttsProvider.synthesize(response, ttsProviderConfig);
+    byte[] audioBytes = new byte[audioByteObjects.length];
+    for (int i = 0; i < audioByteObjects.length; i++) {
+      audioBytes[i] = audioByteObjects[i];
+    }
 
     // Upload audio if uploader is configured
     if (mediaUploader != null) {
@@ -354,7 +359,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
    */
   public static final class Builder<T> {
     private final Interactable agent;
-    private final @Nullable Interactable.Structured<T> structuredAgent;
+    private final Interactable.@Nullable Structured<T> structuredAgent;
     private MessagingProvider messagingProvider;
     private WhatsAppMediaUploader mediaUploader;
     private MessageConverter messageConverter;
@@ -363,7 +368,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     private int maxHistoryMessages = 20;
     private Duration maxHistoryAge = Duration.ofHours(24);
 
-    private Builder(Interactable agent, @Nullable Interactable.Structured<T> structuredAgent) {
+    private Builder(Interactable agent, Interactable.@Nullable Structured<T> structuredAgent) {
       this.agent = agent;
       this.structuredAgent = structuredAgent;
     }

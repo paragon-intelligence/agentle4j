@@ -57,13 +57,13 @@ public sealed interface WebhookEvent permits
    * Interface selada para conteúdo de mensagem recebida.
    */
   sealed interface IncomingMessageContent permits
-          IncomingMessageContent.TextContent,
-          IncomingMessageContent.MediaContent,
-          IncomingMessageContent.LocationContent,
-          IncomingMessageContent.ContactContent,
-          IncomingMessageContent.ReactionContent,
-          IncomingMessageContent.ButtonReplyContent,
-          IncomingMessageContent.ListReplyContent {
+          WebhookEvent.TextContent,
+          WebhookEvent.MediaContent,
+          WebhookEvent.LocationContent,
+          WebhookEvent.ContactContent,
+          WebhookEvent.ReactionContent,
+          WebhookEvent.ButtonReplyContent,
+          WebhookEvent.ListReplyContent {
   }
 
   /**
@@ -80,11 +80,11 @@ public sealed interface WebhookEvent permits
   record MessageStatusEvent(
           String messageId,
           String recipientId,
-          MessageResponse.MessageStatus status,
+          String status,
           Instant timestamp,
           Optional<String> conversationId,
-          Optional<MessageResponse.PricingInfo> pricing,
-          Optional<List<MessageResponse.ErrorInfo>> errors
+          Optional<Object> pricing,
+          Optional<List<Object>> errors
   ) implements WebhookEvent {
 
     public MessageStatusEvent {
@@ -108,21 +108,21 @@ public sealed interface WebhookEvent permits
      * Verifica se a mensagem foi entregue com sucesso.
      */
     public boolean isDelivered() {
-      return status == MessageResponse.MessageStatus.DELIVERED;
+      return status.equals("DELIVERED");
     }
 
     /**
      * Verifica se a mensagem foi lida.
      */
     public boolean isRead() {
-      return status == MessageResponse.MessageStatus.READ;
+      return status.equals("READ");
     }
 
     /**
      * Verifica se houve falha.
      */
     public boolean isFailed() {
-      return status == MessageResponse.MessageStatus.FAILED;
+      return status.equals("FAILED");
     }
   }
 

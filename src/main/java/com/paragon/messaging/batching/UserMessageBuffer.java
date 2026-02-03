@@ -1,6 +1,8 @@
 package com.paragon.messaging.batching;
 
 import java.time.Instant;
+import com.paragon.messaging.whatsapp.payload.InboundMessage;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -21,7 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class UserMessageBuffer {
 
   private final String userId;
-  private final ConcurrentLinkedQueue<Message> messages;
+  private final ConcurrentLinkedQueue<InboundMessage> messages;
   private final AtomicReference<Instant> lastMessageTime;
   private final AtomicReference<ScheduledFuture<?>> scheduledTask;
   private final int maxSize;
@@ -40,7 +42,7 @@ public class UserMessageBuffer {
    * @param message mensagem a adicionar
    * @return true se adicionada, false se buffer cheio
    */
-  public boolean add(Message message) {
+  public boolean add(InboundMessage message) {
     if (size() >= maxSize) {
       return false;
     }
@@ -54,7 +56,7 @@ public class UserMessageBuffer {
    *
    * @return mensagem removida ou null se vazio
    */
-  public Message removeOldest() {
+  public InboundMessage removeOldest() {
     return messages.poll();
   }
 
@@ -63,9 +65,9 @@ public class UserMessageBuffer {
    *
    * @return lista de mensagens (ordenadas)
    */
-  public List<Message> drain() {
-    List<Message> batch = new ArrayList<>();
-    Message msg;
+  public List<InboundMessage> drain() {
+    List<InboundMessage> batch = new ArrayList<>();
+    InboundMessage msg;
     while ((msg = messages.poll()) != null) {
       batch.add(msg);
     }

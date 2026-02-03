@@ -1,5 +1,6 @@
 package com.paragon.messaging.whatsapp.payload;
 
+import com.paragon.messaging.core.ContactMessageInterface;
 import com.paragon.messaging.core.OutboundMessage;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -18,7 +19,7 @@ public record ContactMessage(
         @Valid
         List<Contact> contacts
 
-) implements OutboundMessage {
+) implements ContactMessageInterface {
 
   public ContactMessage {
     contacts = List.copyOf(contacts);

@@ -32,7 +32,7 @@ public record Recipient(
    * @throws IllegalArgumentException se o número não estiver em formato E.164
    */
   public static Recipient ofPhoneNumber(
-          @NotBlank @E164PhoneNumber String phoneNumber
+          @NotBlank String phoneNumber
   ) {
     return new Recipient(phoneNumber, RecipientType.PHONE_NUMBER);
   }
@@ -47,8 +47,9 @@ public record Recipient(
    * @throws IllegalArgumentException se o número não puder ser normalizado
    */
   public static Recipient ofPhoneNumberNormalized(String phoneNumber) {
-    String normalized = E164PhoneNumber.Utils.normalize(phoneNumber);
-    if (normalized == null) {
+    // Simple normalization: remove all non-digit characters except +
+    String normalized = phoneNumber.replaceAll("[^+0-9]", "");
+    if (normalized.isEmpty() || !normalized.startsWith("+")) {
       throw new IllegalArgumentException(
               "Cannot normalize phone number to E.164 format: " + phoneNumber
       );

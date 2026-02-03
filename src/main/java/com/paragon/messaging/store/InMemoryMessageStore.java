@@ -1,5 +1,7 @@
 package com.paragon.messaging.store;
 
+import com.paragon.messaging.core.OutboundMessage;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class InMemoryMessageStore implements MessageStore {
 
-  private final Map<String, List<Message>> buffers = new ConcurrentHashMap<>();
+  private final Map<String, List<OutboundMessage>> buffers = new ConcurrentHashMap<>();
   private final Map<String, Set<String>> processedIds;
   private final int maxProcessedIds;
 
@@ -50,13 +52,13 @@ public class InMemoryMessageStore implements MessageStore {
   }
 
   @Override
-  public void store(String userId, Message message) {
+  public void store(String userId, OutboundMessage message) {
     buffers.computeIfAbsent(userId, k -> Collections.synchronizedList(new ArrayList<>()))
             .add(message);
   }
 
   @Override
-  public List<Message> retrieve(String userId) {
+  public List<OutboundMessage> retrieve(String userId) {
     return buffers.getOrDefault(userId, List.of()).stream().toList();
   }
 

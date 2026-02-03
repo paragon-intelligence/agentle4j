@@ -1,5 +1,7 @@
 package com.paragon.messaging.error;
 
+import com.paragon.messaging.whatsapp.payload.InboundMessage;
+
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -57,7 +59,7 @@ public record ErrorHandlingStrategy(
         boolean notifyUserOnFailure,
 
         Optional<String> userNotificationMessage,
-        Optional<BiConsumer<String, List<Message>>> deadLetterHandler
+        Optional<BiConsumer<String, List<InboundMessage>>> deadLetterHandler
 ) {
 
   public ErrorHandlingStrategy {
@@ -160,7 +162,7 @@ public record ErrorHandlingStrategy(
     private boolean exponentialBackoff = true;
     private boolean notifyUserOnFailure = true;
     private String userNotificationMessage;
-    private BiConsumer<String, List<Message>> deadLetterHandler;
+    private BiConsumer<String, List<InboundMessage>> deadLetterHandler;
 
     public Builder maxRetries(int maxRetries) {
       this.maxRetries = maxRetries;
@@ -188,7 +190,7 @@ public record ErrorHandlingStrategy(
     }
 
     public Builder deadLetterHandler(
-            BiConsumer<String, List<Message>> handler) {
+            BiConsumer<String, List<InboundMessage>> handler) {
       this.deadLetterHandler = handler;
       return this;
     }

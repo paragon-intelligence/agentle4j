@@ -1,5 +1,11 @@
 package com.paragon.messaging.core;
 
+import com.paragon.messaging.whatsapp.messages.InteractiveMessage;
+import com.paragon.messaging.whatsapp.messages.LocationMessage;
+import com.paragon.messaging.whatsapp.messages.MediaMessage;
+import com.paragon.messaging.whatsapp.messages.ReactionMessage;
+import com.paragon.messaging.whatsapp.messages.TemplateMessage;
+import com.paragon.messaging.whatsapp.messages.TextMessage;
 import com.paragon.messaging.whatsapp.payload.ContactMessage;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -265,7 +271,7 @@ public interface MessagingProvider {
 
       // Collect only successes
       return subtasks.stream()
-              .filter(java.util.concurrent.StructuredTaskScope.Subtask::state)
+              .filter(t -> t.state() == java.util.concurrent.StructuredTaskScope.Subtask.State.SUCCESS)
               .map(java.util.concurrent.StructuredTaskScope.Subtask::get)
               .toList();
 
@@ -285,7 +291,7 @@ public interface MessagingProvider {
   record MessageResponse(
           @NonNull String messageId,
           @NonNull String status,
-          @NonNull java.time.Instant timestamp
+          java.time.@NonNull Instant timestamp
   ) {
     /**
      * Creates a successful response with current timestamp.

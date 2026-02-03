@@ -1,5 +1,7 @@
 package com.paragon.messaging.hooks;
 
+import com.paragon.messaging.whatsapp.payload.InboundMessage;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -41,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public record HookContext(
         String userId,
-        List<Message> messages,
+        List<InboundMessage> messages,
         Instant batchStartTime,
         int batchSize,
         boolean isRetry,
@@ -82,7 +84,7 @@ public record HookContext(
    * @param messages mensagens a processar
    * @return novo HookContext
    */
-  public static HookContext create(String userId, List<Message> messages) {
+  public static HookContext create(String userId, List<InboundMessage> messages) {
     return new HookContext(
             userId,
             messages,
@@ -128,7 +130,7 @@ public record HookContext(
    * @return primeira mensagem
    * @throws IllegalStateException se lote vazio
    */
-  public Message firstMessage() {
+  public InboundMessage firstMessage() {
     if (messages.isEmpty()) {
       throw new IllegalStateException("Batch is empty");
     }
@@ -141,7 +143,7 @@ public record HookContext(
    * @return última mensagem
    * @throws IllegalStateException se lote vazio
    */
-  public Message lastMessage() {
+  public InboundMessage lastMessage() {
     if (messages.isEmpty()) {
       throw new IllegalStateException("Batch is empty");
     }
