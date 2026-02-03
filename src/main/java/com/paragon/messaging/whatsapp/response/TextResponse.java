@@ -1,7 +1,7 @@
 package com.paragon.messaging.whatsapp.response;
 
-import com.paragon.messaging.whatsapp.OutboundMessage;
-import com.paragon.messaging.whatsapp.TextMessage;
+import com.paragon.messaging.core.OutboundMessage;
+import com.paragon.messaging.whatsapp.messages.TextMessage;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 

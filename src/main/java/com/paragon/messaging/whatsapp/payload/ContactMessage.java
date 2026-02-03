@@ -1,6 +1,6 @@
 package com.paragon.messaging.whatsapp.payload;
 
-import com.paragon.messaging.whatsapp.OutboundMessage;
+import com.paragon.messaging.core.OutboundMessage;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -1,7 +1,7 @@
 package com.paragon.messaging.whatsapp.payload;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.paragon.messaging.whatsapp.Message;
+import com.paragon.messaging.batching.Message;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
