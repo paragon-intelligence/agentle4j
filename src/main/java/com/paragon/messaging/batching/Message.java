@@ -1,5 +1,8 @@
 package com.paragon.messaging.batching;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 import org.jspecify.annotations.NonNull;
 
 import java.time.Instant;
@@ -18,9 +21,18 @@ import java.time.Instant;
  * @since 2.1
  */
 public record Message(
-        @NonNull String messageId,
-        @NonNull String content,
-        @NonNull Instant timestamp
+        @NonNull
+        @NotBlank(message = "Message ID cannot be blank")
+        String messageId,
+
+        @NonNull
+        @NotBlank(message = "Message content cannot be blank")
+        String content,
+
+        @NonNull
+        @NotNull(message = "Timestamp cannot be null")
+        @PastOrPresent(message = "Timestamp cannot be in the future")
+        Instant timestamp
 ) {
     /**
      * Canonical constructor with validation.

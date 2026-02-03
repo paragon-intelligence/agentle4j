@@ -34,7 +34,7 @@ public interface TTSProvider {
    * @return provider vazio
    */
   static TTSProvider noOp() {
-    return (text, config) -> new byte[0];
+    return (text, config) -> new Byte[0];
   }
 
   /**

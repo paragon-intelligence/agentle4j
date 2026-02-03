@@ -1,5 +1,9 @@
 package com.paragon.messaging.error;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -42,10 +46,16 @@ import java.util.function.BiConsumer;
  * @since 1.0
  */
 public record ErrorHandlingStrategy(
+        @PositiveOrZero(message = "Max retries must be zero or positive")
+        @Max(value = 10, message = "Max retries cannot exceed 10")
         int maxRetries,
+
+        @NotNull(message = "Retry delay cannot be null")
         Duration retryDelay,
+
         boolean exponentialBackoff,
         boolean notifyUserOnFailure,
+
         Optional<String> userNotificationMessage,
         Optional<BiConsumer<String, List<Message>>> deadLetterHandler
 ) {

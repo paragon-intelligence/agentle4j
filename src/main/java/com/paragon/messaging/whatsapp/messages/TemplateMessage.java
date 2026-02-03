@@ -3,6 +3,7 @@ package com.paragon.messaging.whatsapp.messages;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
@@ -13,10 +14,11 @@ import java.util.List;
 public record TemplateMessage(
 
         @NotBlank(message = "Template name cannot be blank")
+        @Pattern(regexp = "[a-z0-9_]+", message = "Template name must contain only lowercase letters, numbers, and underscores")
         String name,
 
         @NotBlank(message = "Language code cannot be blank")
-        @Size(min = 2, max = 10, message = "Language code must be between 2 and 10 characters")
+        @Pattern(regexp = "[a-z]{2}_[A-Z]{2}", message = "Language code must be in format 'xx_XX' (e.g., 'pt_BR', 'en_US')")
         String languageCode,
 
         @NotNull(message = "Components cannot be null")

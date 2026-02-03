@@ -2,6 +2,11 @@ package com.paragon.messaging.batching;
 
 import com.paragon.messaging.security.SecurityConfig;
 import com.paragon.messaging.whatsapp.config.TTSConfig;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import org.jspecify.annotations.NonNull;
 import com.paragon.messaging.ratelimit.RateLimitConfig;
 import com.paragon.messaging.error.ErrorHandlingStrategy;
@@ -47,15 +52,45 @@ import java.time.Duration;
  * @since 2.1
  */
 public record BatchingConfig(
-        @NonNull Duration adaptiveTimeout,
-        @NonNull Duration silenceThreshold,
+        @NonNull
+        @NotNull(message = "Adaptive timeout cannot be null")
+        Duration adaptiveTimeout,
+
+        @NonNull
+        @NotNull(message = "Silence threshold cannot be null")
+        Duration silenceThreshold,
+
+        @Positive(message = "Max buffer size must be positive")
+        @Min(value = 1, message = "Max buffer size must be at least 1")
+        @Max(value = 10000, message = "Max buffer size cannot exceed 10,000")
         int maxBufferSize,
-        @NonNull RateLimitConfig rateLimitConfig,
-        @NonNull BackpressureStrategy backpressureStrategy,
-        @NonNull ErrorHandlingStrategy errorHandlingStrategy,
-        @Nullable MessageStore messageStore,
-        @NonNull TTSConfig ttsConfig,
-        @Nullable SecurityConfig securityConfig
+
+        @NonNull
+        @NotNull(message = "Rate limit config cannot be null")
+        @Valid
+        RateLimitConfig rateLimitConfig,
+
+        @NonNull
+        @NotNull(message = "Backpressure strategy cannot be null")
+        BackpressureStrategy backpressureStrategy,
+
+        @NonNull
+        @NotNull(message = "Error handling strategy cannot be null")
+        @Valid
+        ErrorHandlingStrategy errorHandlingStrategy,
+
+        @Nullable
+        @Valid
+        MessageStore messageStore,
+
+        @NonNull
+        @NotNull(message = "TTS config cannot be null")
+        @Valid
+        TTSConfig ttsConfig,
+
+        @Nullable
+        @Valid
+        SecurityConfig securityConfig
 ) {
 
     /**

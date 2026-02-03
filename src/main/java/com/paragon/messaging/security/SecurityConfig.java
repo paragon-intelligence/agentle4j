@@ -1,7 +1,11 @@
 package com.paragon.messaging.security;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -53,14 +57,33 @@ import java.util.regex.Pattern;
  * @since 2.1
  */
 public record SecurityConfig(
-        @NotBlank String webhookVerifyToken,
-        @Nullable String appSecret,
+        @NotBlank(message = "Webhook verify token cannot be blank")
+        @Size(min = 10, max = 256, message = "Webhook verify token must be between 10 and 256 characters")
+        String webhookVerifyToken,
+
+        @Nullable
+        @Size(min = 10, max = 256, message = "App secret must be between 10 and 256 characters")
+        String appSecret,
+
         boolean validateSignatures,
         boolean contentSanitization,
-        @Positive int maxMessageLength,
-        @NonNull Set<String> blockedPatterns,
-        @NonNull Duration floodPreventionWindow,
-        @Positive int maxMessagesPerWindow
+
+        @Positive(message = "Max message length must be positive")
+        @Max(value = 65536, message = "Max message length cannot exceed 65,536 characters")
+        int maxMessageLength,
+
+        @NonNull
+        @NotNull(message = "Blocked patterns cannot be null")
+        Set<String> blockedPatterns,
+
+        @NonNull
+        @NotNull(message = "Flood prevention window cannot be null")
+        Duration floodPreventionWindow,
+
+        @Positive(message = "Max messages per window must be positive")
+        @Min(value = 1, message = "Max messages per window must be at least 1")
+        @Max(value = 1000, message = "Max messages per window cannot exceed 1,000")
+        int maxMessagesPerWindow
 ) {
 
     /**

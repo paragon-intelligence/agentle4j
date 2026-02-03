@@ -1,6 +1,7 @@
 package com.paragon.messaging.whatsapp.messages;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.util.Optional;
 
@@ -12,7 +13,7 @@ public record ReactionMessage(
         @NotBlank(message = "Message ID cannot be blank")
         String messageId,
 
-        Optional<String> emoji
+        Optional<@Size(max = 10, message = "Emoji cannot exceed 10 characters") String> emoji
 
 ) implements OutboundMessage {
 

@@ -1,5 +1,10 @@
 package com.paragon.messaging.ratelimit;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 import java.time.Duration;
 
 /**
@@ -35,9 +40,21 @@ import java.time.Duration;
  * @since 1.0
  */
 public record RateLimitConfig(
+        @Positive(message = "Tokens per minute must be positive")
+        @Min(value = 1, message = "Tokens per minute must be at least 1")
+        @Max(value = 10000, message = "Tokens per minute cannot exceed 10,000")
         int tokensPerMinute,
+
+        @Positive(message = "Bucket capacity must be positive")
+        @Min(value = 1, message = "Bucket capacity must be at least 1")
         int bucketCapacity,
+
+        @Positive(message = "Max messages in window must be positive")
+        @Min(value = 1, message = "Max messages must be at least 1")
+        @Max(value = 100000, message = "Max messages cannot exceed 100,000")
         int maxMessagesInWindow,
+
+        @NotNull(message = "Sliding window duration cannot be null")
         Duration slidingWindow
 ) {
 

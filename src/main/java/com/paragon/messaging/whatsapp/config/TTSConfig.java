@@ -1,6 +1,9 @@
 package com.paragon.messaging.whatsapp.config;
 
 import com.paragon.tts.TTSProvider;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Pattern;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -33,9 +36,16 @@ import org.jspecify.annotations.Nullable;
  */
 public record TTSConfig(
         @Nullable TTSProvider provider,
+
+        @DecimalMin(value = "0.0", message = "Speech chance must be between 0.0 and 1.0")
+        @DecimalMax(value = "1.0", message = "Speech chance must be between 0.0 and 1.0")
         double speechChance,
+
         @Nullable String defaultVoiceId,
-        @NonNull String languageCode
+
+        @NonNull
+        @Pattern(regexp = "[a-z]{2}-[A-Z]{2}", message = "Language code must be in format 'xx-XX' (e.g., 'pt-BR', 'en-US')")
+        String languageCode
 ) {
 
     /**

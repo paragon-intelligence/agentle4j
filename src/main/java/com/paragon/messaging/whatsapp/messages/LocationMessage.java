@@ -29,8 +29,8 @@ public record LocationMessage(
         @DecimalMax(value = "180.0", message = "Longitude must be <= 180")
         Double longitude,
 
-        Optional<@Size(max = 1000, message = "Location name cannot exceed 1000 characters") String> name,
-        Optional<@Size(max = 1000, message = "Location address cannot exceed 1000 characters") String> address
+        Optional<@Size(max = 256, message = "Location name cannot exceed 256 characters") String> name,
+        Optional<@Size(max = 512, message = "Location address cannot exceed 512 characters") String> address
 
 ) implements OutboundMessage {
 

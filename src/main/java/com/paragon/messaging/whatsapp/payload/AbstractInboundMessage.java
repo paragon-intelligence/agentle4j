@@ -1,6 +1,8 @@
 package com.paragon.messaging.whatsapp.payload;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -24,16 +26,17 @@ public abstract sealed class AbstractInboundMessage implements InboundMessage
         DocumentMessage, StickerMessage, InteractiveMessage, LocationMessage,
         ReactionMessage, SystemMessage, OrderMessage {
 
-    @NotNull
+    @NotBlank(message = "Sender phone number cannot be blank")
+    @Pattern(regexp = "[0-9]{10,15}", message = "Phone number must contain 10-15 digits")
     public final String from;
 
-    @NotNull
+    @NotBlank(message = "Message ID cannot be blank")
     public final String id;
 
-    @NotNull
+    @NotBlank(message = "Timestamp cannot be blank")
     public final String timestamp;
 
-    @NotNull
+    @NotBlank(message = "Message type cannot be blank")
     public final String type;
 
     @Nullable
