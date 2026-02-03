@@ -752,6 +752,66 @@ try (Playwright playwright = Playwright.create();
 
 See the [Web Extraction Guide](docs/guides/web-extraction.md) for configuration options.
 
+## Messaging Integration
+
+Build AI-powered messaging bots for WhatsApp, Telegram, and other platforms with intelligent batching, rate limiting, and conversation history.
+
+### WhatsApp Bot with AI Agent
+
+```java
+// 1. Create AI agent
+Agent agent = Agent.builder()
+    .name("CustomerSupport")
+    .model("openai/gpt-4o")
+    .instructions("You are a helpful customer support assistant.")
+    .responder(responder)
+    .build();
+
+// 2. Create WhatsApp provider
+WhatsAppMessagingProvider whatsapp = WhatsAppMessagingProvider.builder()
+    .phoneNumberId(System.getenv("WHATSAPP_PHONE_NUMBER_ID"))
+    .accessToken(System.getenv("WHATSAPP_ACCESS_TOKEN"))
+    .build();
+
+// 3. Create AI processor with conversation history
+AIAgentProcessor<?> processor = AIAgentProcessor.forAgent(agent)
+    .messagingProvider(whatsapp)
+    .historyStore(RedisConversationHistoryStore.create(redisClient))
+    .maxHistoryMessages(20)
+    .build();
+
+// 4. Create batching service with rate limiting
+MessageBatchingService batchingService = MessageBatchingService.builder()
+    .config(BatchingConfig.builder()
+        .adaptiveTimeout(Duration.ofSeconds(3))
+        .silenceThreshold(Duration.ofMillis(800))
+        .rateLimitConfig(RateLimitConfig.builder()
+            .maxMessagesPerMinute(20)
+            .build())
+        .build())
+    .processor(processor)
+    .build();
+
+// 5. Process incoming webhook
+@PostMapping("/whatsapp/webhook")
+public void handleWebhook(@RequestBody WebhookEvent event) {
+    for (var message : event.messages()) {
+        batchingService.receiveMessage(message.from(), message);
+    }
+}
+```
+
+### Key Features
+
+- **Adaptive Message Batching** – Groups rapid messages with silence detection (e.g., user typing "Hello" → "I need help" → "with my order" becomes one AI call)
+- **Hybrid Rate Limiting** – Token bucket + sliding window prevents API overload
+- **Conversation History** – Redis or in-memory persistence for multi-turn context
+- **Security** – Webhook signature validation, flood detection, content sanitization
+- **Virtual Threads** – High-performance async processing with Java virtual threads
+- **Multi-Platform** – Provider abstraction for WhatsApp, Telegram, and more
+
+See the [Messaging Guide](docs/guides/messaging.md) for complete documentation, security features, and production setup.
+
 ## Observability
 
 Built-in OpenTelemetry support:

@@ -101,6 +101,7 @@ nav:
     - Function Tools: guides/tools.md
     - Context Management: guides/context-management.md
     - Vision: guides/vision.md
+    - Messaging: guides/messaging.md
     - Spring Boot: guides/spring-boot.md
     - Observability: guides/observability.md
   - API Reference: api.md
