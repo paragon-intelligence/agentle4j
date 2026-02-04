@@ -204,8 +204,8 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     sendResponse(userId, response, replyToMessageId);
   }
 
-  @SuppressWarnings("unchecked")
   private void processStructured(String userId, AgentContext context, String replyToMessageId) throws Exception {
+    assert structuredAgent != null;
     StructuredAgentResult<T> result = structuredAgent.interactStructured(context);
 
     if (result.isError()) {
@@ -213,10 +213,6 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     }
 
     T output = result.output();
-
-    if (output == null) {
-      return;
-    }
 
     // Store the raw output in history
     if (historyStore != null) {
@@ -265,6 +261,10 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
   }
 
   private void sendAudioResponse(MessagingProvider.Recipient recipient, String response) throws Exception {
+    if (Objects.isNull(ttsProvider)) {
+      throw new AIProcessingException("TTSProvider has not been initialized.", new NullPointerException("Ttsprovider"));
+    }
+
     // Generate TTS audio
     TTSConfig ttsProviderConfig = TTSConfig.builder()
             .defaultVoiceId(ttsConfig.defaultVoiceId())
