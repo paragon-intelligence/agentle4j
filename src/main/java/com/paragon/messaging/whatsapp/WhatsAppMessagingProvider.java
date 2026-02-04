@@ -58,7 +58,7 @@ import java.util.concurrent.TimeUnit;
 public class WhatsAppMessagingProvider implements MessagingProvider {
 
   private static final String PROVIDER_TYPE = "WHATSAPP_CLOUD";
-  private static final String API_VERSION = "v21.0";
+  private static final String API_VERSION = "v22.0";
   private static final String BASE_URL = "https://graph.facebook.com/" + API_VERSION;
   private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 

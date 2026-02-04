@@ -19,7 +19,7 @@ public record TemplateMessage(
         String name,
 
         @NotBlank(message = "Language code cannot be blank")
-        @Pattern(regexp = "[a-z]{2}_[A-Z]{2}", message = "Language code must be in format 'xx_XX' (e.g., 'pt_BR', 'en_US')")
+        @Pattern(regexp = "[a-z]{2}(_[A-Z]{2})?", message = "Language code must be in format 'xx' or 'xx_XX' (e.g., 'en', 'pt', 'pt_BR', 'en_US')")
         String languageCode,
 
         @NotNull(message = "Components cannot be null")

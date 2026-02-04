@@ -40,7 +40,7 @@ import java.util.Objects;
  */
 public class WhatsAppMediaUploader {
 
-    private static final String API_VERSION = "v21.0";
+    private static final String API_VERSION = "v22.0";
     private static final String BASE_URL = "https://graph.facebook.com/" + API_VERSION;
     private static final long MAX_AUDIO_SIZE_BYTES = 16 * 1024 * 1024; // 16MB
     private static final long MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;  // 5MB

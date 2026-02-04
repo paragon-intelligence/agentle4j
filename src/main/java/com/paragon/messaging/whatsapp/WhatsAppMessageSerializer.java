@@ -41,12 +41,22 @@ public class WhatsAppMessageSerializer {
    * Serializa mensagem de texto.
    */
   private String serializeTextMessage(MessagingProvider.Recipient recipient, TextMessage message) {
+    // Build context field if this is a reply
+    String contextField = "";
+    if (message.replyToMessageId() != null && !message.replyToMessageId().isBlank()) {
+      contextField = String.format("""
+              "context": {
+                "message_id": "%s"
+              },
+              """, escapeJson(message.replyToMessageId()));
+    }
+
     return String.format("""
                     {
                       "messaging_product": "whatsapp",
                       "recipient_type": "individual",
                       "to": "%s",
-                      "type": "text",
+                      %s"type": "text",
                       "text": {
                         "body": "%s",
                         "preview_url": %b
@@ -54,6 +64,7 @@ public class WhatsAppMessageSerializer {
                     }
                     """,
             escapeJson(recipient.value()),
+            contextField,
             escapeJson(message.body()),
             message.previewUrl()
     );
@@ -264,7 +275,43 @@ public class WhatsAppMessageSerializer {
   }
 
   private String serializeButtonMessage(MessagingProvider.Recipient recipient, InteractiveMessage.ButtonMessage msg) {
-    // Implementação simplificada
+    // Build header field if present
+    String headerField = msg.header()
+            .map(h -> String.format("""
+                    "header": {
+                      "type": "text",
+                      "text": "%s"
+                    },
+                    """, escapeJson(h)))
+            .orElse("");
+
+    // Build footer field if present
+    String footerField = msg.footer()
+            .map(f -> String.format("""
+                    ,
+                    "footer": {
+                      "text": "%s"
+                    }""", escapeJson(f)))
+            .orElse("");
+
+    // Build buttons array
+    StringBuilder buttonsJson = new StringBuilder("[");
+    for (int i = 0; i < msg.buttons().size(); i++) {
+      if (i > 0) buttonsJson.append(",\n          ");
+      var btn = msg.buttons().get(i);
+      buttonsJson.append(String.format("""
+              {
+                "type": "reply",
+                "reply": {
+                  "id": "%s",
+                  "title": "%s"
+                }
+              }""",
+              escapeJson(btn.id()),
+              escapeJson(btn.title())));
+    }
+    buttonsJson.append("\n        ]");
+
     return String.format("""
                     {
                       "messaging_product": "whatsapp",
@@ -272,17 +319,81 @@ public class WhatsAppMessageSerializer {
                       "type": "interactive",
                       "interactive": {
                         "type": "button",
-                        "body": {"text": "%s"}
+                        %s"body": {
+                          "text": "%s"
+                        }%s,
+                        "action": {
+                          "buttons": %s
+                        }
                       }
                     }
                     """,
             escapeJson(recipient.value()),
-            escapeJson(msg.body())
+            headerField,
+            escapeJson(msg.body()),
+            footerField,
+            buttonsJson.toString()
     );
   }
 
   private String serializeListMessage(MessagingProvider.Recipient recipient, InteractiveMessage.ListMessage msg) {
-    // Implementação simplificada
+    // Build header field if present
+    String headerField = msg.header()
+            .map(h -> String.format("""
+                    "header": {
+                      "type": "text",
+                      "text": "%s"
+                    },
+                    """, escapeJson(h)))
+            .orElse("");
+
+    // Build footer field if present
+    String footerField = msg.footer()
+            .map(f -> String.format("""
+                    ,
+                    "footer": {
+                      "text": "%s"
+                    }""", escapeJson(f)))
+            .orElse("");
+
+    // Build sections array
+    StringBuilder sectionsJson = new StringBuilder("[\n");
+    for (int i = 0; i < msg.sections().size(); i++) {
+      if (i > 0) sectionsJson.append(",\n");
+      var section = msg.sections().get(i);
+      
+      sectionsJson.append("          {\n");
+      
+      // Add section title if present
+      section.title().ifPresent(title -> 
+              sectionsJson.append(String.format("            \"title\": \"%s\",\n", escapeJson(title)))
+      );
+      
+      // Add rows
+      sectionsJson.append("            \"rows\": [\n");
+      for (int j = 0; j < section.rows().size(); j++) {
+        if (j > 0) sectionsJson.append(",\n");
+        var row = section.rows().get(j);
+        
+        sectionsJson.append(String.format("""
+                              {
+                                "id": "%s",
+                                "title": "%s\"""",
+                escapeJson(row.id()),
+                escapeJson(row.title())));
+        
+        // Add description if present
+        row.description().ifPresent(desc ->
+                sectionsJson.append(String.format(",\n                \"description\": \"%s\"", escapeJson(desc)))
+        );
+        
+        sectionsJson.append("\n              }");
+      }
+      sectionsJson.append("\n            ]\n");
+      sectionsJson.append("          }");
+    }
+    sectionsJson.append("\n        ]");
+
     return String.format("""
                     {
                       "messaging_product": "whatsapp",
@@ -290,14 +401,22 @@ public class WhatsAppMessageSerializer {
                       "type": "interactive",
                       "interactive": {
                         "type": "list",
-                        "body": {"text": "%s"},
-                        "action": {"button": "%s"}
+                        %s"body": {
+                          "text": "%s"
+                        }%s,
+                        "action": {
+                          "button": "%s",
+                          "sections": %s
+                        }
                       }
                     }
                     """,
             escapeJson(recipient.value()),
+            headerField,
             escapeJson(msg.body()),
-            escapeJson(msg.buttonText())
+            footerField,
+            escapeJson(msg.buttonText()),
+            sectionsJson.toString()
     );
   }
 
