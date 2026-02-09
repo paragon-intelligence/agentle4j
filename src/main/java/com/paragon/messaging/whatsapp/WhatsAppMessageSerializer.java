@@ -1,11 +1,7 @@
 package com.paragon.messaging.whatsapp;
 
-import com.paragon.messaging.core.MessagingProvider;
-import com.paragon.messaging.core.MessagingProvider.Recipient;
-import com.paragon.messaging.core.OutboundMessage;
 import com.paragon.messaging.core.*;
 import com.paragon.messaging.whatsapp.messages.*;
-import com.paragon.messaging.whatsapp.payload.ContactMessage;
 
 /**
  * Serializador que converte mensagens genéricas para o formato JSON da API WhatsApp.
@@ -25,7 +21,7 @@ public class WhatsAppMessageSerializer {
    * @param message   mensagem a ser serializada
    * @return JSON string
    */
-  public String serialize(MessagingProvider.Recipient recipient, OutboundMessage message) {
+  public String serialize(Recipient recipient, OutboundMessage message) {
     return switch (message) {
       case TextMessageInterface text -> serializeTextMessage(recipient, (TextMessage) text);
       case MediaMessageInterface media -> serializeMediaMessage(recipient, (MediaMessage) media);
@@ -40,26 +36,25 @@ public class WhatsAppMessageSerializer {
   /**
    * Serializa mensagem de texto.
    */
-  private String serializeTextMessage(MessagingProvider.Recipient recipient, TextMessage message) {
-    // Build context field if this is a reply
+  private String serializeTextMessage(Recipient recipient, TextMessage message) {
     String contextField = "";
     if (message.replyToMessageId() != null && !message.replyToMessageId().isBlank()) {
       contextField = String.format("""
-              "context": {
-                "message_id": "%s"
+              "context":{
+                "message_id":"%s"
               },
               """, escapeJson(message.replyToMessageId()));
     }
 
     return String.format("""
                     {
-                      "messaging_product": "whatsapp",
-                      "recipient_type": "individual",
-                      "to": "%s",
-                      %s"type": "text",
-                      "text": {
-                        "body": "%s",
-                        "preview_url": %b
+                      "messaging_product":"whatsapp",
+                      "recipient_type":"individual",
+                      "to":"%s",
+                      %s"type":"text",
+                      "text":{
+                        "body":"%s",
+                        "preview_url":%b
                       }
                     }
                     """,
@@ -83,19 +78,19 @@ public class WhatsAppMessageSerializer {
     };
   }
 
-  private String serializeImage(MessagingProvider.Recipient recipient, MediaMessage.Image image) {
+  private String serializeImage(Recipient recipient, MediaMessage.Image image) {
     String sourceField = serializeMediaSource(image.source());
     String captionField = image.caption()
-            .map(c -> ",\n        \"caption\": \"" + escapeJson(c) + "\"")
+            .map(c -> ",\n        \"caption\":\"" + escapeJson(c) + "\"")
             .orElse("");
 
     return String.format("""
                     {
-                      "messaging_product": "whatsapp",
-                      "recipient_type": "individual",
-                      "to": "%s",
-                      "type": "image",
-                      "image": {
+                      "messaging_product":"whatsapp",
+                      "recipient_type":"individual",
+                      "to":"%s",
+                      "type":"image",
+                      "image":{
                         %s%s
                       }
                     }
@@ -106,18 +101,18 @@ public class WhatsAppMessageSerializer {
     );
   }
 
-  private String serializeVideo(MessagingProvider.Recipient recipient, MediaMessage.Video video) {
+  private String serializeVideo(Recipient recipient, MediaMessage.Video video) {
     String sourceField = serializeMediaSource(video.source());
     String captionField = video.caption()
-            .map(c -> ",\n        \"caption\": \"" + escapeJson(c) + "\"")
+            .map(c -> ",\n        \"caption\":\"" + escapeJson(c) + "\"")
             .orElse("");
 
     return String.format("""
                     {
-                      "messaging_product": "whatsapp",
-                      "to": "%s",
-                      "type": "video",
-                      "video": {
+                      "messaging_product":"whatsapp",
+                      "to":"%s",
+                      "type":"video",
+                      "video":{
                         %s%s
                       }
                     }
@@ -128,15 +123,15 @@ public class WhatsAppMessageSerializer {
     );
   }
 
-  private String serializeAudio(MessagingProvider.Recipient recipient, MediaMessage.Audio audio) {
+  private String serializeAudio(Recipient recipient, MediaMessage.Audio audio) {
     String sourceField = serializeMediaSource(audio.source());
 
     return String.format("""
                     {
-                      "messaging_product": "whatsapp",
-                      "to": "%s",
-                      "type": "audio",
-                      "audio": {
+                      "messaging_product":"whatsapp",
+                      "to":"%s",
+                      "type":"audio",
+                      "audio":{
                         %s
                       }
                     }
@@ -146,21 +141,21 @@ public class WhatsAppMessageSerializer {
     );
   }
 
-  private String serializeDocument(MessagingProvider.Recipient recipient, MediaMessage.Document document) {
+  private String serializeDocument(Recipient recipient, MediaMessage.Document document) {
     String sourceField = serializeMediaSource(document.source());
     String filenameField = document.filename()
-            .map(f -> ",\n        \"filename\": \"" + escapeJson(f) + "\"")
+            .map(f -> ",\n        \"filename\":\"" + escapeJson(f) + "\"")
             .orElse("");
     String captionField = document.caption()
-            .map(c -> ",\n        \"caption\": \"" + escapeJson(c) + "\"")
+            .map(c -> ",\n        \"caption\":\"" + escapeJson(c) + "\"")
             .orElse("");
 
     return String.format("""
                     {
-                      "messaging_product": "whatsapp",
-                      "to": "%s",
-                      "type": "document",
-                      "document": {
+                      "messaging_product":"whatsapp",
+                      "to":"%s",
+                      "type":"document",
+                      "document":{
                         %s%s%s
                       }
                     }
@@ -172,15 +167,15 @@ public class WhatsAppMessageSerializer {
     );
   }
 
-  private String serializeSticker(MessagingProvider.Recipient recipient, MediaMessage.Sticker sticker) {
+  private String serializeSticker(Recipient recipient, MediaMessage.Sticker sticker) {
     String sourceField = serializeMediaSource(sticker.source());
 
     return String.format("""
                     {
-                      "messaging_product": "whatsapp",
-                      "to": "%s",
-                      "type": "sticker",
-                      "sticker": {
+                      "messaging_product":"whatsapp",
+                      "to":"%s",
+                      "type":"sticker",
+                      "sticker":{
                         %s
                       }
                     }
@@ -195,19 +190,19 @@ public class WhatsAppMessageSerializer {
    */
   private String serializeMediaSource(MediaMessage.MediaSource source) {
     return switch (source) {
-      case MediaMessage.MediaSource.Url url -> "\"link\": \"" + escapeJson(url.url()) + "\"";
-      case MediaMessage.MediaSource.MediaId id -> "\"id\": \"" + escapeJson(id.id()) + "\"";
+      case MediaMessage.MediaSource.Url url -> "\"link\":\"" + escapeJson(url.url()) + "\"";
+      case MediaMessage.MediaSource.MediaId id -> "\"id\":\"" + escapeJson(id.id()) + "\"";
     };
   }
 
   /**
    * Serializa mensagem de template.
    */
-  private String serializeTemplateMessage(MessagingProvider.Recipient recipient, TemplateMessage template) {
+  private String serializeTemplateMessage(Recipient recipient, TemplateMessage template) {
     StringBuilder componentsJson = new StringBuilder();
 
     if (!template.components().isEmpty()) {
-      componentsJson.append(",\n      \"components\": [\n");
+      componentsJson.append(",\n      \"components\":[\n");
 
       for (int i = 0; i < template.components().size(); i++) {
         if (i > 0) componentsJson.append(",\n");
@@ -220,13 +215,13 @@ public class WhatsAppMessageSerializer {
 
     return String.format("""
                     {
-                      "messaging_product": "whatsapp",
-                      "to": "%s",
-                      "type": "template",
-                      "template": {
-                        "name": "%s",
-                        "language": {
-                          "code": "%s"
+                      "messaging_product":"whatsapp",
+                      "to":"%s",
+                      "type":"template",
+                      "template":{
+                        "name":"%s",
+                        "language":{
+                          "code":"%s"
                         }%s
                       }
                     }
@@ -239,11 +234,10 @@ public class WhatsAppMessageSerializer {
   }
 
   private String serializeTemplateComponent(TemplateMessage.TemplateComponent component) {
-    // Simplified serialization based on simple component structure
     return String.format("""
             {
-              "type": "%s",
-              "parameters": %s
+              "type":"%s",
+              "parameters":%s
             }""",
             escapeJson(component.type()),
             serializeStringList(component.parameters()));
@@ -255,7 +249,7 @@ public class WhatsAppMessageSerializer {
     StringBuilder json = new StringBuilder("[");
     for (int i = 0; i < params.size(); i++) {
       if (i > 0) json.append(", ");
-      json.append("{\"type\": \"text\", \"text\": \"")
+      json.append("{\"type\":\"text\", \"text\":\"")
               .append(escapeJson(params.get(i)))
               .append("\"}");
     }
@@ -266,7 +260,7 @@ public class WhatsAppMessageSerializer {
   /**
    * Serializa mensagem interativa.
    */
-  private String serializeInteractiveMessage(MessagingProvider.Recipient recipient, InteractiveMessage interactive) {
+  private String serializeInteractiveMessage(Recipient recipient, InteractiveMessage interactive) {
     return switch (interactive) {
       case InteractiveMessage.ButtonMessage btn -> serializeButtonMessage(recipient, btn);
       case InteractiveMessage.ListMessage list -> serializeListMessage(recipient, list);
@@ -274,37 +268,34 @@ public class WhatsAppMessageSerializer {
     };
   }
 
-  private String serializeButtonMessage(MessagingProvider.Recipient recipient, InteractiveMessage.ButtonMessage msg) {
-    // Build header field if present
+  private String serializeButtonMessage(Recipient recipient, InteractiveMessage.ButtonMessage msg) {
     String headerField = msg.header()
             .map(h -> String.format("""
-                    "header": {
-                      "type": "text",
-                      "text": "%s"
+                    "header":{
+                      "type":"text",
+                      "text":"%s"
                     },
                     """, escapeJson(h)))
             .orElse("");
 
-    // Build footer field if present
     String footerField = msg.footer()
             .map(f -> String.format("""
                     ,
-                    "footer": {
-                      "text": "%s"
+                    "footer":{
+                      "text":"%s"
                     }""", escapeJson(f)))
             .orElse("");
 
-    // Build buttons array
     StringBuilder buttonsJson = new StringBuilder("[");
     for (int i = 0; i < msg.buttons().size(); i++) {
       if (i > 0) buttonsJson.append(",\n          ");
       var btn = msg.buttons().get(i);
       buttonsJson.append(String.format("""
               {
-                "type": "reply",
-                "reply": {
-                  "id": "%s",
-                  "title": "%s"
+                "type":"reply",
+                "reply":{
+                  "id":"%s",
+                  "title":"%s"
                 }
               }""",
               escapeJson(btn.id()),
@@ -314,16 +305,16 @@ public class WhatsAppMessageSerializer {
 
     return String.format("""
                     {
-                      "messaging_product": "whatsapp",
-                      "to": "%s",
-                      "type": "interactive",
-                      "interactive": {
-                        "type": "button",
-                        %s"body": {
-                          "text": "%s"
+                      "messaging_product":"whatsapp",
+                      "to":"%s",
+                      "type":"interactive",
+                      "interactive":{
+                        "type":"button",
+                        %s"body":{
+                          "text":"%s"
                         }%s,
-                        "action": {
-                          "buttons": %s
+                        "action":{
+                          "buttons":%s
                         }
                       }
                     }
@@ -336,27 +327,24 @@ public class WhatsAppMessageSerializer {
     );
   }
 
-  private String serializeListMessage(MessagingProvider.Recipient recipient, InteractiveMessage.ListMessage msg) {
-    // Build header field if present
+  private String serializeListMessage(Recipient recipient, InteractiveMessage.ListMessage msg) {
     String headerField = msg.header()
             .map(h -> String.format("""
-                    "header": {
-                      "type": "text",
-                      "text": "%s"
+                    "header":{
+                      "type":"text",
+                      "text":"%s"
                     },
                     """, escapeJson(h)))
             .orElse("");
 
-    // Build footer field if present
     String footerField = msg.footer()
             .map(f -> String.format("""
                     ,
-                    "footer": {
-                      "text": "%s"
+                    "footer":{
+                      "text":"%s"
                     }""", escapeJson(f)))
             .orElse("");
 
-    // Build sections array
     StringBuilder sectionsJson = new StringBuilder("[\n");
     for (int i = 0; i < msg.sections().size(); i++) {
       if (i > 0) sectionsJson.append(",\n");
@@ -364,27 +352,24 @@ public class WhatsAppMessageSerializer {
       
       sectionsJson.append("          {\n");
       
-      // Add section title if present
       section.title().ifPresent(title -> 
-              sectionsJson.append(String.format("            \"title\": \"%s\",\n", escapeJson(title)))
+              sectionsJson.append(String.format("            \"title\":\"%s\",\n", escapeJson(title)))
       );
       
-      // Add rows
-      sectionsJson.append("            \"rows\": [\n");
+      sectionsJson.append("            \"rows\":[\n");
       for (int j = 0; j < section.rows().size(); j++) {
         if (j > 0) sectionsJson.append(",\n");
         var row = section.rows().get(j);
         
         sectionsJson.append(String.format("""
                               {
-                                "id": "%s",
-                                "title": "%s\"""",
+                                "id":"%s",
+                                "title":"%s\"""",
                 escapeJson(row.id()),
                 escapeJson(row.title())));
         
-        // Add description if present
         row.description().ifPresent(desc ->
-                sectionsJson.append(String.format(",\n                \"description\": \"%s\"", escapeJson(desc)))
+                sectionsJson.append(String.format(",\n                \"description\":\"%s\"", escapeJson(desc)))
         );
         
         sectionsJson.append("\n              }");
@@ -396,17 +381,17 @@ public class WhatsAppMessageSerializer {
 
     return String.format("""
                     {
-                      "messaging_product": "whatsapp",
-                      "to": "%s",
-                      "type": "interactive",
-                      "interactive": {
-                        "type": "list",
-                        %s"body": {
-                          "text": "%s"
+                      "messaging_product":"whatsapp",
+                      "to":"%s",
+                      "type":"interactive",
+                      "interactive":{
+                        "type":"list",
+                        %s"body":{
+                          "text":"%s"
                         }%s,
-                        "action": {
-                          "button": "%s",
-                          "sections": %s
+                        "action":{
+                          "button":"%s",
+                          "sections":%s
                         }
                       }
                     }
@@ -420,20 +405,24 @@ public class WhatsAppMessageSerializer {
     );
   }
 
-  private String serializeCtaUrlMessage(MessagingProvider.Recipient recipient, InteractiveMessage.CtaUrlMessage msg) {
+  private String serializeCtaUrlMessage(Recipient recipient, InteractiveMessage.CtaUrlMessage msg) {
+    String footerField = msg.footer()
+            .map(f -> ",\n                \"footer\":{\"text\":\"" + escapeJson(f) + "\"}")
+            .orElse("");
+
     return String.format("""
                     {
-                      "messaging_product": "whatsapp",
-                      "to": "%s",
-                      "type": "interactive",
-                      "interactive": {
-                        "type": "cta_url",
-                        "body": {"text": "%s"},
-                        "action": {
-                          "name": "cta_url",
-                          "parameters": {
-                            "display_text": "%s",
-                            "url": "%s"
+                      "messaging_product":"whatsapp",
+                      "to":"%s",
+                      "type":"interactive",
+                      "interactive":{
+                        "type":"cta_url",
+                        "body":{"text":"%s"}%s,
+                        "action":{
+                          "name":"cta_url",
+                          "parameters":{
+                            "display_text":"%s",
+                            "url":"%s"
                           }
                         }
                       }
@@ -441,6 +430,7 @@ public class WhatsAppMessageSerializer {
                     """,
             escapeJson(recipient.value()),
             escapeJson(msg.body()),
+            footerField,
             escapeJson(msg.displayText()),
             escapeJson(msg.url())
     );
@@ -449,28 +439,28 @@ public class WhatsAppMessageSerializer {
   /**
    * Serializa mensagem de localização.
    */
-  private String serializeLocationMessage(MessagingProvider.Recipient recipient, LocationMessage location) {
+  private String serializeLocationMessage(Recipient recipient, LocationMessage location) {
     String nameField = location.name()
-            .map(n -> ",\n        \"name\": \"" + escapeJson(n) + "\"")
+            .map(n -> ",\n        \"name\":\"" + escapeJson(n) + "\"")
             .orElse("");
     String addressField = location.address()
-            .map(a -> ",\n        \"address\": \"" + escapeJson(a) + "\"")
+            .map(a -> ",\n        \"address\":\"" + escapeJson(a) + "\"")
             .orElse("");
 
     return String.format("""
                     {
-                      "messaging_product": "whatsapp",
-                      "to": "%s",
-                      "type": "location",
-                      "location": {
-                        "latitude": %f,
-                        "longitude": %f%s%s
+                      "messaging_product":"whatsapp",
+                      "to":"%s",
+                      "type":"location",
+                      "location":{
+                        "latitude":%s,
+                        "longitude":%s%s%s
                       }
                     }
                     """,
             escapeJson(recipient.value()),
-            location.latitude(),
-            location.longitude(),
+            Double.toString(location.latitude()),
+            Double.toString(location.longitude()),
             nameField,
             addressField
     );
@@ -479,35 +469,59 @@ public class WhatsAppMessageSerializer {
   /**
    * Serializa mensagem de contato.
    */
-  private String serializeContactMessage(MessagingProvider.Recipient recipient, ContactMessage contact) {
-    // Implementação simplificada - em produção seria mais complexa
+  private String serializeContactMessage(Recipient recipient, ContactMessage contact) {
+    StringBuilder phonesJson = new StringBuilder("[");
+    for (int i = 0; i < contact.phones().size(); i++) {
+      if (i > 0) phonesJson.append(",");
+      var p = contact.phones().get(i);
+      phonesJson.append("{\"phone\":\"").append(escapeJson(p.phone()))
+              .append("\",\"type\":\"").append(escapeJson(p.type())).append("\"}");
+    }
+    phonesJson.append("]");
+
+    StringBuilder emailsJson = new StringBuilder("[");
+    for (int i = 0; i < contact.emails().size(); i++) {
+      if (i > 0) emailsJson.append(",");
+      var e = contact.emails().get(i);
+      emailsJson.append("{\"email\":\"").append(escapeJson(e.email()))
+              .append("\",\"type\":\"").append(escapeJson(e.type())).append("\"}");
+    }
+    emailsJson.append("]");
+
     return String.format("""
                     {
-                      "messaging_product": "whatsapp",
-                      "to": "%s",
-                      "type": "contacts",
-                      "contacts": []
+                      "messaging_product":"whatsapp",
+                      "to":"%s",
+                      "type":"contacts",
+                      "contacts":[{
+                        "name":{"formatted_name":"%s"},
+                        "phone":%s,
+                        "email":%s
+                      }]
                     }
                     """,
-            escapeJson(recipient.value())
+            escapeJson(recipient.value()),
+            escapeJson(contact.formattedName()),
+            phonesJson.toString(),
+            emailsJson.toString()
     );
   }
 
   /**
    * Serializa mensagem de reação.
    */
-  private String serializeReactionMessage(MessagingProvider.Recipient recipient, ReactionMessage reaction) {
+  private String serializeReactionMessage(Recipient recipient, ReactionMessage reaction) {
     String emojiField = reaction.emoji()
-            .map(e -> "\"emoji\": \"" + escapeJson(e) + "\"")
-            .orElse("\"emoji\": \"\"");
+            .map(e -> "\"emoji\":\"" + escapeJson(e) + "\"")
+            .orElse("\"emoji\":\"\"");
 
     return String.format("""
                     {
-                      "messaging_product": "whatsapp",
-                      "to": "%s",
-                      "type": "reaction",
-                      "reaction": {
-                        "message_id": "%s",
+                      "messaging_product":"whatsapp",
+                      "to":"%s",
+                      "type":"reaction",
+                      "reaction":{
+                        "message_id":"%s",
                         %s
                       }
                     }

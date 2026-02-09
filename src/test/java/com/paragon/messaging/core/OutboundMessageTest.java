@@ -359,7 +359,7 @@ class OutboundMessageTest {
         }
 
         @Test
-        @displayName("has all interactive types")
+        @DisplayName("has all interactive types")
         void hasAllInteractiveTypes() {
             assertNotNull(OutboundMessage.OutboundMessageType.INTERACTIVE_BUTTON);
             assertNotNull(OutboundMessage.OutboundMessageType.INTERACTIVE_LIST);

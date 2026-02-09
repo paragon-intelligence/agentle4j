@@ -9,6 +9,7 @@ import com.paragon.messaging.conversion.MessageConverter;
 import com.paragon.messaging.core.MessageProcessor;
 import com.paragon.messaging.core.MessagingProvider;
 import com.paragon.messaging.core.OutboundMessage;
+import com.paragon.messaging.core.Recipient;
 import com.paragon.messaging.store.history.ConversationHistoryStore;
 import com.paragon.messaging.store.history.InMemoryConversationHistoryStore;
 import com.paragon.messaging.whatsapp.WhatsAppMediaUploader;
@@ -229,7 +230,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
   }
 
   private void sendResponse(String userId, String response, @Nullable String replyToMessageId) throws Exception {
-    MessagingProvider.Recipient recipient = MessagingProvider.Recipient.ofPhoneNumber(userId);
+    Recipient recipient = Recipient.ofPhoneNumber(userId);
 
     // Decide text vs audio based on TTS config
     boolean shouldSendAudio = ttsConfig.isEnabled()
@@ -244,7 +245,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
   }
 
   private void sendTextResponse(
-          MessagingProvider.Recipient recipient,
+          Recipient recipient,
           String response,
           @Nullable String replyToMessageId
   ) {
@@ -260,7 +261,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     messagingProvider.sendMessage(recipient, message);
   }
 
-  private void sendAudioResponse(MessagingProvider.Recipient recipient, String response) throws Exception {
+  private void sendAudioResponse(Recipient recipient, String response) throws Exception {
     if (Objects.isNull(ttsProvider)) {
       throw new AIProcessingException("TTSProvider has not been initialized.", new NullPointerException("Ttsprovider"));
     }
@@ -305,7 +306,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
           WhatsAppResponse response,
           @Nullable String defaultReplyToMessageId
   ) {
-    MessagingProvider.Recipient recipient = MessagingProvider.Recipient.ofPhoneNumber(userId);
+    Recipient recipient = Recipient.ofPhoneNumber(userId);
 
     // Get reply context from response or use default
     String replyToMessageId = response.getReplyToMessageId();

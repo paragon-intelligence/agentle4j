@@ -97,6 +97,18 @@ public final class AgentResult {
   }
 
   /**
+   * Convenience method for creating a simple successful result (for testing).
+   *
+   * @param output the final text output
+   * @return a minimal success result
+   */
+  public static @NonNull AgentResult success(@NonNull String output) {
+    return new Builder()
+        .output(output)
+        .build();
+  }
+
+  /**
    * Creates a successful result with parsed structured output.
    *
    * @param output the final text output (JSON)
@@ -159,6 +171,16 @@ public final class AgentResult {
   public static @NonNull AgentResult error(
       @NonNull Throwable error, @NonNull AgentContext context, int turnsUsed) {
     return new Builder().error(error).history(context.getHistory()).turnsUsed(turnsUsed).build();
+  }
+
+  /**
+   * Convenience method for creating a simple error result (for testing).
+   *
+   * @param error the error that occurred
+   * @return a minimal error result
+   */
+  public static @NonNull AgentResult error(@NonNull Throwable error) {
+    return new Builder().error(error).build();
   }
 
   /**

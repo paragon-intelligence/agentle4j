@@ -302,7 +302,7 @@ class LocationMessageTest {
         @Test
         @DisplayName("handles null name and address")
         void handlesNullOptionals() {
-            LocationMessage location = new LocationMessage(0.0, 0.0, null, null);
+            LocationMessage location = new LocationMessage(0.0, 0.0, (String) null, (String) null);
 
             assertTrue(location.name().isEmpty());
             assertTrue(location.address().isEmpty());

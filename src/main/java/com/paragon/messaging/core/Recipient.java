@@ -105,6 +105,16 @@ public record Recipient(
   }
 
   /**
+   * Returns the recipient value (alias for identifier()).
+   * Provided for API compatibility.
+   *
+   * @return the recipient identifier
+   */
+  public String value() {
+    return identifier;
+  }
+
+  /**
    * Tipos de destinatário suportados.
    */
   public enum RecipientType {

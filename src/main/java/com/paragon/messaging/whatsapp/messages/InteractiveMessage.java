@@ -98,6 +98,10 @@ public sealed interface InteractiveMessage extends InteractiveMessageInterface p
         return this;
       }
 
+      public Builder bodyText(String body) {
+        return body(body);
+      }
+
       public Builder addButton(String id, String title) {
         this.buttons.add(new ReplyButton(id, title));
         return this;
@@ -189,14 +193,20 @@ public sealed interface InteractiveMessage extends InteractiveMessageInterface p
 
     public static class Builder {
       private final List<ListSection> sections = new java.util.ArrayList<>();
+      private final List<ListRow> currentRows = new java.util.ArrayList<>();
       private String body;
       private String buttonText;
       private String header;
       private String footer;
+      private String currentSectionTitle;
 
       public Builder body(String body) {
         this.body = body;
         return this;
+      }
+
+      public Builder bodyText(String body) {
+        return body(body);
       }
 
       public Builder buttonText(String buttonText) {
@@ -205,12 +215,31 @@ public sealed interface InteractiveMessage extends InteractiveMessageInterface p
       }
 
       public Builder addSection(ListSection section) {
+        flushSection();
         this.sections.add(section);
         return this;
       }
 
       public Builder addSection(String title, List<ListRow> rows) {
+        flushSection();
         this.sections.add(new ListSection(title, rows));
+        return this;
+      }
+
+      public Builder addSection(String title) {
+        flushSection();
+        this.currentSectionTitle = title;
+        this.currentRows.clear();
+        return this;
+      }
+
+      public Builder addRow(String id, String title, String description) {
+        currentRows.add(new ListRow(id, title, description));
+        return this;
+      }
+
+      public Builder addRow(String id, String title) {
+        currentRows.add(new ListRow(id, title));
         return this;
       }
 
@@ -224,7 +253,16 @@ public sealed interface InteractiveMessage extends InteractiveMessageInterface p
         return this;
       }
 
+      private void flushSection() {
+        if (!currentRows.isEmpty()) {
+          sections.add(new ListSection(currentSectionTitle, new java.util.ArrayList<>(currentRows)));
+          currentSectionTitle = null;
+          currentRows.clear();
+        }
+      }
+
       public ListMessage build() {
+        flushSection();
         return new ListMessage(body, buttonText, sections,
                 Optional.ofNullable(header), Optional.ofNullable(footer));
       }
@@ -250,9 +288,15 @@ public sealed interface InteractiveMessage extends InteractiveMessageInterface p
 
           @NotBlank(message = "URL cannot be blank")
           @Pattern(regexp = "^https?://.*", message = "URL must start with http:// or https://")
-          String url
+          String url,
+
+          Optional<String> footer
 
   ) implements InteractiveMessage {
+
+    public CtaUrlMessage(String body, String displayText, String url) {
+      this(body, displayText, url, Optional.empty());
+    }
 
     @Override
     public Optional<String> header() {
@@ -261,12 +305,47 @@ public sealed interface InteractiveMessage extends InteractiveMessageInterface p
 
     @Override
     public Optional<String> footer() {
-      return Optional.empty();
+      return footer;
     }
 
     @Override
     public OutboundMessageType type() {
       return OutboundMessageType.INTERACTIVE_CTA_URL;
+    }
+
+    public static Builder builder() {
+      return new Builder();
+    }
+
+    public static class Builder {
+      private String body;
+      private String displayText;
+      private String url;
+      private String footer;
+
+      public Builder bodyText(String body) {
+        this.body = body;
+        return this;
+      }
+
+      public Builder displayText(String text) {
+        this.displayText = text;
+        return this;
+      }
+
+      public Builder url(String url) {
+        this.url = url;
+        return this;
+      }
+
+      public Builder footerText(String footer) {
+        this.footer = footer;
+        return this;
+      }
+
+      public CtaUrlMessage build() {
+        return new CtaUrlMessage(body, displayText, url, Optional.ofNullable(footer));
+      }
     }
   }
 

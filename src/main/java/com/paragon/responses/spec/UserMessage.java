@@ -57,6 +57,16 @@ public final class UserMessage extends Message {
   }
 
   /**
+   * Convenience method to create a UserMessage with a single text content.
+   *
+   * @param text the text content
+   * @return a new UserMessage with the text
+   */
+  public static UserMessage text(@NonNull String text) {
+    return new UserMessage(List.of(new Text(text)));
+  }
+
+  /**
    * Returns the role identifier for this message type.
    *
    * <p>User messages have lower priority than developer messages but represent the primary

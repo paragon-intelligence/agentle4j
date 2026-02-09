@@ -1,8 +1,10 @@
 package com.paragon.messaging.testutil;
 
 import com.paragon.messaging.whatsapp.payload.*;
+import com.paragon.messaging.whatsapp.WebhookEvent;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Factory for creating mock WhatsApp messages for testing.
@@ -10,13 +12,14 @@ import java.util.List;
 public class MockMessageFactory {
 
     public static InboundMessage createTextMessage(String from, String messageId, String text) {
-        return InboundMessage.builder()
-                .from(from)
-                .id(messageId)
-                .timestamp(Instant.now().getEpochSecond())
-                .type("text")
-                .text(TextPayload.builder().body(text).build())
-                .build();
+        return new TextMessage(
+                from,
+                messageId,
+                String.valueOf(Instant.now().getEpochSecond()),
+                "text",
+                null,
+                new TextMessage.TextBody(text)
+        );
     }
 
     public static InboundMessage createTextMessage(String from, String text) {
@@ -24,108 +27,111 @@ public class MockMessageFactory {
     }
 
     public static InboundMessage createImageMessage(String from, String mediaId) {
-        return InboundMessage.builder()
-                .from(from)
-                .id(generateMessageId())
-                .timestamp(Instant.now().getEpochSecond())
-                .type("image")
-                .image(ImagePayload.builder()
-                        .id(mediaId)
-                        .mimeType("image/jpeg")
-                        .build())
-                .build();
+        return new ImageMessage(
+                from,
+                generateMessageId(),
+                String.valueOf(Instant.now().getEpochSecond()),
+                "image",
+                null,
+                new MediaContent(mediaId, "image/jpeg", null, null, null, null, null, null)
+        );
     }
 
     public static InboundMessage createAudioMessage(String from, String mediaId) {
-        return InboundMessage.builder()
-                .from(from)
-                .id(generateMessageId())
-                .timestamp(Instant.now().getEpochSecond())
-                .type("audio")
-                .audio(AudioPayload.builder()
-                        .id(mediaId)
-                        .mimeType("audio/ogg")
-                        .build())
-                .build();
+        return new AudioMessage(
+                from,
+                generateMessageId(),
+                String.valueOf(Instant.now().getEpochSecond()),
+                "audio",
+                null,
+                new MediaContent(mediaId, "audio/ogg", null, null, null, true, null, null)
+        );
     }
 
     public static InboundMessage createVideoMessage(String from, String mediaId) {
-        return InboundMessage.builder()
-                .from(from)
-                .id(generateMessageId())
-                .timestamp(Instant.now().getEpochSecond())
-                .type("video")
-                .video(VideoPayload.builder()
-                        .id(mediaId)
-                        .mimeType("video/mp4")
-                        .build())
-                .build();
+        return new VideoMessage(
+                from,
+                generateMessageId(),
+                String.valueOf(Instant.now().getEpochSecond()),
+                "video",
+                null,
+                new MediaContent(mediaId, "video/mp4", null, null, null, null, null, null)
+        );
     }
 
     public static InboundMessage createDocumentMessage(String from, String mediaId, String filename) {
-        return InboundMessage.builder()
-                .from(from)
-                .id(generateMessageId())
-                .timestamp(Instant.now().getEpochSecond())
-                .type("document")
-                .document(DocumentPayload.builder()
-                        .id(mediaId)
-                        .filename(filename)
-                        .mimeType("application/pdf")
-                        .build())
-                .build();
+        return new DocumentMessage(
+                from,
+                generateMessageId(),
+                String.valueOf(Instant.now().getEpochSecond()),
+                "document",
+                null,
+                new MediaContent(mediaId, "application/pdf", null, null, filename, null, null, null)
+        );
     }
 
     public static InboundMessage createLocationMessage(String from, double latitude, double longitude) {
-        return InboundMessage.builder()
-                .from(from)
-                .id(generateMessageId())
-                .timestamp(Instant.now().getEpochSecond())
-                .type("location")
-                .location(LocationPayload.builder()
-                        .latitude(latitude)
-                        .longitude(longitude)
-                        .build())
-                .build();
+        return new LocationMessage(
+                from,
+                generateMessageId(),
+                String.valueOf(Instant.now().getEpochSecond()),
+                "location",
+                null,
+                new LocationMessage.LocationContent(latitude, longitude, null, null, null)
+        );
     }
 
     public static InboundMessage createButtonReply(String from, String buttonText) {
-        return InboundMessage.builder()
-                .from(from)
-                .id(generateMessageId())
-                .timestamp(Instant.now().getEpochSecond())
-                .type("button")
-                .button(ButtonReply.builder()
-                        .text(buttonText)
-                        .payload(buttonText.toLowerCase())
-                        .build())
-                .build();
+        return new InteractiveMessage(
+                from,
+                generateMessageId(),
+                String.valueOf(Instant.now().getEpochSecond()),
+                "interactive",
+                null,
+                new ButtonReply(
+                        "button_reply",
+                        new ReplyData(buttonText.toLowerCase(), buttonText, null)
+                )
+        );
     }
 
     public static WebhookEvent createWebhookEvent(InboundMessage... messages) {
-        ChangeValue value = ChangeValue.builder()
-                .messagingProduct("whatsapp")
-                .metadata(Metadata.builder()
-                        .displayPhoneNumber("1234567890")
-                        .phoneNumberId("phone-id-123")
-                        .build())
-                .messages(List.of(messages))
-                .build();
+        // Create a simple IncomingMessageEvent based on the first message
+        String messageId = messages.length > 0 ? messages[0].id() : generateMessageId();
+        String senderId = messages.length > 0 ? messages[0].from() : "test-sender";
 
-        Change change = Change.builder()
-                .value(value)
-                .field("messages")
-                .build();
+        // Determine message type and content from first message
+        WebhookEvent.IncomingMessageType messageType = WebhookEvent.IncomingMessageType.TEXT;
+        WebhookEvent.IncomingMessageContent content = new WebhookEvent.TextContent("test");
 
-        Entry entry = Entry.builder()
-                .id("entry-123")
-                .changes(List.of(change))
-                .build();
+        if (messages.length > 0) {
+            InboundMessage msg = messages[0];
+            if (msg instanceof TextMessage tm) {
+                messageType = WebhookEvent.IncomingMessageType.TEXT;
+                content = new WebhookEvent.TextContent(tm.text.body);
+            } else if (msg instanceof ImageMessage) {
+                messageType = WebhookEvent.IncomingMessageType.IMAGE;
+                content = new WebhookEvent.MediaContent("media-id", "image/jpeg", Optional.empty(), Optional.empty());
+            } else if (msg instanceof InteractiveMessage im) {
+                if (im.buttonReply != null) {
+                    messageType = WebhookEvent.IncomingMessageType.BUTTON_REPLY;
+                    content = new WebhookEvent.ButtonReplyContent(im.buttonReply.id, im.buttonReply.title);
+                } else if (im.listReply != null) {
+                    messageType = WebhookEvent.IncomingMessageType.LIST_REPLY;
+                    content = new WebhookEvent.ListReplyContent(im.listReply.id, im.listReply.title, Optional.empty());
+                }
+            }
+        }
 
-        return WebhookEvent.builder()
-                .object("whatsapp_business_account")
-                .entry(List.of(entry))
-                .build();
+        return new WebhookEvent.IncomingMessageEvent(
+                messageId,
+                senderId,
+                Optional.of("Test User"),
+                messageType,
+                content,
+                Instant.now(),
+                Optional.empty()
+        );
     }
 
     private static String generateMessageId() {

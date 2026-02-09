@@ -34,15 +34,15 @@ class RateLimitConfigTest {
     class BuilderTests {
 
         @Test
-        @DisplayName("defaults() creates config with default values")
-        void defaults_createsDefaultConfig() {
-            RateLimitConfig config = RateLimitConfig.defaults();
+        @DisplayName("lenient() creates config with lenient values")
+        void lenient_createsLenientConfig() {
+            RateLimitConfig config = RateLimitConfig.lenient();
 
             assertNotNull(config);
-            assertEquals(30, config.tokensPerMinute());
-            assertEquals(10, config.bucketCapacity());
-            assertEquals(Duration.ofMinutes(1), config.slidingWindow());
-            assertEquals(50, config.maxMessagesInWindow());
+            assertEquals(20, config.tokensPerMinute());
+            assertEquals(30, config.bucketCapacity());
+            assertEquals(Duration.ofSeconds(30), config.slidingWindow());
+            assertEquals(10, config.maxMessagesInWindow());
         }
 
         @Test
@@ -83,7 +83,7 @@ class RateLimitConfigTest {
         @Test
         @DisplayName("valid config passes validation")
         void validConfig_passesValidation() {
-            RateLimitConfig config = RateLimitConfig.defaults();
+            RateLimitConfig config = RateLimitConfig.lenient();
 
             Set<ConstraintViolation<RateLimitConfig>> violations = validator.validate(config);
 

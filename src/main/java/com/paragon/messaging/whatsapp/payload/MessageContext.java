@@ -29,4 +29,11 @@ public record MessageContext(
         this.forwarded = forwarded;
         this.frequentlyForwarded = frequentlyForwarded;
     }
+
+    /**
+     * Convenience constructor for simple reply context with just message ID.
+     */
+    public MessageContext(String id) {
+        this(null, id, null, null);
+    }
 }

@@ -85,6 +85,20 @@ public record StructuredAgentResult<T>(
   }
 
   /**
+   * Convenience method for creating a simple successful result (for testing).
+   *
+   * @param output the typed output
+   * @param rawOutput the raw JSON/text output
+   * @param <T> the output type
+   * @return a minimal success result
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> @NonNull StructuredAgentResult<T> success(@NonNull T output, @NonNull String rawOutput) {
+    return new StructuredAgentResult<>(
+        output, rawOutput, null, List.of(), List.of(), 0, null, null);
+  }
+
+  /**
    * Creates an error result.
    *
    * @param error the error that occurred
@@ -111,6 +125,26 @@ public record StructuredAgentResult<T>(
         history,
         toolExecutions,
         turnsUsed,
+        null,
+        error);
+  }
+
+  /**
+   * Convenience method for creating a simple error result (for testing).
+   *
+   * @param error the error that occurred
+   * @param <T> the output type
+   * @return a minimal error result
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> @NonNull StructuredAgentResult<T> error(@NonNull Throwable error) {
+    return new StructuredAgentResult<>(
+        (T) null,
+        "",
+        null,
+        List.of(),
+        List.of(),
+        0,
         null,
         error);
   }

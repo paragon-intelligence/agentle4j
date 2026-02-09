@@ -35,7 +35,7 @@ class MessagingProviderTest {
         @Test
         @DisplayName("getProviderType() returns provider identifier")
         void getProviderTypeReturnsIdentifier() {
-            assertEquals("TEST_PROVIDER", provider.getProviderType());
+            assertEquals(MessagingProvider.ProviderType.WHATSAPP, provider.getProviderType());
         }
 
         @Test
@@ -391,8 +391,8 @@ class MessagingProviderTest {
         private int failOnCount = -1; // -1 means never fail
 
         @Override
-        public String getProviderType() {
-            return "TEST_PROVIDER";
+        public MessagingProvider.ProviderType getProviderType() {
+            return MessagingProvider.ProviderType.WHATSAPP; // Using WHATSAPP as test provider
         }
 
         @Override

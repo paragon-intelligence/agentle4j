@@ -6,7 +6,7 @@ import com.paragon.messaging.whatsapp.messages.MediaMessage;
 import com.paragon.messaging.whatsapp.messages.ReactionMessage;
 import com.paragon.messaging.whatsapp.messages.TemplateMessage;
 import com.paragon.messaging.whatsapp.messages.TextMessage;
-import com.paragon.messaging.whatsapp.payload.ContactMessage;
+import com.paragon.messaging.whatsapp.messages.ContactMessage;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -35,7 +35,7 @@ import org.jspecify.annotations.NonNull;
  *     }
  * });
  *
- * // Form 3: Structured Concurrency (Java 21+)
+ * // Form 3: Structured Concurrency (Java 25)
  * try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
  *     var task1 = scope.fork(() -> provider.sendMessage(recipient1, message));
  *     var task2 = scope.fork(() -> provider.sendMessage(recipient2, message));
@@ -54,11 +54,18 @@ import org.jspecify.annotations.NonNull;
 public interface MessagingProvider {
 
   /**
-   * Returns the provider type/name (e.g., "WHATSAPP_CLOUD", "FACEBOOK_MESSENGER").
-   *
-   * @return unique provider identifier
+   * Supported provider types.
    */
-  String getProviderType();
+  enum ProviderType {
+    WHATSAPP
+  }
+
+  /**
+   * Returns the provider type.
+   *
+   * @return the provider type
+   */
+  ProviderType getProviderType();
 
   /**
    * Checks if the provider is configured and ready to send messages.
@@ -278,60 +285,6 @@ public interface MessagingProvider {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new MessagingException("Broadcast interrupted", e);
-    }
-  }
-
-  /**
-   * Response from sending a message.
-   *
-   * @param messageId the unique message ID assigned by the platform
-   * @param status    the delivery status
-   * @param timestamp the timestamp when the message was accepted
-   */
-  record MessageResponse(
-          @NonNull String messageId,
-          @NonNull String status,
-          java.time.@NonNull Instant timestamp
-  ) {
-    /**
-     * Creates a successful response with current timestamp.
-     *
-     * @param messageId the message ID
-     * @return successful response
-     */
-    public static MessageResponse success(String messageId) {
-      return new MessageResponse(messageId, "accepted", java.time.Instant.now());
-    }
-  }
-
-  /**
-   * Represents a message recipient.
-   *
-   * @param type  recipient type (phone_number, wa_id, etc.)
-   * @param value the recipient identifier value
-   */
-  record Recipient(
-          @NonNull String type,
-          @NonNull String value
-  ) {
-    /**
-     * Creates a recipient from a phone number.
-     *
-     * @param phoneNumber the E.164 formatted phone number
-     * @return phone number recipient
-     */
-    public static Recipient ofPhoneNumber(String phoneNumber) {
-      return new Recipient("phone_number", phoneNumber);
-    }
-
-    /**
-     * Creates a recipient from a WhatsApp ID.
-     *
-     * @param waId the WhatsApp ID
-     * @return WhatsApp ID recipient
-     */
-    public static Recipient ofWhatsAppId(String waId) {
-      return new Recipient("wa_id", waId);
     }
   }
 

@@ -1,16 +1,16 @@
 package com.paragon.messaging.whatsapp;
 
 import com.paragon.messaging.core.MessagingProvider;
-import com.paragon.messaging.core.MessagingProvider.MessageResponse;
-import com.paragon.messaging.core.MessagingProvider.Recipient;
+import com.paragon.messaging.core.MessageResponse;
+import com.paragon.messaging.core.Recipient;
 import com.paragon.messaging.testutil.MockWebServerUtil;
 import com.paragon.messaging.whatsapp.config.WhatsAppConfig;
 import com.paragon.messaging.whatsapp.messages.TextMessage;
 import com.paragon.messaging.whatsapp.messages.MediaMessage;
 import com.paragon.messaging.whatsapp.messages.ReactionMessage;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
-import mockwebserver3.RecordedRequest;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;

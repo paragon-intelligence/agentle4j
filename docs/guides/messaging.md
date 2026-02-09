@@ -165,7 +165,7 @@ The `MessagingProvider` interface abstracts messaging platform APIs (WhatsApp, T
 
 ```java
 public interface MessagingProvider {
-    String getProviderType();
+    ProviderType getProviderType();
     boolean isConfigured();
     
     // Send different message types
@@ -173,6 +173,9 @@ public interface MessagingProvider {
     MessageResponse sendMedia(Recipient recipient, MediaMessage message);
     MessageResponse sendInteractive(Recipient recipient, InteractiveMessage message);
     MessageResponse sendTemplate(Recipient recipient, TemplateMessage message);
+    MessageResponse sendLocation(Recipient recipient, LocationMessage message);
+    MessageResponse sendContact(Recipient recipient, ContactMessage message);
+    MessageResponse sendReaction(Recipient recipient, ReactionMessage message);
     
     // Batch sending with virtual threads
     List<MessageResponse> sendBatch(Recipient recipient, List<OutboundMessage> messages);

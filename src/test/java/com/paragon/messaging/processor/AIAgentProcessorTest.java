@@ -193,7 +193,7 @@ class AIAgentProcessorTest {
 
             processor.process("user123", List.of());
 
-            verify(mockAgent, never()).interact(any());
+            verify(mockAgent, never()).interact(any(AgentContext.class));
             verify(mockProvider, never()).sendMessage(any(), any());
         }
 
@@ -202,7 +202,7 @@ class AIAgentProcessorTest {
         void process_agentError_throws() {
             when(mockConverter.toUserMessage(anyList())).thenReturn(
                     UserMessage.text("Hello"));
-            when(mockAgent.interact(any())).thenReturn(
+            when(mockAgent.interact(any(AgentContext.class))).thenReturn(
                     AgentResult.error(new RuntimeException("Agent failed")));
 
             AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
@@ -222,7 +222,7 @@ class AIAgentProcessorTest {
         void process_emptyResponse_skips() throws Exception {
             when(mockConverter.toUserMessage(anyList())).thenReturn(
                     UserMessage.text("Hello"));
-            when(mockAgent.interact(any())).thenReturn(
+            when(mockAgent.interact(any(AgentContext.class))).thenReturn(
                     AgentResult.success("   "));
 
             AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
@@ -254,7 +254,7 @@ class AIAgentProcessorTest {
 
             when(mockConverter.toUserMessage(anyList())).thenReturn(
                     UserMessage.text("Hello"));
-            when(structuredAgent.interactStructured(any()))
+            when(structuredAgent.interactStructured(any(AgentContext.class)))
                     .thenReturn(StructuredAgentResult.success(testResponse, "raw output"));
 
             AIAgentProcessor<TestResponse> processor =
@@ -281,7 +281,7 @@ class AIAgentProcessorTest {
 
             when(mockConverter.toUserMessage(anyList())).thenReturn(
                     UserMessage.text("Hello"));
-            when(structuredAgent.interactStructured(any()))
+            when(structuredAgent.interactStructured(any(AgentContext.class)))
                     .thenReturn(StructuredAgentResult.error(
                             new RuntimeException("Structured agent failed")));
 
@@ -311,7 +311,7 @@ class AIAgentProcessorTest {
             when(mockConverter.toUserMessage(anyList())).thenReturn(userMsg);
             when(mockHistoryStore.getHistory(anyString(), anyInt(), any()))
                     .thenReturn(List.of());
-            when(mockAgent.interact(any())).thenReturn(
+            when(mockAgent.interact(any(AgentContext.class))).thenReturn(
                     AgentResult.success("Hi there!"));
 
             AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
@@ -335,7 +335,7 @@ class AIAgentProcessorTest {
                     UserMessage.text("Hello"));
             when(mockHistoryStore.getHistory(anyString(), anyInt(), any()))
                     .thenReturn(List.of());
-            when(mockAgent.interact(any())).thenReturn(
+            when(mockAgent.interact(any(AgentContext.class))).thenReturn(
                     AgentResult.success("Hi there!"));
 
             AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
@@ -366,7 +366,7 @@ class AIAgentProcessorTest {
                     UserMessage.text("Hello"));
             when(mockHistoryStore.getHistory(eq("user123"), eq(15), any()))
                     .thenReturn(List.of());
-            when(mockAgent.interact(any())).thenReturn(
+            when(mockAgent.interact(any(AgentContext.class))).thenReturn(
                     AgentResult.success("Response"));
 
             AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
@@ -393,7 +393,7 @@ class AIAgentProcessorTest {
                     UserMessage.text("Hello"));
             when(mockHistoryStore.getHistory(anyString(), anyInt(), eq(maxAge)))
                     .thenReturn(List.of());
-            when(mockAgent.interact(any())).thenReturn(
+            when(mockAgent.interact(any(AgentContext.class))).thenReturn(
                     AgentResult.success("Response"));
 
             AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
@@ -416,7 +416,7 @@ class AIAgentProcessorTest {
         void worksWithoutHistoryStore() throws Exception {
             when(mockConverter.toUserMessage(anyList())).thenReturn(
                     UserMessage.text("Hello"));
-            when(mockAgent.interact(any())).thenReturn(
+            when(mockAgent.interact(any(AgentContext.class))).thenReturn(
                     AgentResult.success("Response"));
 
             AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
@@ -446,7 +446,7 @@ class AIAgentProcessorTest {
 
             when(mockConverter.toUserMessage(messages)).thenReturn(
                     UserMessage.text("Hello\nHow are you?\nI need help"));
-            when(mockAgent.interact(any())).thenReturn(
+            when(mockAgent.interact(any(AgentContext.class))).thenReturn(
                     AgentResult.success("I'm here to help!"));
 
             AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
@@ -457,7 +457,7 @@ class AIAgentProcessorTest {
             processor.process("user123", messages);
 
             verify(mockConverter).toUserMessage(messages);
-            verify(mockAgent).interact(any());
+            verify(mockAgent).interact(any(AgentContext.class));
         }
 
         @Test
@@ -471,7 +471,7 @@ class AIAgentProcessorTest {
 
             when(mockConverter.toUserMessage(anyList())).thenReturn(
                     UserMessage.text("Combined"));
-            when(mockAgent.interact(any())).thenReturn(
+            when(mockAgent.interact(any(AgentContext.class))).thenReturn(
                     AgentResult.success("Response"));
 
             AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
@@ -487,7 +487,7 @@ class AIAgentProcessorTest {
 
             OutboundMessage sent = messageCaptor.getValue();
             if (sent instanceof TextMessage textMsg) {
-                assertEquals("msg3", textMsg.replyTo());
+                assertEquals("msg3", textMsg.replyToMessageId());
             }
         }
     }
@@ -501,7 +501,7 @@ class AIAgentProcessorTest {
         void process_acceptsContext() throws Exception {
             when(mockConverter.toUserMessage(anyList())).thenReturn(
                     UserMessage.text("Hello"));
-            when(mockAgent.interact(any())).thenReturn(
+            when(mockAgent.interact(any(AgentContext.class))).thenReturn(
                     AgentResult.success("Response"));
 
             AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
@@ -530,7 +530,7 @@ class AIAgentProcessorTest {
         void handlesNullResponse() throws Exception {
             when(mockConverter.toUserMessage(anyList())).thenReturn(
                     UserMessage.text("Hello"));
-            when(mockAgent.interact(any())).thenReturn(
+            when(mockAgent.interact(any(AgentContext.class))).thenReturn(
                     AgentResult.success(null));
 
             AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
@@ -553,7 +553,7 @@ class AIAgentProcessorTest {
 
             when(mockConverter.toUserMessage(anyList())).thenReturn(
                     UserMessage.text(longText));
-            when(mockAgent.interact(any())).thenReturn(
+            when(mockAgent.interact(any(AgentContext.class))).thenReturn(
                     AgentResult.success("Processed long message"));
 
             AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
@@ -579,6 +579,11 @@ class AIAgentProcessorTest {
         @Override
         public List<OutboundMessage> toMessages() {
             return List.of(new TextMessage(message));
+        }
+
+        @Override
+        public String getTextContent() {
+            return message;
         }
 
         @Override

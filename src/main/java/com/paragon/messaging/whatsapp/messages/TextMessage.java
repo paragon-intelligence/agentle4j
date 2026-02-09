@@ -90,7 +90,7 @@ public record TextMessage(
   }
 
   @Override
-  public @NonNull OutboundMessage withReplyTo(@NonNull String messageId) {
+  public @NonNull TextMessage withReplyTo(@NonNull String messageId) {
     return new TextMessage(body, previewUrl, messageId);
   }
 

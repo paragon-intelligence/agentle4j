@@ -1,6 +1,6 @@
 package com.paragon.messaging.whatsapp;
 
-import com.paragon.messaging.core.MessagingProvider.Recipient;
+import com.paragon.messaging.core.Recipient;
 import com.paragon.messaging.whatsapp.messages.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -171,7 +171,7 @@ class WhatsAppMessageSerializerTest {
         }
 
         @Test
-        @displayName("serializes sticker message")
+        @DisplayName("serializes sticker message")
         void serializeSticker() {
             MediaMessage.Sticker sticker = new MediaMessage.Sticker(
                     new MediaMessage.MediaSource.MediaId("sticker123"));
@@ -278,7 +278,7 @@ class WhatsAppMessageSerializerTest {
         @Test
         @DisplayName("serializes location without name and address")
         void serializeLocationMinimal() {
-            LocationMessage location = new LocationMessage(0.0, 0.0, null, null);
+            LocationMessage location = new LocationMessage(0.0, 0.0, (String) null, (String) null);
 
             String json = serializer.serialize(recipient, location);
 

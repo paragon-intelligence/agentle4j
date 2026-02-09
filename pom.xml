@@ -43,7 +43,8 @@
     </scm>
 
     <properties>
-        <maven.compiler.release>25</maven.compiler.release>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.jupiter.version>5.11.3</junit.jupiter.version>
         <jmh.version>1.37</jmh.version>
@@ -220,7 +221,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <release>25</release>
+                    <source>25</source>
+                    <target>25</target>
                     <compilerArgs>
                         <arg>--enable-preview</arg>
                     </compilerArgs>

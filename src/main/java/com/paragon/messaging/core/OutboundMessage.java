@@ -6,7 +6,7 @@ import com.paragon.messaging.whatsapp.messages.MediaMessage;
 import com.paragon.messaging.whatsapp.messages.ReactionMessage;
 import com.paragon.messaging.whatsapp.messages.TemplateMessage;
 import com.paragon.messaging.whatsapp.messages.TextMessage;
-import com.paragon.messaging.whatsapp.payload.ContactMessage;
+import com.paragon.messaging.whatsapp.messages.ContactMessage;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 

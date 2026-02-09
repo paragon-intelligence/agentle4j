@@ -32,6 +32,13 @@ public record TemplateMessage(
     components = List.copyOf(components);
   }
 
+  /**
+   * Convenience constructor for template without components.
+   */
+  public TemplateMessage(String name, String languageCode) {
+    this(name, languageCode, List.of());
+  }
+
   public static Builder builder() {
     return new Builder();
   }
@@ -55,6 +62,7 @@ public record TemplateMessage(
 
   public static class Builder {
     private final List<TemplateComponent> components = new java.util.ArrayList<>();
+    private final List<String> bodyParams = new java.util.ArrayList<>();
     private String name;
     private String languageCode;
 
@@ -73,7 +81,15 @@ public record TemplateMessage(
       return this;
     }
 
+    public Builder addBodyParameter(String param) {
+      bodyParams.add(param);
+      return this;
+    }
+
     public TemplateMessage build() {
+      if (!bodyParams.isEmpty()) {
+        components.add(new TemplateComponent("body", bodyParams));
+      }
       return new TemplateMessage(name, languageCode, components);
     }
   }

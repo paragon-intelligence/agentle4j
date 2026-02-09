@@ -42,7 +42,7 @@ class FloodDetectorTest {
         @DisplayName("create(SecurityConfig) creates from config")
         void create_withConfig_createsDetector() {
             SecurityConfig config = SecurityConfig.builder()
-                    .enableFloodDetection(true)
+                    .webhookVerifyToken("test-token-12345")
                     .floodPreventionWindow(Duration.ofMinutes(1))
                     .maxMessagesPerWindow(15)
                     .build();
