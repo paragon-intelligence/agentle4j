@@ -1,0 +1,552 @@
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/opt/homebrew/Cellar/maven/3.9.11/libexec/lib/guice-5.1.0-classes.jar)
+WARNING: Please consider reporting this to the maintainers of class com.google.inject.internal.aop.HiddenClassDefiner
+WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
+[INFO] Scanning for projects...
+[INFO] Inspecting build with total of 1 modules
+[INFO] Installing Central Publishing features
+[INFO] 
+[INFO] --------------< io.github.paragon-intelligence:agentle4j >--------------
+[INFO] Building Agentle4j 0.6.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.14:prepare-agent (prepare-agent) @ agentle4j ---
+[INFO] argLine set to -javaagent:/Users/arthurbrenno/.m2/repository/org/jacoco/org.jacoco.agent/0.8.14/org.jacoco.agent-0.8.14-runtime.jar=destfile=/Users/arthurbrenno/IdeaProjects/agentle-java/target/jacoco.exec,excludes=com/paragon/Main.class:com/paragon/Main$*.class
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ agentle4j ---
+[INFO] skip non existing resourceDirectory /Users/arthurbrenno/IdeaProjects/agentle-java/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ agentle4j ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ agentle4j ---
+[INFO] skip non existing resourceDirectory /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ agentle4j ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 219 source files with javac [debug release 25] to target/test-classes
+[INFO] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/parsing/AgenticFileParserTest.java: /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/parsing/AgenticFileParserTest.java uses unchecked or unsafe operations.
+[INFO] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/parsing/AgenticFileParserTest.java: Recompile with -Xlint:unchecked for details.
+[INFO] Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/testutil/MockMessageFactory.java:[105,19] cannot find symbol
+  symbol:   class WebhookEvent
+  location: class com.paragon.messaging.testutil.MockMessageFactory
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[362,10] cannot find symbol
+  symbol:   class displayName
+  location: class com.paragon.messaging.core.OutboundMessageTest.OutboundMessageTypeTests
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[55,61] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[58,32] cannot find symbol
+  symbol:   method success()
+  location: variable response of type com.paragon.messaging.core.MessageResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[72,31] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[84,32] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[93,40] constructor TemplateMessage in record com.paragon.messaging.whatsapp.messages.TemplateMessage cannot be applied to given types;
+  required: java.lang.String,java.lang.String,java.util.List<com.paragon.messaging.whatsapp.messages.TemplateMessage.TemplateComponent>
+  found:    java.lang.String,java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[95,35] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[109,38] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[120,35] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[131,35] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[151,66] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[166,66] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[185,40] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[194,66] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[204,66] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[224,70] incompatible types: java.util.List<com.paragon.messaging.core.Recipient> cannot be converted to java.util.List<com.paragon.messaging.core.MessagingProvider.Recipient>
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[242,70] incompatible types: java.util.List<com.paragon.messaging.core.Recipient> cannot be converted to java.util.List<com.paragon.messaging.core.MessagingProvider.Recipient>
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[254,70] incompatible types: java.util.List<com.paragon.messaging.core.Recipient> cannot be converted to java.util.List<com.paragon.messaging.core.MessagingProvider.Recipient>
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[270,70] incompatible types: java.util.List<com.paragon.messaging.core.Recipient> cannot be converted to java.util.List<com.paragon.messaging.core.MessagingProvider.Recipient>
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[285,58] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[287,32] cannot find symbol
+  symbol:   method success()
+  location: variable response of type com.paragon.messaging.core.MessageResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[301,65] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[303,32] cannot find symbol
+  symbol:   method success()
+  location: variable response of type com.paragon.messaging.core.MessageResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[313,59] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[315,32] cannot find symbol
+  symbol:   method success()
+  location: variable response of type com.paragon.messaging.core.MessageResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[330,66] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[333,52] invalid method reference
+  cannot find symbol
+    symbol:   method success(T)
+    location: class com.paragon.messaging.core.MessageResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[347,70] incompatible types: java.util.List<com.paragon.messaging.core.Recipient> cannot be converted to java.util.List<com.paragon.messaging.core.MessagingProvider.Recipient>
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[363,39] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[387,20] com.paragon.messaging.core.MessagingProviderTest.TestMessagingProvider is not abstract and does not override abstract method getProviderType() in com.paragon.messaging.core.MessagingProvider
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[394,23] getProviderType() in com.paragon.messaging.core.MessagingProviderTest.TestMessagingProvider cannot implement getProviderType() in com.paragon.messaging.core.MessagingProvider
+  return type java.lang.String is not compatible with com.paragon.messaging.core.MessagingProvider.ProviderType
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[393,9] method does not override or implement a method from a supertype
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[414,36] cannot find symbol
+  symbol:   variable MessageStatus
+  location: class com.paragon.messaging.core.MessagingProvider.MessageResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[72,39] constructor TemplateMessage in record com.paragon.messaging.whatsapp.messages.TemplateMessage cannot be applied to given types;
+  required: java.lang.String,java.lang.String,java.util.List<com.paragon.messaging.whatsapp.messages.TemplateMessage.TemplateComponent>
+  found:    java.lang.String,java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[136,21] method addRow in class com.paragon.messaging.whatsapp.messages.InteractiveMessage.ListMessage.Builder cannot be applied to given types;
+  required: java.lang.String,java.lang.String,java.lang.String
+  found:    java.lang.String,java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[230,39] constructor TemplateMessage in record com.paragon.messaging.whatsapp.messages.TemplateMessage cannot be applied to given types;
+  required: java.lang.String,java.lang.String,java.util.List<com.paragon.messaging.whatsapp.messages.TemplateMessage.TemplateComponent>
+  found:    java.lang.String,java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[322,59] incompatible types: com.paragon.messaging.core.OutboundMessage cannot be converted to com.paragon.messaging.whatsapp.messages.TextMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[334,66] incompatible types: com.paragon.messaging.core.OutboundMessage cannot be converted to com.paragon.messaging.whatsapp.messages.MediaMessage.Image
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[424,21] method addRow in class com.paragon.messaging.whatsapp.messages.InteractiveMessage.ListMessage.Builder cannot be applied to given types;
+  required: java.lang.String,java.lang.String,java.lang.String
+  found:    java.lang.String,java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[456,33] incompatible types: com.paragon.messaging.core.OutboundMessage cannot be converted to com.paragon.messaging.whatsapp.messages.TextMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/hooks/HookInterruptedExceptionTest.java:[227,65] cannot find symbol
+  symbol:   variable List
+  location: class com.paragon.messaging.hooks.HookInterruptedExceptionTest.IntegrationTests
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/hooks/HookInterruptedExceptionTest.java:[247,68] cannot find symbol
+  symbol:   variable List
+  location: class com.paragon.messaging.hooks.HookInterruptedExceptionTest.IntegrationTests
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/hooks/ProcessingHookTest.java:[416,13] cannot find symbol
+  symbol:   class AtomicBoolean
+  location: class com.paragon.messaging.hooks.ProcessingHookTest.LambdaHooksTests
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/hooks/ProcessingHookTest.java:[416,42] cannot find symbol
+  symbol:   class AtomicBoolean
+  location: class com.paragon.messaging.hooks.ProcessingHookTest.LambdaHooksTests
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[139,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[141,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[196,39] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[204,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[205,27] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[206,32] no suitable method found for error(java.lang.RuntimeException)
+    method com.paragon.agents.AgentResult.error(@org.jspecify.annotations.NonNull java.lang.Throwable,@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext,int) is not applicable
+      (actual and formal argument lists differ in length)
+    method com.paragon.agents.AgentResult.error() is not applicable
+      (actual and formal argument lists differ in length)
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[224,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[225,27] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[226,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[256,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[257,33] reference to interactStructured is ambiguous
+  both method interactStructured(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable.Structured and method interactStructured(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable.Structured match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[258,54] method success in record com.paragon.agents.StructuredAgentResult<T> cannot be applied to given types;
+  required: T,java.lang.String,com.paragon.responses.spec.Response,java.util.List<com.paragon.responses.spec.ResponseInputItem>,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    com.paragon.messaging.processor.AIAgentProcessorTest.TestResponse,java.lang.String
+  reason: cannot infer type-variable(s) T
+    (actual and formal argument lists differ in length)
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[283,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[284,33] reference to interactStructured is ambiguous
+  both method interactStructured(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable.Structured and method interactStructured(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable.Structured match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[285,54] method error in record com.paragon.agents.StructuredAgentResult<T> cannot be applied to given types;
+  required: java.lang.Throwable,java.lang.String,com.paragon.responses.spec.Response,java.util.List<com.paragon.responses.spec.ResponseInputItem>,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    java.lang.RuntimeException
+  reason: cannot infer type-variable(s) T
+    (actual and formal argument lists differ in length)
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[309,46] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[314,27] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[315,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[335,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[338,27] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[339,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[366,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[369,27] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[370,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[393,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[396,27] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[397,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[418,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[419,27] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[420,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[448,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[449,27] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[450,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[460,30] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[473,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[474,27] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[475,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[490,45] cannot find symbol
+  symbol:   method replyTo()
+  location: variable textMsg of type com.paragon.messaging.whatsapp.messages.TextMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[503,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[504,27] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[505,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[532,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[533,27] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[534,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    <nulltype>
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[555,32] cannot find symbol
+  symbol:   method text(java.lang.String)
+  location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[556,27] reference to interact is ambiguous
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[557,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  found:    java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[572,20] com.paragon.messaging.processor.AIAgentProcessorTest.TestResponse is not abstract and does not override abstract method getTextContent() in com.paragon.messaging.whatsapp.response.WhatsAppResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/ratelimit/RateLimitConfigTest.java:[39,53] cannot find symbol
+  symbol:   method defaults()
+  location: class com.paragon.messaging.ratelimit.RateLimitConfig
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/ratelimit/RateLimitConfigTest.java:[86,53] cannot find symbol
+  symbol:   method defaults()
+  location: class com.paragon.messaging.ratelimit.RateLimitConfig
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/security/FloodDetectorTest.java:[45,21] cannot find symbol
+  symbol:   method enableFloodDetection(boolean)
+  location: class com.paragon.messaging.security.SecurityConfig.Builder
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/testutil/MockMessageFactory.java:[13,30] cannot find symbol
+  symbol:   method builder()
+  location: interface com.paragon.messaging.whatsapp.payload.InboundMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/testutil/MockMessageFactory.java:[18,23] cannot find symbol
+  symbol:   variable TextPayload
+  location: class com.paragon.messaging.testutil.MockMessageFactory
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/testutil/MockMessageFactory.java:[27,30] cannot find symbol
+  symbol:   method builder()
+  location: interface com.paragon.messaging.whatsapp.payload.InboundMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/testutil/MockMessageFactory.java:[32,24] cannot find symbol
+  symbol:   variable ImagePayload
+  location: class com.paragon.messaging.testutil.MockMessageFactory
+[INFO] 100 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.788 s
+[INFO] Finished at: 2026-02-05T14:28:00-03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:testCompile (default-testCompile) on project agentle4j: Compilation failure: Compilation failure: 
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/testutil/MockMessageFactory.java:[105,19] cannot find symbol
+[ERROR]   symbol:   class WebhookEvent
+[ERROR]   location: class com.paragon.messaging.testutil.MockMessageFactory
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[362,10] cannot find symbol
+[ERROR]   symbol:   class displayName
+[ERROR]   location: class com.paragon.messaging.core.OutboundMessageTest.OutboundMessageTypeTests
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[55,61] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[58,32] cannot find symbol
+[ERROR]   symbol:   method success()
+[ERROR]   location: variable response of type com.paragon.messaging.core.MessageResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[72,31] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[84,32] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[93,40] constructor TemplateMessage in record com.paragon.messaging.whatsapp.messages.TemplateMessage cannot be applied to given types;
+[ERROR]   required: java.lang.String,java.lang.String,java.util.List<com.paragon.messaging.whatsapp.messages.TemplateMessage.TemplateComponent>
+[ERROR]   found:    java.lang.String,java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[95,35] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[109,38] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[120,35] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[131,35] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[151,66] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[166,66] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[185,40] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[194,66] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[204,66] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[224,70] incompatible types: java.util.List<com.paragon.messaging.core.Recipient> cannot be converted to java.util.List<com.paragon.messaging.core.MessagingProvider.Recipient>
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[242,70] incompatible types: java.util.List<com.paragon.messaging.core.Recipient> cannot be converted to java.util.List<com.paragon.messaging.core.MessagingProvider.Recipient>
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[254,70] incompatible types: java.util.List<com.paragon.messaging.core.Recipient> cannot be converted to java.util.List<com.paragon.messaging.core.MessagingProvider.Recipient>
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[270,70] incompatible types: java.util.List<com.paragon.messaging.core.Recipient> cannot be converted to java.util.List<com.paragon.messaging.core.MessagingProvider.Recipient>
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[285,58] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[287,32] cannot find symbol
+[ERROR]   symbol:   method success()
+[ERROR]   location: variable response of type com.paragon.messaging.core.MessageResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[301,65] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[303,32] cannot find symbol
+[ERROR]   symbol:   method success()
+[ERROR]   location: variable response of type com.paragon.messaging.core.MessageResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[313,59] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[315,32] cannot find symbol
+[ERROR]   symbol:   method success()
+[ERROR]   location: variable response of type com.paragon.messaging.core.MessageResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[330,66] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[333,52] invalid method reference
+[ERROR]   cannot find symbol
+[ERROR]     symbol:   method success(T)
+[ERROR]     location: class com.paragon.messaging.core.MessageResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[347,70] incompatible types: java.util.List<com.paragon.messaging.core.Recipient> cannot be converted to java.util.List<com.paragon.messaging.core.MessagingProvider.Recipient>
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[363,39] incompatible types: com.paragon.messaging.core.Recipient cannot be converted to com.paragon.messaging.core.MessagingProvider.Recipient
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[387,20] com.paragon.messaging.core.MessagingProviderTest.TestMessagingProvider is not abstract and does not override abstract method getProviderType() in com.paragon.messaging.core.MessagingProvider
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[394,23] getProviderType() in com.paragon.messaging.core.MessagingProviderTest.TestMessagingProvider cannot implement getProviderType() in com.paragon.messaging.core.MessagingProvider
+[ERROR]   return type java.lang.String is not compatible with com.paragon.messaging.core.MessagingProvider.ProviderType
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[393,9] method does not override or implement a method from a supertype
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/MessagingProviderTest.java:[414,36] cannot find symbol
+[ERROR]   symbol:   variable MessageStatus
+[ERROR]   location: class com.paragon.messaging.core.MessagingProvider.MessageResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[72,39] constructor TemplateMessage in record com.paragon.messaging.whatsapp.messages.TemplateMessage cannot be applied to given types;
+[ERROR]   required: java.lang.String,java.lang.String,java.util.List<com.paragon.messaging.whatsapp.messages.TemplateMessage.TemplateComponent>
+[ERROR]   found:    java.lang.String,java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[136,21] method addRow in class com.paragon.messaging.whatsapp.messages.InteractiveMessage.ListMessage.Builder cannot be applied to given types;
+[ERROR]   required: java.lang.String,java.lang.String,java.lang.String
+[ERROR]   found:    java.lang.String,java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[230,39] constructor TemplateMessage in record com.paragon.messaging.whatsapp.messages.TemplateMessage cannot be applied to given types;
+[ERROR]   required: java.lang.String,java.lang.String,java.util.List<com.paragon.messaging.whatsapp.messages.TemplateMessage.TemplateComponent>
+[ERROR]   found:    java.lang.String,java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[322,59] incompatible types: com.paragon.messaging.core.OutboundMessage cannot be converted to com.paragon.messaging.whatsapp.messages.TextMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[334,66] incompatible types: com.paragon.messaging.core.OutboundMessage cannot be converted to com.paragon.messaging.whatsapp.messages.MediaMessage.Image
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[424,21] method addRow in class com.paragon.messaging.whatsapp.messages.InteractiveMessage.ListMessage.Builder cannot be applied to given types;
+[ERROR]   required: java.lang.String,java.lang.String,java.lang.String
+[ERROR]   found:    java.lang.String,java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/core/OutboundMessageTest.java:[456,33] incompatible types: com.paragon.messaging.core.OutboundMessage cannot be converted to com.paragon.messaging.whatsapp.messages.TextMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/hooks/HookInterruptedExceptionTest.java:[227,65] cannot find symbol
+[ERROR]   symbol:   variable List
+[ERROR]   location: class com.paragon.messaging.hooks.HookInterruptedExceptionTest.IntegrationTests
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/hooks/HookInterruptedExceptionTest.java:[247,68] cannot find symbol
+[ERROR]   symbol:   variable List
+[ERROR]   location: class com.paragon.messaging.hooks.HookInterruptedExceptionTest.IntegrationTests
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/hooks/ProcessingHookTest.java:[416,13] cannot find symbol
+[ERROR]   symbol:   class AtomicBoolean
+[ERROR]   location: class com.paragon.messaging.hooks.ProcessingHookTest.LambdaHooksTests
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/hooks/ProcessingHookTest.java:[416,42] cannot find symbol
+[ERROR]   symbol:   class AtomicBoolean
+[ERROR]   location: class com.paragon.messaging.hooks.ProcessingHookTest.LambdaHooksTests
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[139,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[141,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[196,39] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[204,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[205,27] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[206,32] no suitable method found for error(java.lang.RuntimeException)
+[ERROR]     method com.paragon.agents.AgentResult.error(@org.jspecify.annotations.NonNull java.lang.Throwable,@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext,int) is not applicable
+[ERROR]       (actual and formal argument lists differ in length)
+[ERROR]     method com.paragon.agents.AgentResult.error() is not applicable
+[ERROR]       (actual and formal argument lists differ in length)
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[224,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[225,27] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[226,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[256,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[257,33] reference to interactStructured is ambiguous
+[ERROR]   both method interactStructured(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable.Structured and method interactStructured(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable.Structured match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[258,54] method success in record com.paragon.agents.StructuredAgentResult<T> cannot be applied to given types;
+[ERROR]   required: T,java.lang.String,com.paragon.responses.spec.Response,java.util.List<com.paragon.responses.spec.ResponseInputItem>,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    com.paragon.messaging.processor.AIAgentProcessorTest.TestResponse,java.lang.String
+[ERROR]   reason: cannot infer type-variable(s) T
+[ERROR]     (actual and formal argument lists differ in length)
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[283,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[284,33] reference to interactStructured is ambiguous
+[ERROR]   both method interactStructured(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable.Structured and method interactStructured(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable.Structured match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[285,54] method error in record com.paragon.agents.StructuredAgentResult<T> cannot be applied to given types;
+[ERROR]   required: java.lang.Throwable,java.lang.String,com.paragon.responses.spec.Response,java.util.List<com.paragon.responses.spec.ResponseInputItem>,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    java.lang.RuntimeException
+[ERROR]   reason: cannot infer type-variable(s) T
+[ERROR]     (actual and formal argument lists differ in length)
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[309,46] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[314,27] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[315,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[335,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[338,27] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[339,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[366,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[369,27] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[370,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[393,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[396,27] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[397,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[418,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[419,27] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[420,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[448,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[449,27] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[450,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[460,30] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[473,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[474,27] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[475,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[490,45] cannot find symbol
+[ERROR]   symbol:   method replyTo()
+[ERROR]   location: variable textMsg of type com.paragon.messaging.whatsapp.messages.TextMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[503,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[504,27] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[505,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[532,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[533,27] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[534,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    <nulltype>
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[555,32] cannot find symbol
+[ERROR]   symbol:   method text(java.lang.String)
+[ERROR]   location: class com.paragon.responses.spec.UserMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[556,27] reference to interact is ambiguous
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[557,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   found:    java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[572,20] com.paragon.messaging.processor.AIAgentProcessorTest.TestResponse is not abstract and does not override abstract method getTextContent() in com.paragon.messaging.whatsapp.response.WhatsAppResponse
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/ratelimit/RateLimitConfigTest.java:[39,53] cannot find symbol
+[ERROR]   symbol:   method defaults()
+[ERROR]   location: class com.paragon.messaging.ratelimit.RateLimitConfig
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/ratelimit/RateLimitConfigTest.java:[86,53] cannot find symbol
+[ERROR]   symbol:   method defaults()
+[ERROR]   location: class com.paragon.messaging.ratelimit.RateLimitConfig
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/security/FloodDetectorTest.java:[45,21] cannot find symbol
+[ERROR]   symbol:   method enableFloodDetection(boolean)
+[ERROR]   location: class com.paragon.messaging.security.SecurityConfig.Builder
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/testutil/MockMessageFactory.java:[13,30] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: interface com.paragon.messaging.whatsapp.payload.InboundMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/testutil/MockMessageFactory.java:[18,23] cannot find symbol
+[ERROR]   symbol:   variable TextPayload
+[ERROR]   location: class com.paragon.messaging.testutil.MockMessageFactory
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/testutil/MockMessageFactory.java:[27,30] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: interface com.paragon.messaging.whatsapp.payload.InboundMessage
+[ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/testutil/MockMessageFactory.java:[32,24] cannot find symbol
+[ERROR]   symbol:   variable ImagePayload
+[ERROR]   location: class com.paragon.messaging.testutil.MockMessageFactory
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
