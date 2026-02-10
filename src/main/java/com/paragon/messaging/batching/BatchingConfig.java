@@ -97,23 +97,13 @@ public record BatchingConfig(
      * Canonical constructor with validation.
      */
     public BatchingConfig {
-        if (adaptiveTimeout == null || adaptiveTimeout.isNegative() || adaptiveTimeout.isZero()) {
-            throw new IllegalArgumentException("adaptiveTimeout must be positive");
-        }
-        if (silenceThreshold == null || silenceThreshold.isNegative()) {
-            throw new IllegalArgumentException("silenceThreshold must be non-negative");
-        }
-        if (maxBufferSize <= 0) {
-            throw new IllegalArgumentException("maxBufferSize must be positive");
-        }
-        // rateLimitConfig is @NonNull, so no null check needed
         if (backpressureStrategy == null) {
             throw new IllegalArgumentException("backpressureStrategy cannot be null");
         }
         if (errorHandlingStrategy == null) {
             throw new IllegalArgumentException("errorHandlingStrategy cannot be null");
         }
-        if (silenceThreshold.compareTo(adaptiveTimeout) > 0) {
+        if (adaptiveTimeout != null && silenceThreshold != null && silenceThreshold.compareTo(adaptiveTimeout) > 0) {
             throw new IllegalArgumentException("silenceThreshold cannot be greater than adaptiveTimeout");
         }
         if (ttsConfig == null) {
@@ -126,7 +116,7 @@ public record BatchingConfig(
      *
      * <ul>
      *   <li>Adaptive timeout: 5 seconds</li>
-     *   <li>Silence: 2 seconds</li>
+     *   <li>Silence: 1 second</li>
      *   <li>Buffer: 50 messages</li>
      *   <li>Rate limit: Lenient</li>
      *   <li>Backpressure: DROP_OLDEST</li>
@@ -181,10 +171,10 @@ public record BatchingConfig(
      */
     public static final class Builder {
         private Duration adaptiveTimeout = Duration.ofSeconds(5);
-        private Duration silenceThreshold = Duration.ofSeconds(2);
+        private Duration silenceThreshold = Duration.ofSeconds(1);
         private int maxBufferSize = 50;
         private RateLimitConfig rateLimitConfig = RateLimitConfig.lenient();
-        private BackpressureStrategy backpressureStrategy = BackpressureStrategy.DROP_OLDEST;
+        private BackpressureStrategy backpressureStrategy = BackpressureStrategy.FLUSH_AND_ACCEPT;
         private ErrorHandlingStrategy errorHandlingStrategy = ErrorHandlingStrategy.defaults();
         private MessageStore messageStore;
         private TTSConfig ttsConfig = TTSConfig.disabled();

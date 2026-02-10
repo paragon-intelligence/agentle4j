@@ -4,13 +4,10 @@ import com.paragon.prompts.Prompt;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.Text;
 import com.paragon.telemetry.processors.TraceIdGenerator;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+
+import java.util.*;
 
 /**
  * Implements the Hierarchical pattern: multi-layered supervisor structure.
@@ -80,7 +77,9 @@ public final class HierarchicalAgents implements Interactable {
     this.rootSupervisor = buildHierarchy();
   }
 
-  /** Creates a new HierarchicalAgents builder. */
+  /**
+   * Creates a new HierarchicalAgents builder.
+   */
   public static @NonNull Builder builder() {
     return new Builder();
   }
@@ -94,7 +93,9 @@ public final class HierarchicalAgents implements Interactable {
     return executive;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public @NonNull String name() {
     return executive.name() + "_Hierarchy";
@@ -163,13 +164,13 @@ public final class HierarchicalAgents implements Interactable {
    * @param context the context with task history
    * @return the execution result
    */
-  public @NonNull AgentResult execute(@NonNull AgentContext context) {
+  public @NonNull AgentResult execute(@NonNull AgenticContext context) {
     Objects.requireNonNull(context, "context cannot be null");
 
     // Ensure trace correlation
     if (!context.hasTraceContext()) {
       context.withTraceContext(
-          TraceIdGenerator.generateTraceId(), TraceIdGenerator.generateSpanId());
+              TraceIdGenerator.generateTraceId(), TraceIdGenerator.generateSpanId());
     }
 
     return rootSupervisor.orchestrate(context);
@@ -205,7 +206,7 @@ public final class HierarchicalAgents implements Interactable {
    * @param context the context with task history
    * @return an AgentStream for processing streaming events
    */
-  public @NonNull AgentStream executeStream(@NonNull AgentContext context) {
+  public @NonNull AgentStream executeStream(@NonNull AgenticContext context) {
     Objects.requireNonNull(context, "context cannot be null");
     return rootSupervisor.orchestrateStream(context);
   }
@@ -216,12 +217,12 @@ public final class HierarchicalAgents implements Interactable {
    * <p>Bypasses the executive and sends the task directly to the department manager.
    *
    * @param departmentName the department name
-   * @param task the task description
+   * @param task           the task description
    * @return the department result
    * @throws IllegalArgumentException if department doesn't exist
    */
   public @NonNull AgentResult sendToDepartment(
-      @NonNull String departmentName, @NonNull String task) {
+          @NonNull String departmentName, @NonNull String task) {
     Objects.requireNonNull(departmentName, "departmentName cannot be null");
     Objects.requireNonNull(task, "task cannot be null");
 
@@ -239,63 +240,79 @@ public final class HierarchicalAgents implements Interactable {
    * <p>Bypasses the executive and sends the prompt directly to the department manager.
    *
    * @param departmentName the department name
-   * @param prompt the task prompt
+   * @param prompt         the task prompt
    * @return the department result
    * @throws IllegalArgumentException if department doesn't exist
    */
   public @NonNull AgentResult sendToDepartment(
-      @NonNull String departmentName, @NonNull Prompt prompt) {
+          @NonNull String departmentName, @NonNull Prompt prompt) {
     Objects.requireNonNull(prompt, "prompt cannot be null");
     return sendToDepartment(departmentName, prompt.text());
   }
 
   // ===== Interactable Interface Implementation =====
 
-  /** {@inheritDoc} Delegates to {@link #execute(String)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #execute(String)}.
+   */
   @Override
   public @NonNull AgentResult interact(@NonNull String input) {
     return execute(input);
   }
 
-  /** {@inheritDoc} Delegates to {@link #execute(Text)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #execute(Text)}.
+   */
   @Override
   public @NonNull AgentResult interact(@NonNull Text text) {
     return execute(text);
   }
 
-  /** {@inheritDoc} Delegates to {@link #execute(Message)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #execute(Message)}.
+   */
   @Override
   public @NonNull AgentResult interact(@NonNull Message message) {
     return execute(message);
   }
 
-  /** {@inheritDoc} Delegates to {@link #execute(Prompt)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #execute(Prompt)}.
+   */
   @Override
   public @NonNull AgentResult interact(@NonNull Prompt prompt) {
     return execute(prompt);
   }
 
-  /** {@inheritDoc} Delegates to {@link #execute(AgentContext)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #execute(AgenticContext)}.
+   */
   @Override
-  public @NonNull AgentResult interact(@NonNull AgentContext context) {
+  public @NonNull AgentResult interact(@NonNull AgenticContext context) {
     return execute(context);
   }
 
-  /** {@inheritDoc} Delegates to {@link #executeStream(String)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #executeStream(String)}.
+   */
   @Override
   public @NonNull AgentStream interactStream(@NonNull String input) {
     return executeStream(input);
   }
 
-  /** {@inheritDoc} Delegates to {@link #executeStream(Prompt)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #executeStream(Prompt)}.
+   */
   @Override
   public @NonNull AgentStream interactStream(@NonNull Prompt prompt) {
     return executeStream(prompt);
   }
 
-  /** {@inheritDoc} Delegates to {@link #executeStream(AgentContext)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #executeStream(AgenticContext)}.
+   */
   @Override
-  public @NonNull AgentStream interactStream(@NonNull AgentContext context) {
+  public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
     return executeStream(context);
   }
 
@@ -307,12 +324,12 @@ public final class HierarchicalAgents implements Interactable {
 
       // Create supervisor for this department
       SupervisorAgent.Builder deptSupervisorBuilder =
-          SupervisorAgent.builder()
-              .name(dept.manager().name() + "_Supervisor")
-              .model(dept.manager().model())
-              .instructions(buildManagerInstructions(dept))
-              .responder(getResponderFromAgent(dept.manager()))
-              .maxTurns(maxTurns);
+              SupervisorAgent.builder()
+                      .name(dept.manager().name() + "_Supervisor")
+                      .model(dept.manager().model())
+                      .instructions(buildManagerInstructions(dept))
+                      .responder(getResponderFromAgent(dept.manager()))
+                      .maxTurns(maxTurns);
 
       // Add workers to department supervisor
       for (Interactable worker : dept.workers()) {
@@ -324,19 +341,19 @@ public final class HierarchicalAgents implements Interactable {
 
     // Build root supervisor (executive) with department supervisors as workers
     SupervisorAgent.Builder rootBuilder =
-        SupervisorAgent.builder()
-            .name(executive.name() + "_Executive")
-            .model(executive.model())
-            .instructions(buildExecutiveInstructions())
-            .responder(getResponderFromAgent(executive))
-            .maxTurns(maxTurns);
+            SupervisorAgent.builder()
+                    .name(executive.name() + "_Executive")
+                    .model(executive.model())
+                    .instructions(buildExecutiveInstructions())
+                    .responder(getResponderFromAgent(executive))
+                    .maxTurns(maxTurns);
 
     for (Map.Entry<String, Department> entry : departments.entrySet()) {
       String deptName = entry.getKey();
       SupervisorAgent deptSupervisor = departmentSupervisors.get(deptName);
       rootBuilder.addWorker(
-          deptSupervisor.underlyingAgent(),
-          deptName + " department - " + entry.getValue().manager().instructions().text());
+              deptSupervisor.underlyingAgent(),
+              deptName + " department - " + entry.getValue().manager().instructions().text());
     }
 
     return rootBuilder.build();
@@ -386,9 +403,11 @@ public final class HierarchicalAgents implements Interactable {
     }
   }
 
-  /** Represents a department with a manager and workers. */
+  /**
+   * Represents a department with a manager and workers.
+   */
   public record Department(
-      @NonNull Agent manager, @NonNull List<Interactable> workers, @Nullable SupervisorAgent supervisor) {
+          @NonNull Agent manager, @NonNull List<Interactable> workers, @Nullable SupervisorAgent supervisor) {
     public Department {
       Objects.requireNonNull(manager, "manager cannot be null");
       Objects.requireNonNull(workers, "workers cannot be null");
@@ -397,19 +416,24 @@ public final class HierarchicalAgents implements Interactable {
       }
     }
 
-    /** Creates a department (supervisor is set internally). */
+    /**
+     * Creates a department (supervisor is set internally).
+     */
     public Department(@NonNull Agent manager, @NonNull List<Interactable> workers) {
       this(manager, List.copyOf(workers), null);
     }
   }
 
-  /** Builder for HierarchicalAgents. */
+  /**
+   * Builder for HierarchicalAgents.
+   */
   public static final class Builder {
-    private @Nullable Agent executive;
     private final Map<String, Department> departments = new HashMap<>();
+    private @Nullable Agent executive;
     private int maxTurns = 10;
 
-    private Builder() {}
+    private Builder() {
+    }
 
     /**
      * Sets the executive agent at the top of the hierarchy.
@@ -427,13 +451,13 @@ public final class HierarchicalAgents implements Interactable {
      *
      * <p>Workers can be any Interactable: Agent, RouterAgent, ParallelAgents, etc.
      *
-     * @param name the department name
+     * @param name    the department name
      * @param manager the department manager (must be an Agent for responder/model access)
      * @param workers the workers in this department
      * @return this builder
      */
     public @NonNull Builder addDepartment(
-        @NonNull String name, @NonNull Agent manager, @NonNull Interactable... workers) {
+            @NonNull String name, @NonNull Agent manager, @NonNull Interactable... workers) {
       Objects.requireNonNull(name, "name cannot be null");
       Objects.requireNonNull(manager, "manager cannot be null");
       Objects.requireNonNull(workers, "workers cannot be null");
@@ -455,13 +479,13 @@ public final class HierarchicalAgents implements Interactable {
     /**
      * Adds a department with a manager and worker list.
      *
-     * @param name the department name
+     * @param name    the department name
      * @param manager the department manager (must be an Agent for responder/model access)
      * @param workers the workers in this department
      * @return this builder
      */
     public @NonNull Builder addDepartment(
-        @NonNull String name, @NonNull Agent manager, @NonNull List<Interactable> workers) {
+            @NonNull String name, @NonNull Agent manager, @NonNull List<Interactable> workers) {
       Objects.requireNonNull(name, "name cannot be null");
       Objects.requireNonNull(manager, "manager cannot be null");
       Objects.requireNonNull(workers, "workers cannot be null");

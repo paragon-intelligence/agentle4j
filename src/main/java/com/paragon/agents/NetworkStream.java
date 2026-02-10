@@ -4,12 +4,13 @@ import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import com.paragon.telemetry.processors.TraceIdGenerator;
+import org.jspecify.annotations.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import org.jspecify.annotations.NonNull;
 
 /**
  * Streaming wrapper for AgentNetwork that provides event callbacks during network discussions.
@@ -26,18 +27,9 @@ import org.jspecify.annotations.NonNull;
  */
 public final class NetworkStream {
 
-  /** Execution mode for the network stream. */
-  enum Mode {
-    /** Sequential peer contributions across rounds. */
-    DISCUSS,
-    /** Parallel broadcast to all peers. */
-    BROADCAST
-  }
-
   private final AgentNetwork network;
-  private final AgentContext context;
+  private final AgenticContext context;
   private final Mode mode;
-
   // Callbacks
   private BiConsumer<Interactable, String> onPeerTextDelta;
   private BiConsumer<Interactable, AgentResult> onPeerComplete;
@@ -46,8 +38,7 @@ public final class NetworkStream {
   private Consumer<String> onSynthesisTextDelta;
   private Consumer<AgentNetwork.NetworkResult> onComplete;
   private Consumer<Throwable> onError;
-
-  NetworkStream(AgentNetwork network, AgentContext context, Mode mode) {
+  NetworkStream(AgentNetwork network, AgenticContext context, Mode mode) {
     this.network = Objects.requireNonNull(network, "network cannot be null");
     this.context = Objects.requireNonNull(context, "context cannot be null");
     this.mode = Objects.requireNonNull(mode, "mode cannot be null");
@@ -93,7 +84,7 @@ public final class NetworkStream {
    * @return this stream
    */
   public @NonNull NetworkStream onRoundComplete(
-      @NonNull Consumer<List<AgentNetwork.Contribution>> callback) {
+          @NonNull Consumer<List<AgentNetwork.Contribution>> callback) {
     this.onRoundComplete = Objects.requireNonNull(callback);
     return this;
   }
@@ -177,9 +168,9 @@ public final class NetworkStream {
   }
 
   private void runStreamingRounds(
-      List<AgentNetwork.Contribution> allContributions,
-      String parentTraceId,
-      String parentSpanId) {
+          List<AgentNetwork.Contribution> allContributions,
+          String parentTraceId,
+          String parentSpanId) {
 
     List<Interactable> peers = network.peers();
     int maxRounds = network.maxRounds();
@@ -195,7 +186,7 @@ public final class NetworkStream {
 
       // Process each peer sequentially within the round
       for (Interactable peer : peers) {
-        AgentContext peerContext = buildPeerContext(peer, currentRound);
+        AgenticContext peerContext = buildPeerContext(peer, currentRound);
         peerContext.withTraceContext(parentTraceId, parentSpanId);
 
         AgentStream stream = peer.interactStream(peerContext);
@@ -213,12 +204,12 @@ public final class NetworkStream {
         // Add contribution to shared context for next peers
         if (!isError && output != null) {
           Message contribution =
-              Message.assistant(Text.valueOf("[" + peer.name() + "]: " + output));
+                  Message.assistant(Text.valueOf("[" + peer.name() + "]: " + output));
           context.addInput(contribution);
         }
 
         AgentNetwork.Contribution contrib =
-            new AgentNetwork.Contribution(peer, currentRound, output, isError);
+                new AgentNetwork.Contribution(peer, currentRound, output, isError);
         allContributions.add(contrib);
         roundContributions.add(contrib);
 
@@ -235,7 +226,7 @@ public final class NetworkStream {
   }
 
   private AgentNetwork.NetworkResult synthesizeWithStreaming(
-      List<AgentNetwork.Contribution> contributions, String originalTopic, Interactable synthesizer) {
+          List<AgentNetwork.Contribution> contributions, String originalTopic, Interactable synthesizer) {
 
     StringBuilder synthPrompt = new StringBuilder();
     synthPrompt.append("Original discussion topic: ").append(originalTopic).append("\n\n");
@@ -254,7 +245,7 @@ public final class NetworkStream {
 
     synthPrompt.append("Please synthesize these viewpoints into a coherent summary.");
 
-    AgentContext synthContext = AgentContext.create();
+    AgenticContext synthContext = AgenticContext.create();
     synthContext.addInput(Message.user(synthPrompt.toString()));
 
     AgentStream synthStream = synthesizer.interactStream(synthContext);
@@ -268,7 +259,7 @@ public final class NetworkStream {
 
     String synthesis = synthResult.output();
     AgentNetwork.NetworkResult networkResult =
-        new AgentNetwork.NetworkResult(contributions, synthesis);
+            new AgentNetwork.NetworkResult(contributions, synthesis);
 
     if (onComplete != null) {
       onComplete.accept(networkResult);
@@ -287,11 +278,11 @@ public final class NetworkStream {
     // Run all peers in parallel using virtual threads
     List<Thread> threads = new ArrayList<>();
     List<AgentNetwork.Contribution> syncContributions =
-        java.util.Collections.synchronizedList(contributions);
+            java.util.Collections.synchronizedList(contributions);
 
     for (Interactable peer : peers) {
       Thread thread = Thread.startVirtualThread(() -> {
-        AgentContext peerContext = context.copy();
+        AgenticContext peerContext = context.copy();
         peerContext.withTraceContext(parentTraceId, parentSpanId);
 
         AgentStream stream = peer.interactStream(peerContext);
@@ -303,7 +294,7 @@ public final class NetworkStream {
         AgentResult result = stream.start();
 
         AgentNetwork.Contribution contrib =
-            new AgentNetwork.Contribution(peer, 1, result.output(), result.isError());
+                new AgentNetwork.Contribution(peer, 1, result.output(), result.isError());
         syncContributions.add(contrib);
 
         if (onPeerComplete != null) {
@@ -330,15 +321,15 @@ public final class NetworkStream {
     return result;
   }
 
-  private AgentContext buildPeerContext(Interactable peer, int round) {
-    AgentContext peerContext = context.copy();
+  private AgenticContext buildPeerContext(Interactable peer, int round) {
+    AgenticContext peerContext = context.copy();
 
     String roleReminder =
-        String.format(
-            "You are %s participating in round %d of a discussion. "
-                + "Consider the previous contributions and add your unique perspective. "
-                + "Be constructive and build on others' ideas.",
-            peer.name(), round);
+            String.format(
+                    "You are %s participating in round %d of a discussion. "
+                            + "Consider the previous contributions and add your unique perspective. "
+                            + "Be constructive and build on others' ideas.",
+                    peer.name(), round);
 
     peerContext.addInput(Message.developer(Text.valueOf(roleReminder)));
     return peerContext;
@@ -359,5 +350,19 @@ public final class NetworkStream {
       }
     }
     return "[No topic provided]";
+  }
+
+  /**
+   * Execution mode for the network stream.
+   */
+  enum Mode {
+    /**
+     * Sequential peer contributions across rounds.
+     */
+    DISCUSS,
+    /**
+     * Parallel broadcast to all peers.
+     */
+    BROADCAST
   }
 }

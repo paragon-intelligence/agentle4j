@@ -255,7 +255,7 @@ public class MessageBatchingService {
       executeHooks(preHooks, context);
 
       // Processar com AI agent
-      processor.process(userId, messages);
+      processor.process(userId, messages, MessageProcessor.ProcessingContext.empty());
 
       // Marcar como processadas (deduplicação)
       markAsProcessed(userId, messages);

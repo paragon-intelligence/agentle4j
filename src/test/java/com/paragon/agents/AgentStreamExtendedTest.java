@@ -1,19 +1,19 @@
 package com.paragon.agents;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.paragon.responses.Responder;
 import com.paragon.responses.annotations.FunctionMetadata;
 import com.paragon.responses.spec.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Extended tests for AgentStream.java covering: - Full streaming loop execution - Callback
@@ -31,7 +31,7 @@ class AgentStreamExtendedTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
     responder =
-        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -42,6 +42,199 @@ class AgentStreamExtendedTest {
   // ═══════════════════════════════════════════════════════════════════════════
   // FULL STREAMING LOOP
   // ═══════════════════════════════════════════════════════════════════════════
+
+  private Agent createTestAgent() {
+    return Agent.builder()
+            .name("TestAgent")
+            .model("test-model")
+            .instructions("Test instructions")
+            .responder(responder)
+            .build();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CALLBACK INVOCATIONS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  private void enqueueSuccessResponse(String text) {
+    String json =
+            """
+                    {
+                      "id": "resp_001",
+                      "object": "response",
+                      "created_at": 1234567890,
+                      "status": "completed",
+                      "model": "test-model",
+                      "output": [
+                        {
+                          "type": "message",
+                          "id": "msg_001",
+                          "role": "assistant",
+                          "content": [
+                            {
+                              "type": "output_text",
+                              "text": "%s"
+                            }
+                          ]
+                        }
+                      ],
+                      "usage": {
+                        "input_tokens": 10,
+                        "output_tokens": 5,
+                        "total_tokens": 15
+                      }
+                    }
+                    """
+                    .formatted(text);
+
+    mockWebServer.enqueue(
+            new MockResponse()
+                    .setResponseCode(200)
+                    .setBody(json)
+                    .addHeader("Content-Type", "application/json"));
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TOOL EXECUTION WITH CALLBACKS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  private void enqueueToolCallResponse(String toolName, String arguments) {
+    String json =
+            """
+                    {
+                      "id": "resp_001",
+                      "object": "response",
+                      "created_at": 1234567890,
+                      "status": "completed",
+                      "model": "test-model",
+                      "output": [
+                        {
+                          "type": "function_call",
+                          "id": "fc_001",
+                          "call_id": "call_123",
+                          "name": "%s",
+                          "arguments": "%s"
+                        }
+                      ],
+                      "usage": {
+                        "input_tokens": 10,
+                        "output_tokens": 5,
+                        "total_tokens": 15
+                      }
+                    }
+                    """
+                    .formatted(toolName, arguments.replace("\"", "\\\""));
+
+    mockWebServer.enqueue(
+            new MockResponse()
+                    .setResponseCode(200)
+                    .setBody(json)
+                    .addHeader("Content-Type", "application/json"));
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HUMAN-IN-THE-LOOP CONFIRMATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  private void enqueueMultiToolCallResponse(List<String> toolNames, List<String> arguments) {
+    StringBuilder outputBuilder = new StringBuilder();
+    for (int i = 0; i < toolNames.size(); i++) {
+      if (i > 0) outputBuilder.append(",");
+      outputBuilder.append(
+              """
+                      {
+                        "type": "function_call",
+                        "id": "fc_%03d",
+                        "call_id": "call_%d",
+                        "name": "%s",
+                        "arguments": "%s"
+                      }
+                      """
+                      .formatted(i, i, toolNames.get(i), arguments.get(i).replace("\"", "\\\"")));
+    }
+
+    String json =
+            """
+                    {
+                      "id": "resp_001",
+                      "object": "response",
+                      "created_at": 1234567890,
+                      "status": "completed",
+                      "model": "test-model",
+                      "output": [%s],
+                      "usage": {
+                        "input_tokens": 10,
+                        "output_tokens": 5,
+                        "total_tokens": 15
+                      }
+                    }
+                    """
+                    .formatted(outputBuilder.toString());
+
+    mockWebServer.enqueue(
+            new MockResponse()
+                    .setResponseCode(200)
+                    .setBody(json)
+                    .addHeader("Content-Type", "application/json"));
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PAUSE HANDLER
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  public record TestArgs(String value) {
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // OUTPUT GUARDRAILS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @FunctionMetadata(name = "simple_tool", description = "A simple tool")
+  private static class SimpleTool extends FunctionTool<TestArgs> {
+    @Override
+    public FunctionToolCallOutput call(TestArgs params) {
+      return FunctionToolCallOutput.success("simple_call", "Simple result");
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PRE-FAILED STREAMS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @FunctionMetadata(name = "tool_one", description = "Tool one")
+  private static class ToolOne extends FunctionTool<TestArgs> {
+    @Override
+    public FunctionToolCallOutput call(TestArgs params) {
+      return FunctionToolCallOutput.success("call_one", "One result");
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HANDOFF CALLBACKS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @FunctionMetadata(name = "tool_two", description = "Tool two")
+  private static class ToolTwo extends FunctionTool<TestArgs> {
+    @Override
+    public FunctionToolCallOutput call(TestArgs params) {
+      return FunctionToolCallOutput.success("call_two", "Two result");
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HELPER CLASSES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @FunctionMetadata(
+          name = "dangerous_tool",
+          description = "A dangerous tool",
+          requiresConfirmation = true)
+  private static class DangerousTool extends FunctionTool<TestArgs> {
+    @Override
+    public FunctionToolCallOutput call(TestArgs params) {
+      return FunctionToolCallOutput.success("dangerous_call", "Dangerous result");
+    }
+  }
 
   @Nested
   @DisplayName("Full Streaming Loop")
@@ -56,7 +249,7 @@ class AgentStreamExtendedTest {
       AtomicReference<AgentResult> resultRef = new AtomicReference<>();
 
       AgentResult result =
-          agent.interactStream("Hello").onComplete(resultRef::set).start();
+              agent.interactStream("Hello").onComplete(resultRef::set).start();
 
       assertNotNull(result);
       assertTrue(result.isSuccess());
@@ -80,7 +273,7 @@ class AgentStreamExtendedTest {
     @DisplayName("streaming with context preserves conversation")
     void streamingWithContextPreservesConversation() throws Exception {
       Agent agent = createTestAgent();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       enqueueSuccessResponse("First response");
       enqueueSuccessResponse("Second response");
@@ -97,10 +290,6 @@ class AgentStreamExtendedTest {
       assertTrue(context.getHistory().size() > 2);
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // CALLBACK INVOCATIONS
-  // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
   @DisplayName("Callback Invocations")
@@ -141,10 +330,10 @@ class AgentStreamExtendedTest {
       AtomicReference<Response> responseRef = new AtomicReference<>();
 
       agent
-          .interactStream("Hello")
-          .onTurnComplete(responseRef::set)
-          .start()
-          ;
+              .interactStream("Hello")
+              .onTurnComplete(responseRef::set)
+              .start()
+      ;
 
       assertNotNull(responseRef);
       assertNotNull(responseRef.get().id());
@@ -171,24 +360,20 @@ class AgentStreamExtendedTest {
 
       // Enqueue malformed response to cause parsing error
       mockWebServer.enqueue(
-          new MockResponse()
-              .setResponseCode(200)
-              .setBody("not json")
-              .addHeader("Content-Type", "application/json"));
+              new MockResponse()
+                      .setResponseCode(200)
+                      .setBody("not json")
+                      .addHeader("Content-Type", "application/json"));
 
       AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
       AgentResult result =
-          agent.interactStream("Hello").onError(errorRef::set).start();
+              agent.interactStream("Hello").onError(errorRef::set).start();
 
       // Either error callback was called or result is error
       assertTrue(errorRef != null || result.isError());
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // TOOL EXECUTION WITH CALLBACKS
-  // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
   @DisplayName("Tool Execution With Callbacks")
@@ -200,13 +385,13 @@ class AgentStreamExtendedTest {
       FunctionTool<TestArgs> tool = new SimpleTool();
 
       Agent agent =
-          Agent.builder()
-              .name("ToolAgent")
-              .model("test-model")
-              .instructions("Use tools")
-              .responder(responder)
-              .addTool(tool)
-              .build();
+              Agent.builder()
+                      .name("ToolAgent")
+                      .model("test-model")
+                      .instructions("Use tools")
+                      .responder(responder)
+                      .addTool(tool)
+                      .build();
 
       enqueueToolCallResponse("simple_tool", "{\"value\": \"test\"}");
       enqueueSuccessResponse("Tool completed");
@@ -214,10 +399,10 @@ class AgentStreamExtendedTest {
       AtomicReference<ToolExecution> execRef = new AtomicReference<>();
 
       agent
-          .interactStream("Call the tool")
-          .onToolExecuted(execRef::set)
-          .start()
-          ;
+              .interactStream("Call the tool")
+              .onToolExecuted(execRef::set)
+              .start()
+      ;
 
       assertNotNull(execRef);
       assertEquals("simple_tool", execRef.get().toolName());
@@ -230,34 +415,30 @@ class AgentStreamExtendedTest {
       FunctionTool<TestArgs> tool2 = new ToolTwo();
 
       Agent agent =
-          Agent.builder()
-              .name("MultiToolAgent")
-              .model("test-model")
-              .instructions("Use tools")
-              .responder(responder)
-              .addTool(tool1)
-              .addTool(tool2)
-              .build();
+              Agent.builder()
+                      .name("MultiToolAgent")
+                      .model("test-model")
+                      .instructions("Use tools")
+                      .responder(responder)
+                      .addTool(tool1)
+                      .addTool(tool2)
+                      .build();
 
       enqueueMultiToolCallResponse(
-          List.of("tool_one", "tool_two"), List.of("{\"value\": \"a\"}", "{\"value\": \"b\"}"));
+              List.of("tool_one", "tool_two"), List.of("{\"value\": \"a\"}", "{\"value\": \"b\"}"));
       enqueueSuccessResponse("Done");
 
       List<ToolExecution> executions = new ArrayList<>();
 
       agent
-          .interactStream("Call tools")
-          .onToolExecuted(executions::add)
-          .start()
-          ;
+              .interactStream("Call tools")
+              .onToolExecuted(executions::add)
+              .start()
+      ;
 
       assertEquals(2, executions.size());
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // HUMAN-IN-THE-LOOP CONFIRMATION
-  // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
   @DisplayName("Human-in-the-Loop Confirmation")
@@ -269,13 +450,13 @@ class AgentStreamExtendedTest {
       FunctionTool<TestArgs> dangerousTool = new DangerousTool();
 
       Agent agent =
-          Agent.builder()
-              .name("HitlAgent")
-              .model("test-model")
-              .instructions("Use tools")
-              .responder(responder)
-              .addTool(dangerousTool)
-              .build();
+              Agent.builder()
+                      .name("HitlAgent")
+                      .model("test-model")
+                      .instructions("Use tools")
+                      .responder(responder)
+                      .addTool(dangerousTool)
+                      .build();
 
       enqueueToolCallResponse("dangerous_tool", "{\"value\": \"test\"}");
       enqueueSuccessResponse("Tool completed");
@@ -284,15 +465,15 @@ class AgentStreamExtendedTest {
       AtomicReference<FunctionToolCall> pendingCall = new AtomicReference<>();
 
       agent
-          .interactStream("Run dangerous tool")
-          .onToolCallPending(
-              (call, approve) -> {
-                callbackCalled.set(true);
-                pendingCall.set(call);
-                approve.accept(true); // Approve the tool
-              })
-          .start()
-          ;
+              .interactStream("Run dangerous tool")
+              .onToolCallPending(
+                      (call, approve) -> {
+                        callbackCalled.set(true);
+                        pendingCall.set(call);
+                        approve.accept(true); // Approve the tool
+                      })
+              .start()
+      ;
 
       assertTrue(callbackCalled.get());
       assertNotNull(pendingCall.get());
@@ -305,13 +486,13 @@ class AgentStreamExtendedTest {
       FunctionTool<TestArgs> dangerousTool = new DangerousTool();
 
       Agent agent =
-          Agent.builder()
-              .name("HitlAgent")
-              .model("test-model")
-              .instructions("Use tools")
-              .responder(responder)
-              .addTool(dangerousTool)
-              .build();
+              Agent.builder()
+                      .name("HitlAgent")
+                      .model("test-model")
+                      .instructions("Use tools")
+                      .responder(responder)
+                      .addTool(dangerousTool)
+                      .build();
 
       enqueueToolCallResponse("dangerous_tool", "{\"value\": \"test\"}");
       enqueueSuccessResponse("Tool rejected");
@@ -319,11 +500,11 @@ class AgentStreamExtendedTest {
       AtomicBoolean toolExecuted = new AtomicBoolean(false);
 
       agent
-          .interactStream("Run dangerous tool")
-          .onToolCallPending((call, approve) -> approve.accept(false)) // Reject
-          .onToolExecuted(exec -> toolExecuted.set(true))
-          .start()
-          ;
+              .interactStream("Run dangerous tool")
+              .onToolCallPending((call, approve) -> approve.accept(false)) // Reject
+              .onToolExecuted(exec -> toolExecuted.set(true))
+              .start()
+      ;
 
       // Tool should NOT be executed when rejected
       assertFalse(toolExecuted.get());
@@ -335,13 +516,13 @@ class AgentStreamExtendedTest {
       FunctionTool<TestArgs> safeTool = new SimpleTool();
 
       Agent agent =
-          Agent.builder()
-              .name("SafeAgent")
-              .model("test-model")
-              .instructions("Use tools")
-              .responder(responder)
-              .addTool(safeTool)
-              .build();
+              Agent.builder()
+                      .name("SafeAgent")
+                      .model("test-model")
+                      .instructions("Use tools")
+                      .responder(responder)
+                      .addTool(safeTool)
+                      .build();
 
       enqueueToolCallResponse("simple_tool", "{\"value\": \"test\"}");
       enqueueSuccessResponse("Done");
@@ -350,11 +531,11 @@ class AgentStreamExtendedTest {
       AtomicBoolean toolExecuted = new AtomicBoolean(false);
 
       agent
-          .interactStream("Run safe tool")
-          .onToolCallPending((call, approve) -> confirmationCalled.set(true))
-          .onToolExecuted(exec -> toolExecuted.set(true))
-          .start()
-          ;
+              .interactStream("Run safe tool")
+              .onToolCallPending((call, approve) -> confirmationCalled.set(true))
+              .onToolExecuted(exec -> toolExecuted.set(true))
+              .start()
+      ;
 
       // Safe tool should NOT trigger confirmation
       assertFalse(confirmationCalled.get());
@@ -364,7 +545,7 @@ class AgentStreamExtendedTest {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // PAUSE HANDLER
+  // HELPER METHODS
   // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
@@ -377,23 +558,23 @@ class AgentStreamExtendedTest {
       FunctionTool<TestArgs> dangerousTool = new DangerousTool();
 
       Agent agent =
-          Agent.builder()
-              .name("PauseAgent")
-              .model("test-model")
-              .instructions("Use tools")
-              .responder(responder)
-              .addTool(dangerousTool)
-              .build();
+              Agent.builder()
+                      .name("PauseAgent")
+                      .model("test-model")
+                      .instructions("Use tools")
+                      .responder(responder)
+                      .addTool(dangerousTool)
+                      .build();
 
       enqueueToolCallResponse("dangerous_tool", "{\"value\": \"test\"}");
 
       AtomicReference<AgentRunState> pauseStateRef = new AtomicReference<>();
 
       AgentResult result =
-          agent
-              .interactStream("Run dangerous tool")
-              .onPause(pauseStateRef::set)
-              .start();
+              agent
+                      .interactStream("Run dangerous tool")
+                      .onPause(pauseStateRef::set)
+                      .start();
 
       assertNotNull(pauseStateRef);
       assertTrue(pauseStateRef.get().isPendingApproval());
@@ -401,10 +582,6 @@ class AgentStreamExtendedTest {
       assertTrue(result.isPaused());
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // OUTPUT GUARDRAILS
-  // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
   @DisplayName("Output Guardrails")
@@ -414,39 +591,35 @@ class AgentStreamExtendedTest {
     @DisplayName("onGuardrailFailed is called when output guardrail fails")
     void onGuardrailFailedIsCalled() throws Exception {
       Agent agent =
-          Agent.builder()
-              .name("GuardedAgent")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .addOutputGuardrail(
-                  (output, ctx) -> {
-                    if (output.contains("forbidden")) {
-                      return GuardrailResult.failed("Contains forbidden content");
-                    }
-                    return GuardrailResult.passed();
-                  })
-              .build();
+              Agent.builder()
+                      .name("GuardedAgent")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .addOutputGuardrail(
+                              (output, ctx) -> {
+                                if (output.contains("forbidden")) {
+                                  return GuardrailResult.failed("Contains forbidden content");
+                                }
+                                return GuardrailResult.passed();
+                              })
+                      .build();
 
       enqueueSuccessResponse("This is forbidden content");
 
       AtomicReference<GuardrailResult.Failed> failedRef = new AtomicReference<>();
 
       AgentResult result =
-          agent
-              .interactStream("Generate response")
-              .onGuardrailFailed(failedRef::set)
-              .start();
+              agent
+                      .interactStream("Generate response")
+                      .onGuardrailFailed(failedRef::set)
+                      .start();
 
       assertNotNull(failedRef);
       assertTrue(failedRef.get().reason().contains("forbidden"));
       assertFalse(result.isSuccess());
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PRE-FAILED STREAMS
-  // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
   @DisplayName("Pre-Failed Streams")
@@ -455,15 +628,15 @@ class AgentStreamExtendedTest {
     @Test
     @DisplayName("pre-failed stream immediately completes with error")
     void preFailedStreamCompletesImmediately() throws Exception {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult failedResult = AgentResult.error(new RuntimeException("Pre-failure"), context, 0);
 
       AtomicReference<AgentResult> completedRef = new AtomicReference<>();
 
       AgentResult result =
-          AgentStream.failed(failedResult)
-              .onComplete(completedRef::set)
-              .start();
+              AgentStream.failed(failedResult)
+                      .onComplete(completedRef::set)
+                      .start();
 
       assertNotNull(result);
       assertTrue(result.isError());
@@ -473,7 +646,7 @@ class AgentStreamExtendedTest {
     @Test
     @DisplayName("pre-failed stream startBlocking returns immediately")
     void preFailedStreamStartBlockingReturnsImmediately() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult failedResult = AgentResult.error(new RuntimeException("Pre-failure"), context, 0);
 
       AgentResult result = AgentStream.failed(failedResult).startBlocking();
@@ -483,10 +656,6 @@ class AgentStreamExtendedTest {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // HANDOFF CALLBACKS
-  // ═══════════════════════════════════════════════════════════════════════════
-
   @Nested
   @DisplayName("Handoff Callbacks")
   class HandoffCallbackTests {
@@ -494,7 +663,7 @@ class AgentStreamExtendedTest {
     @Test
     @DisplayName("onHandoff registration works")
     void onHandoffRegistrationWorks() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AtomicBoolean handlerSet = new AtomicBoolean(false);
@@ -503,173 +672,5 @@ class AgentStreamExtendedTest {
 
       assertNotNull(stream);
     }
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // HELPER CLASSES
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  public record TestArgs(String value) {}
-
-  @FunctionMetadata(name = "simple_tool", description = "A simple tool")
-  private static class SimpleTool extends FunctionTool<TestArgs> {
-    @Override
-    public FunctionToolCallOutput call(TestArgs params) {
-      return FunctionToolCallOutput.success("simple_call", "Simple result");
-    }
-  }
-
-  @FunctionMetadata(name = "tool_one", description = "Tool one")
-  private static class ToolOne extends FunctionTool<TestArgs> {
-    @Override
-    public FunctionToolCallOutput call(TestArgs params) {
-      return FunctionToolCallOutput.success("call_one", "One result");
-    }
-  }
-
-  @FunctionMetadata(name = "tool_two", description = "Tool two")
-  private static class ToolTwo extends FunctionTool<TestArgs> {
-    @Override
-    public FunctionToolCallOutput call(TestArgs params) {
-      return FunctionToolCallOutput.success("call_two", "Two result");
-    }
-  }
-
-  @FunctionMetadata(
-      name = "dangerous_tool",
-      description = "A dangerous tool",
-      requiresConfirmation = true)
-  private static class DangerousTool extends FunctionTool<TestArgs> {
-    @Override
-    public FunctionToolCallOutput call(TestArgs params) {
-      return FunctionToolCallOutput.success("dangerous_call", "Dangerous result");
-    }
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // HELPER METHODS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  private Agent createTestAgent() {
-    return Agent.builder()
-        .name("TestAgent")
-        .model("test-model")
-        .instructions("Test instructions")
-        .responder(responder)
-        .build();
-  }
-
-  private void enqueueSuccessResponse(String text) {
-    String json =
-        """
-        {
-          "id": "resp_001",
-          "object": "response",
-          "created_at": 1234567890,
-          "status": "completed",
-          "model": "test-model",
-          "output": [
-            {
-              "type": "message",
-              "id": "msg_001",
-              "role": "assistant",
-              "content": [
-                {
-                  "type": "output_text",
-                  "text": "%s"
-                }
-              ]
-            }
-          ],
-          "usage": {
-            "input_tokens": 10,
-            "output_tokens": 5,
-            "total_tokens": 15
-          }
-        }
-        """
-            .formatted(text);
-
-    mockWebServer.enqueue(
-        new MockResponse()
-            .setResponseCode(200)
-            .setBody(json)
-            .addHeader("Content-Type", "application/json"));
-  }
-
-  private void enqueueToolCallResponse(String toolName, String arguments) {
-    String json =
-        """
-        {
-          "id": "resp_001",
-          "object": "response",
-          "created_at": 1234567890,
-          "status": "completed",
-          "model": "test-model",
-          "output": [
-            {
-              "type": "function_call",
-              "id": "fc_001",
-              "call_id": "call_123",
-              "name": "%s",
-              "arguments": "%s"
-            }
-          ],
-          "usage": {
-            "input_tokens": 10,
-            "output_tokens": 5,
-            "total_tokens": 15
-          }
-        }
-        """
-            .formatted(toolName, arguments.replace("\"", "\\\""));
-
-    mockWebServer.enqueue(
-        new MockResponse()
-            .setResponseCode(200)
-            .setBody(json)
-            .addHeader("Content-Type", "application/json"));
-  }
-
-  private void enqueueMultiToolCallResponse(List<String> toolNames, List<String> arguments) {
-    StringBuilder outputBuilder = new StringBuilder();
-    for (int i = 0; i < toolNames.size(); i++) {
-      if (i > 0) outputBuilder.append(",");
-      outputBuilder.append(
-          """
-          {
-            "type": "function_call",
-            "id": "fc_%03d",
-            "call_id": "call_%d",
-            "name": "%s",
-            "arguments": "%s"
-          }
-          """
-              .formatted(i, i, toolNames.get(i), arguments.get(i).replace("\"", "\\\"")));
-    }
-
-    String json =
-        """
-        {
-          "id": "resp_001",
-          "object": "response",
-          "created_at": 1234567890,
-          "status": "completed",
-          "model": "test-model",
-          "output": [%s],
-          "usage": {
-            "input_tokens": 10,
-            "output_tokens": 5,
-            "total_tokens": 15
-          }
-        }
-        """
-            .formatted(outputBuilder.toString());
-
-    mockWebServer.enqueue(
-        new MockResponse()
-            .setResponseCode(200)
-            .setBody(json)
-            .addHeader("Content-Type", "application/json"));
   }
 }

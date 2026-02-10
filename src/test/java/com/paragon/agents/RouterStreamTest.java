@@ -1,22 +1,17 @@
 package com.paragon.agents;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.paragon.responses.Responder;
-import com.paragon.responses.spec.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+import com.paragon.responses.spec.Message;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for RouterStream.
@@ -34,7 +29,7 @@ class RouterStreamTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
     responder =
-        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -46,6 +41,104 @@ class RouterStreamTest {
   // CALLBACK REGISTRATION
   // ═══════════════════════════════════════════════════════════════════════════
 
+  private RouterAgent createSimpleRouter() {
+    return RouterAgent.builder()
+            .model("test-model")
+            .responder(responder)
+            .addRoute(createTestAgent("Default", "Default agent"), "Default route")
+            .build();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ERROR HANDLING
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  private Agent createTestAgent(String name, String instructions) {
+    return Agent.builder()
+            .name(name)
+            .model("test-model")
+            .instructions(instructions)
+            .responder(responder)
+            .build();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ROUTING EXECUTION
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  private void enqueueRouteClassificationResponse(String agentName) {
+    // Classification response that includes the agent name
+    String json =
+            """
+                    {
+                      "id": "resp_001",
+                      "object": "response",
+                      "created_at": 1234567890,
+                      "status": "completed",
+                      "model": "test-model",
+                      "output": [
+                        {
+                          "type": "message",
+                          "id": "msg_001",
+                          "role": "assistant",
+                          "content": [
+                            {
+                              "type": "output_text",
+                              "text": "%s"
+                            }
+                          ]
+                        }
+                      ],
+                      "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
+                    }
+                    """
+                    .formatted(agentName);
+
+    mockWebServer.enqueue(
+            new MockResponse()
+                    .setResponseCode(200)
+                    .setBody(json)
+                    .addHeader("Content-Type", "application/json"));
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HELPERS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  private void enqueueSuccessResponse(String text) {
+    String json =
+            """
+                    {
+                      "id": "resp_001",
+                      "object": "response",
+                      "created_at": 1234567890,
+                      "status": "completed",
+                      "model": "test-model",
+                      "output": [
+                        {
+                          "type": "message",
+                          "id": "msg_001",
+                          "role": "assistant",
+                          "content": [
+                            {
+                              "type": "output_text",
+                              "text": "%s"
+                            }
+                          ]
+                        }
+                      ],
+                      "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
+                    }
+                    """
+                    .formatted(text);
+
+    mockWebServer.enqueue(
+            new MockResponse()
+                    .setResponseCode(200)
+                    .setBody(json)
+                    .addHeader("Content-Type", "application/json"));
+  }
+
   @Nested
   @DisplayName("Callback Registration")
   class CallbackRegistrationTests {
@@ -54,7 +147,7 @@ class RouterStreamTest {
     @DisplayName("onRouteSelected registers callback")
     void onRouteSelectedRegistersCallback() {
       RouterAgent router = createSimpleRouter();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       RouterStream stream = router.routeStream(context);
@@ -70,7 +163,7 @@ class RouterStreamTest {
     @DisplayName("onTextDelta registers callback")
     void onTextDeltaRegistersCallback() {
       RouterAgent router = createSimpleRouter();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       RouterStream stream = router.routeStream(context);
@@ -86,7 +179,7 @@ class RouterStreamTest {
     @DisplayName("onComplete registers callback")
     void onCompleteRegistersCallback() {
       RouterAgent router = createSimpleRouter();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       RouterStream stream = router.routeStream(context);
@@ -102,7 +195,7 @@ class RouterStreamTest {
     @DisplayName("onError registers callback")
     void onErrorRegistersCallback() {
       RouterAgent router = createSimpleRouter();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       RouterStream stream = router.routeStream(context);
@@ -118,7 +211,7 @@ class RouterStreamTest {
     @DisplayName("onTurnStart registers callback")
     void onTurnStartRegistersCallback() {
       RouterAgent router = createSimpleRouter();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       RouterStream stream = router.routeStream(context);
@@ -134,7 +227,7 @@ class RouterStreamTest {
     @DisplayName("onToolExecuted registers callback")
     void onToolExecutedRegistersCallback() {
       RouterAgent router = createSimpleRouter();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       RouterStream stream = router.routeStream(context);
@@ -150,7 +243,7 @@ class RouterStreamTest {
     @DisplayName("onHandoff registers callback")
     void onHandoffRegistersCallback() {
       RouterAgent router = createSimpleRouter();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       RouterStream stream = router.routeStream(context);
@@ -166,27 +259,30 @@ class RouterStreamTest {
     @DisplayName("callbacks can be chained fluently")
     void callbacksCanBeChainedFluently() {
       RouterAgent router = createSimpleRouter();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       RouterStream stream =
-          router
-              .routeStream(context)
-              .onRouteSelected(agent -> {})
-              .onTextDelta(delta -> {})
-              .onComplete(result -> {})
-              .onError(error -> {})
-              .onTurnStart(turn -> {})
-              .onToolExecuted(exec -> {})
-              .onHandoff(handoff -> {});
+              router
+                      .routeStream(context)
+                      .onRouteSelected(agent -> {
+                      })
+                      .onTextDelta(delta -> {
+                      })
+                      .onComplete(result -> {
+                      })
+                      .onError(error -> {
+                      })
+                      .onTurnStart(turn -> {
+                      })
+                      .onToolExecuted(exec -> {
+                      })
+                      .onHandoff(handoff -> {
+                      });
 
       assertNotNull(stream);
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // ERROR HANDLING
-  // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
   @DisplayName("Error Handling")
@@ -196,14 +292,14 @@ class RouterStreamTest {
     @DisplayName("start with empty context returns error")
     void startWithEmptyContextReturnsError() throws Exception {
       RouterAgent router = createSimpleRouter();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       // No user message added
 
       AtomicReference<Throwable> errorRef = new AtomicReference<>();
       AtomicReference<AgentResult> resultRef = new AtomicReference<>();
 
       AgentResult result =
-          router.routeStream(context).onError(errorRef::set).onComplete(resultRef::set).start();
+              router.routeStream(context).onError(errorRef::set).onComplete(resultRef::set).start();
 
 
       assertTrue(result.isError());
@@ -215,22 +311,18 @@ class RouterStreamTest {
     @DisplayName("start with blank user message returns error")
     void startWithBlankUserMessageReturnsError() throws Exception {
       RouterAgent router = createSimpleRouter();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("   "));
 
       AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
       AgentResult result =
-          router.routeStream(context).onError(errorRef::set).start();
+              router.routeStream(context).onError(errorRef::set).start();
 
 
       assertTrue(result.isError());
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // ROUTING EXECUTION
-  // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
   @DisplayName("Routing Execution")
@@ -248,20 +340,20 @@ class RouterStreamTest {
       Agent supportAgent = createTestAgent("Support", "Handle support issues");
 
       RouterAgent router =
-          RouterAgent.builder()
-              .model("test-model")
-              .responder(responder)
-              .addRoute(salesAgent, "Sales inquiries")
-              .addRoute(supportAgent, "Support issues")
-              .build();
+              RouterAgent.builder()
+                      .model("test-model")
+                      .responder(responder)
+                      .addRoute(salesAgent, "Sales inquiries")
+                      .addRoute(supportAgent, "Support issues")
+                      .build();
 
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("I want to buy something"));
 
       AtomicBoolean completed = new AtomicBoolean(false);
 
       AgentResult result =
-          router.routeStream(context).onComplete(r -> completed.set(true)).start();
+              router.routeStream(context).onComplete(r -> completed.set(true)).start();
 
 
       // Test that we get some result
@@ -279,113 +371,23 @@ class RouterStreamTest {
       Agent salesAgent = createTestAgent("Sales", "Sales");
 
       RouterAgent router =
-          RouterAgent.builder()
-              .model("test-model")
-              .responder(responder)
-              .addRoute(salesAgent, "Sales")
-              .build();
+              RouterAgent.builder()
+                      .model("test-model")
+                      .responder(responder)
+                      .addRoute(salesAgent, "Sales")
+                      .build();
 
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Buy something"));
 
       List<String> deltas = new ArrayList<>();
 
       AgentResult result =
-          router.routeStream(context).onTextDelta(deltas::add).start();
+              router.routeStream(context).onTextDelta(deltas::add).start();
 
 
       // Deltas may or may not be captured depending on streaming behavior
       assertNotNull(deltas);
     }
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // HELPERS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  private RouterAgent createSimpleRouter() {
-    return RouterAgent.builder()
-        .model("test-model")
-        .responder(responder)
-        .addRoute(createTestAgent("Default", "Default agent"), "Default route")
-        .build();
-  }
-
-  private Agent createTestAgent(String name, String instructions) {
-    return Agent.builder()
-        .name(name)
-        .model("test-model")
-        .instructions(instructions)
-        .responder(responder)
-        .build();
-  }
-
-  private void enqueueRouteClassificationResponse(String agentName) {
-    // Classification response that includes the agent name
-    String json =
-        """
-        {
-          "id": "resp_001",
-          "object": "response",
-          "created_at": 1234567890,
-          "status": "completed",
-          "model": "test-model",
-          "output": [
-            {
-              "type": "message",
-              "id": "msg_001",
-              "role": "assistant",
-              "content": [
-                {
-                  "type": "output_text",
-                  "text": "%s"
-                }
-              ]
-            }
-          ],
-          "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
-        }
-        """
-            .formatted(agentName);
-
-    mockWebServer.enqueue(
-        new MockResponse()
-            .setResponseCode(200)
-            .setBody(json)
-            .addHeader("Content-Type", "application/json"));
-  }
-
-  private void enqueueSuccessResponse(String text) {
-    String json =
-        """
-        {
-          "id": "resp_001",
-          "object": "response",
-          "created_at": 1234567890,
-          "status": "completed",
-          "model": "test-model",
-          "output": [
-            {
-              "type": "message",
-              "id": "msg_001",
-              "role": "assistant",
-              "content": [
-                {
-                  "type": "output_text",
-                  "text": "%s"
-                }
-              ]
-            }
-          ],
-          "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
-        }
-        """
-            .formatted(text);
-
-    mockWebServer.enqueue(
-        new MockResponse()
-            .setResponseCode(200)
-            .setBody(json)
-            .addHeader("Content-Type", "application/json"));
   }
 }

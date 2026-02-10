@@ -1,17 +1,67 @@
 package com.paragon.agents;
 
+import com.paragon.responses.spec.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.paragon.responses.spec.*;
-import java.util.List;
-import org.junit.jupiter.api.*;
-
-/** Tests for AgentResult factory methods and accessors. */
+/**
+ * Tests for AgentResult factory methods and accessors.
+ */
 @DisplayName("AgentResult")
 class AgentResultTest {
 
   // ═══════════════════════════════════════════════════════════════════════════
   // FACTORY METHODS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  private Response createMinimalResponse() {
+    return new Response(
+            null,
+            null,
+            System.currentTimeMillis() / 1000,
+            null,
+            "resp_123",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "gpt-4o",
+            ResponseObject.RESPONSE,
+            List.of(
+                    new OutputMessage<Void>(
+                            List.of(Text.valueOf("Test")), "msg_1", InputMessageStatus.COMPLETED, null)),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            ResponseGenerationStatus.COMPLETED,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STATUS CHECKS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  public record TestPerson(String name, int age) {
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ACCESSORS
   // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
@@ -21,7 +71,7 @@ class AgentResultTest {
     @Test
     @DisplayName("success creates success result")
     void successCreatesSuccessResult() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       Response response = createMinimalResponse();
       List<ToolExecution> executions = List.of();
 
@@ -38,14 +88,14 @@ class AgentResultTest {
     @Test
     @DisplayName("successWithParsed creates success result with parsed object")
     void successWithParsedCreatesSuccessResult() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       Response response = createMinimalResponse();
       List<ToolExecution> executions = List.of();
       TestPerson parsed = new TestPerson("John", 30);
 
       AgentResult result =
-          AgentResult.successWithParsed(
-              "{\"name\":\"John\",\"age\":30}", parsed, response, context, executions, 1);
+              AgentResult.successWithParsed(
+                      "{\"name\":\"John\",\"age\":30}", parsed, response, context, executions, 1);
 
       assertTrue(result.isSuccess());
       assertEquals("{\"name\":\"John\",\"age\":30}", result.output());
@@ -56,7 +106,7 @@ class AgentResultTest {
     @Test
     @DisplayName("error creates error result")
     void errorCreatesErrorResult() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       RuntimeException ex = new RuntimeException("Test error");
 
       AgentResult result = AgentResult.error(ex, context, 1);
@@ -70,7 +120,7 @@ class AgentResultTest {
     @Test
     @DisplayName("guardrailFailed creates guardrail error result")
     void guardrailFailedCreatesGuardrailError() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       AgentResult result = AgentResult.guardrailFailed("Invalid input", context);
 
@@ -82,11 +132,11 @@ class AgentResultTest {
     @Test
     @DisplayName("paused creates paused result")
     void pausedCreatesPausedResult() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       FunctionToolCall pendingCall =
-          new FunctionToolCall("{}", "call-123", "test_tool", null, null);
+              new FunctionToolCall("{}", "call-123", "test_tool", null, null);
       AgentRunState state =
-          AgentRunState.pendingApproval("TestAgent", context, pendingCall, null, List.of(), 1);
+              AgentRunState.pendingApproval("TestAgent", context, pendingCall, null, List.of(), 1);
 
       AgentResult result = AgentResult.paused(state, context);
 
@@ -100,7 +150,7 @@ class AgentResultTest {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // STATUS CHECKS
+  // HELPERS
   // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
@@ -110,7 +160,7 @@ class AgentResultTest {
     @Test
     @DisplayName("isSuccess returns true for success result")
     void isSuccessReturnsTrueForSuccess() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       Response response = createMinimalResponse();
 
       AgentResult result = AgentResult.success("output", response, context, List.of(), 1);
@@ -124,7 +174,7 @@ class AgentResultTest {
     @Test
     @DisplayName("isError returns true for error result")
     void isErrorReturnsTrueForError() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult errorResult = AgentResult.error(new RuntimeException(), context, 1);
 
       assertTrue(errorResult.isError());
@@ -134,7 +184,7 @@ class AgentResultTest {
     @Test
     @DisplayName("isSuccess returns false for error result")
     void isSuccessReturnsFalseForError() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult errorResult = AgentResult.error(new RuntimeException(), context, 1);
 
       assertFalse(errorResult.isSuccess());
@@ -143,7 +193,7 @@ class AgentResultTest {
     @Test
     @DisplayName("isHandoff returns false for error result")
     void isHandoffReturnsFalseForError() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult errorResult = AgentResult.error(new RuntimeException(), context, 1);
 
       assertFalse(errorResult.isHandoff());
@@ -152,10 +202,10 @@ class AgentResultTest {
     @Test
     @DisplayName("isPaused returns true for paused result")
     void isPausedReturnsTrueForPaused() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       FunctionToolCall call = new FunctionToolCall("{}", "call-1", "tool", null, null);
       AgentRunState state =
-          AgentRunState.pendingApproval("Agent", context, call, null, List.of(), 1);
+              AgentRunState.pendingApproval("Agent", context, call, null, List.of(), 1);
 
       AgentResult result = AgentResult.paused(state, context);
 
@@ -168,7 +218,7 @@ class AgentResultTest {
     @Test
     @DisplayName("isPaused returns false for success result")
     void isPausedReturnsFalseForSuccess() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       Response response = createMinimalResponse();
 
       AgentResult result = AgentResult.success("output", response, context, List.of(), 1);
@@ -177,10 +227,6 @@ class AgentResultTest {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // ACCESSORS
-  // ═══════════════════════════════════════════════════════════════════════════
-
   @Nested
   @DisplayName("Accessors")
   class Accessors {
@@ -188,7 +234,7 @@ class AgentResultTest {
     @Test
     @DisplayName("output returns text for success")
     void outputReturnsTextForSuccess() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       Response response = createMinimalResponse();
 
       AgentResult result = AgentResult.success("Hello world", response, context, List.of(), 1);
@@ -199,7 +245,7 @@ class AgentResultTest {
     @Test
     @DisplayName("finalResponse returns response for success")
     void finalResponseReturnsResponseForSuccess() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       Response response = createMinimalResponse();
 
       AgentResult result = AgentResult.success("output", response, context, List.of(), 1);
@@ -211,15 +257,15 @@ class AgentResultTest {
     @Test
     @DisplayName("toolExecutions returns executions")
     void toolExecutionsReturnsExecutions() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       Response response = createMinimalResponse();
       ToolExecution exec =
-          new ToolExecution(
-              "tool",
-              "call-1",
-              "{}",
-              FunctionToolCallOutput.success("output"),
-              java.time.Duration.ofMillis(100));
+              new ToolExecution(
+                      "tool",
+                      "call-1",
+                      "{}",
+                      FunctionToolCallOutput.success("output"),
+                      java.time.Duration.ofMillis(100));
       List<ToolExecution> executions = List.of(exec);
 
       AgentResult result = AgentResult.success("output", response, context, executions, 1);
@@ -231,7 +277,7 @@ class AgentResultTest {
     @Test
     @DisplayName("error returns null for guardrail failure")
     void errorReturnsExceptionForGuardrail() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult result = AgentResult.guardrailFailed("Test", context);
 
       assertNotNull(result.error());
@@ -240,7 +286,7 @@ class AgentResultTest {
     @Test
     @DisplayName("pausedState returns null for error result")
     void pausedStateReturnsNullForError() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult errorResult = AgentResult.error(new RuntimeException(), context, 1);
 
       assertNull(errorResult.pausedState());
@@ -249,10 +295,10 @@ class AgentResultTest {
     @Test
     @DisplayName("pausedState returns state for paused result")
     void pausedStateReturnsStateForPaused() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       FunctionToolCall call = new FunctionToolCall("{}", "call-1", "tool", null, null);
       AgentRunState state =
-          AgentRunState.pendingApproval("Agent", context, call, null, List.of(), 1);
+              AgentRunState.pendingApproval("Agent", context, call, null, List.of(), 1);
 
       AgentResult result = AgentResult.paused(state, context);
 
@@ -263,7 +309,7 @@ class AgentResultTest {
     @Test
     @DisplayName("handoffAgent returns null for error result")
     void handoffAgentReturnsNullForError() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult errorResult = AgentResult.error(new RuntimeException(), context, 1);
 
       assertNull(errorResult.handoffAgent());
@@ -272,7 +318,7 @@ class AgentResultTest {
     @Test
     @DisplayName("parsed returns null for error result")
     void parsedReturnsNullForError() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult errorResult = AgentResult.error(new RuntimeException(), context, 1);
 
       assertNull(errorResult.parsed());
@@ -281,12 +327,12 @@ class AgentResultTest {
     @Test
     @DisplayName("parsed returns object for successWithParsed")
     void parsedReturnsObjectForSuccessWithParsed() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       Response response = createMinimalResponse();
       TestPerson person = new TestPerson("Jane", 25);
 
       AgentResult result =
-          AgentResult.successWithParsed("{}", person, response, context, List.of(), 1);
+              AgentResult.successWithParsed("{}", person, response, context, List.of(), 1);
 
       assertNotNull(result.parsed());
       TestPerson parsed = (TestPerson) result.parsed();
@@ -297,7 +343,7 @@ class AgentResultTest {
     @Test
     @DisplayName("toolExecutions returns empty list for error")
     void toolExecutionsReturnsEmptyForError() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult errorResult = AgentResult.error(new RuntimeException(), context, 1);
 
       assertNotNull(errorResult.toolExecutions());
@@ -307,7 +353,7 @@ class AgentResultTest {
     @Test
     @DisplayName("turnsUsed returns correct value")
     void turnsUsedReturnsCorrectValue() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult errorResult = AgentResult.error(new RuntimeException(), context, 5);
 
       assertEquals(5, errorResult.turnsUsed());
@@ -316,7 +362,7 @@ class AgentResultTest {
     @Test
     @DisplayName("history returns list")
     void historyReturnsList() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult errorResult = AgentResult.error(new RuntimeException(), context, 1);
 
       assertNotNull(errorResult.history());
@@ -325,7 +371,7 @@ class AgentResultTest {
     @Test
     @DisplayName("history includes context messages for success")
     void historyIncludesContextMessages() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
       Response response = createMinimalResponse();
 
@@ -337,7 +383,7 @@ class AgentResultTest {
     @Test
     @DisplayName("finalResponse returns null for error")
     void finalResponseReturnsNullForError() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult errorResult = AgentResult.error(new RuntimeException(), context, 1);
 
       assertNull(errorResult.finalResponse());
@@ -346,50 +392,10 @@ class AgentResultTest {
     @Test
     @DisplayName("output returns null for error")
     void outputReturnsNullForError() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult errorResult = AgentResult.error(new RuntimeException(), context, 1);
 
       assertNull(errorResult.output());
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // HELPERS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  private Response createMinimalResponse() {
-    return new Response(
-        null,
-        null,
-        System.currentTimeMillis() / 1000,
-        null,
-        "resp_123",
-        null,
-        null,
-        null,
-        null,
-        null,
-        "gpt-4o",
-        ResponseObject.RESPONSE,
-        List.of(
-            new OutputMessage<Void>(
-                List.of(Text.valueOf("Test")), "msg_1", InputMessageStatus.COMPLETED, null)),
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        ResponseGenerationStatus.COMPLETED,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null);
-  }
-
-  public record TestPerson(String name, int age) {}
 }

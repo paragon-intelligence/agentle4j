@@ -4,6 +4,9 @@ import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import com.paragon.telemetry.processors.TraceIdGenerator;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -12,8 +15,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Streaming wrapper for ParallelAgents that provides event callbacks during parallel execution.
@@ -30,21 +31,10 @@ import org.jspecify.annotations.Nullable;
  */
 public final class ParallelStream {
 
-  /** Execution mode for the parallel stream. */
-  enum Mode {
-    /** Wait for all agents to complete. */
-    ALL,
-    /** Return when first agent completes. */
-    FIRST,
-    /** Run all, then synthesize. */
-    SYNTHESIZE
-  }
-
   private final ParallelAgents orchestrator;
-  private final AgentContext context;
+  private final AgenticContext context;
   private final Mode mode;
   private final @Nullable Interactable synthesizer;
-
   // Callbacks
   private BiConsumer<Interactable, String> onAgentTextDelta;
   private BiConsumer<Interactable, AgentResult> onAgentComplete;
@@ -53,13 +43,12 @@ public final class ParallelStream {
   private Consumer<AgentResult> onSynthesisComplete;
   private Consumer<Throwable> onError;
   private BiConsumer<Interactable, Integer> onAgentTurnStart;
-
-  ParallelStream(ParallelAgents orchestrator, AgentContext context, Mode mode) {
+  ParallelStream(ParallelAgents orchestrator, AgenticContext context, Mode mode) {
     this(orchestrator, context, mode, null);
   }
 
   ParallelStream(
-      ParallelAgents orchestrator, AgentContext context, Mode mode, @Nullable Interactable synthesizer) {
+          ParallelAgents orchestrator, AgenticContext context, Mode mode, @Nullable Interactable synthesizer) {
     this.orchestrator = Objects.requireNonNull(orchestrator);
     this.context = Objects.requireNonNull(context);
     this.mode = Objects.requireNonNull(mode);
@@ -177,7 +166,7 @@ public final class ParallelStream {
 
     for (Interactable member : members) {
       Thread thread = Thread.startVirtualThread(() -> {
-        AgentContext ctx = context.copy();
+        AgenticContext ctx = context.copy();
         ctx.withTraceContext(parentTraceId, parentSpanId);
 
         AgentStream stream = member.interactStream(ctx);
@@ -227,7 +216,7 @@ public final class ParallelStream {
 
     for (Interactable member : members) {
       Thread thread = Thread.startVirtualThread(() -> {
-        AgentContext ctx = context.copy();
+        AgenticContext ctx = context.copy();
         AgentStream stream = member.interactStream(ctx);
 
         if (onAgentTextDelta != null) {
@@ -280,7 +269,7 @@ public final class ParallelStream {
 
     for (Interactable member : members) {
       Thread thread = Thread.startVirtualThread(() -> {
-        AgentContext ctx = context.copy();
+        AgenticContext ctx = context.copy();
         ctx.withTraceContext(parentTraceId, parentSpanId);
 
         AgentStream stream = member.interactStream(ctx);
@@ -321,20 +310,20 @@ public final class ParallelStream {
       synthesisPrompt.append("--- ").append(member.name()).append(" ---\n");
       if (result.isError()) {
         synthesisPrompt
-            .append("[ERROR: ")
-            .append(result.error().getMessage())
-            .append("]\n");
+                .append("[ERROR: ")
+                .append(result.error().getMessage())
+                .append("]\n");
       } else {
         synthesisPrompt
-            .append(result.output() != null ? result.output() : "[No output]")
-            .append("\n");
+                .append(result.output() != null ? result.output() : "[No output]")
+                .append("\n");
       }
       synthesisPrompt.append("\n");
     }
     synthesisPrompt.append("Please synthesize these outputs into a coherent response.");
 
     // Stream synthesizer
-    AgentContext synthContext = AgentContext.create();
+    AgenticContext synthContext = AgenticContext.create();
     synthContext.addInput(Message.user(synthesisPrompt.toString()));
 
     AgentStream synthStream = synthesizer.interactStream(synthContext);
@@ -367,5 +356,23 @@ public final class ParallelStream {
       }
     }
     return "[No query provided]";
+  }
+
+  /**
+   * Execution mode for the parallel stream.
+   */
+  enum Mode {
+    /**
+     * Wait for all agents to complete.
+     */
+    ALL,
+    /**
+     * Return when first agent completes.
+     */
+    FIRST,
+    /**
+     * Run all, then synthesize.
+     */
+    SYNTHESIZE
   }
 }

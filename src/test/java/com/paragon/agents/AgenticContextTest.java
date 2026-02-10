@@ -1,15 +1,16 @@
 package com.paragon.agents;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Comprehensive tests for AgentContext.
@@ -19,7 +20,7 @@ import org.junit.jupiter.api.Test;
  * functionality
  */
 @DisplayName("AgentContext")
-class AgentContextTest {
+class AgenticContextTest {
 
   @Nested
   @DisplayName("Creation")
@@ -28,7 +29,7 @@ class AgentContextTest {
     @Test
     @DisplayName("create() returns fresh context with no history")
     void create_returnsFreshContext() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       assertNotNull(context);
       assertTrue(context.getHistory().isEmpty());
@@ -42,7 +43,7 @@ class AgentContextTest {
       Message message = Message.user(Text.valueOf("Hello"));
       List<ResponseInputItem> history = List.of(message);
 
-      AgentContext context = AgentContext.withHistory(history);
+      AgenticContext context = AgenticContext.withHistory(history);
 
       assertEquals(1, context.historySize());
       assertEquals(message, context.getHistory().getFirst());
@@ -51,7 +52,7 @@ class AgentContextTest {
     @Test
     @DisplayName("withHistory() throws NullPointerException when null")
     void withHistory_throwsWhenNull() {
-      assertThrows(NullPointerException.class, () -> AgentContext.withHistory(null));
+      assertThrows(NullPointerException.class, () -> AgenticContext.withHistory(null));
     }
   }
 
@@ -62,7 +63,7 @@ class AgentContextTest {
     @Test
     @DisplayName("addMessage() adds message to history")
     void addMessage_addsToHistory() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       Message message = Message.user(Text.valueOf("Test"));
 
       context.addMessage(message);
@@ -74,11 +75,11 @@ class AgentContextTest {
     @Test
     @DisplayName("addMessage() supports chaining")
     void addMessage_supportsChaining() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       Message msg1 = Message.user(Text.valueOf("First"));
       Message msg2 = Message.user(Text.valueOf("Second"));
 
-      AgentContext result = context.addMessage(msg1).addMessage(msg2);
+      AgenticContext result = context.addMessage(msg1).addMessage(msg2);
 
       assertSame(context, result);
       assertEquals(2, context.historySize());
@@ -87,7 +88,7 @@ class AgentContextTest {
     @Test
     @DisplayName("addInput() adds ResponseInputItem to history")
     void addInput_addsToHistory() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       Message message = Message.user(Text.valueOf("Input"));
 
       context.addInput(message);
@@ -98,20 +99,20 @@ class AgentContextTest {
     @Test
     @DisplayName("getHistory() returns unmodifiable list")
     void getHistory_returnsUnmodifiableList() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addMessage(Message.user(Text.valueOf("Test")));
 
       List<ResponseInputItem> history = context.getHistory();
 
       assertThrows(
-          UnsupportedOperationException.class,
-          () -> history.add(Message.user(Text.valueOf("New"))));
+              UnsupportedOperationException.class,
+              () -> history.add(Message.user(Text.valueOf("New"))));
     }
 
     @Test
     @DisplayName("getHistoryMutable() returns mutable copy")
     void getHistoryMutable_returnsMutableCopy() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addMessage(Message.user(Text.valueOf("Test")));
 
       List<ResponseInputItem> mutableHistory = context.getHistoryMutable();
@@ -129,7 +130,7 @@ class AgentContextTest {
     @Test
     @DisplayName("setState() stores value")
     void setState_storesValue() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       context.setState("key", "value");
 
@@ -139,9 +140,9 @@ class AgentContextTest {
     @Test
     @DisplayName("setState() supports chaining")
     void setState_supportsChaining() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
-      AgentContext result = context.setState("a", 1).setState("b", 2);
+      AgenticContext result = context.setState("a", 1).setState("b", 2);
 
       assertSame(context, result);
       assertEquals(1, context.getState("a").orElse(null));
@@ -151,7 +152,7 @@ class AgentContextTest {
     @Test
     @DisplayName("setState() with null value removes key")
     void setState_nullRemovesKey() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.setState("key", "value");
 
       context.setState("key", null);
@@ -163,7 +164,7 @@ class AgentContextTest {
     @Test
     @DisplayName("getState() with type returns properly typed value")
     void getState_withType_returnsTypedValue() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.setState("number", 42);
 
       Integer value = context.getState("number", Integer.class).orElse(null);
@@ -174,7 +175,7 @@ class AgentContextTest {
     @Test
     @DisplayName("getState() returns empty for missing key")
     void getState_returnsEmptyForMissingKey() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       assertTrue(context.getState("nonexistent").isEmpty());
     }
@@ -182,7 +183,7 @@ class AgentContextTest {
     @Test
     @DisplayName("hasState() returns true for existing key")
     void hasState_returnsTrueForExistingKey() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.setState("key", "value");
 
       assertTrue(context.hasState("key"));
@@ -191,7 +192,7 @@ class AgentContextTest {
     @Test
     @DisplayName("hasState() returns false for missing key")
     void hasState_returnsFalseForMissingKey() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       assertFalse(context.hasState("nonexistent"));
     }
@@ -199,7 +200,7 @@ class AgentContextTest {
     @Test
     @DisplayName("getAllState() returns unmodifiable map")
     void getAllState_returnsUnmodifiableMap() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.setState("key", "value");
 
       Map<String, Object> state = context.getAllState();
@@ -215,7 +216,7 @@ class AgentContextTest {
     @Test
     @DisplayName("getTurnCount() starts at zero")
     void getTurnCount_startsAtZero() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       assertEquals(0, context.getTurnCount());
     }
@@ -223,7 +224,7 @@ class AgentContextTest {
     @Test
     @DisplayName("incrementTurn() increments and returns new count")
     void incrementTurn_incrementsAndReturns() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       int first = context.incrementTurn();
       int second = context.incrementTurn();
@@ -243,10 +244,10 @@ class AgentContextTest {
     @Test
     @DisplayName("copy() creates independent copy with same history")
     void copy_createsIndependentCopyWithHistory() {
-      AgentContext original = AgentContext.create();
+      AgenticContext original = AgenticContext.create();
       original.addMessage(Message.user(Text.valueOf("Hello")));
 
-      AgentContext copy = original.copy();
+      AgenticContext copy = original.copy();
 
       assertEquals(original.historySize(), copy.historySize());
       assertNotSame(original, copy);
@@ -255,10 +256,10 @@ class AgentContextTest {
     @Test
     @DisplayName("copy() isolates state changes")
     void copy_isolatesStateChanges() {
-      AgentContext original = AgentContext.create();
+      AgenticContext original = AgenticContext.create();
       original.setState("shared", "initial");
 
-      AgentContext copy = original.copy();
+      AgenticContext copy = original.copy();
       copy.setState("shared", "modified");
       copy.setState("new", "value");
 
@@ -274,11 +275,11 @@ class AgentContextTest {
     @Test
     @DisplayName("copy() preserves turn count")
     void copy_preservesTurnCount() {
-      AgentContext original = AgentContext.create();
+      AgenticContext original = AgenticContext.create();
       original.incrementTurn();
       original.incrementTurn();
 
-      AgentContext copy = original.copy();
+      AgenticContext copy = original.copy();
 
       assertEquals(2, copy.getTurnCount());
     }
@@ -286,10 +287,10 @@ class AgentContextTest {
     @Test
     @DisplayName("copy() isolates history modifications")
     void copy_isolatesHistoryModifications() {
-      AgentContext original = AgentContext.create();
+      AgenticContext original = AgenticContext.create();
       original.addMessage(Message.user(Text.valueOf("Original")));
 
-      AgentContext copy = original.copy();
+      AgenticContext copy = original.copy();
       copy.addMessage(Message.user(Text.valueOf("New")));
 
       assertEquals(1, original.historySize());
@@ -304,7 +305,7 @@ class AgentContextTest {
     @Test
     @DisplayName("clear() removes all history")
     void clear_removesAllHistory() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addMessage(Message.user(Text.valueOf("Test")));
 
       context.clear();
@@ -315,7 +316,7 @@ class AgentContextTest {
     @Test
     @DisplayName("clear() removes all state")
     void clear_removesAllState() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.setState("key", "value");
 
       context.clear();
@@ -327,7 +328,7 @@ class AgentContextTest {
     @Test
     @DisplayName("clear() resets turn count")
     void clear_resetsTurnCount() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.incrementTurn();
       context.incrementTurn();
 
@@ -339,9 +340,9 @@ class AgentContextTest {
     @Test
     @DisplayName("clear() supports chaining")
     void clear_supportsChaining() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
-      AgentContext result = context.clear();
+      AgenticContext result = context.clear();
 
       assertSame(context, result);
     }

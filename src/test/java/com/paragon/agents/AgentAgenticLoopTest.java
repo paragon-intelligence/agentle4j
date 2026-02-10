@@ -1,20 +1,17 @@
 package com.paragon.agents;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.paragon.responses.Responder;
 import com.paragon.responses.exception.GuardrailException;
 import com.paragon.responses.spec.Message;
-import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
-/** Tests for Agent agentic loop internals - guardrails, result methods. */
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Tests for Agent agentic loop internals - guardrails, result methods.
+ */
 @DisplayName("Agent Agentic Loop")
 class AgentAgenticLoopTest {
 
@@ -26,7 +23,7 @@ class AgentAgenticLoopTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
     responder =
-        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -38,6 +35,61 @@ class AgentAgenticLoopTest {
   // INPUT GUARDRAIL TESTS
   // ═══════════════════════════════════════════════════════════════════════════
 
+  private Agent createSimpleAgent() {
+    return Agent.builder()
+            .name("TestAgent")
+            .model("test-model")
+            .instructions("You are a test agent")
+            .responder(responder)
+            .build();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // OUTPUT GUARDRAIL TESTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  private void enqueueSuccessResponse(String text) {
+    String json =
+            """
+                    {
+                      "id": "resp_001",
+                      "object": "response",
+                      "created_at": 1234567890,
+                      "status": "completed",
+                      "model": "test-model",
+                      "output": [
+                        {
+                          "type": "message",
+                          "id": "msg_001",
+                          "role": "assistant",
+                          "content": [
+                            {
+                              "type": "output_text",
+                              "text": "%s"
+                            }
+                          ]
+                        }
+                      ],
+                      "usage": {
+                        "input_tokens": 10,
+                        "output_tokens": 5,
+                        "total_tokens": 15
+                      }
+                    }
+                    """
+                    .formatted(text);
+
+    mockWebServer.enqueue(
+            new MockResponse()
+                    .setResponseCode(200)
+                    .setBody(json)
+                    .addHeader("Content-Type", "application/json"));
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AGENT RESULT METHODS
+  // ═══════════════════════════════════════════════════════════════════════════
+
   @Nested
   @DisplayName("Input Guardrails")
   class InputGuardrailTests {
@@ -46,19 +98,19 @@ class AgentAgenticLoopTest {
     @DisplayName("input guardrail failure returns error result")
     void inputGuardrailFailureReturnsError() throws Exception {
       Agent agent =
-          Agent.builder()
-              .name("GuardrailAgent")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .addInputGuardrail(
-                  (input, ctx) -> {
-                    if (input.contains("blocked")) {
-                      return GuardrailResult.failed("Blocked content detected");
-                    }
-                    return GuardrailResult.passed();
-                  })
-              .build();
+              Agent.builder()
+                      .name("GuardrailAgent")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .addInputGuardrail(
+                              (input, ctx) -> {
+                                if (input.contains("blocked")) {
+                                  return GuardrailResult.failed("Blocked content detected");
+                                }
+                                return GuardrailResult.passed();
+                              })
+                      .build();
 
       AgentResult result = agent.interact("This contains blocked content");
 
@@ -72,13 +124,13 @@ class AgentAgenticLoopTest {
     @DisplayName("input guardrail passing allows execution")
     void inputGuardrailPassingAllowsExecution() throws Exception {
       Agent agent =
-          Agent.builder()
-              .name("GuardrailAgent")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
-              .build();
+              Agent.builder()
+                      .name("GuardrailAgent")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
+                      .build();
 
       enqueueSuccessResponse("Hello!");
 
@@ -89,7 +141,7 @@ class AgentAgenticLoopTest {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // OUTPUT GUARDRAIL TESTS
+  // TRACE CONTEXT
   // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
@@ -100,19 +152,19 @@ class AgentAgenticLoopTest {
     @DisplayName("output guardrail failure returns error")
     void outputGuardrailFailureReturnsError() throws Exception {
       Agent agent =
-          Agent.builder()
-              .name("OutputGuard")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .addOutputGuardrail(
-                  (output, ctx) -> {
-                    if (output.contains("forbidden")) {
-                      return GuardrailResult.failed("Forbidden output detected");
-                    }
-                    return GuardrailResult.passed();
-                  })
-              .build();
+              Agent.builder()
+                      .name("OutputGuard")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .addOutputGuardrail(
+                              (output, ctx) -> {
+                                if (output.contains("forbidden")) {
+                                  return GuardrailResult.failed("Forbidden output detected");
+                                }
+                                return GuardrailResult.passed();
+                              })
+                      .build();
 
       enqueueSuccessResponse("This is forbidden output");
 
@@ -127,13 +179,13 @@ class AgentAgenticLoopTest {
     @DisplayName("output guardrail passing returns success")
     void outputGuardrailPassingReturnsSuccess() throws Exception {
       Agent agent =
-          Agent.builder()
-              .name("OutputGuard")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .addOutputGuardrail((output, ctx) -> GuardrailResult.passed())
-              .build();
+              Agent.builder()
+                      .name("OutputGuard")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .addOutputGuardrail((output, ctx) -> GuardrailResult.passed())
+                      .build();
 
       enqueueSuccessResponse("Safe output");
 
@@ -144,7 +196,7 @@ class AgentAgenticLoopTest {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // AGENT RESULT METHODS
+  // HELPER METHODS
   // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
@@ -223,10 +275,6 @@ class AgentAgenticLoopTest {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // TRACE CONTEXT
-  // ═══════════════════════════════════════════════════════════════════════════
-
   @Nested
   @DisplayName("Trace Context")
   class TraceContextTests {
@@ -235,7 +283,7 @@ class AgentAgenticLoopTest {
     @DisplayName("uses existing trace context if set")
     void usesExistingTraceContext() throws Exception {
       Agent agent = createSimpleAgent();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
       context.withTraceContext("custom-trace-id", "custom-span-id");
 
@@ -247,56 +295,5 @@ class AgentAgenticLoopTest {
       // Context should still have the trace we set
       assertEquals("custom-trace-id", context.parentTraceId().orElse(null));
     }
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // HELPER METHODS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  private Agent createSimpleAgent() {
-    return Agent.builder()
-        .name("TestAgent")
-        .model("test-model")
-        .instructions("You are a test agent")
-        .responder(responder)
-        .build();
-  }
-
-  private void enqueueSuccessResponse(String text) {
-    String json =
-        """
-        {
-          "id": "resp_001",
-          "object": "response",
-          "created_at": 1234567890,
-          "status": "completed",
-          "model": "test-model",
-          "output": [
-            {
-              "type": "message",
-              "id": "msg_001",
-              "role": "assistant",
-              "content": [
-                {
-                  "type": "output_text",
-                  "text": "%s"
-                }
-              ]
-            }
-          ],
-          "usage": {
-            "input_tokens": 10,
-            "output_tokens": 5,
-            "total_tokens": 15
-          }
-        }
-        """
-            .formatted(text);
-
-    mockWebServer.enqueue(
-        new MockResponse()
-            .setResponseCode(200)
-            .setBody(json)
-            .addHeader("Content-Type", "application/json"));
   }
 }

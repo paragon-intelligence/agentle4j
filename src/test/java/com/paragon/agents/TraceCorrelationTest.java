@@ -1,11 +1,11 @@
 package com.paragon.agents;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.paragon.telemetry.TelemetryContext;
 import com.paragon.telemetry.processors.TraceIdGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for trace correlation across multi-agent runs.
@@ -18,7 +18,7 @@ class TraceCorrelationTest {
   @Test
   @DisplayName("AgentContext should auto-init trace context if not set")
   void agentContext_shouldInitTraceIfNotSet() {
-    AgentContext ctx = AgentContext.create();
+    AgenticContext ctx = AgenticContext.create();
     assertFalse(ctx.hasTraceContext(), "New context should not have trace");
 
     // Calling withTraceContext should set it
@@ -32,13 +32,13 @@ class TraceCorrelationTest {
   @Test
   @DisplayName("AgentContext.fork should create child with same traceId but new parentSpanId")
   void agentContext_forkShouldPreserveTraceId() {
-    AgentContext parent =
-        AgentContext.create()
-            .withTraceContext("aaaa1111aaaa1111aaaa1111aaaa1111", "bbbb2222bbbb2222")
-            .withRequestId("req-001");
+    AgenticContext parent =
+            AgenticContext.create()
+                    .withTraceContext("aaaa1111aaaa1111aaaa1111aaaa1111", "bbbb2222bbbb2222")
+                    .withRequestId("req-001");
     parent.setState("key", "value");
 
-    AgentContext child = parent.fork("cccc3333cccc3333");
+    AgenticContext child = parent.fork("cccc3333cccc3333");
 
     // TraceId should be preserved
     assertEquals("aaaa1111aaaa1111aaaa1111aaaa1111", child.parentTraceId().orElse(null));
@@ -55,12 +55,12 @@ class TraceCorrelationTest {
   @Test
   @DisplayName("AgentContext.copy should preserve all trace context")
   void agentContext_copyShouldPreserveTraceContext() {
-    AgentContext original =
-        AgentContext.create()
-            .withTraceContext("aaaa1111aaaa1111aaaa1111aaaa1111", "bbbb2222bbbb2222")
-            .withRequestId("req-001");
+    AgenticContext original =
+            AgenticContext.create()
+                    .withTraceContext("aaaa1111aaaa1111aaaa1111aaaa1111", "bbbb2222bbbb2222")
+                    .withRequestId("req-001");
 
-    AgentContext copy = original.copy();
+    AgenticContext copy = original.copy();
 
     assertEquals(original.parentTraceId(), copy.parentTraceId());
     assertEquals(original.parentSpanId(), copy.parentSpanId());
@@ -71,14 +71,14 @@ class TraceCorrelationTest {
   @DisplayName("TelemetryContext should support parent trace fields")
   void telemetryContext_shouldSupportParentTrace() {
     TelemetryContext ctx =
-        TelemetryContext.builder()
-            .userId("user-123")
-            .traceName("test-operation")
-            .parentTraceId("aaaa1111aaaa1111aaaa1111aaaa1111")
-            .parentSpanId("bbbb2222bbbb2222")
-            .requestId("req-001")
-            .addTag("test")
-            .build();
+            TelemetryContext.builder()
+                    .userId("user-123")
+                    .traceName("test-operation")
+                    .parentTraceId("aaaa1111aaaa1111aaaa1111aaaa1111")
+                    .parentSpanId("bbbb2222bbbb2222")
+                    .requestId("req-001")
+                    .addTag("test")
+                    .build();
 
     assertEquals("user-123", ctx.userId());
     assertEquals("test-operation", ctx.traceName());
@@ -136,7 +136,7 @@ class TraceCorrelationTest {
   @Test
   @DisplayName("AgentContext should track requestId separately from trace context")
   void agentContext_requestIdShouldBeIndependent() {
-    AgentContext ctx = AgentContext.create().withRequestId("my-request-123");
+    AgenticContext ctx = AgenticContext.create().withRequestId("my-request-123");
 
     assertFalse(ctx.hasTraceContext(), "RequestId alone should not mean hasTraceContext");
     assertEquals("my-request-123", ctx.requestId().orElse(null));

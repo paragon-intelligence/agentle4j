@@ -67,6 +67,12 @@ public sealed interface InteractiveMessage extends InteractiveMessageInterface p
      * Compact constructor para garantir imutabilidade da lista.
      */
     public ButtonMessage {
+      if (buttons == null || buttons.isEmpty()) {
+        throw new IllegalArgumentException("Must have at least 1 button");
+      }
+      if (buttons.size() > MAX_BUTTONS) {
+        throw new IllegalArgumentException("Cannot have more than " + MAX_BUTTONS + " buttons");
+      }
       buttons = List.copyOf(buttons);
     }
 
@@ -389,6 +395,9 @@ public sealed interface InteractiveMessage extends InteractiveMessageInterface p
     public static final int MAX_TITLE_LENGTH = 24;
 
     public ListSection {
+      if (rows == null || rows.isEmpty()) {
+        throw new IllegalArgumentException("Must have at least 1 row");
+      }
       rows = List.copyOf(rows);
     }
 

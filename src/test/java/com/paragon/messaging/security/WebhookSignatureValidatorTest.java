@@ -48,6 +48,7 @@ class WebhookSignatureValidatorTest {
         @DisplayName("create(SecurityConfig) creates from config")
         void create_withConfig_createsValidator() {
             SecurityConfig config = SecurityConfig.builder()
+                    .webhookVerifyToken("test-verify-token-12345")
                     .appSecret(APP_SECRET)
                     .validateSignatures(true)
                     .build();
@@ -62,6 +63,7 @@ class WebhookSignatureValidatorTest {
         @DisplayName("create(SecurityConfig) creates disabled validator when validation disabled")
         void create_withDisabledConfig_createsDisabledValidator() {
             SecurityConfig config = SecurityConfig.builder()
+                    .webhookVerifyToken("test-verify-token-12345")
                     .validateSignatures(false)
                     .build();
 
@@ -193,6 +195,7 @@ class WebhookSignatureValidatorTest {
         @DisplayName("validator from config with validation disabled always returns true")
         void validatorFromDisabledConfig_alwaysReturnsTrue() {
             SecurityConfig config = SecurityConfig.builder()
+                    .webhookVerifyToken("test-verify-token-12345")
                     .validateSignatures(false)
                     .build();
             WebhookSignatureValidator validator = WebhookSignatureValidator.create(config);

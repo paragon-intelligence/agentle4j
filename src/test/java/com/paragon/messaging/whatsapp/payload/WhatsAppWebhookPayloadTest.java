@@ -26,7 +26,7 @@ class WhatsAppWebhookPayloadTest {
 
     @BeforeEach
     void setUp() {
-        objectMapper = new ObjectMapper();
+        objectMapper = new ObjectMapper().findAndRegisterModules();
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
@@ -63,7 +63,7 @@ class WhatsAppWebhookPayloadTest {
                                   {
                                     "from": "5511999999999",
                                     "id": "wamid.ABC123",
-                                    "timestamp": "1234567890",
+                                    "timestamp": 1234567890,
                                     "type": "text",
                                     "text": {
                                       "body": "Hello, World!"
@@ -168,7 +168,7 @@ class WhatsAppWebhookPayloadTest {
                             "messages": [{
                               "from": "SENDER_PHONE_NUMBER",
                               "id": "wamid.ID",
-                              "timestamp": "TIMESTAMP",
+                              "timestamp": 1234567890,
                               "text": {
                                 "body": "MESSAGE_BODY"
                               },

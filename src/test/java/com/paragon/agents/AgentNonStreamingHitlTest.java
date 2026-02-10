@@ -1,19 +1,18 @@
 package com.paragon.agents;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.paragon.responses.Responder;
 import com.paragon.responses.annotations.FunctionMetadata;
-import com.paragon.responses.spec.*;
-import java.io.IOException;
-import java.util.List;
+import com.paragon.responses.spec.FunctionTool;
+import com.paragon.responses.spec.FunctionToolCall;
+import com.paragon.responses.spec.FunctionToolCallOutput;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+
+import java.io.IOException;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for non-streaming human-in-the-loop (HITL) support.
@@ -24,7 +23,65 @@ import org.junit.jupiter.api.Test;
 @DisplayName("Agent Non-Streaming Human-in-the-Loop")
 class AgentNonStreamingHitlTest {
 
-  record SimpleParams(String value) {}
+  private MockWebServer mockWebServer;
+  private Responder responder;
+
+  @BeforeEach
+  void setUp() throws IOException {
+    mockWebServer = new MockWebServer();
+    mockWebServer.start();
+    responder =
+            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+  }
+
+  @AfterEach
+  void tearDown() throws IOException {
+    mockWebServer.shutdown();
+  }
+
+  private String buildToolCallResponse(String toolName) {
+    return """
+            {
+              "id": "resp_123",
+              "object": "response",
+              "status": "completed",
+              "output": [
+                {
+                  "type": "function_call",
+                  "id": "fc_123",
+                  "call_id": "call_123",
+                  "name": "%s",
+                  "arguments": "{\\"value\\": \\"test\\"}"
+                }
+              ],
+              "usage": {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
+            }
+            """
+            .formatted(toolName);
+  }
+
+  private String buildTextResponse(String text) {
+    return """
+            {
+              "id": "resp_456",
+              "object": "response",
+              "status": "completed",
+              "output": [
+                {
+                  "type": "message",
+                  "id": "msg_123",
+                  "role": "assistant",
+                  "content": [{"type": "output_text", "text": "%s"}]
+                }
+              ],
+              "usage": {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
+            }
+            """
+            .formatted(text);
+  }
+
+  record SimpleParams(String value) {
+  }
 
   @FunctionMetadata(name = "safe_tool", description = "A safe tool that auto-executes")
   static class SafeTool extends FunctionTool<SimpleParams> {
@@ -38,9 +95,9 @@ class AgentNonStreamingHitlTest {
   }
 
   @FunctionMetadata(
-      name = "dangerous_tool",
-      description = "A dangerous tool requiring confirmation",
-      requiresConfirmation = true)
+          name = "dangerous_tool",
+          description = "A dangerous tool requiring confirmation",
+          requiresConfirmation = true)
   static class DangerousTool extends FunctionTool<SimpleParams> {
     boolean executed = false;
 
@@ -48,65 +105,8 @@ class AgentNonStreamingHitlTest {
     public FunctionToolCallOutput call(SimpleParams params) {
       executed = true;
       return FunctionToolCallOutput.success(
-          "dangerous_call", "Dangerous result: " + params.value());
+              "dangerous_call", "Dangerous result: " + params.value());
     }
-  }
-
-  private MockWebServer mockWebServer;
-  private Responder responder;
-
-  @BeforeEach
-  void setUp() throws IOException {
-    mockWebServer = new MockWebServer();
-    mockWebServer.start();
-    responder =
-        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
-  }
-
-  @AfterEach
-  void tearDown() throws IOException {
-    mockWebServer.shutdown();
-  }
-
-  private String buildToolCallResponse(String toolName) {
-    return """
-    {
-      "id": "resp_123",
-      "object": "response",
-      "status": "completed",
-      "output": [
-        {
-          "type": "function_call",
-          "id": "fc_123",
-          "call_id": "call_123",
-          "name": "%s",
-          "arguments": "{\\"value\\": \\"test\\"}"
-        }
-      ],
-      "usage": {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
-    }
-    """
-        .formatted(toolName);
-  }
-
-  private String buildTextResponse(String text) {
-    return """
-    {
-      "id": "resp_456",
-      "object": "response",
-      "status": "completed",
-      "output": [
-        {
-          "type": "message",
-          "id": "msg_123",
-          "role": "assistant",
-          "content": [{"type": "output_text", "text": "%s"}]
-        }
-      ],
-      "usage": {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
-    }
-    """
-        .formatted(text);
   }
 
   @Nested
@@ -119,17 +119,17 @@ class AgentNonStreamingHitlTest {
       DangerousTool dangerousTool = new DangerousTool();
 
       Agent agent =
-          Agent.builder()
-              .name("TestAgent")
-              .instructions("Test instructions")
-              .model("test-model")
-              .responder(responder)
-              .addTool(dangerousTool)
-              .build();
+              Agent.builder()
+                      .name("TestAgent")
+                      .instructions("Test instructions")
+                      .model("test-model")
+                      .responder(responder)
+                      .addTool(dangerousTool)
+                      .build();
 
       // LLM responds with a call to dangerous_tool
       mockWebServer.enqueue(
-          new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
+              new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
 
       AgentResult result = agent.interact("Do something dangerous");
 
@@ -152,21 +152,21 @@ class AgentNonStreamingHitlTest {
       SafeTool safeTool = new SafeTool();
 
       Agent agent =
-          Agent.builder()
-              .name("TestAgent")
-              .instructions("Test instructions")
-              .model("test-model")
-              .responder(responder)
-              .addTool(safeTool)
-              .build();
+              Agent.builder()
+                      .name("TestAgent")
+                      .instructions("Test instructions")
+                      .model("test-model")
+                      .responder(responder)
+                      .addTool(safeTool)
+                      .build();
 
       // LLM responds with a call to safe_tool
       mockWebServer.enqueue(
-          new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("safe_tool")));
+              new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("safe_tool")));
 
       // After tool execution, LLM gives final answer
       mockWebServer.enqueue(
-          new MockResponse().setResponseCode(200).setBody(buildTextResponse("Done!")));
+              new MockResponse().setResponseCode(200).setBody(buildTextResponse("Done!")));
 
       AgentResult result = agent.interact("Do something safe");
 
@@ -188,17 +188,17 @@ class AgentNonStreamingHitlTest {
       DangerousTool dangerousTool = new DangerousTool();
 
       Agent agent =
-          Agent.builder()
-              .name("TestAgent")
-              .instructions("Test instructions")
-              .model("test-model")
-              .responder(responder)
-              .addTool(dangerousTool)
-              .build();
+              Agent.builder()
+                      .name("TestAgent")
+                      .instructions("Test instructions")
+                      .model("test-model")
+                      .responder(responder)
+                      .addTool(dangerousTool)
+                      .build();
 
       // First call: LLM requests dangerous tool
       mockWebServer.enqueue(
-          new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
+              new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
 
       AgentResult pausedResult = agent.interact("Do something dangerous");
       assertTrue(pausedResult.isPaused());
@@ -209,9 +209,9 @@ class AgentNonStreamingHitlTest {
 
       // Enqueue response for after resume (final answer)
       mockWebServer.enqueue(
-          new MockResponse()
-              .setResponseCode(200)
-              .setBody(buildTextResponse("Operation completed successfully!")));
+              new MockResponse()
+                      .setResponseCode(200)
+                      .setBody(buildTextResponse("Operation completed successfully!")));
 
       // Resume
       AgentResult finalResult = agent.resume(state);
@@ -227,17 +227,17 @@ class AgentNonStreamingHitlTest {
       DangerousTool dangerousTool = new DangerousTool();
 
       Agent agent =
-          Agent.builder()
-              .name("TestAgent")
-              .instructions("Test instructions")
-              .model("test-model")
-              .responder(responder)
-              .addTool(dangerousTool)
-              .build();
+              Agent.builder()
+                      .name("TestAgent")
+                      .instructions("Test instructions")
+                      .model("test-model")
+                      .responder(responder)
+                      .addTool(dangerousTool)
+                      .build();
 
       // First call: LLM requests dangerous tool
       mockWebServer.enqueue(
-          new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
+              new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
 
       AgentResult pausedResult = agent.interact("Do something dangerous");
       assertTrue(pausedResult.isPaused());
@@ -248,9 +248,9 @@ class AgentNonStreamingHitlTest {
 
       // Enqueue response for after resume (LLM acknowledges rejection)
       mockWebServer.enqueue(
-          new MockResponse()
-              .setResponseCode(200)
-              .setBody(buildTextResponse("I understand, the operation was cancelled.")));
+              new MockResponse()
+                      .setResponseCode(200)
+                      .setBody(buildTextResponse("I understand, the operation was cancelled.")));
 
       // Resume
       AgentResult finalResult = agent.resume(state);
@@ -271,16 +271,16 @@ class AgentNonStreamingHitlTest {
       DangerousTool dangerousTool = new DangerousTool();
 
       Agent agent =
-          Agent.builder()
-              .name("TestAgent")
-              .instructions("Test instructions")
-              .model("test-model")
-              .responder(responder)
-              .addTool(dangerousTool)
-              .build();
+              Agent.builder()
+                      .name("TestAgent")
+                      .instructions("Test instructions")
+                      .model("test-model")
+                      .responder(responder)
+                      .addTool(dangerousTool)
+                      .build();
 
       mockWebServer.enqueue(
-          new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
+              new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
 
       AgentResult result = agent.interact("Do something");
 
@@ -308,18 +308,18 @@ class AgentNonStreamingHitlTest {
       DangerousTool dangerousTool = new DangerousTool();
 
       Agent agent =
-          Agent.builder()
-              .name("TestAgent")
-              .instructions("Test instructions")
-              .model("test-model")
-              .responder(responder)
-              .addTool(safeTool)
-              .addTool(dangerousTool)
-              .build();
+              Agent.builder()
+                      .name("TestAgent")
+                      .instructions("Test instructions")
+                      .model("test-model")
+                      .responder(responder)
+                      .addTool(safeTool)
+                      .addTool(dangerousTool)
+                      .build();
 
       // LLM responds with dangerous_tool call
       mockWebServer.enqueue(
-          new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
+              new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
 
       AgentResult result = agent.interact("Do something");
 
@@ -331,15 +331,15 @@ class AgentNonStreamingHitlTest {
     @DisplayName("resume throws if state is not pending approval")
     void resumeThrowsIfNotPending() {
       Agent agent =
-          Agent.builder()
-              .name("TestAgent")
-              .instructions("Test instructions")
-              .model("test-model")
-              .responder(responder)
-              .build();
+              Agent.builder()
+                      .name("TestAgent")
+                      .instructions("Test instructions")
+                      .model("test-model")
+                      .responder(responder)
+                      .build();
 
       AgentRunState completedState =
-          AgentRunState.completed("TestAgent", AgentContext.create(), null, List.of(), 1);
+              AgentRunState.completed("TestAgent", AgenticContext.create(), null, List.of(), 1);
 
       assertThrows(IllegalStateException.class, () -> agent.resume(completedState));
     }
@@ -350,16 +350,16 @@ class AgentNonStreamingHitlTest {
       DangerousTool dangerousTool = new DangerousTool();
 
       Agent agent =
-          Agent.builder()
-              .name("TestAgent")
-              .instructions("Test instructions")
-              .model("test-model")
-              .responder(responder)
-              .addTool(dangerousTool)
-              .build();
+              Agent.builder()
+                      .name("TestAgent")
+                      .instructions("Test instructions")
+                      .model("test-model")
+                      .responder(responder)
+                      .addTool(dangerousTool)
+                      .build();
 
       mockWebServer.enqueue(
-          new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
+              new MockResponse().setResponseCode(200).setBody(buildToolCallResponse("dangerous_tool")));
 
       AgentResult result = agent.interact("Do something");
       AgentRunState state = result.pausedState();

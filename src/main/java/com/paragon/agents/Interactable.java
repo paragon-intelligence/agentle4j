@@ -71,7 +71,8 @@ public interface Interactable {
    *
    * @return the name of this interactable
    */
-  @NonNull String name();
+  @NonNull
+  String name();
 
   /**
    * Interacts with the agent using a text input.
@@ -79,7 +80,8 @@ public interface Interactable {
    * @param input the user's text input
    * @return the agent's result
    */
-  @NonNull AgentResult interact(@NonNull String input);
+  @NonNull
+  AgentResult interact(@NonNull String input);
 
   /**
    * Interacts with the agent using Text content.
@@ -87,7 +89,8 @@ public interface Interactable {
    * @param text the text content
    * @return the agent's result
    */
-  @NonNull AgentResult interact(@NonNull Text text);
+  @NonNull
+  AgentResult interact(@NonNull Text text);
 
   /**
    * Interacts with the agent using a Message.
@@ -95,7 +98,8 @@ public interface Interactable {
    * @param message the message input
    * @return the agent's result
    */
-  @NonNull AgentResult interact(@NonNull Message message);
+  @NonNull
+  AgentResult interact(@NonNull Message message);
 
   /**
    * Interacts with the agent using a Prompt.
@@ -105,7 +109,8 @@ public interface Interactable {
    * @param prompt the prompt input
    * @return the agent's result
    */
-  @NonNull AgentResult interact(@NonNull Prompt prompt);
+  @NonNull
+  AgentResult interact(@NonNull Prompt prompt);
 
   /**
    * Interacts with the agent using an existing context.
@@ -113,7 +118,8 @@ public interface Interactable {
    * @param context the conversation context containing history
    * @return the agent's result
    */
-  @NonNull AgentResult interact(@NonNull AgentContext context);
+  @NonNull
+  AgentResult interact(@NonNull AgenticContext context);
 
   /**
    * Interacts with the agent with streaming support.
@@ -121,7 +127,8 @@ public interface Interactable {
    * @param input the user's text input
    * @return an AgentStream for processing streaming events
    */
-  @NonNull AgentStream interactStream(@NonNull String input);
+  @NonNull
+  AgentStream interactStream(@NonNull String input);
 
   /**
    * Interacts with the agent with streaming using a Prompt.
@@ -131,7 +138,8 @@ public interface Interactable {
    * @param prompt the prompt input
    * @return an AgentStream for processing streaming events
    */
-  @NonNull AgentStream interactStream(@NonNull Prompt prompt);
+  @NonNull
+  AgentStream interactStream(@NonNull Prompt prompt);
 
   /**
    * Interacts with the agent with streaming using an existing context.
@@ -139,7 +147,8 @@ public interface Interactable {
    * @param context the conversation context containing history
    * @return an AgentStream for processing streaming events
    */
-  @NonNull AgentStream interactStream(@NonNull AgentContext context);
+  @NonNull
+  AgentStream interactStream(@NonNull AgenticContext context);
 
   /**
    * Extended interface for agents that return structured (typed) output.
@@ -175,7 +184,8 @@ public interface Interactable {
      * @param input the user's text input
      * @return the structured result with parsed output
      */
-    @NonNull StructuredAgentResult<T> interactStructured(@NonNull String input);
+    @NonNull
+    StructuredAgentResult<T> interactStructured(@NonNull String input);
 
     /**
      * Interacts with the agent with Text content and returns a structured result.
@@ -183,7 +193,8 @@ public interface Interactable {
      * @param text the text content
      * @return the structured result with parsed output
      */
-    @NonNull StructuredAgentResult<T> interactStructured(@NonNull Text text);
+    @NonNull
+    StructuredAgentResult<T> interactStructured(@NonNull Text text);
 
     /**
      * Interacts with the agent with a Message and returns a structured result.
@@ -191,7 +202,8 @@ public interface Interactable {
      * @param message the message input
      * @return the structured result with parsed output
      */
-    @NonNull StructuredAgentResult<T> interactStructured(@NonNull Message message);
+    @NonNull
+    StructuredAgentResult<T> interactStructured(@NonNull Message message);
 
     /**
      * Interacts with the agent with a Prompt and returns a structured result.
@@ -199,7 +211,8 @@ public interface Interactable {
      * @param prompt the prompt input
      * @return the structured result with parsed output
      */
-    @NonNull StructuredAgentResult<T> interactStructured(@NonNull Prompt prompt);
+    @NonNull
+    StructuredAgentResult<T> interactStructured(@NonNull Prompt prompt);
 
     /**
      * Interacts with the agent with an existing context and returns a structured result.
@@ -207,6 +220,7 @@ public interface Interactable {
      * @param context the conversation context
      * @return the structured result with parsed output
      */
-    @NonNull StructuredAgentResult<T> interactStructured(@NonNull AgentContext context);
+    @NonNull
+    StructuredAgentResult<T> interactStructured(@NonNull AgenticContext context);
   }
 }

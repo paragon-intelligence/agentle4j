@@ -1,19 +1,22 @@
 package com.paragon.agents;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.exception.GuardrailException;
-import com.paragon.responses.spec.*;
-import java.util.List;
-import java.util.Map;
+import com.paragon.responses.spec.Message;
+import com.paragon.responses.spec.ResponseInputItem;
+import com.paragon.responses.spec.Text;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration tests for Agent.java covering builder validation, guardrails, error handling, and
@@ -30,7 +33,7 @@ class AgentIntegrationTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
     responder =
-        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -46,17 +49,17 @@ class AgentIntegrationTest {
   @DisplayName("LLM API error returns AgentResult with error")
   void llmApiErrorReturnsAgentResultWithError() {
     mockWebServer.enqueue(
-        new MockResponse()
-            .setResponseCode(500)
-            .setBody("{\"error\": {\"message\": \"Internal server error\"}}"));
+            new MockResponse()
+                    .setResponseCode(500)
+                    .setBody("{\"error\": {\"message\": \"Internal server error\"}}"));
 
     Agent agent =
-        Agent.builder()
-            .name("ErrorAgent")
-            .model("test-model")
-            .instructions("Test")
-            .responder(responder)
-            .build();
+            Agent.builder()
+                    .name("ErrorAgent")
+                    .model("test-model")
+                    .instructions("Test")
+                    .responder(responder)
+                    .build();
 
     AgentResult result = agent.interact("Hello");
 
@@ -68,18 +71,18 @@ class AgentIntegrationTest {
   @DisplayName("rate limit error is wrapped correctly")
   void rateLimitErrorIsWrappedCorrectly() {
     mockWebServer.enqueue(
-        new MockResponse()
-            .setResponseCode(429)
-            .setHeader("Retry-After", "60")
-            .setBody("{\"error\": {\"message\": \"Rate limit exceeded\"}}"));
+            new MockResponse()
+                    .setResponseCode(429)
+                    .setHeader("Retry-After", "60")
+                    .setBody("{\"error\": {\"message\": \"Rate limit exceeded\"}}"));
 
     Agent agent =
-        Agent.builder()
-            .name("RateLimitedAgent")
-            .model("test-model")
-            .instructions("Test")
-            .responder(responder)
-            .build();
+            Agent.builder()
+                    .name("RateLimitedAgent")
+                    .model("test-model")
+                    .instructions("Test")
+                    .responder(responder)
+                    .build();
 
     AgentResult result = agent.interact("Hello");
 
@@ -94,19 +97,19 @@ class AgentIntegrationTest {
   @DisplayName("input guardrail blocks request before LLM call")
   void inputGuardrailBlocksRequestBeforeLLMCall() {
     Agent agent =
-        Agent.builder()
-            .name("GuardedAgent")
-            .model("test-model")
-            .instructions("Test")
-            .responder(responder)
-            .addInputGuardrail(
-                (input, ctx) -> {
-                  if (input.contains("forbidden")) {
-                    return GuardrailResult.failed("Forbidden content detected");
-                  }
-                  return GuardrailResult.passed();
-                })
-            .build();
+            Agent.builder()
+                    .name("GuardedAgent")
+                    .model("test-model")
+                    .instructions("Test")
+                    .responder(responder)
+                    .addInputGuardrail(
+                            (input, ctx) -> {
+                              if (input.contains("forbidden")) {
+                                return GuardrailResult.failed("Forbidden content detected");
+                              }
+                              return GuardrailResult.passed();
+                            })
+                    .build();
 
     AgentResult result = agent.interact("This is forbidden content");
 
@@ -119,20 +122,20 @@ class AgentIntegrationTest {
   @DisplayName("multiple input guardrails are all executed")
   void multipleInputGuardrailsAreAllExecuted() {
     Agent agent =
-        Agent.builder()
-            .name("MultiGuardAgent")
-            .model("test-model")
-            .instructions("Test")
-            .responder(responder)
-            .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
-            .addInputGuardrail(
-                (input, ctx) -> {
-                  if (input.contains("block")) {
-                    return GuardrailResult.failed("Blocked by second guardrail");
-                  }
-                  return GuardrailResult.passed();
-                })
-            .build();
+            Agent.builder()
+                    .name("MultiGuardAgent")
+                    .model("test-model")
+                    .instructions("Test")
+                    .responder(responder)
+                    .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
+                    .addInputGuardrail(
+                            (input, ctx) -> {
+                              if (input.contains("block")) {
+                                return GuardrailResult.failed("Blocked by second guardrail");
+                              }
+                              return GuardrailResult.passed();
+                            })
+                    .build();
 
     AgentResult result = agent.interact("This should block");
 
@@ -175,7 +178,7 @@ class AgentIntegrationTest {
     enqueueSuccessResponse("Context received");
 
     Agent agent = createBasicAgent();
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     context.addInput(Message.user("Hello from context"));
 
     AgentResult result = agent.interact(context);
@@ -190,7 +193,7 @@ class AgentIntegrationTest {
 
     Agent agent = createBasicAgent();
     List<ResponseInputItem> items =
-        List.of(Message.user("First message"), Message.user("Second message"));
+            List.of(Message.user("First message"), Message.user("Second message"));
 
     AgentResult result = agent.interact(items);
 
@@ -205,95 +208,95 @@ class AgentIntegrationTest {
   @DisplayName("builder validates required fields")
   void builderValidatesRequiredFields() {
     assertThrows(
-        NullPointerException.class,
-        () -> {
-          Agent.builder().model("test-model").instructions("Test").responder(responder).build();
-        });
+            NullPointerException.class,
+            () -> {
+              Agent.builder().model("test-model").instructions("Test").responder(responder).build();
+            });
 
     assertThrows(
-        NullPointerException.class,
-        () -> {
-          Agent.builder().name("Test").instructions("Test").responder(responder).build();
-        });
+            NullPointerException.class,
+            () -> {
+              Agent.builder().name("Test").instructions("Test").responder(responder).build();
+            });
 
     assertThrows(
-        NullPointerException.class,
-        () -> {
-          Agent.builder().name("Test").model("test-model").instructions("Test").build();
-        });
+            NullPointerException.class,
+            () -> {
+              Agent.builder().name("Test").model("test-model").instructions("Test").build();
+            });
   }
 
   @Test
   @DisplayName("builder rejects invalid maxTurns")
   void builderRejectsInvalidMaxTurns() {
     assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .maxTurns(0)
-              .build();
-        });
+            IllegalArgumentException.class,
+            () -> {
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .maxTurns(0)
+                      .build();
+            });
 
     assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .maxTurns(-1)
-              .build();
-        });
+            IllegalArgumentException.class,
+            () -> {
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .maxTurns(-1)
+                      .build();
+            });
   }
 
   @Test
   @DisplayName("builder rejects invalid temperature")
   void builderRejectsInvalidTemperature() {
     assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .temperature(-0.1)
-              .build();
-        });
+            IllegalArgumentException.class,
+            () -> {
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .temperature(-0.1)
+                      .build();
+            });
 
     assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .temperature(2.1)
-              .build();
-        });
+            IllegalArgumentException.class,
+            () -> {
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .temperature(2.1)
+                      .build();
+            });
   }
 
   @Test
   @DisplayName("builder accepts valid configuration options")
   void builderAcceptsValidConfigurationOptions() {
     Agent agent =
-        Agent.builder()
-            .name("FullyConfigured")
-            .model("test-model")
-            .instructions("Full configuration")
-            .responder(responder)
-            .maxTurns(5)
-            .temperature(0.7)
-            .maxOutputTokens(1000)
-            .metadata(Map.of("key", "value"))
-            .objectMapper(new ObjectMapper())
-            .build();
+            Agent.builder()
+                    .name("FullyConfigured")
+                    .model("test-model")
+                    .instructions("Full configuration")
+                    .responder(responder)
+                    .maxTurns(5)
+                    .temperature(0.7)
+                    .maxOutputTokens(1000)
+                    .metadata(Map.of("key", "value"))
+                    .objectMapper(new ObjectMapper())
+                    .build();
 
     assertEquals("FullyConfigured", agent.name());
     assertEquals("test-model", agent.model());
@@ -311,7 +314,7 @@ class AgentIntegrationTest {
     enqueueSuccessResponse("Second response");
 
     Agent agent = createBasicAgent();
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     context.setState("userId", "user-123");
 
     context.addInput(Message.user("First message"));
@@ -331,7 +334,7 @@ class AgentIntegrationTest {
     enqueueSuccessResponse("Response 2");
 
     Agent agent = createBasicAgent();
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
 
     context.addInput(Message.user("Message 1"));
     agent.interact(context);
@@ -352,19 +355,19 @@ class AgentIntegrationTest {
     enqueueSuccessResponse("This response contains BAD content");
 
     Agent agent =
-        Agent.builder()
-            .name("GuardedAgent")
-            .model("test-model")
-            .instructions("Test")
-            .responder(responder)
-            .addOutputGuardrail(
-                (output, ctx) -> {
-                  if (output.contains("BAD")) {
-                    return GuardrailResult.failed("Bad content in output");
-                  }
-                  return GuardrailResult.passed();
-                })
-            .build();
+            Agent.builder()
+                    .name("GuardedAgent")
+                    .model("test-model")
+                    .instructions("Test")
+                    .responder(responder)
+                    .addOutputGuardrail(
+                            (output, ctx) -> {
+                              if (output.contains("BAD")) {
+                                return GuardrailResult.failed("Bad content in output");
+                              }
+                              return GuardrailResult.passed();
+                            })
+                    .build();
 
     AgentResult result = agent.interact("Generate something");
 
@@ -378,48 +381,48 @@ class AgentIntegrationTest {
 
   private Agent createBasicAgent() {
     return Agent.builder()
-        .name("BasicAgent")
-        .model("test-model")
-        .instructions("Test instructions")
-        .responder(responder)
-        .build();
+            .name("BasicAgent")
+            .model("test-model")
+            .instructions("Test instructions")
+            .responder(responder)
+            .build();
   }
 
   private void enqueueSuccessResponse(String text) {
     String json =
-        """
-        {
-          "id": "resp_001",
-          "object": "response",
-          "created_at": 1234567890,
-          "status": "completed",
-          "model": "test-model",
-          "output": [
-            {
-              "type": "message",
-              "id": "msg_001",
-              "role": "assistant",
-              "content": [
-                {
-                  "type": "output_text",
-                  "text": "%s"
-                }
-              ]
-            }
-          ],
-          "usage": {
-            "input_tokens": 10,
-            "output_tokens": 5,
-            "total_tokens": 15
-          }
-        }
-        """
-            .formatted(text);
+            """
+                    {
+                      "id": "resp_001",
+                      "object": "response",
+                      "created_at": 1234567890,
+                      "status": "completed",
+                      "model": "test-model",
+                      "output": [
+                        {
+                          "type": "message",
+                          "id": "msg_001",
+                          "role": "assistant",
+                          "content": [
+                            {
+                              "type": "output_text",
+                              "text": "%s"
+                            }
+                          ]
+                        }
+                      ],
+                      "usage": {
+                        "input_tokens": 10,
+                        "output_tokens": 5,
+                        "total_tokens": 15
+                      }
+                    }
+                    """
+                    .formatted(text);
 
     mockWebServer.enqueue(
-        new MockResponse()
-            .setResponseCode(200)
-            .addHeader("Content-Type", "application/json")
-            .setBody(json));
+            new MockResponse()
+                    .setResponseCode(200)
+                    .addHeader("Content-Type", "application/json")
+                    .setBody(json));
   }
 }

@@ -5,10 +5,11 @@ import com.paragon.responses.spec.FunctionTool;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.Message;
 import com.paragon.telemetry.processors.TraceIdGenerator;
-import java.util.Map;
-import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Wraps an Agent as a FunctionTool, enabling agent composition.
@@ -46,21 +47,13 @@ import org.jspecify.annotations.Nullable;
 @FunctionMetadata(name = "", description = "")
 public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams> {
 
-  /**
-   * Parameters for the sub-agent invocation.
-   *
-   * @param request The message/request to send to the sub-agent
-   */
-  public record SubAgentParams(@NonNull String request) {}
-
+  // ScopedValue for context propagation - virtual thread optimized
+  private static final ScopedValue<AgenticContext> CURRENT_CONTEXT = ScopedValue.newInstance();
   private final @NonNull Agent targetAgent;
   private final @NonNull String toolName;
   private final @NonNull String toolDescription;
   private final boolean shareState;
   private final boolean shareHistory;
-
-  // ScopedValue for context propagation - virtual thread optimized
-  private static final ScopedValue<AgentContext> CURRENT_CONTEXT = ScopedValue.newInstance();
 
   /**
    * Creates a SubAgentTool with default configuration.
@@ -76,35 +69,91 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
    * Creates a SubAgentTool with the specified configuration.
    *
    * @param targetAgent the agent to invoke as a tool
-   * @param config configuration for context sharing and description
+   * @param config      configuration for context sharing and description
    */
   public SubAgentTool(@NonNull Agent targetAgent, @NonNull Config config) {
     super(
-        Map.of(
-            "type",
-            "object",
-            "properties",
             Map.of(
-                "request",
-                Map.of(
                     "type",
-                    "string",
-                    "description",
-                    "The message/request to send to the sub-agent")),
-            "required",
-            java.util.List.of("request"),
-            "additionalProperties",
-            false),
-        true);
+                    "object",
+                    "properties",
+                    Map.of(
+                            "request",
+                            Map.of(
+                                    "type",
+                                    "string",
+                                    "description",
+                                    "The message/request to send to the sub-agent")),
+                    "required",
+                    java.util.List.of("request"),
+                    "additionalProperties",
+                    false),
+            true);
 
     this.targetAgent = Objects.requireNonNull(targetAgent, "targetAgent cannot be null");
     this.toolName = "invoke_" + toSnakeCase(targetAgent.name());
     this.toolDescription =
-        config.description != null
-            ? config.description
-            : "Invoke " + targetAgent.name() + ": " + targetAgent.instructions().text();
+            config.description != null
+                    ? config.description
+                    : "Invoke " + targetAgent.name() + ": " + targetAgent.instructions().text();
     this.shareState = config.shareState;
     this.shareHistory = config.shareHistory;
+  }
+
+  /**
+   * Runs a task with the current context set for sub-agent execution. Package-private for Agent
+   * use.
+   *
+   * <p>Uses ScopedValue for virtual-thread-safe context propagation.
+   *
+   * @param context the parent context to propagate
+   * @param task    the task to run with the context (returns void)
+   */
+  static void runWithContext(@Nullable AgenticContext context, java.lang.Runnable task) {
+    if (context != null) {
+      ScopedValue.where(CURRENT_CONTEXT, context).run(task);
+    } else {
+      task.run();
+    }
+  }
+
+  /**
+   * Runs a task with the current context set and returns a result. Package-private for Agent use.
+   *
+   * <p>Uses ScopedValue for virtual-thread-safe context propagation.
+   *
+   * @param context the parent context to propagate
+   * @param task    the task to run with the context
+   * @param <T>     the return type
+   * @return the result from the task
+   */
+  static <T> T callWithContext(@Nullable AgenticContext context, ScopedValue.CallableOp<T, Exception> task) throws Exception {
+    if (context != null) {
+      return ScopedValue.where(CURRENT_CONTEXT, context).call(task);
+    } else {
+      return task.call();
+    }
+  }
+
+  private static String toSnakeCase(String input) {
+    if (input == null || input.isEmpty()) {
+      return input;
+    }
+    StringBuilder result = new StringBuilder();
+    for (int i = 0; i < input.length(); i++) {
+      char c = input.charAt(i);
+      if (Character.isUpperCase(c)) {
+        if (i > 0) {
+          result.append('_');
+        }
+        result.append(Character.toLowerCase(c));
+      } else if (Character.isWhitespace(c)) {
+        result.append('_');
+      } else {
+        result.append(c);
+      }
+    }
+    return result.toString();
   }
 
   @Override
@@ -125,20 +174,20 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
 
     try {
       // Build child context based on configuration
-      AgentContext childContext = buildChildContext(params.request());
+      AgenticContext childContext = buildChildContext(params.request());
 
       // Invoke the sub-agent (blocking - cheap in virtual threads)
       AgentResult result = targetAgent.interact(childContext);
 
       if (result.isError()) {
         return FunctionToolCallOutput.error(
-            "SubAgent '" + targetAgent.name() + "' failed: " + result.error().getMessage());
+                "SubAgent '" + targetAgent.name() + "' failed: " + result.error().getMessage());
       }
 
       return FunctionToolCallOutput.success(result.output());
     } catch (Exception e) {
       return FunctionToolCallOutput.error(
-          "SubAgent '" + targetAgent.name() + "' error: " + e.getMessage());
+              "SubAgent '" + targetAgent.name() + "' error: " + e.getMessage());
     }
   }
 
@@ -148,10 +197,10 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
    * @param request the request message to send
    * @return configured child context
    */
-  private AgentContext buildChildContext(String request) {
+  private AgenticContext buildChildContext(String request) {
     // Safely check if CURRENT_CONTEXT is bound (only set when called from Agent)
-    AgentContext parentContext = CURRENT_CONTEXT.isBound() ? CURRENT_CONTEXT.get() : null;
-    AgentContext childContext;
+    AgenticContext parentContext = CURRENT_CONTEXT.isBound() ? CURRENT_CONTEXT.get() : null;
+    AgenticContext childContext;
 
     if (parentContext != null && shareHistory) {
       // Fork full context including history
@@ -160,7 +209,7 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
       childContext.addInput(Message.user(request));
     } else if (parentContext != null && shareState) {
       // Fresh history but copy state
-      childContext = AgentContext.create();
+      childContext = AgenticContext.create();
 
       // Copy trace context for observability
       if (parentContext.hasTraceContext()) {
@@ -177,46 +226,11 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
       childContext.addInput(Message.user(request));
     } else {
       // Completely isolated
-      childContext = AgentContext.create();
+      childContext = AgenticContext.create();
       childContext.addInput(Message.user(request));
     }
 
     return childContext;
-  }
-
-  /**
-   * Runs a task with the current context set for sub-agent execution. Package-private for Agent
-   * use.
-   *
-   * <p>Uses ScopedValue for virtual-thread-safe context propagation.
-   *
-   * @param context the parent context to propagate
-   * @param task the task to run with the context (returns void)
-   */
-  static void runWithContext(@Nullable AgentContext context, java.lang.Runnable task) {
-    if (context != null) {
-      ScopedValue.where(CURRENT_CONTEXT, context).run(task);
-    } else {
-      task.run();
-    }
-  }
-
-  /**
-   * Runs a task with the current context set and returns a result. Package-private for Agent use.
-   *
-   * <p>Uses ScopedValue for virtual-thread-safe context propagation.
-   *
-   * @param context the parent context to propagate
-   * @param task the task to run with the context
-   * @param <T> the return type
-   * @return the result from the task
-   */
-  static <T> T callWithContext(@Nullable AgentContext context, ScopedValue.CallableOp<T, Exception> task) throws Exception {
-    if (context != null) {
-      return ScopedValue.where(CURRENT_CONTEXT, context).call(task);
-    } else {
-      return task.call();
-    }
   }
 
   /**
@@ -246,25 +260,12 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
     return shareHistory;
   }
 
-  private static String toSnakeCase(String input) {
-    if (input == null || input.isEmpty()) {
-      return input;
-    }
-    StringBuilder result = new StringBuilder();
-    for (int i = 0; i < input.length(); i++) {
-      char c = input.charAt(i);
-      if (Character.isUpperCase(c)) {
-        if (i > 0) {
-          result.append('_');
-        }
-        result.append(Character.toLowerCase(c));
-      } else if (Character.isWhitespace(c)) {
-        result.append('_');
-      } else {
-        result.append(c);
-      }
-    }
-    return result.toString();
+  /**
+   * Parameters for the sub-agent invocation.
+   *
+   * @param request The message/request to send to the sub-agent
+   */
+  public record SubAgentParams(@NonNull String request) {
   }
 
   /**
@@ -300,28 +301,37 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
       return new Builder();
     }
 
-    /** Returns the description. */
+    /**
+     * Returns the description.
+     */
     public @Nullable String description() {
       return description;
     }
 
-    /** Returns whether state is shared. */
+    /**
+     * Returns whether state is shared.
+     */
     public boolean shareState() {
       return shareState;
     }
 
-    /** Returns whether history is shared. */
+    /**
+     * Returns whether history is shared.
+     */
     public boolean shareHistory() {
       return shareHistory;
     }
 
-    /** Builder for Config. */
+    /**
+     * Builder for Config.
+     */
     public static final class Builder {
       private @Nullable String description;
       private boolean shareState = true; // Default: share state
       private boolean shareHistory = false; // Default: don't share history
 
-      private Builder() {}
+      private Builder() {
+      }
 
       /**
        * Sets the description for when to use this sub-agent.

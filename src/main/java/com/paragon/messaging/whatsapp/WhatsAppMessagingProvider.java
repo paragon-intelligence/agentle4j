@@ -6,6 +6,7 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import okhttp3.*;
 
+import com.paragon.messaging.core.MessagingException;
 import com.paragon.messaging.core.MessagingProvider;
 import com.paragon.messaging.core.MessageResponse;
 import com.paragon.messaging.core.OutboundMessage;
@@ -159,7 +160,7 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
       Request request = new Request.Builder()
               .url(baseUrl + "/" + phoneNumberId + "/messages")
               .addHeader("Authorization", "Bearer " + accessToken)
-              .post(RequestBody.create(jsonPayload, JSON))
+              .post(RequestBody.create(jsonPayload.getBytes(java.nio.charset.StandardCharsets.UTF_8), JSON))
               .build();
 
       // Enviar requisição

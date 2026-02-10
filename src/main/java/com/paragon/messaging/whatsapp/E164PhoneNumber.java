@@ -127,6 +127,9 @@ public @interface E164PhoneNumber {
       // Remove todos os caracteres não-numéricos exceto +
       String cleaned = phoneNumber.replaceAll("[^+\\d]", "");
 
+      // Collapse multiple + signs into one
+      cleaned = cleaned.replaceAll("\\++", "+");
+
       // Adiciona + se não tiver
       if (!cleaned.startsWith("+")) {
         cleaned = "+" + cleaned;

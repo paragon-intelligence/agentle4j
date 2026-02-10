@@ -1,7 +1,7 @@
 package com.paragon.messaging.processor;
 
-import com.paragon.agents.AgentContext;
 import com.paragon.agents.AgentResult;
+import com.paragon.agents.AgenticContext;
 import com.paragon.agents.Interactable;
 import com.paragon.agents.StructuredAgentResult;
 import com.paragon.messaging.conversion.DefaultMessageConverter;
@@ -165,25 +165,25 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     UserMessage userMessage = messageConverter.toUserMessage(messages);
 
     // Build agent context with conversation history
-    AgentContext agentContext = buildAgentContext(userId, userMessage);
+    AgenticContext agenticContext = buildAgentContext(userId, userMessage);
 
     // Get the last message ID for reply context
     String lastMessageId = messages.getLast().id();
 
-    // Process through agent and send response
-    if (structuredAgent != null) {
-      processStructured(userId, agentContext, lastMessageId);
-    } else {
-      processSimple(userId, agentContext, lastMessageId);
-    }
-
-    // Store messages in history
+    // Store user message in history before processing
     if (historyStore != null) {
       historyStore.addMessage(userId, userMessage);
     }
+
+    // Process through agent and send response
+    if (structuredAgent != null) {
+      processStructured(userId, agenticContext, lastMessageId);
+    } else {
+      processSimple(userId, agenticContext, lastMessageId);
+    }
   }
 
-  private void processSimple(String userId, AgentContext context, String replyToMessageId) throws Exception {
+  private void processSimple(String userId, AgenticContext context, String replyToMessageId) throws Exception {
     AgentResult result = agent.interact(context);
 
     if (result.isError()) {
@@ -205,7 +205,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     sendResponse(userId, response, replyToMessageId);
   }
 
-  private void processStructured(String userId, AgentContext context, String replyToMessageId) throws Exception {
+  private void processStructured(String userId, AgenticContext context, String replyToMessageId) throws Exception {
     assert structuredAgent != null;
     StructuredAgentResult<T> result = structuredAgent.interactStructured(context);
 
@@ -334,10 +334,10 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     }
   }
 
-  private AgentContext buildAgentContext(String userId, UserMessage currentMessage) {
+  private AgenticContext buildAgentContext(String userId, UserMessage currentMessage) {
     if (historyStore == null) {
       // No history - just use current message
-      return AgentContext.create().addMessage(currentMessage);
+      return AgenticContext.create().addMessage(currentMessage);
     }
 
     // Get conversation history
@@ -348,7 +348,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     );
 
     // Create context with history and add current message
-    AgentContext context = AgentContext.withHistory(history);
+    AgenticContext context = AgenticContext.withHistory(history);
     context.addMessage(currentMessage);
     return context;
   }

@@ -218,28 +218,11 @@ public interface MessagingProvider {
           @NotNull java.util.List<@Valid ? extends OutboundMessage> messages
   ) throws MessagingException {
 
-    try (var scope = java.util.concurrent.StructuredTaskScope.open(
-            java.util.concurrent.StructuredTaskScope.Joiner.allSuccessfulOrThrow())) {
-
-      // Fork a subtask for each message
-      var subtasks = messages.stream()
-              .map(msg -> scope.fork(() -> sendMessage(recipient, msg)))
-              .toList();
-
-      // Wait for all (throws exception if any fail)
-      scope.join();
-
-      // Collect results in original order
-      return subtasks.stream()
-              .map(java.util.concurrent.StructuredTaskScope.Subtask::get)
-              .toList();
-
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new MessagingException("Batch send interrupted", e);
-    } catch (Exception e) {
-      throw new MessagingException("Batch send failed", e);
+    java.util.List<MessageResponse> results = new java.util.ArrayList<>();
+    for (var msg : messages) {
+      results.add(sendMessage(recipient, msg));
     }
+    return results;
   }
 
   /**
@@ -288,16 +271,4 @@ public interface MessagingProvider {
     }
   }
 
-  /**
-   * Exception thrown when messaging operations fail.
-   */
-  class MessagingException extends RuntimeException {
-    public MessagingException(String message) {
-      super(message);
-    }
-
-    public MessagingException(String message, Throwable cause) {
-      super(message, cause);
-    }
-  }
 }

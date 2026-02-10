@@ -339,7 +339,7 @@ class E164PhoneNumberTest {
         @DisplayName("normalizes formatted Brazilian number")
         void normalizesBrazilian() {
             String result = E164PhoneNumber.Utils.normalize("(11) 98765-4321");
-            assertEquals("+1198765432", result);  // Note: adds default +, but validates if correct
+            assertEquals("+11987654321", result);  // Note: adds default +, but validates if correct
         }
 
         @Test

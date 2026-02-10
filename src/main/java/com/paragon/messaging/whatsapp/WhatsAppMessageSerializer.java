@@ -22,7 +22,7 @@ public class WhatsAppMessageSerializer {
    * @return JSON string
    */
   public String serialize(Recipient recipient, OutboundMessage message) {
-    return switch (message) {
+    String json = switch (message) {
       case TextMessageInterface text -> serializeTextMessage(recipient, (TextMessage) text);
       case MediaMessageInterface media -> serializeMediaMessage(recipient, (MediaMessage) media);
       case TemplateMessageInterface template -> serializeTemplateMessage(recipient, (TemplateMessage) template);
@@ -31,6 +31,7 @@ public class WhatsAppMessageSerializer {
       case ContactMessageInterface contact -> serializeContactMessage(recipient, (ContactMessage) contact);
       case ReactionMessageInterface reaction -> serializeReactionMessage(recipient, (ReactionMessage) reaction);
     };
+    return json.strip();
   }
 
   /**

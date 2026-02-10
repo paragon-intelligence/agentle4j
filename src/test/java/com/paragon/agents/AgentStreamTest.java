@@ -1,14 +1,18 @@
 package com.paragon.agents;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/** Tests for AgentStream builder and callback configuration. */
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+
+/**
+ * Tests for AgentStream builder and callback configuration.
+ */
 @DisplayName("AgentStream")
 class AgentStreamTest {
 
@@ -21,7 +25,7 @@ class AgentStreamTest {
     @Test
     @DisplayName("failed creates pre-failed stream")
     void failedCreatesPreFailedStream() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult failedResult = AgentResult.error(new RuntimeException("Test error"), context, 0);
 
       AgentStream stream = AgentStream.failed(failedResult);
@@ -32,7 +36,7 @@ class AgentStreamTest {
     @Test
     @DisplayName("failed stream accepts error handler")
     void failedStreamAcceptsErrorHandler() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult failedResult = AgentResult.error(new RuntimeException("Test error"), context, 0);
       AtomicBoolean errorCalled = new AtomicBoolean(false);
 
@@ -44,7 +48,7 @@ class AgentStreamTest {
     @Test
     @DisplayName("failed stream accepts complete handler")
     void failedStreamAcceptsCompleteHandler() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult failedResult = AgentResult.error(new RuntimeException("Test error"), context, 0);
       AtomicReference<AgentResult> result = new AtomicReference<>();
 
@@ -63,19 +67,27 @@ class AgentStreamTest {
     @Test
     @DisplayName("all handlers can be chained")
     void allHandlersCanBeChained() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream =
-          AgentStream.failed(result)
-              .onTurnStart(turn -> {})
-              .onTextDelta(text -> {})
-              .onTurnComplete(response -> {})
-              .onToolExecuted(exec -> {})
-              .onGuardrailFailed(failed -> {})
-              .onHandoff(handoff -> {})
-              .onComplete(r -> {})
-              .onError(e -> {});
+              AgentStream.failed(result)
+                      .onTurnStart(turn -> {
+                      })
+                      .onTextDelta(text -> {
+                      })
+                      .onTurnComplete(response -> {
+                      })
+                      .onToolExecuted(exec -> {
+                      })
+                      .onGuardrailFailed(failed -> {
+                      })
+                      .onHandoff(handoff -> {
+                      })
+                      .onComplete(r -> {
+                      })
+                      .onError(e -> {
+                      });
 
       assertNotNull(stream);
     }
@@ -83,12 +95,14 @@ class AgentStreamTest {
     @Test
     @DisplayName("handlers return same stream instance for chaining")
     void handlersReturnSameInstance() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream = AgentStream.failed(result);
-      AgentStream chain1 = stream.onTextDelta(t -> {});
-      AgentStream chain2 = chain1.onComplete(r -> {});
+      AgentStream chain1 = stream.onTextDelta(t -> {
+      });
+      AgentStream chain2 = chain1.onComplete(r -> {
+      });
 
       assertSame(stream, chain1);
       assertSame(stream, chain2);
@@ -97,11 +111,12 @@ class AgentStreamTest {
     @Test
     @DisplayName("onTurnStart returns same instance")
     void onTurnStartReturnsSameInstance() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream = AgentStream.failed(result);
-      AgentStream chained = stream.onTurnStart(turn -> {});
+      AgentStream chained = stream.onTurnStart(turn -> {
+      });
 
       assertSame(stream, chained);
     }
@@ -109,11 +124,12 @@ class AgentStreamTest {
     @Test
     @DisplayName("onToolExecuted returns same instance")
     void onToolExecutedReturnsSameInstance() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream = AgentStream.failed(result);
-      AgentStream chained = stream.onToolExecuted(exec -> {});
+      AgentStream chained = stream.onToolExecuted(exec -> {
+      });
 
       assertSame(stream, chained);
     }
@@ -121,11 +137,12 @@ class AgentStreamTest {
     @Test
     @DisplayName("onGuardrailFailed returns same instance")
     void onGuardrailFailedReturnsSameInstance() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream = AgentStream.failed(result);
-      AgentStream chained = stream.onGuardrailFailed(failed -> {});
+      AgentStream chained = stream.onGuardrailFailed(failed -> {
+      });
 
       assertSame(stream, chained);
     }
@@ -133,11 +150,12 @@ class AgentStreamTest {
     @Test
     @DisplayName("onHandoff returns same instance")
     void onHandoffReturnsSameInstance() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream = AgentStream.failed(result);
-      AgentStream chained = stream.onHandoff(handoff -> {});
+      AgentStream chained = stream.onHandoff(handoff -> {
+      });
 
       assertSame(stream, chained);
     }
@@ -145,11 +163,12 @@ class AgentStreamTest {
     @Test
     @DisplayName("onError returns same instance")
     void onErrorReturnsSameInstance() {
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream = AgentStream.failed(result);
-      AgentStream chained = stream.onError(e -> {});
+      AgentStream chained = stream.onError(e -> {
+      });
 
       assertSame(stream, chained);
     }

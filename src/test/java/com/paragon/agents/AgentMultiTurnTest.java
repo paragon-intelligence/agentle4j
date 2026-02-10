@@ -1,17 +1,14 @@
 package com.paragon.agents;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
-import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for Agent multi-turn conversation behavior.
@@ -31,7 +28,7 @@ class AgentMultiTurnTest {
     mockWebServer.start();
 
     responder =
-        Responder.builder().openRouter().apiKey("test-key").baseUrl(mockWebServer.url("/")).build();
+            Responder.builder().openRouter().apiKey("test-key").baseUrl(mockWebServer.url("/")).build();
   }
 
   @AfterEach
@@ -43,6 +40,62 @@ class AgentMultiTurnTest {
   // CONTEXT REUSE
   // ═══════════════════════════════════════════════════════════════════════════
 
+  private Agent createTestAgent(String name) {
+    return Agent.builder()
+            .name(name)
+            .instructions("You are a helpful assistant.")
+            .model("test-model")
+            .responder(responder)
+            .build();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TURN COUNTING
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  private void enqueueSuccessResponse(String text) {
+    String responseJson =
+            """
+                    {
+                      "id": "resp_%d",
+                      "object": "response",
+                      "created_at": 1234567890,
+                      "status": "completed",
+                      "output": [
+                        {
+                          "type": "message",
+                          "id": "msg_1",
+                          "status": "completed",
+                          "role": "assistant",
+                          "content": [
+                            {
+                              "type": "output_text",
+                              "text": "%s"
+                            }
+                          ]
+                        }
+                      ],
+                      "model": "test-model",
+                      "usage": {
+                        "input_tokens": 10,
+                        "output_tokens": 20,
+                        "total_tokens": 30
+                      }
+                    }
+                    """
+                    .formatted(System.nanoTime(), text);
+
+    mockWebServer.enqueue(
+            new MockResponse()
+                    .setBody(responseJson)
+                    .setHeader("Content-Type", "application/json")
+                    .setResponseCode(200));
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HISTORY VERIFICATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
   @Nested
   @DisplayName("Context Reuse")
   class ContextReuse {
@@ -51,7 +104,7 @@ class AgentMultiTurnTest {
     @DisplayName("same context accumulates history across calls")
     void sameContext_accumulatesHistory() {
       Agent agent = createTestAgent("TestAgent");
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       // Enqueue responses for two turns
       enqueueSuccessResponse("Response 1");
@@ -79,11 +132,11 @@ class AgentMultiTurnTest {
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
 
-      AgentContext context1 = AgentContext.create();
+      AgenticContext context1 = AgenticContext.create();
       context1.addInput(Message.user("Message 1"));
       agent.interact(context1);
 
-      AgentContext context2 = AgentContext.create();
+      AgenticContext context2 = AgenticContext.create();
       assertEquals(0, context2.historySize());
       context2.addInput(Message.user("Message 2"));
       agent.interact(context2);
@@ -97,7 +150,7 @@ class AgentMultiTurnTest {
     @DisplayName("context state persists across calls")
     void contextState_persistsAcrossCalls() {
       Agent agent = createTestAgent("TestAgent");
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
@@ -116,7 +169,7 @@ class AgentMultiTurnTest {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TURN COUNTING
+  // CONVERSATION FLOW
   // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
@@ -139,7 +192,7 @@ class AgentMultiTurnTest {
     @DisplayName("turnsUsed reflects LLM calls in interaction")
     void turnsUsed_reflectsLLMCallsInInteraction() {
       Agent agent = createTestAgent("TestAgent");
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
@@ -155,7 +208,7 @@ class AgentMultiTurnTest {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // HISTORY VERIFICATION
+  // HELPERS
   // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
@@ -166,7 +219,7 @@ class AgentMultiTurnTest {
     @DisplayName("history contains user messages")
     void history_containsUserMessages() {
       Agent agent = createTestAgent("TestAgent");
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       enqueueSuccessResponse("Response");
 
@@ -194,13 +247,13 @@ class AgentMultiTurnTest {
     @DisplayName("context copy creates independent history")
     void contextCopy_createsIndependentHistory() {
       Agent agent = createTestAgent("TestAgent");
-      AgentContext original = AgentContext.create();
+      AgenticContext original = AgenticContext.create();
 
       enqueueSuccessResponse("Response 1");
       original.addInput(Message.user("Original message"));
       agent.interact(original);
 
-      AgentContext copy = original.copy();
+      AgenticContext copy = original.copy();
       assertEquals(original.historySize(), copy.historySize());
 
       enqueueSuccessResponse("Response 2");
@@ -212,10 +265,6 @@ class AgentMultiTurnTest {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // CONVERSATION FLOW
-  // ═══════════════════════════════════════════════════════════════════════════
-
   @Nested
   @DisplayName("Conversation Flow")
   class ConversationFlow {
@@ -224,7 +273,7 @@ class AgentMultiTurnTest {
     @DisplayName("multiple interactions with same context succeed")
     void multipleInteractions_succeed() {
       Agent agent = createTestAgent("TestAgent");
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       for (int i = 0; i < 5; i++) {
         enqueueSuccessResponse("Response " + i);
@@ -244,7 +293,7 @@ class AgentMultiTurnTest {
     @DisplayName("cleared context starts fresh conversation")
     void clearedContext_startsFresh() {
       Agent agent = createTestAgent("TestAgent");
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
 
       enqueueSuccessResponse("First response");
       context.addInput(Message.user("First message"));
@@ -261,57 +310,5 @@ class AgentMultiTurnTest {
       // History started fresh
       assertTrue(context.historySize() < historyBefore * 2);
     }
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // HELPERS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  private Agent createTestAgent(String name) {
-    return Agent.builder()
-        .name(name)
-        .instructions("You are a helpful assistant.")
-        .model("test-model")
-        .responder(responder)
-        .build();
-  }
-
-  private void enqueueSuccessResponse(String text) {
-    String responseJson =
-        """
-        {
-          "id": "resp_%d",
-          "object": "response",
-          "created_at": 1234567890,
-          "status": "completed",
-          "output": [
-            {
-              "type": "message",
-              "id": "msg_1",
-              "status": "completed",
-              "role": "assistant",
-              "content": [
-                {
-                  "type": "output_text",
-                  "text": "%s"
-                }
-              ]
-            }
-          ],
-          "model": "test-model",
-          "usage": {
-            "input_tokens": 10,
-            "output_tokens": 20,
-            "total_tokens": 30
-          }
-        }
-        """
-            .formatted(System.nanoTime(), text);
-
-    mockWebServer.enqueue(
-        new MockResponse()
-            .setBody(responseJson)
-            .setHeader("Content-Type", "application/json")
-            .setResponseCode(200));
   }
 }

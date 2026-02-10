@@ -5,11 +5,12 @@ import com.paragon.responses.spec.FunctionTool;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.Message;
 import com.paragon.telemetry.processors.TraceIdGenerator;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Wraps any Interactable as a FunctionTool, enabling composition of multi-agent patterns.
@@ -38,26 +39,18 @@ import org.jspecify.annotations.Nullable;
 @FunctionMetadata(name = "", description = "")
 public final class InteractableSubAgentTool extends FunctionTool<InteractableSubAgentTool.InteractableParams> {
 
-  /**
-   * Parameters for the interactable invocation.
-   *
-   * @param request The message/request to send to the interactable
-   */
-  public record InteractableParams(@NonNull String request) {}
-
+  // ScopedValue for context propagation - virtual thread optimized
+  private static final ScopedValue<AgenticContext> CURRENT_CONTEXT = ScopedValue.newInstance();
   private final @NonNull Interactable target;
   private final @NonNull String toolName;
   private final @NonNull String toolDescription;
   private final boolean shareState;
   private final boolean shareHistory;
 
-  // ScopedValue for context propagation - virtual thread optimized
-  private static final ScopedValue<AgentContext> CURRENT_CONTEXT = ScopedValue.newInstance();
-
   /**
    * Creates an InteractableSubAgentTool with a description.
    *
-   * @param target the interactable to invoke as a tool
+   * @param target      the interactable to invoke as a tool
    * @param description description of when to use this interactable
    */
   public InteractableSubAgentTool(@NonNull Interactable target, @NonNull String description) {
@@ -72,23 +65,60 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
    */
   public InteractableSubAgentTool(@NonNull Interactable target, @NonNull Config config) {
     super(
-        Map.of(
-            "type", "object",
-            "properties", Map.of(
-                "request", Map.of(
-                    "type", "string",
-                    "description", "The message/request to send to the interactable")),
-            "required", List.of("request"),
-            "additionalProperties", false),
-        true);
+            Map.of(
+                    "type", "object",
+                    "properties", Map.of(
+                            "request", Map.of(
+                                    "type", "string",
+                                    "description", "The message/request to send to the interactable")),
+                    "required", List.of("request"),
+                    "additionalProperties", false),
+            true);
 
     this.target = Objects.requireNonNull(target, "target cannot be null");
     this.toolName = "invoke_" + toSnakeCase(target.name());
     this.toolDescription = config.description != null
-        ? config.description
-        : "Invoke " + target.name();
+            ? config.description
+            : "Invoke " + target.name();
     this.shareState = config.shareState;
     this.shareHistory = config.shareHistory;
+  }
+
+  /**
+   * Runs a task with the current context set for sub-agent execution.
+   *
+   * <p>Uses ScopedValue for virtual-thread-safe context propagation.
+   *
+   * @param context the parent context to propagate
+   * @param task    the task to run with the context
+   */
+  static void runWithContext(@Nullable AgenticContext context, Runnable task) {
+    if (context != null) {
+      ScopedValue.where(CURRENT_CONTEXT, context).run(task);
+    } else {
+      task.run();
+    }
+  }
+
+  private static String toSnakeCase(String input) {
+    if (input == null || input.isEmpty()) {
+      return input;
+    }
+    StringBuilder result = new StringBuilder();
+    for (int i = 0; i < input.length(); i++) {
+      char c = input.charAt(i);
+      if (Character.isUpperCase(c)) {
+        if (i > 0) {
+          result.append('_');
+        }
+        result.append(Character.toLowerCase(c));
+      } else if (Character.isWhitespace(c)) {
+        result.append('_');
+      } else {
+        result.append(c);
+      }
+    }
+    return result.toString();
   }
 
   @Override
@@ -109,20 +139,20 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
 
     try {
       // Build child context based on configuration
-      AgentContext childContext = buildChildContext(params.request());
+      AgenticContext childContext = buildChildContext(params.request());
 
       // Invoke the interactable (blocking - cheap in virtual threads)
       AgentResult result = target.interact(childContext);
 
       if (result.isError()) {
         return FunctionToolCallOutput.error(
-            "'" + target.name() + "' failed: " + result.error().getMessage());
+                "'" + target.name() + "' failed: " + result.error().getMessage());
       }
 
       return FunctionToolCallOutput.success(result.output());
     } catch (Exception e) {
       return FunctionToolCallOutput.error(
-          "'" + target.name() + "' error: " + e.getMessage());
+              "'" + target.name() + "' error: " + e.getMessage());
     }
   }
 
@@ -132,10 +162,10 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
    * @param request the request message to send
    * @return configured child context
    */
-  private AgentContext buildChildContext(String request) {
+  private AgenticContext buildChildContext(String request) {
     // Safely check if CURRENT_CONTEXT is bound (only set when called from Agent)
-    AgentContext parentContext = CURRENT_CONTEXT.isBound() ? CURRENT_CONTEXT.get() : null;
-    AgentContext childContext;
+    AgenticContext parentContext = CURRENT_CONTEXT.isBound() ? CURRENT_CONTEXT.get() : null;
+    AgenticContext childContext;
 
     if (parentContext != null && shareHistory) {
       // Fork full context including history
@@ -144,7 +174,7 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
       childContext.addInput(Message.user(request));
     } else if (parentContext != null && shareState) {
       // Fresh history but copy state
-      childContext = AgentContext.create();
+      childContext = AgenticContext.create();
 
       // Copy trace context for observability
       if (parentContext.hasTraceContext()) {
@@ -161,27 +191,11 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
       childContext.addInput(Message.user(request));
     } else {
       // Completely isolated
-      childContext = AgentContext.create();
+      childContext = AgenticContext.create();
       childContext.addInput(Message.user(request));
     }
 
     return childContext;
-  }
-
-  /**
-   * Runs a task with the current context set for sub-agent execution.
-   *
-   * <p>Uses ScopedValue for virtual-thread-safe context propagation.
-   *
-   * @param context the parent context to propagate
-   * @param task the task to run with the context
-   */
-  static void runWithContext(@Nullable AgentContext context, Runnable task) {
-    if (context != null) {
-      ScopedValue.where(CURRENT_CONTEXT, context).run(task);
-    } else {
-      task.run();
-    }
   }
 
   /**
@@ -211,25 +225,12 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
     return shareHistory;
   }
 
-  private static String toSnakeCase(String input) {
-    if (input == null || input.isEmpty()) {
-      return input;
-    }
-    StringBuilder result = new StringBuilder();
-    for (int i = 0; i < input.length(); i++) {
-      char c = input.charAt(i);
-      if (Character.isUpperCase(c)) {
-        if (i > 0) {
-          result.append('_');
-        }
-        result.append(Character.toLowerCase(c));
-      } else if (Character.isWhitespace(c)) {
-        result.append('_');
-      } else {
-        result.append(c);
-      }
-    }
-    return result.toString();
+  /**
+   * Parameters for the interactable invocation.
+   *
+   * @param request The message/request to send to the interactable
+   */
+  public record InteractableParams(@NonNull String request) {
   }
 
   /**
@@ -246,33 +247,44 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
       this.shareHistory = builder.shareHistory;
     }
 
-    /** Creates a new Config builder. */
+    /**
+     * Creates a new Config builder.
+     */
     public static @NonNull Builder builder() {
       return new Builder();
     }
 
-    /** Returns the description. */
+    /**
+     * Returns the description.
+     */
     public @Nullable String description() {
       return description;
     }
 
-    /** Returns whether state is shared. */
+    /**
+     * Returns whether state is shared.
+     */
     public boolean shareState() {
       return shareState;
     }
 
-    /** Returns whether history is shared. */
+    /**
+     * Returns whether history is shared.
+     */
     public boolean shareHistory() {
       return shareHistory;
     }
 
-    /** Builder for Config. */
+    /**
+     * Builder for Config.
+     */
     public static final class Builder {
       private @Nullable String description;
       private boolean shareState = true;
       private boolean shareHistory = false;
 
-      private Builder() {}
+      private Builder() {
+      }
 
       /**
        * Sets the description for when to use this interactable.
@@ -311,7 +323,9 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
         return this;
       }
 
-      /** Builds the Config. */
+      /**
+       * Builds the Config.
+       */
       public @NonNull Config build() {
         return new Config(this);
       }

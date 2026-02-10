@@ -52,9 +52,6 @@ public record TTSConfig(
      * Canonical constructor with validation.
      */
     public TTSConfig {
-        if (speechChance < 0.0 || speechChance > 1.0) {
-            throw new IllegalArgumentException("speechChance must be between 0.0 and 1.0");
-        }
         if (languageCode == null || languageCode.isBlank()) {
             languageCode = "pt-BR";
         }

@@ -307,7 +307,7 @@ class OutboundMessageTest {
         @Test
         @DisplayName("withReplyTo() returns same instance by default")
         void withReplyToReturnsSameInstance() {
-            OutboundMessage message = new TextMessage("Hello");
+            OutboundMessage message = new ReactionMessage("wamid.original", "\uD83D\uDC4D");
 
             OutboundMessage replyMessage = message.withReplyTo("wamid.123");
 

@@ -122,18 +122,18 @@ WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[141,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    java.lang.String
   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[196,39] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[204,32] cannot find symbol
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[205,27] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[206,32] no suitable method found for error(java.lang.RuntimeException)
-    method com.paragon.agents.AgentResult.error(@org.jspecify.annotations.NonNull java.lang.Throwable,@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext,int) is not applicable
+    method com.paragon.agents.AgentResult.error(@org.jspecify.annotations.NonNull java.lang.Throwable,@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext,int) is not applicable
       (actual and formal argument lists differ in length)
     method com.paragon.agents.AgentResult.error() is not applicable
       (actual and formal argument lists differ in length)
@@ -141,16 +141,16 @@ WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[225,27] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[226,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    java.lang.String
   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[256,32] cannot find symbol
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[257,33] reference to interactStructured is ambiguous
-  both method interactStructured(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable.Structured and method interactStructured(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable.Structured match
+  both method interactStructured(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable.Structured and method interactStructured(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable.Structured match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[258,54] method success in record com.paragon.agents.StructuredAgentResult<T> cannot be applied to given types;
   required: T,java.lang.String,com.paragon.responses.spec.Response,java.util.List<com.paragon.responses.spec.ResponseInputItem>,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    com.paragon.messaging.processor.AIAgentProcessorTest.TestResponse,java.lang.String
@@ -160,7 +160,7 @@ WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[284,33] reference to interactStructured is ambiguous
-  both method interactStructured(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable.Structured and method interactStructured(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable.Structured match
+  both method interactStructured(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable.Structured and method interactStructured(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable.Structured match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[285,54] method error in record com.paragon.agents.StructuredAgentResult<T> cannot be applied to given types;
   required: java.lang.Throwable,java.lang.String,com.paragon.responses.spec.Response,java.util.List<com.paragon.responses.spec.ResponseInputItem>,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    java.lang.RuntimeException
@@ -170,65 +170,65 @@ WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[314,27] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[315,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    java.lang.String
   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[335,32] cannot find symbol
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[338,27] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[339,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    java.lang.String
   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[366,32] cannot find symbol
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[369,27] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[370,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    java.lang.String
   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[393,32] cannot find symbol
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[396,27] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[397,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    java.lang.String
   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[418,32] cannot find symbol
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[419,27] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[420,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    java.lang.String
   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[448,32] cannot find symbol
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[449,27] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[450,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    java.lang.String
   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[460,30] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[473,32] cannot find symbol
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[474,27] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[475,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    java.lang.String
   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[490,45] cannot find symbol
@@ -238,27 +238,27 @@ WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[504,27] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[505,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    java.lang.String
   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[532,32] cannot find symbol
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[533,27] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[534,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    <nulltype>
   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[555,32] cannot find symbol
   symbol:   method text(java.lang.String)
   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[556,27] reference to interact is ambiguous
-  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+  both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[557,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+  required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
   found:    java.lang.String
   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[572,20] com.paragon.messaging.processor.AIAgentProcessorTest.TestResponse is not abstract and does not override abstract method getTextContent() in com.paragon.messaging.whatsapp.response.WhatsAppResponse
@@ -382,18 +382,18 @@ WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[141,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    java.lang.String
 [ERROR]   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[196,39] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[204,32] cannot find symbol
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[205,27] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[206,32] no suitable method found for error(java.lang.RuntimeException)
-[ERROR]     method com.paragon.agents.AgentResult.error(@org.jspecify.annotations.NonNull java.lang.Throwable,@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext,int) is not applicable
+[ERROR]     method com.paragon.agents.AgentResult.error(@org.jspecify.annotations.NonNull java.lang.Throwable,@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext,int) is not applicable
 [ERROR]       (actual and formal argument lists differ in length)
 [ERROR]     method com.paragon.agents.AgentResult.error() is not applicable
 [ERROR]       (actual and formal argument lists differ in length)
@@ -401,16 +401,16 @@ WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[225,27] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[226,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    java.lang.String
 [ERROR]   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[256,32] cannot find symbol
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[257,33] reference to interactStructured is ambiguous
-[ERROR]   both method interactStructured(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable.Structured and method interactStructured(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable.Structured match
+[ERROR]   both method interactStructured(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable.Structured and method interactStructured(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable.Structured match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[258,54] method success in record com.paragon.agents.StructuredAgentResult<T> cannot be applied to given types;
 [ERROR]   required: T,java.lang.String,com.paragon.responses.spec.Response,java.util.List<com.paragon.responses.spec.ResponseInputItem>,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    com.paragon.messaging.processor.AIAgentProcessorTest.TestResponse,java.lang.String
@@ -420,7 +420,7 @@ WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[284,33] reference to interactStructured is ambiguous
-[ERROR]   both method interactStructured(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable.Structured and method interactStructured(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable.Structured match
+[ERROR]   both method interactStructured(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable.Structured and method interactStructured(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable.Structured match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[285,54] method error in record com.paragon.agents.StructuredAgentResult<T> cannot be applied to given types;
 [ERROR]   required: java.lang.Throwable,java.lang.String,com.paragon.responses.spec.Response,java.util.List<com.paragon.responses.spec.ResponseInputItem>,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    java.lang.RuntimeException
@@ -430,65 +430,65 @@ WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[314,27] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[315,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    java.lang.String
 [ERROR]   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[335,32] cannot find symbol
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[338,27] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[339,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    java.lang.String
 [ERROR]   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[366,32] cannot find symbol
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[369,27] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[370,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    java.lang.String
 [ERROR]   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[393,32] cannot find symbol
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[396,27] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[397,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    java.lang.String
 [ERROR]   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[418,32] cannot find symbol
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[419,27] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[420,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    java.lang.String
 [ERROR]   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[448,32] cannot find symbol
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[449,27] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[450,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    java.lang.String
 [ERROR]   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[460,30] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[473,32] cannot find symbol
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[474,27] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[475,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    java.lang.String
 [ERROR]   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[490,45] cannot find symbol
@@ -498,27 +498,27 @@ WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[504,27] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[505,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    java.lang.String
 [ERROR]   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[532,32] cannot find symbol
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[533,27] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[534,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    <nulltype>
 [ERROR]   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[555,32] cannot find symbol
 [ERROR]   symbol:   method text(java.lang.String)
 [ERROR]   location: class com.paragon.responses.spec.UserMessage
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[556,27] reference to interact is ambiguous
-[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgentContext) in com.paragon.agents.Interactable match
+[ERROR]   both method interact(@org.jspecify.annotations.NonNull com.paragon.prompts.Prompt) in com.paragon.agents.Interactable and method interact(@org.jspecify.annotations.NonNull com.paragon.agents.AgenticContext) in com.paragon.agents.Interactable match
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[557,32] method success in class com.paragon.agents.AgentResult cannot be applied to given types;
-[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgentContext,java.util.List<com.paragon.agents.ToolExecution>,int
+[ERROR]   required: java.lang.String,com.paragon.responses.spec.Response,com.paragon.agents.AgenticContext,java.util.List<com.paragon.agents.ToolExecution>,int
 [ERROR]   found:    java.lang.String
 [ERROR]   reason: actual and formal argument lists differ in length
 [ERROR] /Users/arthurbrenno/IdeaProjects/agentle-java/src/test/java/com/paragon/messaging/processor/AIAgentProcessorTest.java:[572,20] com.paragon.messaging.processor.AIAgentProcessorTest.TestResponse is not abstract and does not override abstract method getTextContent() in com.paragon.messaging.whatsapp.response.WhatsAppResponse

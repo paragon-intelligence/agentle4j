@@ -2,17 +2,14 @@ package com.paragon.agents;
 
 import com.paragon.prompts.Prompt;
 import com.paragon.responses.Responder;
-import com.paragon.responses.spec.CreateResponsePayload;
-import com.paragon.responses.spec.Message;
-import com.paragon.responses.spec.Response;
-import com.paragon.responses.spec.ResponseInputItem;
-import com.paragon.responses.spec.Text;
+import com.paragon.responses.spec.*;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 /**
  * A specialized agent for routing inputs to appropriate target agents.
@@ -83,7 +80,9 @@ public final class RouterAgent implements Interactable {
     return new Builder();
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public @NonNull String name() {
     return name;
@@ -97,7 +96,7 @@ public final class RouterAgent implements Interactable {
    */
   public @NonNull AgentResult route(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     context.addInput(Message.user(input));
     return route(context);
   }
@@ -110,7 +109,7 @@ public final class RouterAgent implements Interactable {
    */
   public @NonNull AgentResult route(@NonNull Text text) {
     Objects.requireNonNull(text, "text cannot be null");
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     context.addInput(Message.user(text));
     return route(context);
   }
@@ -123,7 +122,7 @@ public final class RouterAgent implements Interactable {
    */
   public @NonNull AgentResult route(@NonNull Message message) {
     Objects.requireNonNull(message, "message cannot be null");
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     context.addInput(message);
     return route(context);
   }
@@ -149,14 +148,14 @@ public final class RouterAgent implements Interactable {
    * @param context the conversation context
    * @return the result from the selected agent
    */
-  public @NonNull AgentResult route(@NonNull AgentContext context) {
+  public @NonNull AgentResult route(@NonNull AgenticContext context) {
     Objects.requireNonNull(context, "context cannot be null");
 
     // Extract the last user message text for classification
     Optional<String> inputTextOpt = extractLastUserMessage(context);
     if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
       return AgentResult.error(
-          new IllegalStateException("No user message found in context for routing"), context, 0);
+              new IllegalStateException("No user message found in context for routing"), context, 0);
     }
 
     String inputText = inputTextOpt.get();
@@ -164,7 +163,7 @@ public final class RouterAgent implements Interactable {
 
     if (selectedOpt.isEmpty()) {
       return AgentResult.error(
-          new IllegalStateException("No suitable route found for input"), context, 0);
+              new IllegalStateException("No suitable route found for input"), context, 0);
     }
 
     Interactable selected = selectedOpt.get();
@@ -181,7 +180,7 @@ public final class RouterAgent implements Interactable {
    */
   public @NonNull RouterStream routeStream(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     context.addInput(Message.user(input));
     return routeStream(context);
   }
@@ -206,7 +205,7 @@ public final class RouterAgent implements Interactable {
    * @param context the conversation context
    * @return a RouterStream for processing streaming events
    */
-  public @NonNull RouterStream routeStream(@NonNull AgentContext context) {
+  public @NonNull RouterStream routeStream(@NonNull AgenticContext context) {
     Objects.requireNonNull(context, "context cannot be null");
     return new RouterStream(this, context, responder);
   }
@@ -241,25 +240,25 @@ public final class RouterAgent implements Interactable {
     // Build routing prompt
     StringBuilder routingPrompt = new StringBuilder();
     routingPrompt.append(
-        "You are a routing classifier. Based on the user input, select the most appropriate"
-            + " handler.\n\n");
+            "You are a routing classifier. Based on the user input, select the most appropriate"
+                    + " handler.\n\n");
     routingPrompt.append("Available handlers:\n");
     for (int i = 0; i < routes.size(); i++) {
       Route route = routes.get(i);
       routingPrompt
-          .append(i + 1)
-          .append(". ")
-          .append(route.target.name())
-          .append(" - handles: ")
-          .append(route.description)
-          .append("\n");
+              .append(i + 1)
+              .append(". ")
+              .append(route.target.name())
+              .append(" - handles: ")
+              .append(route.description)
+              .append("\n");
     }
     routingPrompt.append("\nUser input: \"").append(input).append("\"\n\n");
     routingPrompt.append("Respond with ONLY the handler number (e.g., \"1\" or \"2\"). Nothing else.");
 
     // Call LLM for classification
     CreateResponsePayload payload =
-        CreateResponsePayload.builder().model(model).addUserMessage(routingPrompt.toString()).build();
+            CreateResponsePayload.builder().model(model).addUserMessage(routingPrompt.toString()).build();
 
     Response response = responder.respond(payload);
 
@@ -286,8 +285,10 @@ public final class RouterAgent implements Interactable {
 
   // ===== Helper Methods =====
 
-  /** Extracts the last user message text from context. */
-  private Optional<String> extractLastUserMessage(AgentContext context) {
+  /**
+   * Extracts the last user message text from context.
+   */
+  private Optional<String> extractLastUserMessage(AgenticContext context) {
     List<ResponseInputItem> history = context.getHistory();
     for (int i = history.size() - 1; i >= 0; i--) {
       ResponseInputItem item = history.get(i);
@@ -307,7 +308,8 @@ public final class RouterAgent implements Interactable {
 
   // ===== Package-private accessors for RouterStream =====
 
-  @NonNull List<Route> getRoutes() {
+  @NonNull
+  List<Route> getRoutes() {
     return routes;
   }
 
@@ -315,43 +317,55 @@ public final class RouterAgent implements Interactable {
     return Optional.ofNullable(fallback);
   }
 
-  @NonNull String getModel() {
+  @NonNull
+  String getModel() {
     return model;
   }
 
-  @NonNull Responder getResponder() {
+  @NonNull
+  Responder getResponder() {
     return responder;
   }
 
   // ===== Interactable Interface Implementation =====
 
-  /** {@inheritDoc} Delegates to {@link #route(String)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #route(String)}.
+   */
   @Override
   public @NonNull AgentResult interact(@NonNull String input) {
     return route(input);
   }
 
-  /** {@inheritDoc} Delegates to {@link #route(Text)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #route(Text)}.
+   */
   @Override
   public @NonNull AgentResult interact(@NonNull Text text) {
     return route(text);
   }
 
-  /** {@inheritDoc} Delegates to {@link #route(Message)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #route(Message)}.
+   */
   @Override
   public @NonNull AgentResult interact(@NonNull Message message) {
     return route(message);
   }
 
-  /** {@inheritDoc} Delegates to {@link #route(Prompt)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #route(Prompt)}.
+   */
   @Override
   public @NonNull AgentResult interact(@NonNull Prompt prompt) {
     return route(prompt);
   }
 
-  /** {@inheritDoc} Delegates to {@link #route(AgentContext)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #route(AgenticContext)}.
+   */
   @Override
-  public @NonNull AgentResult interact(@NonNull AgentContext context) {
+  public @NonNull AgentResult interact(@NonNull AgenticContext context) {
     return route(context);
   }
 
@@ -366,45 +380,51 @@ public final class RouterAgent implements Interactable {
     Objects.requireNonNull(input, "input cannot be null");
     Optional<Interactable> selected = classify(input);
     if (selected.isEmpty()) {
-      AgentContext ctx = AgentContext.create();
+      AgenticContext ctx = AgenticContext.create();
       return AgentStream.failed(
-          AgentResult.error(
-              new IllegalStateException("No suitable route found for input"), ctx, 0));
+              AgentResult.error(
+                      new IllegalStateException("No suitable route found for input"), ctx, 0));
     }
     return selected.get().interactStream(input);
   }
 
-  /** {@inheritDoc} Classifies the prompt and returns the selected agent's stream. */
+  /**
+   * {@inheritDoc} Classifies the prompt and returns the selected agent's stream.
+   */
   @Override
   public @NonNull AgentStream interactStream(@NonNull Prompt prompt) {
     Objects.requireNonNull(prompt, "prompt cannot be null");
     return interactStream(prompt.text());
   }
 
-  /** {@inheritDoc} Extracts the last user message for classification and streams from the selected agent. */
+  /**
+   * {@inheritDoc} Extracts the last user message for classification and streams from the selected agent.
+   */
   @Override
-  public @NonNull AgentStream interactStream(@NonNull AgentContext context) {
+  public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
     Objects.requireNonNull(context, "context cannot be null");
     Optional<String> inputTextOpt = extractLastUserMessage(context);
     if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
       return AgentStream.failed(
-          AgentResult.error(
-              new IllegalStateException("No user message found in context for routing"),
-              context,
-              0));
+              AgentResult.error(
+                      new IllegalStateException("No user message found in context for routing"),
+                      context,
+                      0));
     }
     Optional<Interactable> selected = classify(inputTextOpt.get());
     if (selected.isEmpty()) {
       return AgentStream.failed(
-          AgentResult.error(
-              new IllegalStateException("No suitable route found for input"), context, 0));
+              AgentResult.error(
+                      new IllegalStateException("No suitable route found for input"), context, 0));
     }
     return selected.get().interactStream(context);
   }
 
   // ===== Inner Classes =====
 
-  /** Represents a route to a target. */
+  /**
+   * Represents a route to a target.
+   */
   public record Route(@NonNull Interactable target, @NonNull String description) {
     public Route {
       Objects.requireNonNull(target, "target cannot be null");
@@ -412,15 +432,18 @@ public final class RouterAgent implements Interactable {
     }
   }
 
-  /** Builder for RouterAgent. */
+  /**
+   * Builder for RouterAgent.
+   */
   public static final class Builder {
+    private final List<Route> routes = new ArrayList<>();
     private @Nullable String name;
     private String model;
     private Responder responder;
-    private final List<Route> routes = new ArrayList<>();
     private Interactable fallback;
 
-    private Builder() {}
+    private Builder() {
+    }
 
     /**
      * Sets the name for this router.
@@ -460,7 +483,7 @@ public final class RouterAgent implements Interactable {
      *
      * <p>The target can be any Interactable: Agent, RouterAgent, ParallelAgents, etc.
      *
-     * @param target the target Interactable
+     * @param target      the target Interactable
      * @param description keywords/phrases this target handles (e.g., "billing, invoices, payments")
      * @return this builder
      */

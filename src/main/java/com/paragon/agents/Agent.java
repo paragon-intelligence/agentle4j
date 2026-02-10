@@ -31,7 +31,7 @@ import java.util.*;
  * <p>Unlike {@link Responder} which is stateless, Agent maintains:
  *
  * <ul>
- *   <li>Conversation history (via {@link AgentContext})
+ *   <li>Conversation history (via {@link AgenticContext})
  *   <li>Tool store for function calling
  *   <li>Handoffs for multi-agent delegation
  *   <li>Input/output guardrails
@@ -107,7 +107,7 @@ import java.util.*;
  * System.out.println(result.output());  // Final output from support agent
  * }</pre>
  *
- * @see AgentContext
+ * @see AgenticContext
  * @see AgentResult
  * @see Responder
  * @since 1.0
@@ -273,7 +273,7 @@ public final class Agent implements Serializable, Interactable {
    * Builds a payload from context. Package-private for AgentStream.
    */
   @NonNull
-  CreateResponsePayload buildPayloadInternal(@NonNull AgentContext context) {
+  CreateResponsePayload buildPayloadInternal(@NonNull AgenticContext context) {
     return buildPayload(context);
   }
 
@@ -287,7 +287,7 @@ public final class Agent implements Serializable, Interactable {
    * @return the agent's result
    */
   public @NonNull AgentResult interact(@NonNull String input) {
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     context.addInput(Message.user(Text.valueOf(input)));
     return interact(context);
   }
@@ -302,7 +302,7 @@ public final class Agent implements Serializable, Interactable {
    */
   public @NonNull AgentResult interact(@NonNull Text text) {
     Objects.requireNonNull(text, "text cannot be null");
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     context.addInput(Message.user(text));
     return interact(context);
   }
@@ -315,7 +315,7 @@ public final class Agent implements Serializable, Interactable {
    */
   public @NonNull AgentResult interact(@NonNull File file) {
     Objects.requireNonNull(file, "file cannot be null");
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     context.addInput(Message.user(file));
     return interact(context);
   }
@@ -328,7 +328,7 @@ public final class Agent implements Serializable, Interactable {
    */
   public @NonNull AgentResult interact(@NonNull Image image) {
     Objects.requireNonNull(image, "image cannot be null");
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     context.addInput(Message.user(image));
     return interact(context);
   }
@@ -341,7 +341,7 @@ public final class Agent implements Serializable, Interactable {
    */
   public @NonNull AgentResult interact(@NonNull Message message) {
     Objects.requireNonNull(message, "message cannot be null");
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     context.addInput(message);
     return interact(context);
   }
@@ -354,7 +354,7 @@ public final class Agent implements Serializable, Interactable {
    */
   public @NonNull AgentResult interact(@NonNull ResponseInputItem input) {
     Objects.requireNonNull(input, "input cannot be null");
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     context.addInput(input);
     return interact(context);
   }
@@ -366,7 +366,7 @@ public final class Agent implements Serializable, Interactable {
    * @return the agent's result
    */
   public @NonNull AgentResult interact(@NonNull List<ResponseInputItem> input) {
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     for (ResponseInputItem item : input) {
       context.addInput(item);
     }
@@ -425,7 +425,7 @@ public final class Agent implements Serializable, Interactable {
   public @NonNull AgentStream interactStream(@NonNull String input) {
     Objects.requireNonNull(input, "input cannot be null");
 
-    AgentContext context = AgentContext.create();
+    AgenticContext context = AgenticContext.create();
     List<ResponseInputItem> inputList = List.of(Message.user(input));
 
     // Validate input guardrails before creating stream
@@ -454,7 +454,7 @@ public final class Agent implements Serializable, Interactable {
    * @param context the conversation context containing all history
    * @return an AgentStream for processing streaming events
    */
-  public @NonNull AgentStream interactStream(@NonNull AgentContext context) {
+  public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
     Objects.requireNonNull(context, "context cannot be null");
     return new AgentStream(this, context, responder, objectMapper);
   }
@@ -572,7 +572,7 @@ public final class Agent implements Serializable, Interactable {
    * @param context the conversation context containing all history
    * @return the agent's result
    */
-  public @NonNull AgentResult interact(@NonNull AgentContext context) {
+  public @NonNull AgentResult interact(@NonNull AgenticContext context) {
     return interactBlocking(context, null);
   }
 
@@ -587,7 +587,7 @@ public final class Agent implements Serializable, Interactable {
    */
   @NonNull
   AgentResult interactBlocking(
-          @NonNull AgentContext context, @Nullable LoopCallbacks callbacks) {
+          @NonNull AgenticContext context, @Nullable LoopCallbacks callbacks) {
     Objects.requireNonNull(context, "context cannot be null");
 
     // Auto-initialize trace context if not set (enables automatic correlation)
@@ -617,7 +617,7 @@ public final class Agent implements Serializable, Interactable {
    * Unified agentic loop. Shared by interact, resume, and AgentStream.
    */
   private AgentResult executeAgenticLoop(
-          AgentContext context,
+          AgenticContext context,
           List<ToolExecution> initialExecutions,
           @Nullable LoopCallbacks callbacks,
           String fallbackHandoffText) {
@@ -673,7 +673,7 @@ public final class Agent implements Serializable, Interactable {
 
           // Fork context with new parent span for child agent
           String childSpanId = TraceIdGenerator.generateSpanId();
-          AgentContext childContext = context.fork(childSpanId);
+          AgenticContext childContext = context.fork(childSpanId);
 
           // Add handoff message to child context
           if (handoffMessage != null && !handoffMessage.isEmpty()) {
@@ -792,7 +792,7 @@ public final class Agent implements Serializable, Interactable {
   /**
    * Broadcasts a failed event for telemetry.
    */
-  private void broadcastFailedEvent(Exception exception, AgentContext context) {
+  private void broadcastFailedEvent(Exception exception, AgenticContext context) {
     if (telemetryProcessors != null) {
       String sessionId = context.requestId().orElseGet(() -> java.util.UUID.randomUUID().toString());
       AgentFailedEvent event =
@@ -812,7 +812,7 @@ public final class Agent implements Serializable, Interactable {
    * Continues the agentic loop from a saved state (used by resume).
    */
   private AgentResult continueAgenticLoop(
-          AgentContext context,
+          AgenticContext context,
           Response lastResponse,
           List<ToolExecution> previousExecutions,
           int startTurn) {
@@ -820,7 +820,7 @@ public final class Agent implements Serializable, Interactable {
     return executeAgenticLoop(context, previousExecutions, null, "");
   }
 
-  private CreateResponsePayload buildPayload(AgentContext context) {
+  private CreateResponsePayload buildPayload(AgenticContext context) {
     List<ResponseInputItem> input = context.getHistoryMutable();
 
     // Apply context management if configured
@@ -859,7 +859,7 @@ public final class Agent implements Serializable, Interactable {
   /**
    * Builds a TelemetryContext from AgentContext for trace correlation.
    */
-  private TelemetryContext buildTelemetryContext(AgentContext context) {
+  private TelemetryContext buildTelemetryContext(AgenticContext context) {
     TelemetryContext.Builder builder =
             TelemetryContext.builder().traceName(name + ".turn-" + context.getTurnCount());
 
@@ -922,7 +922,7 @@ public final class Agent implements Serializable, Interactable {
    * ToolExecutionException for better diagnostics.
    */
   private ToolExecution executeSingleToolWithErrorHandling(
-          FunctionToolCall call, AgentContext context) {
+          FunctionToolCall call, AgenticContext context) {
     // Skip handoff tools (handled separately)
     for (Handoff handoff : handoffs) {
       if (handoff.name().equals(call.name())) {
@@ -1055,7 +1055,7 @@ public final class Agent implements Serializable, Interactable {
             FunctionToolCall call,
             Response lastResponse,
             List<ToolExecution> executions,
-            AgentContext context) {
+            AgenticContext context) {
       return null;
     }
   }
@@ -1789,7 +1789,7 @@ public final class Agent implements Serializable, Interactable {
      * @return the typed result
      */
     public @NonNull StructuredAgentResult<T> interact(@NonNull String input) {
-      return interact(input, AgentContext.create());
+      return interact(input, AgenticContext.create());
     }
 
     /**
@@ -1800,7 +1800,7 @@ public final class Agent implements Serializable, Interactable {
      * @return the typed result
      */
     public @NonNull StructuredAgentResult<T> interact(
-            @NonNull String input, @NonNull AgentContext context) {
+            @NonNull String input, @NonNull AgenticContext context) {
       Objects.requireNonNull(input, "input cannot be null");
       context.addInput(Message.user(input));
       return interact(context);
@@ -1814,7 +1814,7 @@ public final class Agent implements Serializable, Interactable {
      * @param context the conversation context containing all history
      * @return the typed result
      */
-    public @NonNull StructuredAgentResult<T> interact(@NonNull AgentContext context) {
+    public @NonNull StructuredAgentResult<T> interact(@NonNull AgenticContext context) {
       AgentResult result = agent.interact(context);
       return parseResult(result);
     }

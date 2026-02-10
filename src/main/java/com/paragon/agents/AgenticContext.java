@@ -3,9 +3,10 @@ package com.paragon.agents;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
-import java.util.*;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+
+import java.util.*;
 
 /**
  * Holds conversation state for an agent interaction.
@@ -41,7 +42,7 @@ import org.jspecify.annotations.Nullable;
  * @see Agent
  * @since 1.0
  */
-public final class AgentContext {
+public final class AgenticContext {
 
   private final List<ResponseInputItem> history;
   private final Map<String, Object> state;
@@ -52,7 +53,7 @@ public final class AgentContext {
   private @Nullable String parentSpanId;
   private @Nullable String requestId;
 
-  private AgentContext(List<ResponseInputItem> history, Map<String, Object> state, int turnCount) {
+  private AgenticContext(List<ResponseInputItem> history, Map<String, Object> state, int turnCount) {
     this.history = history;
     this.state = state;
     this.turnCount = turnCount;
@@ -63,22 +64,22 @@ public final class AgentContext {
    *
    * @return a fresh context with no history or state
    */
-  public static @NonNull AgentContext create() {
-    return new AgentContext(new ArrayList<>(), new HashMap<>(), 0);
+  public static @NonNull AgenticContext create() {
+    return new AgenticContext(new ArrayList<>(), new HashMap<>(), 0);
   }
 
-  public static @NonNull AgentContext create(@NonNull List<ResponseInputItem> history) {
-    return new AgentContext(new ArrayList<>(history), new HashMap<>(), 0);
+  public static @NonNull AgenticContext create(@NonNull List<ResponseInputItem> history) {
+    return new AgenticContext(new ArrayList<>(history), new HashMap<>(), 0);
   }
 
-  public static @NonNull AgentContext create(
-      @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state) {
-    return new AgentContext(new ArrayList<>(history), state, 0);
+  public static @NonNull AgenticContext create(
+          @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state) {
+    return new AgenticContext(new ArrayList<>(history), state, 0);
   }
 
-  public static @NonNull AgentContext create(
-      @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state, int turnCount) {
-    return new AgentContext(new ArrayList<>(history), state, turnCount);
+  public static @NonNull AgenticContext create(
+          @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state, int turnCount) {
+    return new AgenticContext(new ArrayList<>(history), state, turnCount);
   }
 
   /**
@@ -89,9 +90,9 @@ public final class AgentContext {
    * @param initialHistory the messages to pre-populate
    * @return a context with the given history
    */
-  public static @NonNull AgentContext withHistory(@NonNull List<ResponseInputItem> initialHistory) {
+  public static @NonNull AgenticContext withHistory(@NonNull List<ResponseInputItem> initialHistory) {
     Objects.requireNonNull(initialHistory, "initialHistory cannot be null");
-    return AgentContext.create(initialHistory);
+    return AgenticContext.create(initialHistory);
   }
 
   /**
@@ -100,7 +101,7 @@ public final class AgentContext {
    * @param message the message to add
    * @return this context for method chaining
    */
-  public @NonNull AgentContext addMessage(@NonNull Message message) {
+  public @NonNull AgenticContext addMessage(@NonNull Message message) {
     Objects.requireNonNull(message, "message cannot be null");
     this.history.add(message);
     return this;
@@ -112,7 +113,7 @@ public final class AgentContext {
    * @param item the input item to add
    * @return this context for method chaining
    */
-  public @NonNull AgentContext addInput(@NonNull ResponseInputItem item) {
+  public @NonNull AgenticContext addInput(@NonNull ResponseInputItem item) {
     Objects.requireNonNull(item, "item cannot be null");
     this.history.add(item);
     return this;
@@ -126,7 +127,7 @@ public final class AgentContext {
    * @param output the tool execution result (already contains callId)
    * @return this context for method chaining
    */
-  public @NonNull AgentContext addToolResult(@NonNull FunctionToolCallOutput output) {
+  public @NonNull AgenticContext addToolResult(@NonNull FunctionToolCallOutput output) {
     Objects.requireNonNull(output, "output cannot be null");
     // FunctionToolCallOutput implements Item which extends ResponseInputItem
     this.history.add(output);
@@ -154,11 +155,11 @@ public final class AgentContext {
   /**
    * Stores a custom value in the context's state.
    *
-   * @param key the key to store under
+   * @param key   the key to store under
    * @param value the value to store (can be null to remove)
    * @return this context for method chaining
    */
-  public @NonNull AgentContext setState(@NonNull String key, @Nullable Object value) {
+  public @NonNull AgenticContext setState(@NonNull String key, @Nullable Object value) {
     Objects.requireNonNull(key, "key cannot be null");
     if (value == null) {
       state.remove(key);
@@ -182,9 +183,9 @@ public final class AgentContext {
   /**
    * Retrieves a typed value from the context's state.
    *
-   * @param key the key to look up
+   * @param key  the key to look up
    * @param type the expected type
-   * @param <T> the type parameter
+   * @param <T>  the type parameter
    * @return an Optional containing the stored value cast to the expected type, or empty if not found
    * @throws ClassCastException if the stored value is not of the expected type
    */
@@ -244,7 +245,7 @@ public final class AgentContext {
    *
    * @return this context for method chaining
    */
-  public @NonNull AgentContext clear() {
+  public @NonNull AgenticContext clear() {
     history.clear();
     state.clear();
     turnCount = 0;
@@ -258,9 +259,9 @@ public final class AgentContext {
    *
    * @return a new context with copied history and state
    */
-  public @NonNull AgentContext copy() {
-    AgentContext copy =
-        new AgentContext(new ArrayList<>(this.history), new HashMap<>(this.state), this.turnCount);
+  public @NonNull AgenticContext copy() {
+    AgenticContext copy =
+            new AgenticContext(new ArrayList<>(this.history), new HashMap<>(this.state), this.turnCount);
     copy.parentTraceId = this.parentTraceId;
     copy.parentSpanId = this.parentSpanId;
     copy.requestId = this.requestId;
@@ -285,10 +286,10 @@ public final class AgentContext {
    * across multi-agent runs.
    *
    * @param traceId the parent trace ID (32-char hex)
-   * @param spanId the parent span ID (16-char hex)
+   * @param spanId  the parent span ID (16-char hex)
    * @return this context for method chaining
    */
-  public @NonNull AgentContext withTraceContext(@NonNull String traceId, @NonNull String spanId) {
+  public @NonNull AgenticContext withTraceContext(@NonNull String traceId, @NonNull String spanId) {
     this.parentTraceId = Objects.requireNonNull(traceId, "traceId cannot be null");
     this.parentSpanId = Objects.requireNonNull(spanId, "spanId cannot be null");
     return this;
@@ -303,7 +304,7 @@ public final class AgentContext {
    * @param requestId the unique request identifier
    * @return this context for method chaining
    */
-  public @NonNull AgentContext withRequestId(@NonNull String requestId) {
+  public @NonNull AgenticContext withRequestId(@NonNull String requestId) {
     this.requestId = Objects.requireNonNull(requestId, "requestId cannot be null");
     return this;
   }
@@ -353,8 +354,8 @@ public final class AgentContext {
    * @param newParentSpanId the span ID to use as the parent for the child
    * @return a new context with the updated parent span
    */
-  public @NonNull AgentContext fork(@NonNull String newParentSpanId) {
-    AgentContext forked = copy();
+  public @NonNull AgenticContext fork(@NonNull String newParentSpanId) {
+    AgenticContext forked = copy();
     forked.parentSpanId = Objects.requireNonNull(newParentSpanId, "newParentSpanId cannot be null");
     forked.turnCount = 0; // Reset turn count for child agent
     return forked;

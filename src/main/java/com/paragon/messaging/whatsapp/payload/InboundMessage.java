@@ -122,13 +122,13 @@ public sealed interface InboundMessage permits AbstractInboundMessage {
      */
     default @NonNull String extractTextContent() {
         return switch (this) {
-            case TextMessage text -> text.text != null ? text.text.body : "";
+            case TextMessage text -> text.text != null && text.text.body != null ? text.text.body : "";
             case ImageMessage img -> img.caption != null ? "[Image: " + img.caption + "]" : "[Image]";
             case VideoMessage vid -> vid.caption != null ? "[Video: " + vid.caption + "]" : "[Video]";
             case AudioMessage __ -> "[Audio message]";
             case DocumentMessage doc -> doc.filename != null ? "[Document: " + doc.filename + "]" : "[Document]";
             case StickerMessage __ -> "[Sticker]";
-            case LocationMessage loc -> "[Location: " + loc.latitude + ", " + loc.longitude + "]";
+            case LocationMessage loc -> String.format("[Location: %.6f, %.6f]", loc.latitude, loc.longitude);
             case InteractiveMessage inter -> extractInteractiveContent(inter);
             case ReactionMessage react -> react.emoji != null ? react.emoji : "";
             case SystemMessage __ -> "[System message]";

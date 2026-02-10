@@ -103,18 +103,16 @@ class InteractiveMessageTest {
         @DisplayName("validates button count 1-3")
         void validatesButtonCount() {
             // Too few (0)
-            assertThrows(Exception.class, () ->
+            assertThrows(IllegalArgumentException.class, () ->
                     new ButtonMessage("Body", List.of()));
 
-            // Too many (4)
-            ButtonMessage tooMany = new ButtonMessage("Body", List.of(
-                    new ReplyButton("btn1", "B1"),
-                    new ReplyButton("btn2", "B2"),
-                    new ReplyButton("btn3", "B3"),
-                    new ReplyButton("btn4", "B4")));
-
-            Set<ConstraintViolation<ButtonMessage>> violations = validator.validate(tooMany);
-            assertFalse(violations.isEmpty());
+            // Too many (4) - should throw IllegalArgumentException
+            assertThrows(IllegalArgumentException.class, () ->
+                    new ButtonMessage("Body", List.of(
+                            new ReplyButton("btn1", "B1"),
+                            new ReplyButton("btn2", "B2"),
+                            new ReplyButton("btn3", "B3"),
+                            new ReplyButton("btn4", "B4"))));
         }
 
         @Test

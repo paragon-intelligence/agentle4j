@@ -8,11 +8,12 @@ import com.paragon.skills.Skill;
 import com.paragon.skills.SkillProvider;
 import com.paragon.skills.SkillStore;
 import com.paragon.telemetry.processors.TraceIdGenerator;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Implements the Supervisor pattern: a central agent that coordinates multiple worker agents.
@@ -80,23 +81,23 @@ public final class SupervisorAgent implements Interactable {
 
     // Build internal supervisor agent with workers as tools
     Agent.Builder agentBuilder =
-        Agent.builder()
-            .name(name)
-            .model(model)
-            .instructions(buildSupervisorInstructions())
-            .responder(responder)
-            .maxTurns(maxTurns);
+            Agent.builder()
+                    .name(name)
+                    .model(model)
+                    .instructions(buildSupervisorInstructions())
+                    .responder(responder)
+                    .maxTurns(maxTurns);
 
     // Add workers as interactable tools
     for (Worker worker : workers) {
       agentBuilder.addTool(
-          new InteractableSubAgentTool(
-              worker.worker(),
-              InteractableSubAgentTool.Config.builder()
-                  .description(worker.description())
-                  .shareState(true)
-                  .shareHistory(false)
-                  .build()));
+              new InteractableSubAgentTool(
+                      worker.worker(),
+                      InteractableSubAgentTool.Config.builder()
+                              .description(worker.description())
+                              .shareState(true)
+                              .shareHistory(false)
+                              .build()));
     }
 
     // Add skills
@@ -107,7 +108,9 @@ public final class SupervisorAgent implements Interactable {
     this.supervisorAgent = agentBuilder.build();
   }
 
-  /** Creates a new SupervisorAgent builder. */
+  /**
+   * Creates a new SupervisorAgent builder.
+   */
   public static @NonNull Builder builder() {
     return new Builder();
   }
@@ -185,13 +188,13 @@ public final class SupervisorAgent implements Interactable {
    * @param context the context with task history
    * @return the orchestrated result
    */
-  public @NonNull AgentResult orchestrate(@NonNull AgentContext context) {
+  public @NonNull AgentResult orchestrate(@NonNull AgenticContext context) {
     Objects.requireNonNull(context, "context cannot be null");
 
     // Ensure trace correlation
     if (!context.hasTraceContext()) {
       context.withTraceContext(
-          TraceIdGenerator.generateTraceId(), TraceIdGenerator.generateSpanId());
+              TraceIdGenerator.generateTraceId(), TraceIdGenerator.generateSpanId());
     }
 
     return supervisorAgent.interact(context);
@@ -227,12 +230,14 @@ public final class SupervisorAgent implements Interactable {
    * @param context the context with task history
    * @return an AgentStream for processing streaming events
    */
-  public @NonNull AgentStream orchestrateStream(@NonNull AgentContext context) {
+  public @NonNull AgentStream orchestrateStream(@NonNull AgenticContext context) {
     Objects.requireNonNull(context, "context cannot be null");
     return supervisorAgent.interactStream(context);
   }
 
-  /** Returns the underlying supervisor agent for advanced usage. */
+  /**
+   * Returns the underlying supervisor agent for advanced usage.
+   */
   @NonNull
   Agent underlyingAgent() {
     return supervisorAgent;
@@ -240,51 +245,67 @@ public final class SupervisorAgent implements Interactable {
 
   // ===== Interactable Interface Implementation =====
 
-  /** {@inheritDoc} Delegates to {@link #orchestrate(String)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #orchestrate(String)}.
+   */
   @Override
   public @NonNull AgentResult interact(@NonNull String input) {
     return orchestrate(input);
   }
 
-  /** {@inheritDoc} Delegates to {@link #orchestrate(Text)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #orchestrate(Text)}.
+   */
   @Override
   public @NonNull AgentResult interact(@NonNull Text text) {
     return orchestrate(text);
   }
 
-  /** {@inheritDoc} Delegates to {@link #orchestrate(Message)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #orchestrate(Message)}.
+   */
   @Override
   public @NonNull AgentResult interact(@NonNull Message message) {
     return orchestrate(message);
   }
 
-  /** {@inheritDoc} Delegates to {@link #orchestrate(Prompt)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #orchestrate(Prompt)}.
+   */
   @Override
   public @NonNull AgentResult interact(@NonNull Prompt prompt) {
     return orchestrate(prompt);
   }
 
-  /** {@inheritDoc} Delegates to {@link #orchestrate(AgentContext)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #orchestrate(AgenticContext)}.
+   */
   @Override
-  public @NonNull AgentResult interact(@NonNull AgentContext context) {
+  public @NonNull AgentResult interact(@NonNull AgenticContext context) {
     return orchestrate(context);
   }
 
-  /** {@inheritDoc} Delegates to {@link #orchestrateStream(String)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #orchestrateStream(String)}.
+   */
   @Override
   public @NonNull AgentStream interactStream(@NonNull String input) {
     return orchestrateStream(input);
   }
 
-  /** {@inheritDoc} Delegates to {@link #orchestrateStream(Prompt)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #orchestrateStream(Prompt)}.
+   */
   @Override
   public @NonNull AgentStream interactStream(@NonNull Prompt prompt) {
     return orchestrateStream(prompt);
   }
 
-  /** {@inheritDoc} Delegates to {@link #orchestrateStream(AgentContext)}. */
+  /**
+   * {@inheritDoc} Delegates to {@link #orchestrateStream(AgenticContext)}.
+   */
   @Override
-  public @NonNull AgentStream interactStream(@NonNull AgentContext context) {
+  public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
     return orchestrateStream(context);
   }
 
@@ -307,7 +328,9 @@ public final class SupervisorAgent implements Interactable {
     return sb.toString();
   }
 
-  /** Represents a worker with its description. */
+  /**
+   * Represents a worker with its description.
+   */
   public record Worker(@NonNull Interactable worker, @NonNull String description) {
     public Worker {
       Objects.requireNonNull(worker, "worker cannot be null");
@@ -315,18 +338,21 @@ public final class SupervisorAgent implements Interactable {
     }
   }
 
-  /** Builder for SupervisorAgent. */
+  /**
+   * Builder for SupervisorAgent.
+   */
   public static final class Builder {
+    private final List<Worker> workers = new ArrayList<>();
+    // Skills to pass to the internal Agent
+    private final List<Skill> pendingSkills = new ArrayList<>();
     private @Nullable String name;
     private @Nullable String model;
     private @Nullable String instructions;
     private @Nullable Responder responder;
-    private final List<Worker> workers = new ArrayList<>();
-    // Skills to pass to the internal Agent
-    private final List<Skill> pendingSkills = new ArrayList<>();
     private int maxTurns = 10;
 
-    private Builder() {}
+    private Builder() {
+    }
 
     /**
      * Sets the supervisor name.
@@ -377,7 +403,7 @@ public final class SupervisorAgent implements Interactable {
      *
      * <p>Workers can be any Interactable: Agent, RouterAgent, ParallelAgents, etc.
      *
-     * @param worker the worker
+     * @param worker      the worker
      * @param description when to use this worker
      * @return this builder
      */
@@ -419,7 +445,7 @@ public final class SupervisorAgent implements Interactable {
      * Loads and adds a skill from a provider.
      *
      * @param provider the skill provider
-     * @param skillId the skill identifier
+     * @param skillId  the skill identifier
      * @return this builder
      */
     public @NonNull Builder addSkillFrom(@NonNull SkillProvider provider, @NonNull String skillId) {

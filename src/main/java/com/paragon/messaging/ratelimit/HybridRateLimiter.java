@@ -70,20 +70,22 @@ public class HybridRateLimiter {
 
     boolean tryConsume() {
       refill();
-      return tokens.updateAndGet(t -> t > 0 ? t - 1 : 0) > 0;
+      return tokens.getAndUpdate(t -> t > 0 ? t - 1 : 0) > 0;
     }
 
-    private void refill() {
+    private synchronized void refill() {
       long now = System.currentTimeMillis();
       long lastRefill = lastRefillTime.get();
       long elapsed = now - lastRefill;
 
       if (elapsed > 0) {
-        // Calcular tokens a adicionar baseado no tempo decorrido
+        // Calculate tokens to add based on elapsed time
         int tokensToAdd = (int) (elapsed * tokensPerMinute / 60_000);
 
-        if (tokensToAdd > 0 && lastRefillTime.compareAndSet(lastRefill, now)) {
-          // Adicionar tokens, respeitando capacity
+        if (tokensToAdd > 0) {
+          // Update timestamp first to prevent other threads from adding the same tokens
+          lastRefillTime.set(now);
+          // Add tokens, respecting capacity
           tokens.updateAndGet(t -> Math.min(capacity, t + tokensToAdd));
         }
       }

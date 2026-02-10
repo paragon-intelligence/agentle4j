@@ -1,39 +1,42 @@
 package com.paragon.agents;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.FunctionToolCall;
-import java.util.List;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/** Tests for AgentRunState and its approval workflow. */
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Tests for AgentRunState and its approval workflow.
+ */
 @DisplayName("AgentRunState Tests")
 class AgentRunStateTest {
 
   private MockWebServer mockWebServer;
   private Responder responder;
   private Agent agent;
-  private AgentContext context;
+  private AgenticContext context;
 
   @BeforeEach
   void setUp() throws Exception {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
     responder =
-        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
     agent =
-        Agent.builder()
-            .name("TestAgent")
-            .instructions("Test instructions")
-            .model("test-model")
-            .responder(responder)
-            .build();
-    context = AgentContext.create();
+            Agent.builder()
+                    .name("TestAgent")
+                    .instructions("Test instructions")
+                    .model("test-model")
+                    .responder(responder)
+                    .build();
+    context = AgenticContext.create();
   }
 
   @Nested
@@ -79,7 +82,7 @@ class AgentRunStateTest {
     void pendingApprovalStateReportsIsPendingApproval() {
       FunctionToolCall toolCall = new FunctionToolCall("{}", "call_123", "test_tool", null, null);
       AgentRunState state =
-          AgentRunState.pendingApproval("TestAgent", context, toolCall, null, List.of(), 1);
+              AgentRunState.pendingApproval("TestAgent", context, toolCall, null, List.of(), 1);
 
       assertTrue(state.isPendingApproval());
       assertFalse(state.isCompleted());
@@ -136,7 +139,7 @@ class AgentRunStateTest {
     void pendingToolCallReturnsForPending() {
       FunctionToolCall toolCall = new FunctionToolCall("{}", "call_123", "my_tool", null, null);
       AgentRunState state =
-          AgentRunState.pendingApproval("TestAgent", context, toolCall, null, List.of(), 1);
+              AgentRunState.pendingApproval("TestAgent", context, toolCall, null, List.of(), 1);
 
       assertNotNull(state.pendingToolCall());
       assertEquals("my_tool", state.pendingToolCall().name());
@@ -152,7 +155,7 @@ class AgentRunStateTest {
     void approveToolCallSetsResult() {
       FunctionToolCall toolCall = new FunctionToolCall("{}", "call_123", "test_tool", null, null);
       AgentRunState state =
-          AgentRunState.pendingApproval("TestAgent", context, toolCall, null, List.of(), 1);
+              AgentRunState.pendingApproval("TestAgent", context, toolCall, null, List.of(), 1);
 
       state.approveToolCall("tool output");
 
@@ -166,7 +169,7 @@ class AgentRunStateTest {
     void rejectToolCallWithoutReason() {
       FunctionToolCall toolCall = new FunctionToolCall("{}", "call_123", "test_tool", null, null);
       AgentRunState state =
-          AgentRunState.pendingApproval("TestAgent", context, toolCall, null, List.of(), 1);
+              AgentRunState.pendingApproval("TestAgent", context, toolCall, null, List.of(), 1);
 
       state.rejectToolCall();
 
@@ -180,7 +183,7 @@ class AgentRunStateTest {
     void rejectToolCallWithReason() {
       FunctionToolCall toolCall = new FunctionToolCall("{}", "call_123", "test_tool", null, null);
       AgentRunState state =
-          AgentRunState.pendingApproval("TestAgent", context, toolCall, null, List.of(), 1);
+              AgentRunState.pendingApproval("TestAgent", context, toolCall, null, List.of(), 1);
 
       state.rejectToolCall("User denied");
 

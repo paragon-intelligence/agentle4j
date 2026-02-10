@@ -47,11 +47,12 @@ public record RateLimitConfig(
 
         @Positive(message = "Bucket capacity must be positive")
         @Min(value = 1, message = "Bucket capacity must be at least 1")
+        @Max(value = 1000, message = "Bucket capacity cannot exceed 1,000")
         int bucketCapacity,
 
         @Positive(message = "Max messages in window must be positive")
         @Min(value = 1, message = "Max messages must be at least 1")
-        @Max(value = 100000, message = "Max messages cannot exceed 100,000")
+        @Max(value = 10000, message = "Max messages cannot exceed 10,000")
         int maxMessagesInWindow,
 
         @NotNull(message = "Sliding window duration cannot be null")
@@ -59,17 +60,8 @@ public record RateLimitConfig(
 ) {
 
   public RateLimitConfig {
-    if (tokensPerMinute <= 0) {
-      throw new IllegalArgumentException("tokensPerMinute must be positive");
-    }
-    if (bucketCapacity <= 0) {
-      throw new IllegalArgumentException("bucketCapacity must be positive");
-    }
-    if (maxMessagesInWindow <= 0) {
-      throw new IllegalArgumentException("maxMessagesInWindow must be positive");
-    }
-    if (slidingWindow == null || slidingWindow.isNegative() || slidingWindow.isZero()) {
-      throw new IllegalArgumentException("slidingWindow must be positive");
+    if (slidingWindow == null) {
+      throw new IllegalArgumentException("slidingWindow cannot be null");
     }
   }
 
@@ -144,7 +136,7 @@ public record RateLimitConfig(
   public static class Builder {
     private int tokensPerMinute = 20;
     private int bucketCapacity = 30;
-    private int maxMessagesInWindow = 10;
+    private int maxMessagesInWindow = 100;
     private Duration slidingWindow = Duration.ofSeconds(30);
 
     public Builder tokensPerMinute(int tokensPerMinute) {

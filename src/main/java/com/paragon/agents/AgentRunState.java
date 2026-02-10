@@ -2,11 +2,12 @@ package com.paragon.agents;
 
 import com.paragon.responses.spec.FunctionToolCall;
 import com.paragon.responses.spec.Response;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Serializable state of a paused agent run.
@@ -36,38 +37,24 @@ import org.jspecify.annotations.Nullable;
 public final class AgentRunState implements Serializable {
 
   private static final long serialVersionUID = 1L;
-
-  /** The current status of the agent run. */
-  public enum Status {
-    /** Run is in progress. */
-    RUNNING,
-    /** Run is paused waiting for tool approval. */
-    PENDING_TOOL_APPROVAL,
-    /** Run completed successfully. */
-    COMPLETED,
-    /** Run failed with an error. */
-    FAILED
-  }
-
   private final @NonNull String agentName;
-  private final @NonNull AgentContext context;
+  private final @NonNull AgenticContext context;
   private final @NonNull Status status;
   private final @Nullable FunctionToolCall pendingToolCall;
   private final @Nullable Response lastResponse;
   private final @NonNull List<ToolExecution> toolExecutions;
   private final int currentTurn;
-
   // For resuming after approval
   private transient @Nullable ToolApprovalResult approvalResult;
 
   private AgentRunState(
-      @NonNull String agentName,
-      @NonNull AgentContext context,
-      @NonNull Status status,
-      @Nullable FunctionToolCall pendingToolCall,
-      @Nullable Response lastResponse,
-      @NonNull List<ToolExecution> toolExecutions,
-      int currentTurn) {
+          @NonNull String agentName,
+          @NonNull AgenticContext context,
+          @NonNull Status status,
+          @Nullable FunctionToolCall pendingToolCall,
+          @Nullable Response lastResponse,
+          @NonNull List<ToolExecution> toolExecutions,
+          int currentTurn) {
     this.agentName = agentName;
     this.context = context;
     this.status = status;
@@ -77,44 +64,48 @@ public final class AgentRunState implements Serializable {
     this.currentTurn = currentTurn;
   }
 
+  /**
+   * Creates a state for a run pending tool approval.
+   */
+  static AgentRunState pendingApproval(
+          @NonNull String agentName,
+          @NonNull AgenticContext context,
+          @NonNull FunctionToolCall pendingToolCall,
+          @Nullable Response lastResponse,
+          @NonNull List<ToolExecution> toolExecutions,
+          int currentTurn) {
+    return new AgentRunState(
+            agentName,
+            context,
+            Status.PENDING_TOOL_APPROVAL,
+            pendingToolCall,
+            lastResponse,
+            toolExecutions,
+            currentTurn);
+  }
+
   // ===== Factory Methods =====
 
-  /** Creates a state for a run pending tool approval. */
-  static AgentRunState pendingApproval(
-      @NonNull String agentName,
-      @NonNull AgentContext context,
-      @NonNull FunctionToolCall pendingToolCall,
-      @Nullable Response lastResponse,
-      @NonNull List<ToolExecution> toolExecutions,
-      int currentTurn) {
-    return new AgentRunState(
-        agentName,
-        context,
-        Status.PENDING_TOOL_APPROVAL,
-        pendingToolCall,
-        lastResponse,
-        toolExecutions,
-        currentTurn);
-  }
-
-  /** Creates a state for a completed run. */
+  /**
+   * Creates a state for a completed run.
+   */
   static AgentRunState completed(
-      @NonNull String agentName,
-      @NonNull AgentContext context,
-      @Nullable Response lastResponse,
-      @NonNull List<ToolExecution> toolExecutions,
-      int currentTurn) {
+          @NonNull String agentName,
+          @NonNull AgenticContext context,
+          @Nullable Response lastResponse,
+          @NonNull List<ToolExecution> toolExecutions,
+          int currentTurn) {
     return new AgentRunState(
-        agentName, context, Status.COMPLETED, null, lastResponse, toolExecutions, currentTurn);
+            agentName, context, Status.COMPLETED, null, lastResponse, toolExecutions, currentTurn);
   }
 
-  /** Creates a state for a failed run. */
+  /**
+   * Creates a state for a failed run.
+   */
   static AgentRunState failed(
-      @NonNull String agentName, @NonNull AgentContext context, int currentTurn) {
+          @NonNull String agentName, @NonNull AgenticContext context, int currentTurn) {
     return new AgentRunState(agentName, context, Status.FAILED, null, null, List.of(), currentTurn);
   }
-
-  // ===== Approval Methods =====
 
   /**
    * Approves the pending tool call with the given output.
@@ -130,6 +121,8 @@ public final class AgentRunState implements Serializable {
     }
     this.approvalResult = new ToolApprovalResult(true, output);
   }
+
+  // ===== Approval Methods =====
 
   /**
    * Rejects the pending tool call.
@@ -159,13 +152,13 @@ public final class AgentRunState implements Serializable {
     this.approvalResult = new ToolApprovalResult(false, reason);
   }
 
-  // ===== Getters =====
-
   public @NonNull String agentName() {
     return agentName;
   }
 
-  public @NonNull AgentContext context() {
+  // ===== Getters =====
+
+  public @NonNull AgenticContext context() {
     return context;
   }
 
@@ -189,7 +182,8 @@ public final class AgentRunState implements Serializable {
     return currentTurn;
   }
 
-  @Nullable ToolApprovalResult approvalResult() {
+  @Nullable
+  ToolApprovalResult approvalResult() {
     return approvalResult;
   }
 
@@ -205,7 +199,30 @@ public final class AgentRunState implements Serializable {
     return status == Status.FAILED;
   }
 
+  /**
+   * The current status of the agent run.
+   */
+  public enum Status {
+    /**
+     * Run is in progress.
+     */
+    RUNNING,
+    /**
+     * Run is paused waiting for tool approval.
+     */
+    PENDING_TOOL_APPROVAL,
+    /**
+     * Run completed successfully.
+     */
+    COMPLETED,
+    /**
+     * Run failed with an error.
+     */
+    FAILED
+  }
+
   // ===== Internal Classes =====
 
-  record ToolApprovalResult(boolean approved, @Nullable String outputOrReason) {}
+  record ToolApprovalResult(boolean approved, @Nullable String outputOrReason) {
+  }
 }

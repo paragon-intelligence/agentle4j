@@ -1,22 +1,17 @@
 package com.paragon.agents;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.paragon.responses.Responder;
-import com.paragon.responses.spec.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+import com.paragon.responses.spec.Message;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for ParallelStream.
@@ -34,7 +29,7 @@ class ParallelStreamTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
     responder =
-        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -46,6 +41,66 @@ class ParallelStreamTest {
   // CALLBACK REGISTRATION
   // ═══════════════════════════════════════════════════════════════════════════
 
+  private ParallelAgents createSimpleParallel() {
+    return ParallelAgents.of(
+            createTestAgent("Agent1", "Test agent 1"), createTestAgent("Agent2", "Test agent 2"));
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // START METHODS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  private Agent createTestAgent(String name, String instructions) {
+    return Agent.builder()
+            .name(name)
+            .model("test-model")
+            .instructions(instructions)
+            .responder(responder)
+            .build();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ERROR HANDLING
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  private void enqueueSuccessResponse(String text) {
+    String json =
+            """
+                    {
+                      "id": "resp_001",
+                      "object": "response",
+                      "created_at": 1234567890,
+                      "status": "completed",
+                      "model": "test-model",
+                      "output": [
+                        {
+                          "type": "message",
+                          "id": "msg_001",
+                          "role": "assistant",
+                          "content": [
+                            {
+                              "type": "output_text",
+                              "text": "%s"
+                            }
+                          ]
+                        }
+                      ],
+                      "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
+                    }
+                    """
+                    .formatted(text);
+
+    mockWebServer.enqueue(
+            new MockResponse()
+                    .setResponseCode(200)
+                    .setBody(json)
+                    .addHeader("Content-Type", "application/json"));
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AGENT CALLBACKS
+  // ═══════════════════════════════════════════════════════════════════════════
+
   @Nested
   @DisplayName("Callback Registration")
   class CallbackRegistrationTests {
@@ -54,7 +109,7 @@ class ParallelStreamTest {
     @DisplayName("onAgentTextDelta registers callback")
     void onAgentTextDeltaRegistersCallback() {
       ParallelAgents parallel = createSimpleParallel();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       ParallelStream stream = parallel.runAllStream(context);
@@ -70,7 +125,7 @@ class ParallelStreamTest {
     @DisplayName("onAgentComplete registers callback")
     void onAgentCompleteRegistersCallback() {
       ParallelAgents parallel = createSimpleParallel();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       ParallelStream stream = parallel.runAllStream(context);
@@ -86,7 +141,7 @@ class ParallelStreamTest {
     @DisplayName("onComplete registers callback")
     void onCompleteRegistersCallback() {
       ParallelAgents parallel = createSimpleParallel();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       ParallelStream stream = parallel.runAllStream(context);
@@ -102,7 +157,7 @@ class ParallelStreamTest {
     @DisplayName("onFirstComplete registers callback")
     void onFirstCompleteRegistersCallback() {
       ParallelAgents parallel = createSimpleParallel();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       ParallelStream stream = parallel.runAllStream(context);
@@ -118,7 +173,7 @@ class ParallelStreamTest {
     @DisplayName("onSynthesisComplete registers callback")
     void onSynthesisCompleteRegistersCallback() {
       ParallelAgents parallel = createSimpleParallel();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       ParallelStream stream = parallel.runAllStream(context);
@@ -134,7 +189,7 @@ class ParallelStreamTest {
     @DisplayName("onError registers callback")
     void onErrorRegistersCallback() {
       ParallelAgents parallel = createSimpleParallel();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       ParallelStream stream = parallel.runAllStream(context);
@@ -150,7 +205,7 @@ class ParallelStreamTest {
     @DisplayName("onAgentTurnStart registers callback")
     void onAgentTurnStartRegistersCallback() {
       ParallelAgents parallel = createSimpleParallel();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       ParallelStream stream = parallel.runAllStream(context);
@@ -166,26 +221,33 @@ class ParallelStreamTest {
     @DisplayName("callbacks can be chained fluently")
     void callbacksCanBeChainedFluently() {
       ParallelAgents parallel = createSimpleParallel();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       ParallelStream stream =
-          parallel
-              .runAllStream(context)
-              .onAgentTextDelta((agent, delta) -> {})
-              .onAgentComplete((agent, result) -> {})
-              .onComplete(results -> {})
-              .onFirstComplete(result -> {})
-              .onSynthesisComplete(result -> {})
-              .onError(error -> {})
-              .onAgentTurnStart((agent, turn) -> {});
+              parallel
+                      .runAllStream(context)
+                      .onAgentTextDelta((agent, delta) -> {
+                      })
+                      .onAgentComplete((agent, result) -> {
+                      })
+                      .onComplete(results -> {
+                      })
+                      .onFirstComplete(result -> {
+                      })
+                      .onSynthesisComplete(result -> {
+                      })
+                      .onError(error -> {
+                      })
+                      .onAgentTurnStart((agent, turn) -> {
+                      });
 
       assertNotNull(stream);
     }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // START METHODS
+  // MODE ENUM
   // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
@@ -199,7 +261,7 @@ class ParallelStreamTest {
       enqueueSuccessResponse("Response 2");
 
       ParallelAgents parallel = createSimpleParallel();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       Object result = parallel.runAllStream(context).start();
@@ -216,14 +278,14 @@ class ParallelStreamTest {
       List<AgentResult> collectedResults = new ArrayList<>();
 
       ParallelAgents parallel =
-          ParallelAgents.of(
-              createTestAgent("Agent1", "First agent"), createTestAgent("Agent2", "Second agent"));
+              ParallelAgents.of(
+                      createTestAgent("Agent1", "First agent"), createTestAgent("Agent2", "Second agent"));
 
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello all"));
 
       Object result =
-          parallel.runAllStream(context).onComplete(collectedResults::addAll).start();
+              parallel.runAllStream(context).onComplete(collectedResults::addAll).start();
 
 
       // In ALL mode, both agents should complete
@@ -240,27 +302,27 @@ class ParallelStreamTest {
       AtomicBoolean completed = new AtomicBoolean(false);
 
       ParallelAgents parallel =
-          ParallelAgents.of(
-              createTestAgent("Agent1", "First agent"), createTestAgent("Agent2", "Second agent"));
+              ParallelAgents.of(
+                      createTestAgent("Agent1", "First agent"), createTestAgent("Agent2", "Second agent"));
 
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello first"));
 
       Object result =
-          parallel
-              .runAllStream(context)
-              .onFirstComplete(
-                  r -> {
-                    firstResult.set(r);
-                    completed.set(true);
-                  })
-              .onAgentComplete(
-                  (a, r) -> {
-                    // Also capture via onAgentComplete if onFirstComplete isn't called
-                    if (firstResult == null) firstResult.set(r);
-                    completed.set(true);
-                  })
-              .start();
+              parallel
+                      .runAllStream(context)
+                      .onFirstComplete(
+                              r -> {
+                                firstResult.set(r);
+                                completed.set(true);
+                              })
+                      .onAgentComplete(
+                              (a, r) -> {
+                                // Also capture via onAgentComplete if onFirstComplete isn't called
+                                if (firstResult == null) firstResult.set(r);
+                                completed.set(true);
+                              })
+                      .start();
 
 
       // The test passes if either callback was invoked
@@ -269,7 +331,7 @@ class ParallelStreamTest {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ERROR HANDLING
+  // HELPERS
   // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
@@ -281,14 +343,14 @@ class ParallelStreamTest {
     void onErrorCallbackIsInvokedOnFailure() throws Exception {
       // Enqueue error response
       mockWebServer.enqueue(
-          new MockResponse()
-              .setResponseCode(500)
-              .setBody("{\"error\": {\"message\": \"Server error\"}}"));
+              new MockResponse()
+                      .setResponseCode(500)
+                      .setBody("{\"error\": {\"message\": \"Server error\"}}"));
 
       AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
       ParallelAgents parallel = createSimpleParallel();
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       parallel.runAllStream(context).onError(errorRef::set).start();
@@ -300,10 +362,6 @@ class ParallelStreamTest {
       // The important thing is that the test doesn't crash
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // AGENT CALLBACKS
-  // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
   @DisplayName("Agent Callbacks")
@@ -318,17 +376,17 @@ class ParallelStreamTest {
       List<String> completedAgents = new ArrayList<>();
 
       ParallelAgents parallel =
-          ParallelAgents.of(
-              createTestAgent("Agent1", "First"), createTestAgent("Agent2", "Second"));
+              ParallelAgents.of(
+                      createTestAgent("Agent1", "First"), createTestAgent("Agent2", "Second"));
 
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       Object result =
-          parallel
-              .runAllStream(context)
-              .onAgentComplete((agent, r) -> completedAgents.add(agent.name()))
-              .start();
+              parallel
+                      .runAllStream(context)
+                      .onAgentComplete((agent, r) -> completedAgents.add(agent.name()))
+                      .start();
 
 
       assertTrue(completedAgents.size() >= 1);
@@ -343,21 +401,17 @@ class ParallelStreamTest {
 
       ParallelAgents parallel = ParallelAgents.of(createTestAgent("Agent1", "Agent"));
 
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       Object result =
-          parallel.runAllStream(context).onAgentTurnStart((agent, turn) -> turns.add(turn)).start();
+              parallel.runAllStream(context).onAgentTurnStart((agent, turn) -> turns.add(turn)).start();
 
 
       // At least one turn should start
       assertFalse(turns.isEmpty());
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // MODE ENUM
-  // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
   @DisplayName("Mode Enum")
@@ -398,57 +452,5 @@ class ParallelStreamTest {
       assertEquals(ParallelStream.Mode.FIRST, ParallelStream.Mode.valueOf("FIRST"));
       assertEquals(ParallelStream.Mode.SYNTHESIZE, ParallelStream.Mode.valueOf("SYNTHESIZE"));
     }
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // HELPERS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  private ParallelAgents createSimpleParallel() {
-    return ParallelAgents.of(
-        createTestAgent("Agent1", "Test agent 1"), createTestAgent("Agent2", "Test agent 2"));
-  }
-
-  private Agent createTestAgent(String name, String instructions) {
-    return Agent.builder()
-        .name(name)
-        .model("test-model")
-        .instructions(instructions)
-        .responder(responder)
-        .build();
-  }
-
-  private void enqueueSuccessResponse(String text) {
-    String json =
-        """
-        {
-          "id": "resp_001",
-          "object": "response",
-          "created_at": 1234567890,
-          "status": "completed",
-          "model": "test-model",
-          "output": [
-            {
-              "type": "message",
-              "id": "msg_001",
-              "role": "assistant",
-              "content": [
-                {
-                  "type": "output_text",
-                  "text": "%s"
-                }
-              ]
-            }
-          ],
-          "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
-        }
-        """
-            .formatted(text);
-
-    mockWebServer.enqueue(
-        new MockResponse()
-            .setResponseCode(200)
-            .setBody(json)
-            .addHeader("Content-Type", "application/json"));
   }
 }

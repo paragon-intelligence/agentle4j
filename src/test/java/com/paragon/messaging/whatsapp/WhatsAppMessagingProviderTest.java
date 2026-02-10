@@ -50,6 +50,7 @@ class WhatsAppMessagingProviderTest {
     @AfterEach
     void tearDown() throws IOException {
         if (mockServer != null) {
+            // Shutdown immediately without waiting for delayed responses
             mockServer.shutdown();
         }
     }

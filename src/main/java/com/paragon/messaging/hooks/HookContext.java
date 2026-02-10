@@ -85,6 +85,9 @@ public record HookContext(
    * @return novo HookContext
    */
   public static HookContext create(String userId, List<InboundMessage> messages) {
+    if (messages == null) {
+      throw new IllegalArgumentException("messages cannot be null");
+    }
     return new HookContext(
             userId,
             messages,

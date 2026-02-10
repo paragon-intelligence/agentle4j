@@ -40,9 +40,10 @@ public interface OutputGuardrail {
   /**
    * Validates the agent's output.
    *
-   * @param output the agent's output string
+   * @param output  the agent's output string
    * @param context the current agent context
    * @return the validation result
    */
-  @NonNull GuardrailResult validate(@NonNull String output, @NonNull AgentContext context);
+  @NonNull
+  GuardrailResult validate(@NonNull String output, @NonNull AgenticContext context);
 }

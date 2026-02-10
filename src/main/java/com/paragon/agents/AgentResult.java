@@ -2,9 +2,10 @@ package com.paragon.agents;
 
 import com.paragon.responses.spec.Response;
 import com.paragon.responses.spec.ResponseInputItem;
-import java.util.List;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+
+import java.util.List;
 
 /**
  * The result of an agent interaction, containing the final output and execution metadata.
@@ -59,14 +60,14 @@ public final class AgentResult {
     this.finalResponse = builder.finalResponse;
     this.history = builder.history != null ? List.copyOf(builder.history) : List.of();
     this.toolExecutions =
-        builder.toolExecutions != null ? List.copyOf(builder.toolExecutions) : List.of();
+            builder.toolExecutions != null ? List.copyOf(builder.toolExecutions) : List.of();
     this.turnsUsed = builder.turnsUsed;
     this.handoffAgent = builder.handoffAgent;
     this.error = builder.error;
     this.parsed = builder.parsed;
     this.pausedState = builder.pausedState;
     this.relatedResults =
-        builder.relatedResults != null ? List.copyOf(builder.relatedResults) : List.of();
+            builder.relatedResults != null ? List.copyOf(builder.relatedResults) : List.of();
   }
 
   // ===== Factory Methods =====
@@ -74,26 +75,26 @@ public final class AgentResult {
   /**
    * Creates a successful result.
    *
-   * @param output the final text output
-   * @param response the final API response
-   * @param context the agent context with history
+   * @param output         the final text output
+   * @param response       the final API response
+   * @param context        the agent context with history
    * @param toolExecutions all tool executions
-   * @param turnsUsed number of LLM turns
+   * @param turnsUsed      number of LLM turns
    * @return a success result
    */
   public static @NonNull AgentResult success(
-      @NonNull String output,
-      @NonNull Response response,
-      @NonNull AgentContext context,
-      @NonNull List<ToolExecution> toolExecutions,
-      int turnsUsed) {
+          @NonNull String output,
+          @NonNull Response response,
+          @NonNull AgenticContext context,
+          @NonNull List<ToolExecution> toolExecutions,
+          int turnsUsed) {
     return new Builder()
-        .output(output)
-        .finalResponse(response)
-        .history(context.getHistory())
-        .toolExecutions(toolExecutions)
-        .turnsUsed(turnsUsed)
-        .build();
+            .output(output)
+            .finalResponse(response)
+            .history(context.getHistory())
+            .toolExecutions(toolExecutions)
+            .turnsUsed(turnsUsed)
+            .build();
   }
 
   /**
@@ -104,72 +105,72 @@ public final class AgentResult {
    */
   public static @NonNull AgentResult success(@NonNull String output) {
     return new Builder()
-        .output(output)
-        .build();
+            .output(output)
+            .build();
   }
 
   /**
    * Creates a successful result with parsed structured output.
    *
-   * @param output the final text output (JSON)
-   * @param parsed the parsed structured object
-   * @param response the final API response
-   * @param context the agent context with history
+   * @param output         the final text output (JSON)
+   * @param parsed         the parsed structured object
+   * @param response       the final API response
+   * @param context        the agent context with history
    * @param toolExecutions all tool executions
-   * @param turnsUsed number of LLM turns
-   * @param <T> the parsed type
+   * @param turnsUsed      number of LLM turns
+   * @param <T>            the parsed type
    * @return a success result with parsed output
    */
   public static <T> @NonNull AgentResult successWithParsed(
-      @NonNull String output,
-      @NonNull T parsed,
-      @NonNull Response response,
-      @NonNull AgentContext context,
-      @NonNull List<ToolExecution> toolExecutions,
-      int turnsUsed) {
+          @NonNull String output,
+          @NonNull T parsed,
+          @NonNull Response response,
+          @NonNull AgenticContext context,
+          @NonNull List<ToolExecution> toolExecutions,
+          int turnsUsed) {
     return new Builder()
-        .output(output)
-        .parsed(parsed)
-        .finalResponse(response)
-        .history(context.getHistory())
-        .toolExecutions(toolExecutions)
-        .turnsUsed(turnsUsed)
-        .build();
+            .output(output)
+            .parsed(parsed)
+            .finalResponse(response)
+            .history(context.getHistory())
+            .toolExecutions(toolExecutions)
+            .turnsUsed(turnsUsed)
+            .build();
   }
 
   /**
    * Creates a handoff result (after auto-executing the target agent).
    *
    * @param handoffAgent the agent that was handed off to
-   * @param innerResult the result from the handoff agent
-   * @param context the original context with combined history
+   * @param innerResult  the result from the handoff agent
+   * @param context      the original context with combined history
    * @return a handoff result
    */
   public static @NonNull AgentResult handoff(
-      @NonNull Agent handoffAgent,
-      @NonNull AgentResult innerResult,
-      @NonNull AgentContext context) {
+          @NonNull Agent handoffAgent,
+          @NonNull AgentResult innerResult,
+          @NonNull AgenticContext context) {
     return new Builder()
-        .output(innerResult.output)
-        .finalResponse(innerResult.finalResponse)
-        .history(context.getHistory())
-        .toolExecutions(innerResult.toolExecutions)
-        .turnsUsed(innerResult.turnsUsed)
-        .handoffAgent(handoffAgent)
-        .parsed(innerResult.parsed)
-        .build();
+            .output(innerResult.output)
+            .finalResponse(innerResult.finalResponse)
+            .history(context.getHistory())
+            .toolExecutions(innerResult.toolExecutions)
+            .turnsUsed(innerResult.turnsUsed)
+            .handoffAgent(handoffAgent)
+            .parsed(innerResult.parsed)
+            .build();
   }
 
   /**
    * Creates an error result.
    *
-   * @param error the error that occurred
-   * @param context the agent context at time of error
+   * @param error     the error that occurred
+   * @param context   the agent context at time of error
    * @param turnsUsed number of LLM turns before error
    * @return an error result
    */
   public static @NonNull AgentResult error(
-      @NonNull Throwable error, @NonNull AgentContext context, int turnsUsed) {
+          @NonNull Throwable error, @NonNull AgenticContext context, int turnsUsed) {
     return new Builder().error(error).history(context.getHistory()).turnsUsed(turnsUsed).build();
   }
 
@@ -186,17 +187,17 @@ public final class AgentResult {
   /**
    * Creates an error result from a guardrail failure.
    *
-   * @param reason the guardrail failure reason
+   * @param reason  the guardrail failure reason
    * @param context the agent context
    * @return an error result
    */
   public static @NonNull AgentResult guardrailFailed(
-      @NonNull String reason, @NonNull AgentContext context) {
+          @NonNull String reason, @NonNull AgenticContext context) {
     return new Builder()
-        .error(new GuardrailException(reason))
-        .history(context.getHistory())
-        .turnsUsed(0)
-        .build();
+            .error(new GuardrailException(reason))
+            .history(context.getHistory())
+            .turnsUsed(0)
+            .build();
   }
 
   /**
@@ -204,17 +205,17 @@ public final class AgentResult {
    *
    * <p>The run can be resumed later with {@code Agent.resume(state)}.
    *
-   * @param state the serializable run state
+   * @param state   the serializable run state
    * @param context the agent context
    * @return a paused result
    */
   public static @NonNull AgentResult paused(
-      @NonNull AgentRunState state, @NonNull AgentContext context) {
+          @NonNull AgentRunState state, @NonNull AgenticContext context) {
     return new Builder()
-        .pausedState(state)
-        .history(context.getHistory())
-        .turnsUsed(context.getTurnCount())
-        .build();
+            .pausedState(state)
+            .history(context.getHistory())
+            .turnsUsed(context.getTurnCount())
+            .build();
   }
 
   /**
@@ -228,19 +229,19 @@ public final class AgentResult {
    * @return a result containing both primary and related results
    */
   public static @NonNull AgentResult composite(
-      @NonNull AgentResult primary, @NonNull List<AgentResult> related) {
+          @NonNull AgentResult primary, @NonNull List<AgentResult> related) {
     return new Builder()
-        .output(primary.output)
-        .finalResponse(primary.finalResponse)
-        .history(primary.history)
-        .toolExecutions(primary.toolExecutions)
-        .turnsUsed(primary.turnsUsed)
-        .handoffAgent(primary.handoffAgent)
-        .error(primary.error)
-        .parsed(primary.parsed)
-        .pausedState(primary.pausedState)
-        .relatedResults(related)
-        .build();
+            .output(primary.output)
+            .finalResponse(primary.finalResponse)
+            .history(primary.history)
+            .toolExecutions(primary.toolExecutions)
+            .turnsUsed(primary.turnsUsed)
+            .handoffAgent(primary.handoffAgent)
+            .error(primary.error)
+            .parsed(primary.parsed)
+            .pausedState(primary.pausedState)
+            .relatedResults(related)
+            .build();
   }
 
   // ===== Accessors =====
@@ -465,7 +466,9 @@ public final class AgentResult {
     }
   }
 
-  /** Exception thrown when a guardrail validation fails. */
+  /**
+   * Exception thrown when a guardrail validation fails.
+   */
   public static final class GuardrailException extends RuntimeException {
     public GuardrailException(String message) {
       super(message);

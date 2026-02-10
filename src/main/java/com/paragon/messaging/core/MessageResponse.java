@@ -1,5 +1,6 @@
 package com.paragon.messaging.core;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
@@ -10,6 +11,7 @@ import java.util.Optional;
  */
 public record MessageResponse(
 
+        @NotBlank(message = "Message ID cannot be blank")
         String messageId,
 
         @NotNull(message = "Status cannot be null")

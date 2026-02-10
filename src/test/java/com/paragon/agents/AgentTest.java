@@ -1,17 +1,17 @@
 package com.paragon.agents;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.*;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Comprehensive tests for Agent.
@@ -31,11 +31,58 @@ class AgentTest {
     mockWebServer.start();
 
     responder =
-        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   void tearDown() throws Exception {
     mockWebServer.shutdown();
+  }
+
+  private Agent createTestAgent(String name) {
+    return Agent.builder()
+            .name(name)
+            .model("test-model")
+            .instructions("Test instructions")
+            .responder(responder)
+            .build();
+  }
+
+  private void enqueueSuccessResponse(String text) {
+    String json =
+            """
+                    {
+                      "id": "resp_001",
+                      "object": "response",
+                      "created_at": 1234567890,
+                      "status": "completed",
+                      "model": "test-model",
+                      "output": [
+                        {
+                          "type": "message",
+                          "id": "msg_001",
+                          "role": "assistant",
+                          "content": [
+                            {
+                              "type": "output_text",
+                              "text": "%s"
+                            }
+                          ]
+                        }
+                      ],
+                      "usage": {
+                        "input_tokens": 10,
+                        "output_tokens": 5,
+                        "total_tokens": 15
+                      }
+                    }
+                    """
+                    .formatted(text);
+
+    mockWebServer.enqueue(
+            new MockResponse()
+                    .setResponseCode(200)
+                    .setBody(json)
+                    .addHeader("Content-Type", "application/json"));
   }
 
   @Nested
@@ -54,12 +101,12 @@ class AgentTest {
     @DisplayName("build() creates agent with required fields")
     void build_createsAgentWithRequiredFields() {
       Agent agent =
-          Agent.builder()
-              .name("TestAgent")
-              .model("test-model")
-              .instructions("Test instructions")
-              .responder(responder)
-              .build();
+              Agent.builder()
+                      .name("TestAgent")
+                      .model("test-model")
+                      .instructions("Test instructions")
+                      .responder(responder)
+                      .build();
 
       assertEquals("TestAgent", agent.name());
       assertEquals("test-model", agent.model());
@@ -70,43 +117,43 @@ class AgentTest {
     @DisplayName("build() throws when name is null")
     void build_throwsWhenNameNull() {
       assertThrows(
-          NullPointerException.class,
-          () -> {
-            Agent.builder().model("test-model").instructions("Test").responder(responder).build();
-          });
+              NullPointerException.class,
+              () -> {
+                Agent.builder().model("test-model").instructions("Test").responder(responder).build();
+              });
     }
 
     @Test
     @DisplayName("build() throws when model is null")
     void build_throwsWhenModelNull() {
       assertThrows(
-          NullPointerException.class,
-          () -> {
-            Agent.builder().name("Test").instructions("Test").responder(responder).build();
-          });
+              NullPointerException.class,
+              () -> {
+                Agent.builder().name("Test").instructions("Test").responder(responder).build();
+              });
     }
 
     @Test
     @DisplayName("build() throws when responder is null")
     void build_throwsWhenResponderNull() {
       assertThrows(
-          NullPointerException.class,
-          () -> {
-            Agent.builder().name("Test").model("test-model").instructions("Test").build();
-          });
+              NullPointerException.class,
+              () -> {
+                Agent.builder().name("Test").model("test-model").instructions("Test").build();
+              });
     }
 
     @Test
     @DisplayName("maxTurns() sets maximum turns")
     void maxTurns_setsMaximumTurns() {
       Agent agent =
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .maxTurns(5)
-              .build();
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .maxTurns(5)
+                      .build();
 
       assertEquals(5, agent.maxTurns());
     }
@@ -140,7 +187,7 @@ class AgentTest {
     @DisplayName("interact(String, Context) returns AgentResult directly")
     void interact_stringAndContext_returnsAgentResultDirectly() {
       Agent agent = createTestAgent("Test");
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       enqueueSuccessResponse("Hello");
 
       context.addInput(Message.user("Hello"));
@@ -181,13 +228,13 @@ class AgentTest {
     @DisplayName("addInputGuardrail() adds input guardrail")
     void addInputGuardrail_addsInputGuardrail() {
       Agent agent =
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
-              .build();
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
+                      .build();
 
       assertEquals(1, agent.inputGuardrails().size());
     }
@@ -196,13 +243,13 @@ class AgentTest {
     @DisplayName("addOutputGuardrail() adds output guardrail")
     void addOutputGuardrail_addsOutputGuardrail() {
       Agent agent =
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .addOutputGuardrail((output, ctx) -> GuardrailResult.passed())
-              .build();
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .addOutputGuardrail((output, ctx) -> GuardrailResult.passed())
+                      .build();
 
       assertEquals(1, agent.outputGuardrails().size());
     }
@@ -211,15 +258,15 @@ class AgentTest {
     @DisplayName("multiple guardrails can be added")
     void multipleGuardrailsCanBeAdded() {
       Agent agent =
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
-              .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
-              .addOutputGuardrail((output, ctx) -> GuardrailResult.passed())
-              .build();
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
+                      .addInputGuardrail((input, ctx) -> GuardrailResult.passed())
+                      .addOutputGuardrail((output, ctx) -> GuardrailResult.passed())
+                      .build();
 
       assertEquals(2, agent.inputGuardrails().size());
       assertEquals(1, agent.outputGuardrails().size());
@@ -229,13 +276,13 @@ class AgentTest {
     @DisplayName("input guardrail rejection returns early")
     void inputGuardrailRejection_returnsEarly() throws Exception {
       Agent agent =
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .addInputGuardrail((input, ctx) -> GuardrailResult.failed("Blocked"))
-              .build();
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .addInputGuardrail((input, ctx) -> GuardrailResult.failed("Blocked"))
+                      .build();
 
       AgentResult result = agent.interact("Hello");
 
@@ -252,13 +299,13 @@ class AgentTest {
     void addHandoff_addsHandoffToAgent() {
       Agent target = createTestAgent("Target");
       Agent agent =
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .addHandoff(Handoff.to(target).build())
-              .build();
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .addHandoff(Handoff.to(target).build())
+                      .build();
 
       assertEquals(1, agent.handoffs().size());
       assertEquals(target, agent.handoffs().getFirst().targetAgent());
@@ -271,18 +318,22 @@ class AgentTest {
       Agent target2 = createTestAgent("Target2");
 
       Agent agent =
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .addHandoff(Handoff.to(target1).build())
-              .addHandoff(Handoff.to(target2).build())
-              .build();
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .addHandoff(Handoff.to(target1).build())
+                      .addHandoff(Handoff.to(target2).build())
+                      .build();
 
       assertEquals(2, agent.handoffs().size());
     }
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MAX TURNS ENFORCEMENT
+  // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
   @DisplayName("Context Handling")
@@ -303,7 +354,7 @@ class AgentTest {
     @DisplayName("interact with context uses provided context")
     void interact_withContext_usesProvidedContext() throws Exception {
       Agent agent = createTestAgent("Test");
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.setState("userId", "user-123");
 
       enqueueSuccessResponse("Response");
@@ -320,8 +371,8 @@ class AgentTest {
     void sameAgentCanHandleMultipleConversations() throws Exception {
       Agent agent = createTestAgent("Test");
 
-      AgentContext context1 = AgentContext.create();
-      AgentContext context2 = AgentContext.create();
+      AgenticContext context1 = AgenticContext.create();
+      AgenticContext context2 = AgenticContext.create();
 
       enqueueSuccessResponse("Response 1");
       enqueueSuccessResponse("Response 2");
@@ -335,6 +386,10 @@ class AgentTest {
       assertNotNull(result2);
     }
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ERROR HANDLING
+  // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
   @DisplayName("Accessors")
@@ -360,12 +415,12 @@ class AgentTest {
     @DisplayName("instructions() returns system prompt")
     void instructions_returnsSystemPrompt() {
       Agent agent =
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Custom instructions")
-              .responder(responder)
-              .build();
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Custom instructions")
+                      .responder(responder)
+                      .build();
 
       assertEquals("Custom instructions", agent.instructions().toString());
     }
@@ -376,8 +431,8 @@ class AgentTest {
       Agent agent = createTestAgent("Test");
 
       assertThrows(
-          UnsupportedOperationException.class,
-          () -> agent.inputGuardrails().add((input, ctx) -> GuardrailResult.passed()));
+              UnsupportedOperationException.class,
+              () -> agent.inputGuardrails().add((input, ctx) -> GuardrailResult.passed()));
     }
 
     @Test
@@ -386,8 +441,8 @@ class AgentTest {
       Agent agent = createTestAgent("Test");
 
       assertThrows(
-          UnsupportedOperationException.class,
-          () -> agent.outputGuardrails().add((output, ctx) -> GuardrailResult.passed()));
+              UnsupportedOperationException.class,
+              () -> agent.outputGuardrails().add((output, ctx) -> GuardrailResult.passed()));
     }
 
     @Test
@@ -397,13 +452,13 @@ class AgentTest {
       Agent target = createTestAgent("Target");
 
       assertThrows(
-          UnsupportedOperationException.class,
-          () -> agent.handoffs().add(Handoff.to(target).build()));
+              UnsupportedOperationException.class,
+              () -> agent.handoffs().add(Handoff.to(target).build()));
     }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // MAX TURNS ENFORCEMENT
+  // TELEMETRY CONFIGURATION
   // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
@@ -422,13 +477,13 @@ class AgentTest {
     @DisplayName("maxTurns can be set via builder")
     void maxTurns_canBeSetViaBuilder() {
       Agent agent =
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test instructions")
-              .responder(responder)
-              .maxTurns(5)
-              .build();
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test instructions")
+                      .responder(responder)
+                      .maxTurns(5)
+                      .build();
 
       assertEquals(5, agent.maxTurns());
     }
@@ -437,13 +492,13 @@ class AgentTest {
     @DisplayName("maxTurns of 1 allows single turn")
     void maxTurns_of1AllowsSingleTurn() {
       Agent agent =
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test instructions")
-              .responder(responder)
-              .maxTurns(1)
-              .build();
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test instructions")
+                      .responder(responder)
+                      .maxTurns(1)
+                      .build();
 
       enqueueSuccessResponse("Single response");
 
@@ -455,7 +510,7 @@ class AgentTest {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ERROR HANDLING
+  // INTERACT OVERLOADS
   // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
@@ -481,10 +536,10 @@ class AgentTest {
 
       // Enqueue error response
       mockWebServer.enqueue(
-          new MockResponse()
-              .setResponseCode(500)
-              .setBody("{\"error\": \"Internal server error\"}")
-              .addHeader("Content-Type", "application/json"));
+              new MockResponse()
+                      .setResponseCode(500)
+                      .setBody("{\"error\": \"Internal server error\"}")
+                      .addHeader("Content-Type", "application/json"));
 
       AgentResult result = agent.interact("Hello");
 
@@ -506,7 +561,7 @@ class AgentTest {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TELEMETRY CONFIGURATION
+  // STREAMING API
   // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
@@ -517,12 +572,12 @@ class AgentTest {
     @DisplayName("agent can be created without telemetry")
     void agent_createdWithoutTelemetry() {
       Agent agent =
-          Agent.builder()
-              .name("NoTelemetry")
-              .model("test-model")
-              .instructions("Test instructions")
-              .responder(responder)
-              .build();
+              Agent.builder()
+                      .name("NoTelemetry")
+                      .model("test-model")
+                      .instructions("Test instructions")
+                      .responder(responder)
+                      .build();
 
       assertNotNull(agent);
     }
@@ -541,7 +596,7 @@ class AgentTest {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // INTERACT OVERLOADS
+  // BUILDER ADDITIONAL OPTIONS
   // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
@@ -582,8 +637,8 @@ class AgentTest {
       enqueueSuccessResponse("Image response");
 
       Image image =
-          Image.fromBase64(
-              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+              Image.fromBase64(
+                      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
       AgentResult future = agent.interact(image);
 
       assertNotNull(future);
@@ -634,9 +689,7 @@ class AgentTest {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // STREAMING API
-  // ═══════════════════════════════════════════════════════════════════════════
+  // Helper methods
 
   @Nested
   @DisplayName("Streaming API")
@@ -656,7 +709,7 @@ class AgentTest {
     @DisplayName("interactStream(Context) returns AgentStream")
     void interactStream_Context_returnsAgentStream() {
       Agent agent = createTestAgent("Test");
-      AgentContext context = AgentContext.create();
+      AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
       AgentStream stream = agent.interactStream(context);
@@ -664,10 +717,6 @@ class AgentTest {
       assertNotNull(stream);
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // BUILDER ADDITIONAL OPTIONS
-  // ═══════════════════════════════════════════════════════════════════════════
 
   @Nested
   @DisplayName("Builder Additional Options")
@@ -677,13 +726,13 @@ class AgentTest {
     @DisplayName("temperature can be set")
     void temperature_canBeSet() {
       Agent agent =
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .temperature(0.7)
-              .build();
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .temperature(0.7)
+                      .build();
 
       assertNotNull(agent);
     }
@@ -692,13 +741,13 @@ class AgentTest {
     @DisplayName("objectMapper can be set")
     void objectMapper_canBeSet() {
       Agent agent =
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .objectMapper(new com.fasterxml.jackson.databind.ObjectMapper())
-              .build();
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .objectMapper(new com.fasterxml.jackson.databind.ObjectMapper())
+                      .build();
 
       assertNotNull(agent);
     }
@@ -707,64 +756,15 @@ class AgentTest {
     @DisplayName("telemetryContext can be set")
     void telemetryContext_canBeSet() {
       Agent agent =
-          Agent.builder()
-              .name("Test")
-              .model("test-model")
-              .instructions("Test")
-              .responder(responder)
-              .telemetryContext(com.paragon.telemetry.TelemetryContext.builder().build())
-              .build();
+              Agent.builder()
+                      .name("Test")
+                      .model("test-model")
+                      .instructions("Test")
+                      .responder(responder)
+                      .telemetryContext(com.paragon.telemetry.TelemetryContext.builder().build())
+                      .build();
 
       assertNotNull(agent);
     }
-  }
-
-  // Helper methods
-
-  private Agent createTestAgent(String name) {
-    return Agent.builder()
-        .name(name)
-        .model("test-model")
-        .instructions("Test instructions")
-        .responder(responder)
-        .build();
-  }
-
-  private void enqueueSuccessResponse(String text) {
-    String json =
-        """
-        {
-          "id": "resp_001",
-          "object": "response",
-          "created_at": 1234567890,
-          "status": "completed",
-          "model": "test-model",
-          "output": [
-            {
-              "type": "message",
-              "id": "msg_001",
-              "role": "assistant",
-              "content": [
-                {
-                  "type": "output_text",
-                  "text": "%s"
-                }
-              ]
-            }
-          ],
-          "usage": {
-            "input_tokens": 10,
-            "output_tokens": 5,
-            "total_tokens": 15
-          }
-        }
-        """
-            .formatted(text);
-
-    mockWebServer.enqueue(
-        new MockResponse()
-            .setResponseCode(200)
-            .setBody(json)
-            .addHeader("Content-Type", "application/json"));
   }
 }
