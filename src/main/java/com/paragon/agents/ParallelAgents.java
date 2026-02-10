@@ -563,45 +563,6 @@ public final class ParallelAgents implements Interactable {
   // The primary result is the first to complete; all others are in relatedResults().
 
   /**
-   * {@inheritDoc}
-   *
-   * <p>Runs all agents in parallel. Returns the first-to-complete result as primary,
-   * with all other results accessible via {@link AgentResult#relatedResults()}.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull String input) {
-    List<AgentResult> allResults = runAll(input);
-    return toCompositeResult(allResults);
-  }
-
-  /**
-   * {@inheritDoc} Runs all agents; first to complete is primary, others in relatedResults().
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Text text) {
-    List<AgentResult> allResults = runAll(text);
-    return toCompositeResult(allResults);
-  }
-
-  /**
-   * {@inheritDoc} Runs all agents; first to complete is primary, others in relatedResults().
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Message message) {
-    List<AgentResult> allResults = runAll(message);
-    return toCompositeResult(allResults);
-  }
-
-  /**
-   * {@inheritDoc} Runs all agents; first to complete is primary, others in relatedResults().
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Prompt prompt) {
-    List<AgentResult> allResults = runAll(prompt);
-    return toCompositeResult(allResults);
-  }
-
-  /**
    * {@inheritDoc} Runs all agents; first to complete is primary, others in relatedResults().
    */
   @Override
@@ -627,32 +588,6 @@ public final class ParallelAgents implements Interactable {
    *
    * <p>Streams and returns when the first agent completes. For streaming all agents, use {@link
    * #runAllStream(String)} with the explicit ParallelStream return type.
-   */
-  @Override
-  public @NonNull AgentStream interactStream(@NonNull String input) {
-    // Run first agent stream - this is a simplification
-    // For full parallel streaming, use runFirstStream() directly
-    AgenticContext context = AgenticContext.create();
-    context.addInput(Message.user(input));
-    // Return the first member's stream (simplest approach for polymorphism)
-    if (!members.isEmpty()) {
-      return members.get(0).interactStream(context);
-    }
-    return AgentStream.failed(
-            AgentResult.error(new IllegalStateException("No members configured"), context, 0));
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public @NonNull AgentStream interactStream(@NonNull Prompt prompt) {
-    Objects.requireNonNull(prompt, "prompt cannot be null");
-    return interactStream(prompt.text());
-  }
-
-  /**
-   * {@inheritDoc}
    */
   @Override
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {

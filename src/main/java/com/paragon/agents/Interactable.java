@@ -3,7 +3,11 @@ package com.paragon.agents;
 import com.paragon.prompts.Prompt;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.Text;
+import com.paragon.responses.spec.File;
+import com.paragon.responses.spec.Image;
+import com.paragon.responses.spec.ResponseInputItem;
 import org.jspecify.annotations.NonNull;
+
 
 /**
  * Common interface for all agent patterns that can process input and produce output.
@@ -77,29 +81,47 @@ public interface Interactable {
   /**
    * Interacts with the agent using a text input.
    *
+   * <p>Default implementation creates a fresh context with the input as a user message.
+   *
    * @param input the user's text input
    * @return the agent's result
    */
   @NonNull
-  AgentResult interact(@NonNull String input);
+  default AgentResult interact(@NonNull String input) {
+    AgenticContext context = AgenticContext.create();
+    context.addInput(Message.user(input));
+    return interact(context);
+  }
 
   /**
    * Interacts with the agent using Text content.
+   *
+   * <p>Default implementation creates a fresh context with the text as a user message.
    *
    * @param text the text content
    * @return the agent's result
    */
   @NonNull
-  AgentResult interact(@NonNull Text text);
+  default AgentResult interact(@NonNull Text text) {
+    AgenticContext context = AgenticContext.create();
+    context.addInput(Message.user(text));
+    return interact(context);
+  }
 
   /**
    * Interacts with the agent using a Message.
+   *
+   * <p>Default implementation creates a fresh context with the message.
    *
    * @param message the message input
    * @return the agent's result
    */
   @NonNull
-  AgentResult interact(@NonNull Message message);
+  default AgentResult interact(@NonNull Message message) {
+    AgenticContext context = AgenticContext.create();
+    context.addInput(message);
+    return interact(context);
+  }
 
   /**
    * Interacts with the agent using a Prompt.
@@ -110,7 +132,72 @@ public interface Interactable {
    * @return the agent's result
    */
   @NonNull
-  AgentResult interact(@NonNull Prompt prompt);
+  default AgentResult interact(@NonNull Prompt prompt) {
+    return interact(prompt.text());
+  }
+
+  /**
+   * Interacts with the agent using a file. Creates a fresh context.
+   *
+   * <p>Default implementation creates a fresh context with the file as a user message.
+   *
+   * @param file the file input
+   * @return the agent's result
+   */
+  @NonNull
+  default AgentResult interact(@NonNull File file) {
+    AgenticContext context = AgenticContext.create();
+    context.addInput(Message.user(file));
+    return interact(context);
+  }
+
+  /**
+   * Interacts with the agent using an image. Creates a fresh context.
+   *
+   * <p>Default implementation creates a fresh context with the image as a user message.
+   *
+   * @param image the image input
+   * @return the agent's result
+   */
+  @NonNull
+  default AgentResult interact(@NonNull Image image) {
+    AgenticContext context = AgenticContext.create();
+    context.addInput(Message.user(image));
+    return interact(context);
+  }
+
+  /**
+   * Interacts with the agent using a ResponseInputItem. Creates a fresh context.
+   *
+   * <p>Default implementation creates a fresh context with the input item.
+   *
+   * @param input the input item
+   * @return the agent's result
+   */
+  @NonNull
+  default AgentResult interact(@NonNull ResponseInputItem input) {
+    AgenticContext context = AgenticContext.create();
+    context.addInput(input);
+    return interact(context);
+  }
+
+  /**
+   * Interacts with the agent using multiple inputs. Creates a fresh context.
+   *
+   * <p>Default implementation creates a fresh context and adds all input items.
+   *
+   * @param input the input items
+   * @return the agent's result
+   */
+  @NonNull
+  default AgentResult interact(java.util.@NonNull List<ResponseInputItem> input) {
+    AgenticContext context = AgenticContext.create();
+    for (ResponseInputItem item : input) {
+      context.addInput(item);
+    }
+    return interact(context);
+  }
+
 
   /**
    * Interacts with the agent using an existing context.
@@ -124,11 +211,17 @@ public interface Interactable {
   /**
    * Interacts with the agent with streaming support.
    *
+   * <p>Default implementation creates a fresh context with the input as a user message.
+   *
    * @param input the user's text input
    * @return an AgentStream for processing streaming events
    */
   @NonNull
-  AgentStream interactStream(@NonNull String input);
+  default AgentStream interactStream(@NonNull String input) {
+    AgenticContext context = AgenticContext.create();
+    context.addInput(Message.user(input));
+    return interactStream(context);
+  }
 
   /**
    * Interacts with the agent with streaming using a Prompt.
@@ -139,7 +232,9 @@ public interface Interactable {
    * @return an AgentStream for processing streaming events
    */
   @NonNull
-  AgentStream interactStream(@NonNull Prompt prompt);
+  default AgentStream interactStream(@NonNull Prompt prompt) {
+    return interactStream(prompt.text());
+  }
 
   /**
    * Interacts with the agent with streaming using an existing context.
@@ -181,38 +276,60 @@ public interface Interactable {
     /**
      * Interacts with the agent and returns a structured result.
      *
+     * <p>Default implementation creates a fresh context with the input as a user message.
+     *
      * @param input the user's text input
      * @return the structured result with parsed output
      */
     @NonNull
-    StructuredAgentResult<T> interactStructured(@NonNull String input);
+    default StructuredAgentResult<T> interactStructured(@NonNull String input) {
+      AgenticContext context = AgenticContext.create();
+      context.addInput(Message.user(input));
+      return interactStructured(context);
+    }
 
     /**
      * Interacts with the agent with Text content and returns a structured result.
+     *
+     * <p>Default implementation creates a fresh context with the text as a user message.
      *
      * @param text the text content
      * @return the structured result with parsed output
      */
     @NonNull
-    StructuredAgentResult<T> interactStructured(@NonNull Text text);
+    default StructuredAgentResult<T> interactStructured(@NonNull Text text) {
+      AgenticContext context = AgenticContext.create();
+      context.addInput(Message.user(text));
+      return interactStructured(context);
+    }
 
     /**
      * Interacts with the agent with a Message and returns a structured result.
+     *
+     * <p>Default implementation creates a fresh context with the message.
      *
      * @param message the message input
      * @return the structured result with parsed output
      */
     @NonNull
-    StructuredAgentResult<T> interactStructured(@NonNull Message message);
+    default StructuredAgentResult<T> interactStructured(@NonNull Message message) {
+      AgenticContext context = AgenticContext.create();
+      context.addInput(message);
+      return interactStructured(context);
+    }
 
     /**
      * Interacts with the agent with a Prompt and returns a structured result.
+     *
+     * <p>The prompt's text content is extracted and used as the input.
      *
      * @param prompt the prompt input
      * @return the structured result with parsed output
      */
     @NonNull
-    StructuredAgentResult<T> interactStructured(@NonNull Prompt prompt);
+    default StructuredAgentResult<T> interactStructured(@NonNull Prompt prompt) {
+      return interactStructured(prompt.text());
+    }
 
     /**
      * Interacts with the agent with an existing context and returns a structured result.

@@ -330,71 +330,11 @@ public final class RouterAgent implements Interactable {
   // ===== Interactable Interface Implementation =====
 
   /**
-   * {@inheritDoc} Delegates to {@link #route(String)}.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull String input) {
-    return route(input);
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #route(Text)}.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Text text) {
-    return route(text);
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #route(Message)}.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Message message) {
-    return route(message);
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #route(Prompt)}.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Prompt prompt) {
-    return route(prompt);
-  }
-
-  /**
    * {@inheritDoc} Delegates to {@link #route(AgenticContext)}.
    */
   @Override
   public @NonNull AgentResult interact(@NonNull AgenticContext context) {
     return route(context);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * <p>Classifies the input and returns the selected agent's stream. If classification fails,
-   * returns a failed AgentStream.
-   */
-  @Override
-  public @NonNull AgentStream interactStream(@NonNull String input) {
-    Objects.requireNonNull(input, "input cannot be null");
-    Optional<Interactable> selected = classify(input);
-    if (selected.isEmpty()) {
-      AgenticContext ctx = AgenticContext.create();
-      return AgentStream.failed(
-              AgentResult.error(
-                      new IllegalStateException("No suitable route found for input"), ctx, 0));
-    }
-    return selected.get().interactStream(input);
-  }
-
-  /**
-   * {@inheritDoc} Classifies the prompt and returns the selected agent's stream.
-   */
-  @Override
-  public @NonNull AgentStream interactStream(@NonNull Prompt prompt) {
-    Objects.requireNonNull(prompt, "prompt cannot be null");
-    return interactStream(prompt.text());
   }
 
   /**
@@ -419,6 +359,7 @@ public final class RouterAgent implements Interactable {
     }
     return selected.get().interactStream(context);
   }
+
 
   // ===== Inner Classes =====
 

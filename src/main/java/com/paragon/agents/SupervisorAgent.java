@@ -246,59 +246,11 @@ public final class SupervisorAgent implements Interactable {
   // ===== Interactable Interface Implementation =====
 
   /**
-   * {@inheritDoc} Delegates to {@link #orchestrate(String)}.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull String input) {
-    return orchestrate(input);
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #orchestrate(Text)}.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Text text) {
-    return orchestrate(text);
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #orchestrate(Message)}.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Message message) {
-    return orchestrate(message);
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #orchestrate(Prompt)}.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Prompt prompt) {
-    return orchestrate(prompt);
-  }
-
-  /**
    * {@inheritDoc} Delegates to {@link #orchestrate(AgenticContext)}.
    */
   @Override
   public @NonNull AgentResult interact(@NonNull AgenticContext context) {
     return orchestrate(context);
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #orchestrateStream(String)}.
-   */
-  @Override
-  public @NonNull AgentStream interactStream(@NonNull String input) {
-    return orchestrateStream(input);
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #orchestrateStream(Prompt)}.
-   */
-  @Override
-  public @NonNull AgentStream interactStream(@NonNull Prompt prompt) {
-    return orchestrateStream(prompt);
   }
 
   /**
@@ -308,6 +260,7 @@ public final class SupervisorAgent implements Interactable {
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
     return orchestrateStream(context);
   }
+
 
   private String buildSupervisorInstructions() {
     StringBuilder sb = new StringBuilder();

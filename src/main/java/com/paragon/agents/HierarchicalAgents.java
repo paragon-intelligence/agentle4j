@@ -253,59 +253,11 @@ public final class HierarchicalAgents implements Interactable {
   // ===== Interactable Interface Implementation =====
 
   /**
-   * {@inheritDoc} Delegates to {@link #execute(String)}.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull String input) {
-    return execute(input);
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #execute(Text)}.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Text text) {
-    return execute(text);
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #execute(Message)}.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Message message) {
-    return execute(message);
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #execute(Prompt)}.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Prompt prompt) {
-    return execute(prompt);
-  }
-
-  /**
    * {@inheritDoc} Delegates to {@link #execute(AgenticContext)}.
    */
   @Override
   public @NonNull AgentResult interact(@NonNull AgenticContext context) {
     return execute(context);
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #executeStream(String)}.
-   */
-  @Override
-  public @NonNull AgentStream interactStream(@NonNull String input) {
-    return executeStream(input);
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #executeStream(Prompt)}.
-   */
-  @Override
-  public @NonNull AgentStream interactStream(@NonNull Prompt prompt) {
-    return executeStream(prompt);
   }
 
   /**
@@ -315,6 +267,7 @@ public final class HierarchicalAgents implements Interactable {
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
     return executeStream(context);
   }
+
 
   private SupervisorAgent buildHierarchy() {
     // Build department supervisors first

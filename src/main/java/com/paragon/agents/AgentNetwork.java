@@ -431,38 +431,6 @@ public final class AgentNetwork implements Interactable {
    * synthesized output. Otherwise, returns the last contribution's output.
    */
   @Override
-  public @NonNull AgentResult interact(@NonNull String input) {
-    return toAgentResult(discuss(input));
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #discuss(Text)} and converts to AgentResult.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Text text) {
-    return toAgentResult(discuss(text));
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #discuss(Message)} and converts to AgentResult.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Message message) {
-    return toAgentResult(discuss(message));
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #discuss(Prompt)} and converts to AgentResult.
-   */
-  @Override
-  public @NonNull AgentResult interact(@NonNull Prompt prompt) {
-    return toAgentResult(discuss(prompt));
-  }
-
-  /**
-   * {@inheritDoc} Delegates to {@link #discuss(AgenticContext)} and converts to AgentResult.
-   */
-  @Override
   public @NonNull AgentResult interact(@NonNull AgenticContext context) {
     return toAgentResult(discuss(context));
   }
@@ -471,31 +439,7 @@ public final class AgentNetwork implements Interactable {
    * {@inheritDoc}
    *
    * <p>If a synthesizer is configured, runs the discussion and streams the synthesis. Otherwise,
-   * returns a failed stream with an error indicating no synthesizer is configured for streaming.
-   */
-  @Override
-  public @NonNull AgentStream interactStream(@NonNull String input) {
-    if (synthesizer == null) {
-      NetworkResult result = discuss(input);
-      return AgentStream.completed(toAgentResult(result));
-    }
-    // Run discussion synchronously, then stream synthesis
-    NetworkResult result = discuss(input);
-    String synthesisPrompt = buildSynthesisPrompt(result);
-    return synthesizer.interactStream(synthesisPrompt);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public @NonNull AgentStream interactStream(@NonNull Prompt prompt) {
-    Objects.requireNonNull(prompt, "prompt cannot be null");
-    return interactStream(prompt.text());
-  }
-
-  /**
-   * {@inheritDoc}
+   * returns a completed stream with the discussion result.
    */
   @Override
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
@@ -507,6 +451,7 @@ public final class AgentNetwork implements Interactable {
     String synthesisPrompt = buildSynthesisPrompt(result);
     return synthesizer.interactStream(synthesisPrompt);
   }
+
 
   private AgentResult toAgentResult(NetworkResult networkResult) {
     String output;
