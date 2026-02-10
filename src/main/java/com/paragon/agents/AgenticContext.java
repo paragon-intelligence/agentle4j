@@ -68,17 +68,17 @@ public final class AgentContext {
   }
 
   public static @NonNull AgentContext create(@NonNull List<ResponseInputItem> history) {
-    return new AgentContext(history, new HashMap<>(), 0);
+    return new AgentContext(new ArrayList<>(history), new HashMap<>(), 0);
   }
 
   public static @NonNull AgentContext create(
       @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state) {
-    return new AgentContext(history, state, 0);
+    return new AgentContext(new ArrayList<>(history), state, 0);
   }
 
   public static @NonNull AgentContext create(
       @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state, int turnCount) {
-    return new AgentContext(history, state, turnCount);
+    return new AgentContext(new ArrayList<>(history), state, turnCount);
   }
 
   /**
