@@ -11,7 +11,8 @@ public record OpenRouterCustomPayload(
     @Nullable OpenRouterProviderConfig providerConfig,
     @Nullable OpenRouterRouteStrategy route,
     @Nullable String user,
-    @Nullable String sessionId) {
+    @Nullable String sessionId,
+    @Nullable TraceMetadata trace) {
 
   /**
    * Checks if all fields in this payload are null.
@@ -23,7 +24,8 @@ public record OpenRouterCustomPayload(
         && providerConfig == null
         && route == null
         && user == null
-        && sessionId == null;
+        && sessionId == null
+        && trace == null;
   }
 
   /**
@@ -45,6 +47,7 @@ public record OpenRouterCustomPayload(
     @Nullable OpenRouterRouteStrategy route = null;
     @Nullable String user = null;
     @Nullable String sessionId = null;
+    @Nullable TraceMetadata trace = null;
 
     public Builder plugins(List<OpenRouterPlugin> plugins) {
       this.plugins = plugins;
@@ -71,9 +74,14 @@ public record OpenRouterCustomPayload(
       return this;
     }
 
+    public Builder trace(TraceMetadata trace) {
+      this.trace = trace;
+      return this;
+    }
+
     public OpenRouterCustomPayload build() {
       return new OpenRouterCustomPayload(
-          this.plugins, this.providerConfig, this.route, this.user, this.sessionId);
+          this.plugins, this.providerConfig, this.route, this.user, this.sessionId, this.trace);
     }
   }
 }

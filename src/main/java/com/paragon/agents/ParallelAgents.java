@@ -1,11 +1,13 @@
 package com.paragon.agents;
 
 import com.paragon.prompts.Prompt;
+import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import com.paragon.telemetry.processors.TraceIdGenerator;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,13 +58,15 @@ public final class ParallelAgents implements Interactable {
 
   private final @NonNull String name;
   private final @NonNull List<Interactable> members;
+  private final @Nullable TraceMetadata traceMetadata;
 
-  private ParallelAgents(@NonNull String name, @NonNull List<Interactable> members) {
+  private ParallelAgents(@NonNull String name, @NonNull List<Interactable> members, @Nullable TraceMetadata traceMetadata) {
     if (members.isEmpty()) {
       throw new IllegalArgumentException("At least one member is required");
     }
     this.name = name;
     this.members = List.copyOf(members);
+    this.traceMetadata = traceMetadata;
   }
 
   /**
@@ -75,7 +79,7 @@ public final class ParallelAgents implements Interactable {
    */
   public static @NonNull ParallelAgents of(@NonNull Interactable... members) {
     Objects.requireNonNull(members, "members cannot be null");
-    return new ParallelAgents("ParallelAgents", Arrays.asList(members));
+    return new ParallelAgents("ParallelAgents", Arrays.asList(members), null);
   }
 
   /**
@@ -86,7 +90,7 @@ public final class ParallelAgents implements Interactable {
    */
   public static @NonNull ParallelAgents of(@NonNull List<Interactable> members) {
     Objects.requireNonNull(members, "members cannot be null");
-    return new ParallelAgents("ParallelAgents", members);
+    return new ParallelAgents("ParallelAgents", members, null);
   }
 
   /**
@@ -99,7 +103,7 @@ public final class ParallelAgents implements Interactable {
   public static @NonNull ParallelAgents named(@NonNull String name, @NonNull Interactable... members) {
     Objects.requireNonNull(name, "name cannot be null");
     Objects.requireNonNull(members, "members cannot be null");
-    return new ParallelAgents(name, Arrays.asList(members));
+    return new ParallelAgents(name, Arrays.asList(members), null);
   }
 
   /**
@@ -571,6 +575,16 @@ public final class ParallelAgents implements Interactable {
     return toCompositeResult(allResults);
   }
 
+  /**
+   * {@inheritDoc} Runs all agents; trace propagated through peer interactions.
+   */
+  @Override
+  public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    // ParallelAgents doesn't directly use trace; it's passed through peer interactions
+    List<AgentResult> allResults = runAll(context);
+    return toCompositeResult(allResults);
+  }
+
   private AgentResult toCompositeResult(List<AgentResult> allResults) {
     if (allResults.isEmpty()) {
       AgenticContext ctx = AgenticContext.create();
@@ -591,6 +605,20 @@ public final class ParallelAgents implements Interactable {
    */
   @Override
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
+    Objects.requireNonNull(context, "context cannot be null");
+    if (!members.isEmpty()) {
+      return members.get(0).interactStream(context.copy());
+    }
+    return AgentStream.failed(
+            AgentResult.error(new IllegalStateException("No members configured"), context, 0));
+  }
+
+  /**
+   * {@inheritDoc} Streams first member; trace propagated through peer interactions.
+   */
+  @Override
+  public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    // ParallelAgents doesn't directly use trace; it's passed through peer interactions
     Objects.requireNonNull(context, "context cannot be null");
     if (!members.isEmpty()) {
       return members.get(0).interactStream(context.copy());

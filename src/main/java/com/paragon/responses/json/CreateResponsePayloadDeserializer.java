@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.responses.OpenRouterCustomPayload;
+import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.*;
 import java.io.IOException;
 import java.util.List;
@@ -72,15 +73,18 @@ public class CreateResponsePayloadDeserializer extends JsonDeserializer<CreateRe
         getObject(mapper, node, "route", new TypeReference<>() {});
     @Nullable String user = getString(node, "user");
     @Nullable String sessionId = getString(node, "session_id");
+    @Nullable TraceMetadata trace =
+        getObject(mapper, node, "trace", new TypeReference<TraceMetadata>() {});
 
     OpenRouterCustomPayload openRouterCustomPayload = null;
     if (plugins != null
         || providerConfig != null
         || route != null
         || user != null
-        || sessionId != null) {
+        || sessionId != null
+        || trace != null) {
       openRouterCustomPayload =
-          new OpenRouterCustomPayload(plugins, providerConfig, route, user, sessionId);
+          new OpenRouterCustomPayload(plugins, providerConfig, route, user, sessionId, trace);
     }
 
     return new CreateResponsePayload(

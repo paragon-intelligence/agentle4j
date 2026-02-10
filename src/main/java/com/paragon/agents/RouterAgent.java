@@ -2,6 +2,7 @@ package com.paragon.agents;
 
 import com.paragon.prompts.Prompt;
 import com.paragon.responses.Responder;
+import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.*;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -59,6 +60,7 @@ public final class RouterAgent implements Interactable {
   private final @NonNull List<Route> routes;
   private final @NonNull Responder responder;
   private final @Nullable Interactable fallback;
+  private final @Nullable TraceMetadata traceMetadata;
 
   private RouterAgent(Builder builder) {
     if (builder.routes.isEmpty()) {
@@ -69,6 +71,7 @@ public final class RouterAgent implements Interactable {
     this.responder = Objects.requireNonNull(builder.responder, "responder is required");
     this.routes = List.copyOf(builder.routes);
     this.fallback = builder.fallback;
+    this.traceMetadata = builder.traceMetadata;
   }
 
   /**
@@ -338,10 +341,43 @@ public final class RouterAgent implements Interactable {
   }
 
   /**
+   * {@inheritDoc} Delegates to {@link #route(AgenticContext)}. Trace propagated via routed agent.
+   */
+  @Override
+  public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    // RouterAgent doesn't directly use trace; it's passed through routed agents
+    return route(context);
+  }
+
+  /**
    * {@inheritDoc} Extracts the last user message for classification and streams from the selected agent.
    */
   @Override
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
+    Objects.requireNonNull(context, "context cannot be null");
+    Optional<String> inputTextOpt = extractLastUserMessage(context);
+    if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
+      return AgentStream.failed(
+              AgentResult.error(
+                      new IllegalStateException("No user message found in context for routing"),
+                      context,
+                      0));
+    }
+    Optional<Interactable> selected = classify(inputTextOpt.get());
+    if (selected.isEmpty()) {
+      return AgentStream.failed(
+              AgentResult.error(
+                      new IllegalStateException("No suitable route found for input"), context, 0));
+    }
+    return selected.get().interactStream(context);
+  }
+
+  /**
+   * {@inheritDoc} Routes and streams via selected agent. Trace propagated via routed agent.
+   */
+  @Override
+  public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    // RouterAgent doesn't directly use trace; it's passed through routed agents
     Objects.requireNonNull(context, "context cannot be null");
     Optional<String> inputTextOpt = extractLastUserMessage(context);
     if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
@@ -382,6 +418,7 @@ public final class RouterAgent implements Interactable {
     private String model;
     private Responder responder;
     private Interactable fallback;
+    private TraceMetadata traceMetadata;
 
     private Builder() {
     }
@@ -443,6 +480,17 @@ public final class RouterAgent implements Interactable {
      */
     public @NonNull Builder fallback(@NonNull Interactable fallback) {
       this.fallback = fallback;
+      return this;
+    }
+
+    /**
+     * Sets the trace metadata for API requests (optional).
+     *
+     * @param trace the trace metadata
+     * @return this builder
+     */
+    public @NonNull Builder traceMetadata(@Nullable TraceMetadata trace) {
+      this.traceMetadata = trace;
       return this;
     }
 

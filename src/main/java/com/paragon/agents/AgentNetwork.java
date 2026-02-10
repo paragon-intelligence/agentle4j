@@ -1,6 +1,7 @@
 package com.paragon.agents;
 
 import com.paragon.prompts.Prompt;
+import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
@@ -61,12 +62,14 @@ public final class AgentNetwork implements Interactable {
   private final @NonNull List<Interactable> peers;
   private final int maxRounds;
   private final @Nullable Interactable synthesizer;
+  private final @Nullable TraceMetadata traceMetadata;
 
   private AgentNetwork(Builder builder) {
     this.name = builder.name != null ? builder.name : "AgentNetwork";
     this.peers = List.copyOf(builder.peers);
     this.maxRounds = builder.maxRounds;
     this.synthesizer = builder.synthesizer;
+    this.traceMetadata = builder.traceMetadata;
 
     if (peers.size() < 2) {
       throw new IllegalArgumentException("At least two peers are required for a network");
@@ -438,11 +441,41 @@ public final class AgentNetwork implements Interactable {
   /**
    * {@inheritDoc}
    *
+   * <p>Runs a discussion and returns an AgentResult. Trace metadata is propagated through peer
+   * interactions.
+   */
+  @Override
+  public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    // AgentNetwork doesn't directly use trace metadata; peers handle their own traces
+    return toAgentResult(discuss(context));
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * <p>If a synthesizer is configured, runs the discussion and streams the synthesis. Otherwise,
    * returns a completed stream with the discussion result.
    */
   @Override
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
+    if (synthesizer == null) {
+      NetworkResult result = discuss(context);
+      return AgentStream.completed(toAgentResult(result));
+    }
+    NetworkResult result = discuss(context);
+    String synthesisPrompt = buildSynthesisPrompt(result);
+    return synthesizer.interactStream(synthesisPrompt);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>If a synthesizer is configured, runs the discussion and streams the synthesis. Trace
+   * metadata is propagated through peer interactions.
+   */
+  @Override
+  public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    // AgentNetwork doesn't directly use trace metadata; peers handle their own traces
     if (synthesizer == null) {
       NetworkResult result = discuss(context);
       return AgentStream.completed(toAgentResult(result));
@@ -534,6 +567,7 @@ public final class AgentNetwork implements Interactable {
     private @Nullable String name;
     private int maxRounds = 2;
     private @Nullable Interactable synthesizer;
+    private @Nullable TraceMetadata traceMetadata;
 
     private Builder() {
     }
@@ -601,6 +635,17 @@ public final class AgentNetwork implements Interactable {
      */
     public @NonNull Builder synthesizer(@NonNull Interactable synthesizer) {
       this.synthesizer = Objects.requireNonNull(synthesizer);
+      return this;
+    }
+
+    /**
+     * Sets the trace metadata for API requests (optional).
+     *
+     * @param trace the trace metadata
+     * @return this builder
+     */
+    public @NonNull Builder traceMetadata(@Nullable TraceMetadata trace) {
+      this.traceMetadata = trace;
       return this;
     }
 

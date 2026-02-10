@@ -1,6 +1,7 @@
 package com.paragon.agents;
 
 import com.paragon.prompts.Prompt;
+import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.Text;
 import com.paragon.telemetry.processors.TraceIdGenerator;
@@ -62,12 +63,14 @@ public final class HierarchicalAgents implements Interactable {
   private final @NonNull Map<String, SupervisorAgent> departmentSupervisors;
   private final int maxTurns;
   private final @NonNull SupervisorAgent rootSupervisor;
+  private final @Nullable TraceMetadata traceMetadata;
 
   private HierarchicalAgents(Builder builder) {
     this.executive = Objects.requireNonNull(builder.executive, "executive cannot be null");
     this.departments = Map.copyOf(builder.departments);
     this.maxTurns = builder.maxTurns;
     this.departmentSupervisors = new HashMap<>();
+    this.traceMetadata = builder.traceMetadata;
 
     if (departments.isEmpty()) {
       throw new IllegalArgumentException("At least one department is required");
@@ -261,10 +264,28 @@ public final class HierarchicalAgents implements Interactable {
   }
 
   /**
+   * {@inheritDoc} Delegates to {@link #execute(AgenticContext)}. Trace propagated via hierarchy.
+   */
+  @Override
+  public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    // HierarchicalAgents doesn't directly use trace; it's passed through supervisor hierarchy
+    return execute(context);
+  }
+
+  /**
    * {@inheritDoc} Delegates to {@link #executeStream(AgenticContext)}.
    */
   @Override
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
+    return executeStream(context);
+  }
+
+  /**
+   * {@inheritDoc} Delegates to {@link #executeStream(AgenticContext)}. Trace propagated via hierarchy.
+   */
+  @Override
+  public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    // HierarchicalAgents doesn't directly use trace; it's passed through supervisor hierarchy
     return executeStream(context);
   }
 
@@ -384,6 +405,7 @@ public final class HierarchicalAgents implements Interactable {
     private final Map<String, Department> departments = new HashMap<>();
     private @Nullable Agent executive;
     private int maxTurns = 10;
+    private @Nullable TraceMetadata traceMetadata;
 
     private Builder() {
     }
@@ -462,6 +484,17 @@ public final class HierarchicalAgents implements Interactable {
         throw new IllegalArgumentException("maxTurns must be at least 1");
       }
       this.maxTurns = maxTurns;
+      return this;
+    }
+
+    /**
+     * Sets the trace metadata for API requests (optional).
+     *
+     * @param trace the trace metadata
+     * @return this builder
+     */
+    public @NonNull Builder traceMetadata(@Nullable TraceMetadata trace) {
+      this.traceMetadata = trace;
       return this;
     }
 

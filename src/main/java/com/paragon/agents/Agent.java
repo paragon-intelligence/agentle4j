@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.agents.context.ContextManagementConfig;
 import com.paragon.prompts.Prompt;
 import com.paragon.responses.Responder;
+import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.exception.AgentExecutionException;
 import com.paragon.responses.exception.GuardrailException;
 import com.paragon.responses.exception.ToolExecutionException;
@@ -126,6 +127,7 @@ public final class Agent implements Serializable, Interactable {
   private final @Nullable Class<?> outputType;
   private final @Nullable Double temperature;
   private final @NonNull TelemetryContext telemetryContext;
+  private final @Nullable TraceMetadata traceMetadata;
 
   // ===== Context Management =====
   private final @Nullable ContextManagementConfig contextManagementConfig;
@@ -145,6 +147,7 @@ public final class Agent implements Serializable, Interactable {
     this.temperature = builder.temperature;
     this.telemetryContext =
             builder.telemetryContext != null ? builder.telemetryContext : TelemetryContext.empty();
+    this.traceMetadata = builder.traceMetadata;
     this.telemetryProcessors =
             builder.telemetryProcessors.isEmpty()
                     ? ProcessorRegistry.empty()
@@ -323,6 +326,20 @@ public final class Agent implements Serializable, Interactable {
     return new AgentStream(this, inputList, context, responder, objectMapper);
   }
 
+  /**
+   * Interacts with the agent with streaming using an existing context and trace metadata.
+   *
+   * @param context the conversation context containing history
+   * @param trace optional trace metadata (overrides agent-level configuration)
+   * @return an AgentStream for processing streaming events
+   */
+  @Override
+  public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    // Trace metadata for streaming will be handled when AgentStream is updated
+    // For now, just delegate to AgentStream constructor
+    return new AgentStream(this, List.of(), context, responder, objectMapper);
+  }
+
   // ===== Streaming API =====
 
   /**
@@ -450,10 +467,14 @@ public final class Agent implements Serializable, Interactable {
    * blocking is cheap and does not consume platform threads.
    *
    * @param context the conversation context containing all history
+   * @param trace optional trace metadata (overrides agent-level configuration)
    * @return the agent's result
    */
-  public @NonNull AgentResult interact(@NonNull AgenticContext context) {
-    return interactBlocking(context, null);
+  @Override
+  public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    // Merge trace: method parameter > instance field
+    TraceMetadata finalTrace = trace != null ? trace : this.traceMetadata;
+    return interactBlocking(context, null, finalTrace);
   }
 
   // ===== Core Interaction Methods =====
@@ -463,11 +484,12 @@ public final class Agent implements Serializable, Interactable {
    *
    * @param context   the conversation context containing all history
    * @param callbacks optional loop callbacks for streaming/events
+   * @param trace optional trace metadata to include in API requests
    * @return the agent result
    */
   @NonNull
   AgentResult interactBlocking(
-          @NonNull AgenticContext context, @Nullable LoopCallbacks callbacks) {
+          @NonNull AgenticContext context, @Nullable LoopCallbacks callbacks, @Nullable TraceMetadata trace) {
     Objects.requireNonNull(context, "context cannot be null");
 
     // Auto-initialize trace context if not set (enables automatic correlation)
@@ -489,8 +511,8 @@ public final class Agent implements Serializable, Interactable {
       }
     }
 
-    // Execute agentic loop
-    return executeAgenticLoop(context, new ArrayList<>(), callbacks, "");
+    // Execute agentic loop with trace
+    return executeAgenticLoop(context, new ArrayList<>(), callbacks, "", trace);
   }
 
   /**
@@ -500,7 +522,8 @@ public final class Agent implements Serializable, Interactable {
           AgenticContext context,
           List<ToolExecution> initialExecutions,
           @Nullable LoopCallbacks callbacks,
-          String fallbackHandoffText) {
+          String fallbackHandoffText,
+          @Nullable TraceMetadata trace) {
 
     List<ToolExecution> allToolExecutions = new ArrayList<>(initialExecutions);
     Response lastResponse = null;
@@ -517,7 +540,7 @@ public final class Agent implements Serializable, Interactable {
         // Build payload and call LLM with trace context
         CreateResponsePayload payload = buildPayload(context);
         try {
-          lastResponse = responder.respond(payload, telemetryCtx);
+          lastResponse = responder.respond(payload, telemetryCtx, trace);
           //lastResponseId = lastResponse.id();
         } catch (Exception e) {
           // Wrap LLM call failures in AgentExecutionException
@@ -697,7 +720,7 @@ public final class Agent implements Serializable, Interactable {
           List<ToolExecution> previousExecutions,
           int startTurn) {
     // Delegate to unified loop
-    return executeAgenticLoop(context, previousExecutions, null, "");
+    return executeAgenticLoop(context, previousExecutions, null, "", null);
   }
 
   private CreateResponsePayload buildPayload(AgenticContext context) {
@@ -967,6 +990,8 @@ public final class Agent implements Serializable, Interactable {
     private int maxTurns = 10;
     // Context management
     private @Nullable ContextManagementConfig contextManagementConfig;
+    // Trace metadata
+    private @Nullable TraceMetadata traceMetadata;
 
     /**
      * Sets the agent's name (required).
@@ -1323,6 +1348,17 @@ public final class Agent implements Serializable, Interactable {
      */
     public @NonNull Builder telemetryContext(@NonNull TelemetryContext context) {
       this.telemetryContext = Objects.requireNonNull(context);
+      return this;
+    }
+
+    /**
+     * Sets the trace metadata for API requests (optional).
+     *
+     * @param trace the trace metadata
+     * @return this builder
+     */
+    public @NonNull Builder traceMetadata(@Nullable TraceMetadata trace) {
+      this.traceMetadata = trace;
       return this;
     }
 

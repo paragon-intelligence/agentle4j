@@ -73,6 +73,7 @@ public class Responder {
   private final @NonNull ProcessorRegistry telemetryProcessors;
   private final @Nullable OpenRouterModelRegistry modelRegistry;
   private final @NonNull RetryPolicy retryPolicy;
+  private final @Nullable TraceMetadata traceMetadata;
 
   private Responder(
       @Nullable ResponsesAPIProvider provider,
@@ -83,7 +84,8 @@ public class Responder {
       @NonNull ObjectMapper objectMapper,
       @NonNull ProcessorRegistry telemetryProcessors,
       @Nullable OpenRouterModelRegistry modelRegistry,
-      @NonNull RetryPolicy retryPolicy) {
+      @NonNull RetryPolicy retryPolicy,
+      @Nullable TraceMetadata traceMetadata) {
     this.provider = provider;
     this.baseUrl = Objects.requireNonNull(baseUrl);
     this.jsonSchemaProducer = Objects.requireNonNull(jsonSchemaProducer);
@@ -92,6 +94,7 @@ public class Responder {
     this.telemetryProcessors = telemetryProcessors;
     this.modelRegistry = modelRegistry;
     this.retryPolicy = Objects.requireNonNull(retryPolicy);
+    this.traceMetadata = traceMetadata;
     this.headers =
         Headers.of(
             "Authorization",
@@ -116,7 +119,19 @@ public class Responder {
    * @throws RuntimeException if the request fails after all retries
    */
   public @NonNull Response respond(@NonNull CreateResponsePayload payload) {
-    return respond(payload, UUID.randomUUID().toString(), TelemetryContext.empty());
+    return respond(payload, UUID.randomUUID().toString(), TelemetryContext.empty(), null);
+  }
+
+  /**
+   * Sends a request to the API with trace metadata override.
+   *
+   * @param payload the request payload
+   * @param trace trace metadata (overrides instance-level configuration)
+   * @return the API response
+   */
+  public @NonNull Response respond(
+      @NonNull CreateResponsePayload payload, @Nullable TraceMetadata trace) {
+    return respond(payload, UUID.randomUUID().toString(), TelemetryContext.empty(), trace);
   }
 
   /**
@@ -129,7 +144,22 @@ public class Responder {
    */
   public @NonNull Response respond(
       @NonNull CreateResponsePayload payload, @NonNull TelemetryContext context) {
-    return respond(payload, UUID.randomUUID().toString(), context);
+    return respond(payload, UUID.randomUUID().toString(), context, null);
+  }
+
+  /**
+   * Sends a request to the API with telemetry context and trace metadata override.
+   *
+   * @param payload the request payload
+   * @param context telemetry context with user_id, tags, metadata
+   * @param trace trace metadata (overrides instance-level configuration)
+   * @return the API response
+   */
+  public @NonNull Response respond(
+      @NonNull CreateResponsePayload payload,
+      @NonNull TelemetryContext context,
+      @Nullable TraceMetadata trace) {
+    return respond(payload, UUID.randomUUID().toString(), context, trace);
   }
 
   /**
@@ -141,7 +171,22 @@ public class Responder {
    */
   public @NonNull Response respond(
       @NonNull CreateResponsePayload payload, @NonNull String sessionId) {
-    return respond(payload, sessionId, TelemetryContext.empty());
+    return respond(payload, sessionId, TelemetryContext.empty(), null);
+  }
+
+  /**
+   * Sends a request to the API with session ID and trace metadata override.
+   *
+   * @param payload the request payload
+   * @param sessionId unique identifier for this session (used for trace correlation)
+   * @param trace trace metadata (overrides instance-level configuration)
+   * @return the API response
+   */
+  public @NonNull Response respond(
+      @NonNull CreateResponsePayload payload,
+      @NonNull String sessionId,
+      @Nullable TraceMetadata trace) {
+    return respond(payload, sessionId, TelemetryContext.empty(), trace);
   }
 
   /**
@@ -156,6 +201,72 @@ public class Responder {
       @NonNull CreateResponsePayload payload,
       @NonNull String sessionId,
       @NonNull TelemetryContext context) {
+    return respond(payload, sessionId, context, null);
+  }
+
+  /**
+   * Sends a request to the API with full telemetry context and trace metadata.
+   *
+   * <p>This is the main respond method that all other overloads delegate to.
+   *
+   * @param payload the request payload
+   * @param sessionId unique identifier for this session (used for trace correlation)
+   * @param context telemetry context with user_id, tags, metadata
+   * @param trace trace metadata (overrides instance-level configuration)
+   * @return the API response
+   */
+  public @NonNull Response respond(
+      @NonNull CreateResponsePayload payload,
+      @NonNull String sessionId,
+      @NonNull TelemetryContext context,
+      @Nullable TraceMetadata trace) {
+
+    // Merge trace metadata: method parameter > instance field > payload
+    TraceMetadata finalTrace = trace != null ? trace : this.traceMetadata;
+    
+    // If we have trace metadata to add, rebuild the payload with it
+    if (finalTrace != null) {
+      OpenRouterCustomPayload existingCustom = payload.openRouterCustomPayload();
+      OpenRouterCustomPayload.Builder customBuilder = existingCustom != null 
+          ? OpenRouterCustomPayload.builder()
+              .plugins(existingCustom.plugins())
+              .providerConfig(existingCustom.providerConfig())
+              .route(existingCustom.route())
+              .user(existingCustom.user())
+              .sessionId(existingCustom.sessionId())
+              .trace(finalTrace)
+          : OpenRouterCustomPayload.builder().trace(finalTrace);
+      
+      // Rebuild payload with merged trace
+      payload = new CreateResponsePayload(
+          payload.background(),
+          payload.conversation(),
+          payload.include(),
+          payload.input(),
+          payload.instructions(),
+          payload.maxOutputTokens(),
+          payload.maxToolCalls(),
+          payload.metadata(),
+          payload.model(),
+          payload.parallelToolCalls(),
+          payload.prompt(),
+          payload.promptCacheKey(),
+          payload.promptCacheRetention(),
+          payload.reasoning(),
+          payload.safetyIdentifier(),
+          payload.serviceTier(),
+          payload.store(),
+          payload.stream(),
+          payload.streamOptions(),
+          payload.temperature(),
+          payload.text(),
+          payload.toolChoice(),
+          payload.tools(),
+          payload.topLogprobs(),
+          payload.topP(),
+          payload.truncation(),
+          customBuilder.build());
+    }
 
     // Use parent trace context if provided, otherwise generate new IDs
     String traceId =
@@ -248,7 +359,20 @@ public class Responder {
    * @return the parsed response
    */
   public <T> @NonNull ParsedResponse<T> respond(CreateResponsePayload.Structured<T> payload) {
-    return respond(payload, UUID.randomUUID().toString());
+    return respond(payload, UUID.randomUUID().toString(), (TraceMetadata) null);
+  }
+
+  /**
+   * Sends a structured output request with trace metadata override.
+   *
+   * @param payload the structured request payload
+   * @param trace trace metadata (overrides instance-level configuration)
+   * @param <T> the type to parse the response into
+   * @return the parsed response
+   */
+  public <T> @NonNull ParsedResponse<T> respond(
+      CreateResponsePayload.Structured<T> payload, @Nullable TraceMetadata trace) {
+    return respond(payload, UUID.randomUUID().toString(), trace);
   }
 
   /**
@@ -261,6 +385,22 @@ public class Responder {
    */
   public <T> @NonNull ParsedResponse<T> respond(
       CreateResponsePayload.Structured<T> payload, @NonNull String sessionId) {
+    return respond(payload, sessionId, (TraceMetadata) null);
+  }
+
+  /**
+   * Sends a structured output request with session ID and trace metadata.
+   *
+   * @param payload the structured request payload
+   * @param sessionId unique identifier for this session
+   * @param trace trace metadata (overrides instance-level configuration)
+   * @param <T> the type to parse the response into
+   * @return the parsed response
+   */
+  public <T> @NonNull ParsedResponse<T> respond(
+      CreateResponsePayload.Structured<T> payload,
+      @NonNull String sessionId,
+      @Nullable TraceMetadata trace) {
     if (payload.hasEmptyText()) {
       throw new IllegalArgumentException("\"payload.text\" parameter cannot be null.");
     }
@@ -280,7 +420,7 @@ public class Responder {
           """);
     }
 
-    Response response = respond(((CreateResponsePayload) payload), sessionId);
+    Response response = respond(((CreateResponsePayload) payload), sessionId, TelemetryContext.empty(), trace);
 
     try {
       return response.parse(payload.responseType(), objectMapper);
@@ -296,11 +436,22 @@ public class Responder {
    * @return the API response
    */
   public @NonNull Response respond(String input) {
+    return respond(input, null);
+  }
+
+  /**
+   * Simple text-only respond method with trace metadata.
+   *
+   * @param input the user message
+   * @param trace trace metadata (overrides instance-level configuration)
+   * @return the API response
+   */
+  public @NonNull Response respond(String input, @Nullable TraceMetadata trace) {
     var payload = CreateResponsePayload.builder().addUserMessage(input);
     if (provider != null && provider.equals(ResponsesAPIProvider.OPEN_ROUTER)) {
       payload.model("openrouter/auto");
     }
-    return respond(payload.build());
+    return respond(payload.build(), trace);
   }
 
   /**
@@ -454,6 +605,7 @@ public class Responder {
     @Nullable private String apiKey = null;
     @NonNull private ObjectMapper objectMapper = ResponsesApiObjectMapper.create();
     @NonNull private RetryPolicy retryPolicy = RetryPolicy.defaults();
+    @Nullable private TraceMetadata traceMetadata = null;
 
     public Builder openRouter() {
       provider = ResponsesAPIProvider.OPEN_ROUTER;
@@ -539,6 +691,19 @@ public class Responder {
       return this;
     }
 
+    /**
+     * Sets the default trace metadata for all requests.
+     *
+     * <p>This can be overridden per-request by passing trace metadata to respond() methods.
+     *
+     * @param traceMetadata the trace metadata to use by default
+     * @return this builder
+     */
+    public Builder traceMetadata(@Nullable TraceMetadata traceMetadata) {
+      this.traceMetadata = traceMetadata;
+      return this;
+    }
+
     public @NonNull Responder build() {
       HttpUrl resolvedBaseUrl;
       if (baseUrl != null) {
@@ -582,7 +747,8 @@ public class Responder {
           objectMapper,
           ProcessorRegistry.of(telemetryProcessors),
           resolvedModelRegistry,
-          retryPolicy);
+          retryPolicy,
+          traceMetadata);
     }
   }
 }

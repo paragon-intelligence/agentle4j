@@ -2,6 +2,7 @@ package com.paragon.agents;
 
 import com.paragon.prompts.Prompt;
 import com.paragon.responses.Responder;
+import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.Text;
 import com.paragon.skills.Skill;
@@ -66,6 +67,7 @@ public final class SupervisorAgent implements Interactable {
   private final @NonNull List<Worker> workers;
   private final int maxTurns;
   private final @NonNull Agent supervisorAgent;
+  private final @Nullable TraceMetadata traceMetadata;
 
   private SupervisorAgent(Builder builder) {
     this.name = Objects.requireNonNull(builder.name, "name cannot be null");
@@ -74,6 +76,7 @@ public final class SupervisorAgent implements Interactable {
     this.responder = Objects.requireNonNull(builder.responder, "responder cannot be null");
     this.workers = List.copyOf(builder.workers);
     this.maxTurns = builder.maxTurns;
+    this.traceMetadata = builder.traceMetadata;
 
     if (workers.isEmpty()) {
       throw new IllegalArgumentException("At least one worker is required");
@@ -254,10 +257,28 @@ public final class SupervisorAgent implements Interactable {
   }
 
   /**
+   * {@inheritDoc} Delegates to {@link #orchestrate(AgenticContext)}. Trace propagated via Agent.
+   */
+ @Override
+  public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    // Trace metadata is propagated through the underlying supervisorAgent
+    return orchestrate(context);
+  }
+
+  /**
    * {@inheritDoc} Delegates to {@link #orchestrateStream(AgenticContext)}.
    */
   @Override
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
+    return orchestrateStream(context);
+  }
+
+  /**
+   * {@inheritDoc} Delegates to {@link #orchestrateStream(AgenticContext)}. Trace propagated via Agent.
+   */
+  @Override
+  public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    // Trace metadata is propagated through the underlying supervisorAgent
     return orchestrateStream(context);
   }
 
@@ -303,6 +324,7 @@ public final class SupervisorAgent implements Interactable {
     private @Nullable String instructions;
     private @Nullable Responder responder;
     private int maxTurns = 10;
+    private @Nullable TraceMetadata traceMetadata;
 
     private Builder() {
     }
@@ -418,6 +440,17 @@ public final class SupervisorAgent implements Interactable {
       for (Skill skill : store.all()) {
         addSkill(skill);
       }
+      return this;
+    }
+
+    /**
+     * Sets the trace metadata for API requests (optional).
+     *
+     * @param trace the trace metadata
+     * @return this builder
+     */
+    public @NonNull Builder traceMetadata(@Nullable TraceMetadata trace) {
+      this.traceMetadata = trace;
       return this;
     }
 

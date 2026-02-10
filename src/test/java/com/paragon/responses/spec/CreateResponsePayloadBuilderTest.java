@@ -579,7 +579,7 @@ class CreateResponsePayloadBuilderTest {
     @Test
     @DisplayName("openRouterCustomPayload() sets OpenRouter payload")
     void openRouterCustomPayload_setsPayload() {
-      OpenRouterCustomPayload orPayload = new OpenRouterCustomPayload(null, null, null, null, null);
+      OpenRouterCustomPayload orPayload = new OpenRouterCustomPayload(null, null, null, null, null, null);
       CreateResponsePayload payload =
           CreateResponsePayload.builder()
               .model("gpt-4o")
