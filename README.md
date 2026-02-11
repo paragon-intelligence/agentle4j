@@ -166,6 +166,543 @@ context.withRequestId("session-123");
 
 See the [Agents Guide](docs/guides/agents.md#agentcontext) for full API reference.
 
+### Message - Anatomy and Usage
+
+The [`Message`](src/main/java/com/paragon/responses/spec/Message.java) class is the core building block for representing conversation history and input to AI models. Understanding its structure is essential when implementing endpoints or services that work with conversation data.
+
+#### Class Structure
+
+`Message` is a **sealed abstract class** with three concrete implementations based on role hierarchy:
+
+```
+Message (abstract)
+├── DeveloperMessage  (highest priority - system instructions)
+├── UserMessage       (standard priority - user input)
+└── AssistantMessage  (context only - AI responses)
+```
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `content` | `List<MessageContent>` | Non-empty list of message content (text, images, audio, etc.). Immutable and guaranteed non-null. |
+| `status` | `InputMessageStatus` | Processing status: `COMPLETED`, `IN_PROGRESS`, or `INCOMPLETE`. Can be `null` (treated as completed). |
+| `role` | `MessageRole` | Role identifier: `DEVELOPER`, `USER`, or `ASSISTANT` (abstract method implemented by subclasses). |
+
+#### Creating Messages
+
+**Factory Methods** (recommended for simple cases):
+
+```java
+// User messages - most common for user input
+UserMessage userMsg = Message.user("Hello, I need help");
+
+// Developer messages - system-level instructions
+DeveloperMessage sysMsg = Message.developer("You are a helpful assistant.");
+
+// Assistant messages - previous AI responses for context
+AssistantMessage aiMsg = Message.assistant("I'm here to help!");
+```
+
+**Multi-content Messages** (for multi-modal input):
+
+```java
+// Text + Image combination
+UserMessage multiModal = Message.user(List.of(
+    Text.valueOf("Analyze this chart:"),
+    Image.fromUrl("https://example.com/chart.jpg"),
+    Text.valueOf("Focus on Q4 trends.")
+));
+```
+
+**Builder Pattern** (for complex construction):
+
+```java
+UserMessage complexMsg = Message.builder()
+    .addText("Please review this data:")
+    .addContent(Image.fromBytes(imageData))
+    .addText("Provide recommendations.")
+    .status(InputMessageStatus.COMPLETED)
+    .asUser();
+
+// Conditional content building
+MessageBuilder builder = Message.builder()
+    .addText("Process this request");
+
+if (includeImage) {
+    builder.addContent(imageContent);
+}
+
+UserMessage msg = builder.asUser(); // or .asDeveloper() / .asAssistant()
+```
+
+#### MessageContent Types
+
+`MessageContent` is a **sealed interface** that represents the actual content within a message. It has three implementations:
+
+```
+MessageContent (sealed interface)
+├── Text        - Plain text content
+├── Image       - Image content (URL, file ID, or base64)
+└── File        - File attachments (documents, audio, etc.)
+```
+
+##### Text Content
+
+The simplest and most common content type. Use for all text-based input/output:
+
+```java
+// Factory method (recommended)
+Text text = Text.valueOf("Hello, world!");
+
+// Direct constructor
+Text text = new Text("Hello, world!");
+
+// Get the text value
+String value = text.text();  // "Hello, world!"
+String stringValue = text.toString();  // "Hello, world!"
+```
+
+**JSON representation:**
+
+```json
+{
+  "type": "input_text",
+  "text": "Hello, world!"
+}
+```
+
+**Note:** Output messages from the API use `"type": "output_text"` instead of `"input_text"`.
+
+##### Image Content
+
+Supports three ways to provide images: URL, file ID (from uploaded files), or base64-encoded data:
+
+```java
+// Image from URL (most common)
+Image image = Image.fromUrl("https://example.com/photo.jpg");
+
+// Image from URL with detail level
+Image highResImage = Image.fromUrl(ImageDetail.HIGH, "https://example.com/chart.jpg");
+
+// Image from previously uploaded file
+Image uploadedImage = Image.fromFileId("file-abc123");
+
+// Image from base64 data URL
+Image base64Image = Image.fromBase64("data:image/jpeg;base64,/9j/4AAQ...");
+```
+
+**Image Detail Levels:**
+
+| Level | Use Case | Token Cost |
+|-------|----------|------------|
+| `ImageDetail.AUTO` | Default - balanced quality and cost | Medium |
+| `ImageDetail.HIGH` | OCR, detailed analysis, fine details | High |
+| `ImageDetail.LOW` | Quick classification, general understanding | Low |
+
+**JSON representations:**
+
+```json
+// URL-based image (auto detail)
+{
+  "type": "input_image",
+  "detail": "auto",
+  "image_url": "https://example.com/photo.jpg"
+}
+
+// High-detail image from URL
+{
+  "type": "input_image",
+  "detail": "high",
+  "image_url": "https://example.com/analysis.png"
+}
+
+// Image from file ID
+{
+  "type": "input_image",
+  "detail": "auto",
+  "file_id": "file-abc123"
+}
+
+// Base64-encoded image
+{
+  "type": "input_image",
+  "detail": "auto",
+  "image_url": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA..."
+}
+```
+
+##### File Content
+
+For document attachments, audio files, PDFs, and other file types:
+
+```java
+// File from URL
+File document = File.fromUrl("https://example.com/report.pdf");
+
+// File from URL with filename
+File namedDoc = File.fromUrl("https://example.com/report.pdf", "Q4_Report.pdf");
+
+// File from previously uploaded file ID
+File uploadedFile = File.fromFileId("file-xyz789");
+
+// File from file ID with filename
+File namedUpload = File.fromFileId("file-xyz789", "audio.mp3");
+
+// File from base64-encoded data
+File base64File = File.fromBase64(base64Data, "document.pdf");
+
+// Access file properties
+String url = file.fileUrl();
+String id = file.fileID();
+String data = file.fileData();
+String name = file.filename();
+```
+
+**JSON representations:**
+
+```json
+// File from URL
+{
+  "type": "input_file",
+  "file_url": "https://example.com/document.pdf"
+}
+
+// File from URL with filename
+{
+  "type": "input_file",
+  "file_url": "https://example.com/document.pdf",
+  "filename": "Q4_Report.pdf"
+}
+
+// File from file ID
+{
+  "type": "input_file",
+  "file_id": "file-xyz789"
+}
+
+// File from base64 data
+{
+  "type": "input_file",
+  "file_data": "JVBERi0xLjQKJeLjz9M...",
+  "filename": "document.pdf"
+}
+```
+
+#### Complete JSON Request Examples
+
+**Simple text-only conversation:**
+
+```json
+{
+  "model": "openai/gpt-4o",
+  "input": [
+    {
+      "type": "message",
+      "role": "developer",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "You are a helpful customer support assistant."
+        }
+      ]
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "I can't access my account"
+        }
+      ]
+    },
+    {
+      "type": "message",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "I can help you with that. Have you tried resetting your password?"
+        }
+      ]
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "Yes, but I didn't receive the reset email"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Multi-modal message with image analysis:**
+
+```json
+{
+  "model": "openai/gpt-4o",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "Analyze this sales chart and provide insights:"
+        },
+        {
+          "type": "input_image",
+          "detail": "high",
+          "image_url": "https://example.com/charts/q4-sales.png"
+        },
+        {
+          "type": "input_text",
+          "text": "Focus on trends and anomalies."
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Message with document attachment:**
+
+```json
+{
+  "model": "openai/gpt-4o",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "Summarize the key points from this report:"
+        },
+        {
+          "type": "input_file",
+          "file_url": "https://example.com/reports/annual-report.pdf",
+          "filename": "Annual_Report_2024.pdf"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Complex multi-modal conversation:**
+
+```json
+{
+  "model": "openai/gpt-4o",
+  "input": [
+    {
+      "type": "message",
+      "role": "developer",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "You are an expert image analyst. Always provide detailed observations."
+        }
+      ]
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "Compare these two images:"
+        },
+        {
+          "type": "input_image",
+          "detail": "high",
+          "image_url": "https://example.com/before.jpg"
+        },
+        {
+          "type": "input_text",
+          "text": "vs"
+        },
+        {
+          "type": "input_image",
+          "detail": "high",
+          "image_url": "https://example.com/after.jpg"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Using base64-encoded images:**
+
+```json
+{
+  "model": "openai/gpt-4o",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "What's in this screenshot?"
+        },
+        {
+          "type": "input_image",
+          "detail": "auto",
+          "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Working with Conversation History
+
+Messages are typically used in lists to represent conversation history:
+
+```java
+// Building conversation history for API calls
+List<Message> history = new ArrayList<>();
+history.add(Message.developer("You are a customer support agent."));
+history.add(Message.user("I can't log in to my account"));
+history.add(Message.assistant("I can help you with that. Have you tried resetting your password?"));
+history.add(Message.user("Yes, but I didn't receive the email"));
+
+// Use in payload
+var payload = CreateResponsePayload.builder()
+    .model("openai/gpt-4o")
+    .addMessages(history)
+    .build();
+```
+
+#### Extracting Content
+
+```java
+// Get all text content concatenated
+String text = message.outputText();  // "HelloWorld" (no spaces)
+
+// Get text with spaces between items
+String readable = message.getTextContent();  // "Hello World"
+
+// Check if message contains only text (no images/audio)
+if (message.isTextOnly()) {
+    processAsText(message.getTextContent());
+}
+
+// Access raw content list
+List<MessageContent> contents = message.content();
+```
+
+#### Status Checking
+
+```java
+// Check processing status
+if (message.isCompleted()) {
+    processMessage(message);
+}
+
+if (message.isInProgress()) {
+    showLoadingIndicator();
+}
+
+// Get raw status (can be null)
+InputMessageStatus status = message.status();
+```
+
+#### Role Hierarchy and Precedence
+
+The role determines how the AI model interprets and prioritizes instructions:
+
+1. **Developer Role** (`DeveloperMessage`) - Highest priority
+   - Establishes system behavior, safety constraints, operational parameters
+   - Use for: System prompts, guardrails, output format instructions
+
+2. **User Role** (`UserMessage`) - Standard priority
+   - Contains user queries, instructions, and interaction content
+   - Use for: User input, questions, requests
+
+3. **Assistant Role** (`AssistantMessage`) - Context only
+   - Provides conversation history and previous model responses
+   - Use for: AI-generated responses from previous turns
+
+#### Key Characteristics
+
+- **Immutable** - All Message instances are thread-safe
+- **Validated** - Content cannot be null or empty; null content items throw `NullPointerException`
+- **Defensive Copying** - Content list is copied during construction and on access
+- **JSON Serializable** - Uses Jackson with polymorphic type handling via `MessageDeserializer`
+
+#### Common Patterns for Endpoint Implementation
+
+**Building message history from database:**
+
+```java
+public List<Message> loadConversationHistory(String conversationId) {
+    // Load from your storage
+    List<ConversationRecord> records = repository.findByConversationId(conversationId);
+    
+    return records.stream()
+        .map(record -> switch (record.getRole()) {
+            case "user" -> Message.user(record.getContent());
+            case "assistant" -> Message.assistant(record.getContent());
+            case "developer" -> Message.developer(record.getContent());
+            default -> throw new IllegalArgumentException("Unknown role: " + record.getRole());
+        })
+        .collect(Collectors.toList());
+}
+```
+
+**Persisting messages to database:**
+
+```java
+public void saveMessage(Message message, String conversationId) {
+    ConversationRecord record = new ConversationRecord();
+    record.setConversationId(conversationId);
+    record.setRole(message.role().name().toLowerCase());
+    record.setContent(message.getTextContent());
+    record.setStatus(message.status() != null ? message.status().name() : "COMPLETED");
+    record.setTimestamp(Instant.now());
+    
+    repository.save(record);
+}
+```
+
+**Example REST endpoint with message history:**
+
+```java
+@PostMapping("/chat")
+public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
+    // Load existing conversation history
+    List<Message> history = loadConversationHistory(request.getConversationId());
+    
+    // Add new user message
+    history.add(Message.user(request.getMessage()));
+    
+    // Create payload with full history
+    var payload = CreateResponsePayload.builder()
+        .model("openai/gpt-4o")
+        .addMessages(history)
+        .build();
+    
+    // Get AI response
+    Response response = responder.respond(payload);
+    
+    // Save assistant response to history
+    Message assistantMsg = Message.assistant(response.outputText());
+    saveMessage(assistantMsg, request.getConversationId());
+    
+    return ResponseEntity.ok(new ChatResponse(response.outputText()));
+}
+```
+
 ## Function calling
 
 Define tools with a class that extends `FunctionTool`:
