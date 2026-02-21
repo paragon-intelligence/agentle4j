@@ -229,6 +229,15 @@ public final class Agent implements Serializable, Interactable {
   }
 
   /**
+   * Returns the responder used by this agent.
+   *
+   * @return the responder
+   */
+  public @NonNull Responder responder() {
+    return responder;
+  }
+
+  /**
    * Returns the maximum number of LLM turns allowed.
    *
    * @return the max turns limit
@@ -492,12 +501,7 @@ public final class Agent implements Serializable, Interactable {
           @NonNull AgenticContext context, @Nullable LoopCallbacks callbacks, @Nullable TraceMetadata trace) {
     Objects.requireNonNull(context, "context cannot be null");
 
-    // Auto-initialize trace context if not set (enables automatic correlation)
-    if (!context.hasTraceContext()) {
-      String traceId = TraceIdGenerator.generateTraceId();
-      String spanId = TraceIdGenerator.generateSpanId();
-      context.withTraceContext(traceId, spanId);
-    }
+    context.ensureTraceContext();
 
     // Validate input guardrails before processing
     String inputText = extractTextFromInput(context.getHistory());
@@ -841,8 +845,7 @@ public final class Agent implements Serializable, Interactable {
     Instant start = Instant.now();
     try {
       // Execute tool with context using virtual-thread-safe ScopedValue
-      FunctionToolCallOutput output = SubAgentTool.callWithContext(
-              context,
+      FunctionToolCallOutput output = context.callAsCurrent(
               () -> {
                 try {
                   return toolStore.execute(call);

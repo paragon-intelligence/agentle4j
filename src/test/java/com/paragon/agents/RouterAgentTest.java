@@ -353,7 +353,7 @@ class RouterAgentTest {
       enqueueResponse("1");
       enqueueSuccessResponse("Target response");
 
-      AgentResult result = router.route("test input");
+      AgentResult result = router.interact("test input");
 
       assertNotNull(result);
       assertInstanceOf(AgentResult.class, result);
@@ -373,7 +373,7 @@ class RouterAgentTest {
 
       enqueueResponse("invalid"); // No valid agent selected
 
-      AgentResult result = router.route("test");
+      AgentResult result = router.interact("test");
 
       assertTrue(result.isError());
     }
@@ -384,7 +384,7 @@ class RouterAgentTest {
       Agent target = createTestAgent("Target");
       RouterAgent router = createRouter(target);
 
-      assertThrows(NullPointerException.class, () -> router.route((String) null));
+      assertThrows(NullPointerException.class, () -> router.interact((String) null));
     }
   }
 
@@ -403,7 +403,7 @@ class RouterAgentTest {
       enqueueResponse("1");
       enqueueSuccessResponse("Target response");
 
-      AgentResult result = router.route(Text.valueOf("test text input"));
+      AgentResult result = router.interact(Text.valueOf("test text input"));
 
       assertNotNull(result);
     }
@@ -414,7 +414,7 @@ class RouterAgentTest {
       Agent target = createTestAgent("Target");
       RouterAgent router = createRouter(target);
 
-      assertThrows(NullPointerException.class, () -> router.route((Text) null));
+      assertThrows(NullPointerException.class, () -> router.interact((Text) null));
     }
   }
 
@@ -431,7 +431,7 @@ class RouterAgentTest {
       enqueueResponse("1");
       enqueueSuccessResponse("Target response");
 
-      AgentResult result = router.route(Message.user("test message input"));
+      AgentResult result = router.interact(Message.user("test message input"));
 
       assertNotNull(result);
     }
@@ -442,7 +442,7 @@ class RouterAgentTest {
       Agent target = createTestAgent("Target");
       RouterAgent router = createRouter(target);
 
-      assertThrows(NullPointerException.class, () -> router.route((Message) null));
+      assertThrows(NullPointerException.class, () -> router.interact((Message) null));
     }
   }
 
@@ -462,7 +462,7 @@ class RouterAgentTest {
       enqueueResponse("1");
       enqueueSuccessResponse("Target response");
 
-      AgentResult result = router.route(context);
+      AgentResult result = router.interact(context);
 
       assertNotNull(result);
     }
@@ -475,7 +475,7 @@ class RouterAgentTest {
 
       AgenticContext context = AgenticContext.create(); // Empty context
 
-      AgentResult result = router.route(context);
+      AgentResult result = router.interact(context);
 
       assertTrue(result.isError());
     }
@@ -486,25 +486,13 @@ class RouterAgentTest {
       Agent target = createTestAgent("Target");
       RouterAgent router = createRouter(target);
 
-      assertThrows(NullPointerException.class, () -> router.route((AgenticContext) null));
+      assertThrows(NullPointerException.class, () -> router.interact((AgenticContext) null));
     }
   }
 
   @Nested
   @DisplayName("routeStream()")
   class RouteStream {
-
-    @Test
-    @DisplayName("routeStream(String) returns RouterStream")
-    void routeStream_string_returnsRouterStream() {
-      Agent target = createTestAgent("Target");
-      RouterAgent router = createRouter(target);
-
-      RouterStream stream = router.routeStream("test input");
-
-      assertNotNull(stream);
-      assertInstanceOf(RouterStream.class, stream);
-    }
 
     @Test
     @DisplayName("routeStream(AgentContext) returns RouterStream")
@@ -519,15 +507,6 @@ class RouterAgentTest {
 
       assertNotNull(stream);
       assertInstanceOf(RouterStream.class, stream);
-    }
-
-    @Test
-    @DisplayName("routeStream(String) throws when input is null")
-    void routeStream_string_throwsWhenNull() {
-      Agent target = createTestAgent("Target");
-      RouterAgent router = createRouter(target);
-
-      assertThrows(NullPointerException.class, () -> router.routeStream((String) null));
     }
 
     @Test

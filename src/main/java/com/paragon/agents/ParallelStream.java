@@ -299,7 +299,7 @@ public final class ParallelStream {
     }
 
     // Second phase: synthesize results
-    String originalQuery = extractLastUserMessage();
+    String originalQuery = context.extractLastUserMessageText("[No query provided]");
     StringBuilder synthesisPrompt = new StringBuilder();
     synthesisPrompt.append("Original query: ").append(originalQuery).append("\n\n");
     synthesisPrompt.append("The following participants have provided their outputs:\n\n");
@@ -339,23 +339,6 @@ public final class ParallelStream {
     }
 
     return synthResult;
-  }
-
-  private String extractLastUserMessage() {
-    List<ResponseInputItem> history = context.getHistory();
-    for (int i = history.size() - 1; i >= 0; i--) {
-      ResponseInputItem item = history.get(i);
-      if (item instanceof Message msg && "user".equals(msg.role())) {
-        if (msg.content() != null) {
-          for (var content : msg.content()) {
-            if (content instanceof Text text) {
-              return text.text();
-            }
-          }
-        }
-      }
-    }
-    return "[No query provided]";
   }
 
   /**

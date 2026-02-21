@@ -1,10 +1,7 @@
 package com.paragon.agents;
 
-import com.paragon.prompts.Prompt;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.responses.TraceMetadata;
-import com.paragon.responses.spec.Message;
-import com.paragon.responses.spec.Text;
-import com.paragon.telemetry.processors.TraceIdGenerator;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -114,107 +111,6 @@ public final class HierarchicalAgents implements Interactable {
   }
 
   /**
-   * Executes a task through the hierarchy.
-   *
-   * <p>The executive receives the task and delegates through managers to workers as appropriate.
-   *
-   * @param task the task description
-   * @return the execution result
-   */
-  public @NonNull AgentResult execute(@NonNull String task) {
-    Objects.requireNonNull(task, "task cannot be null");
-    return rootSupervisor.orchestrate(task);
-  }
-
-  /**
-   * Executes a task with Text content.
-   *
-   * @param text the task text
-   * @return the execution result
-   */
-  public @NonNull AgentResult execute(@NonNull Text text) {
-    Objects.requireNonNull(text, "text cannot be null");
-    return rootSupervisor.orchestrate(text);
-  }
-
-  /**
-   * Executes a task with a Message.
-   *
-   * @param message the task message
-   * @return the execution result
-   */
-  public @NonNull AgentResult execute(@NonNull Message message) {
-    Objects.requireNonNull(message, "message cannot be null");
-    return rootSupervisor.orchestrate(message);
-  }
-
-  /**
-   * Executes a task with a Prompt.
-   *
-   * <p>The prompt's text content is extracted and used as the input.
-   *
-   * @param prompt the task prompt
-   * @return the execution result
-   */
-  public @NonNull AgentResult execute(@NonNull Prompt prompt) {
-    Objects.requireNonNull(prompt, "prompt cannot be null");
-    return execute(prompt.text());
-  }
-
-  /**
-   * Executes a task using an existing context.
-   *
-   * @param context the context with task history
-   * @return the execution result
-   */
-  public @NonNull AgentResult execute(@NonNull AgenticContext context) {
-    Objects.requireNonNull(context, "context cannot be null");
-
-    // Ensure trace correlation
-    if (!context.hasTraceContext()) {
-      context.withTraceContext(
-              TraceIdGenerator.generateTraceId(), TraceIdGenerator.generateSpanId());
-    }
-
-    return rootSupervisor.orchestrate(context);
-  }
-
-  /**
-   * Executes a task with streaming support.
-   *
-   * @param task the task description
-   * @return an AgentStream for processing streaming events
-   */
-  public @NonNull AgentStream executeStream(@NonNull String task) {
-    Objects.requireNonNull(task, "task cannot be null");
-    return rootSupervisor.orchestrateStream(task);
-  }
-
-  /**
-   * Executes a task with streaming using a Prompt.
-   *
-   * <p>The prompt's text content is extracted and used as the input.
-   *
-   * @param prompt the task prompt
-   * @return an AgentStream for processing streaming events
-   */
-  public @NonNull AgentStream executeStream(@NonNull Prompt prompt) {
-    Objects.requireNonNull(prompt, "prompt cannot be null");
-    return executeStream(prompt.text());
-  }
-
-  /**
-   * Executes a task with streaming using an existing context.
-   *
-   * @param context the context with task history
-   * @return an AgentStream for processing streaming events
-   */
-  public @NonNull AgentStream executeStream(@NonNull AgenticContext context) {
-    Objects.requireNonNull(context, "context cannot be null");
-    return rootSupervisor.orchestrateStream(context);
-  }
-
-  /**
    * Sends a task directly to a specific department.
    *
    * <p>Bypasses the executive and sends the task directly to the department manager.
@@ -234,59 +130,33 @@ public final class HierarchicalAgents implements Interactable {
       throw new IllegalArgumentException("Department not found: " + departmentName);
     }
 
-    return deptSupervisor.orchestrate(task);
-  }
-
-  /**
-   * Sends a Prompt directly to a specific department.
-   *
-   * <p>Bypasses the executive and sends the prompt directly to the department manager.
-   *
-   * @param departmentName the department name
-   * @param prompt         the task prompt
-   * @return the department result
-   * @throws IllegalArgumentException if department doesn't exist
-   */
-  public @NonNull AgentResult sendToDepartment(
-          @NonNull String departmentName, @NonNull Prompt prompt) {
-    Objects.requireNonNull(prompt, "prompt cannot be null");
-    return sendToDepartment(departmentName, prompt.text());
+    return deptSupervisor.interact(task);
   }
 
   // ===== Interactable Interface Implementation =====
 
-  /**
-   * {@inheritDoc} Delegates to {@link #execute(AgenticContext)}.
-   */
   @Override
   public @NonNull AgentResult interact(@NonNull AgenticContext context) {
-    return execute(context);
+    return interact(context, null);
   }
 
-  /**
-   * {@inheritDoc} Delegates to {@link #execute(AgenticContext)}. Trace propagated via hierarchy.
-   */
   @Override
   public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-    // HierarchicalAgents doesn't directly use trace; it's passed through supervisor hierarchy
-    return execute(context);
+    Objects.requireNonNull(context, "context cannot be null");
+    context.ensureTraceContext();
+    return rootSupervisor.interact(context, trace);
   }
 
-  /**
-   * {@inheritDoc} Delegates to {@link #executeStream(AgenticContext)}.
-   */
   @Override
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
-    return executeStream(context);
+    return interactStream(context, null);
   }
 
-  /**
-   * {@inheritDoc} Delegates to {@link #executeStream(AgenticContext)}. Trace propagated via hierarchy.
-   */
   @Override
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-    // HierarchicalAgents doesn't directly use trace; it's passed through supervisor hierarchy
-    return executeStream(context);
+    Objects.requireNonNull(context, "context cannot be null");
+    context.ensureTraceContext();
+    return rootSupervisor.interactStream(context, trace);
   }
 
 
@@ -302,7 +172,7 @@ public final class HierarchicalAgents implements Interactable {
                       .name(dept.manager().name() + "_Supervisor")
                       .model(dept.manager().model())
                       .instructions(buildManagerInstructions(dept))
-                      .responder(getResponderFromAgent(dept.manager()))
+                      .responder(dept.manager().responder())
                       .maxTurns(maxTurns);
 
       // Add workers to department supervisor
@@ -319,7 +189,7 @@ public final class HierarchicalAgents implements Interactable {
                     .name(executive.name() + "_Executive")
                     .model(executive.model())
                     .instructions(buildExecutiveInstructions())
-                    .responder(getResponderFromAgent(executive))
+                    .responder(executive.responder())
                     .maxTurns(maxTurns);
 
     for (Map.Entry<String, Department> entry : departments.entrySet()) {
@@ -361,20 +231,6 @@ public final class HierarchicalAgents implements Interactable {
     sb.append("\nDelegate subtasks to your team members. ");
     sb.append("Coordinate their outputs into a cohesive result.");
     return sb.toString();
-  }
-
-  // Helper to get responder from agent - uses reflection since field is private
-  private com.paragon.responses.Responder getResponderFromAgent(Agent agent) {
-    // The agent doesn't expose its responder, so we need to use the first available
-    // For production code, we'd want the Agent to provide access to its responder
-    // For now, we use the executive's responder configuration
-    try {
-      var field = Agent.class.getDeclaredField("responder");
-      field.setAccessible(true);
-      return (com.paragon.responses.Responder) field.get(agent);
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to get responder from agent", e);
-    }
   }
 
   /**
@@ -499,12 +355,164 @@ public final class HierarchicalAgents implements Interactable {
     }
 
     /**
+     * Configures this hierarchy to produce structured output of the specified type.
+     *
+     * <p>Returns a {@link StructuredBuilder} that builds a {@link HierarchicalAgents.Structured}
+     * instead of a regular HierarchicalAgents.
+     *
+     * <p>The executive's final output is parsed as the specified type.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * var hierarchy = HierarchicalAgents.builder()
+     *     .executive(executive)
+     *     .addDepartment("Engineering", techManager, devAgent)
+     *     .structured(ProjectPlan.class)
+     *     .build();
+     *
+     * StructuredAgentResult<ProjectPlan> result = hierarchy.interactStructured("Plan sprint");
+     * ProjectPlan plan = result.output();
+     * }</pre>
+     *
+     * @param <T>        the output type
+     * @param outputType the class of the structured output
+     * @return a structured builder
+     */
+    public <T> @NonNull StructuredBuilder<T> structured(@NonNull Class<T> outputType) {
+      return new StructuredBuilder<>(this, outputType);
+    }
+
+    /**
      * Builds the HierarchicalAgents.
      *
      * @return the configured hierarchy
      */
     public @NonNull HierarchicalAgents build() {
       return new HierarchicalAgents(this);
+    }
+  }
+
+  /**
+   * Builder for creating type-safe structured output hierarchical agents.
+   *
+   * <p>Returned from {@code HierarchicalAgents.builder().structured(Class)}.
+   *
+   * @param <T> the output type
+   */
+  public static final class StructuredBuilder<T> {
+    private final Builder parentBuilder;
+    private final Class<T> outputType;
+    private @Nullable ObjectMapper objectMapper;
+
+    private StructuredBuilder(@NonNull Builder parentBuilder, @NonNull Class<T> outputType) {
+      this.parentBuilder = Objects.requireNonNull(parentBuilder);
+      this.outputType = Objects.requireNonNull(outputType);
+    }
+
+    public @NonNull StructuredBuilder<T> executive(@NonNull Agent executive) {
+      parentBuilder.executive(executive);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> addDepartment(
+            @NonNull String name, @NonNull Agent manager, @NonNull Interactable... workers) {
+      parentBuilder.addDepartment(name, manager, workers);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> addDepartment(
+            @NonNull String name, @NonNull Agent manager, @NonNull List<Interactable> workers) {
+      parentBuilder.addDepartment(name, manager, workers);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> maxTurns(int maxTurns) {
+      parentBuilder.maxTurns(maxTurns);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> traceMetadata(@Nullable TraceMetadata trace) {
+      parentBuilder.traceMetadata(trace);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> objectMapper(@NonNull ObjectMapper objectMapper) {
+      this.objectMapper = Objects.requireNonNull(objectMapper);
+      return this;
+    }
+
+    /**
+     * Builds the type-safe structured hierarchy.
+     *
+     * @return the configured Structured hierarchy
+     */
+    public HierarchicalAgents.Structured<T> build() {
+      HierarchicalAgents hierarchy = parentBuilder.build();
+      ObjectMapper mapper = objectMapper != null ? objectMapper : new ObjectMapper();
+      return new HierarchicalAgents.Structured<>(hierarchy, outputType, mapper);
+    }
+  }
+
+  /**
+   * Type-safe wrapper for hierarchical agents with structured output.
+   *
+   * <p>Delegates all interaction to the wrapped HierarchicalAgents and parses the executive's
+   * final output as the specified type.
+   *
+   * @param <T> the output type
+   */
+  public static final class Structured<T> implements Interactable.Structured<T> {
+    private final HierarchicalAgents hierarchy;
+    private final Class<T> outputType;
+    private final ObjectMapper objectMapper;
+
+    private Structured(@NonNull HierarchicalAgents hierarchy, @NonNull Class<T> outputType, @NonNull ObjectMapper objectMapper) {
+      this.hierarchy = Objects.requireNonNull(hierarchy);
+      this.outputType = Objects.requireNonNull(outputType);
+      this.objectMapper = Objects.requireNonNull(objectMapper);
+    }
+
+    @Override
+    public @NonNull String name() {
+      return hierarchy.name();
+    }
+
+    @Override
+    public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+      return hierarchy.interact(context, trace);
+    }
+
+    @Override
+    public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+      return hierarchy.interactStream(context, trace);
+    }
+
+    @Override
+    public @NonNull StructuredAgentResult<T> interactStructured(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+      AgentResult result = hierarchy.interact(context, trace);
+      return result.toStructured(outputType, objectMapper);
+    }
+
+    /**
+     * Returns the structured output type.
+     */
+    public @NonNull Class<T> outputType() {
+      return outputType;
+    }
+
+    /**
+     * Returns the executive agent at the top of the hierarchy.
+     */
+    public @NonNull Agent executive() {
+      return hierarchy.executive();
+    }
+
+    /**
+     * Returns all departments in this hierarchy.
+     */
+    public @NonNull Map<String, Department> departments() {
+      return hierarchy.departments();
     }
   }
 }

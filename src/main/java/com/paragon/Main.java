@@ -680,7 +680,7 @@ public class Main {
             "📍 Would route to: " + classified.map(Interactable::name).orElse("fallback"));
 
     // Route and execute
-    AgentResult result = router.route(techQuery);
+    AgentResult result = router.interact(techQuery);
     System.out.println("📥 Response: " + result.output());
   }
 

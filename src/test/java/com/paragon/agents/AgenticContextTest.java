@@ -299,6 +299,169 @@ class AgenticContextTest {
   }
 
   @Nested
+  @DisplayName("Utility Methods")
+  class UtilityMethods {
+
+    @Test
+    @DisplayName("extractLastUserMessageText returns last user message text")
+    void extractLastUserMessageText_returnsLastUserMessage() {
+      AgenticContext context = AgenticContext.create();
+      context.addInput(Message.user("First"));
+      context.addInput(Message.assistant("Response"));
+      context.addInput(Message.user("Second"));
+
+      var result = context.extractLastUserMessageText();
+
+      assertTrue(result.isPresent());
+      assertEquals("Second", result.get());
+    }
+
+    @Test
+    @DisplayName("extractLastUserMessageText returns empty when no user messages")
+    void extractLastUserMessageText_returnsEmptyWhenNoUserMessages() {
+      AgenticContext context = AgenticContext.create();
+      context.addInput(Message.assistant("Response"));
+
+      var result = context.extractLastUserMessageText();
+
+      assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("extractLastUserMessageText returns empty for empty history")
+    void extractLastUserMessageText_returnsEmptyForEmptyHistory() {
+      AgenticContext context = AgenticContext.create();
+
+      assertTrue(context.extractLastUserMessageText().isEmpty());
+    }
+
+    @Test
+    @DisplayName("extractLastUserMessageText with fallback returns fallback when no user message")
+    void extractLastUserMessageText_fallback_returnsFallback() {
+      AgenticContext context = AgenticContext.create();
+
+      assertEquals("[No query]", context.extractLastUserMessageText("[No query]"));
+    }
+
+    @Test
+    @DisplayName("extractLastUserMessageText with fallback returns text when present")
+    void extractLastUserMessageText_fallback_returnsTextWhenPresent() {
+      AgenticContext context = AgenticContext.create();
+      context.addInput(Message.user("Hello"));
+
+      assertEquals("Hello", context.extractLastUserMessageText("[No query]"));
+    }
+
+    @Test
+    @DisplayName("ensureTraceContext sets trace IDs when not present")
+    void ensureTraceContext_setsTraceIds() {
+      AgenticContext context = AgenticContext.create();
+      assertFalse(context.hasTraceContext());
+
+      context.ensureTraceContext();
+
+      assertTrue(context.hasTraceContext());
+      assertTrue(context.parentTraceId().isPresent());
+      assertTrue(context.parentSpanId().isPresent());
+    }
+
+    @Test
+    @DisplayName("ensureTraceContext preserves existing trace IDs")
+    void ensureTraceContext_preservesExistingTraceIds() {
+      AgenticContext context = AgenticContext.create();
+      context.withTraceContext("my-trace-id", "my-span-id");
+
+      context.ensureTraceContext();
+
+      assertEquals("my-trace-id", context.parentTraceId().orElse(null));
+      assertEquals("my-span-id", context.parentSpanId().orElse(null));
+    }
+
+    @Test
+    @DisplayName("ensureTraceContext returns this for chaining")
+    void ensureTraceContext_returnsThis() {
+      AgenticContext context = AgenticContext.create();
+
+      assertSame(context, context.ensureTraceContext());
+    }
+
+    @Test
+    @DisplayName("createChildContext with shareHistory forks full context")
+    void createChildContext_shareHistory_forksFullContext() {
+      AgenticContext parent = AgenticContext.create();
+      parent.addInput(Message.user("Original"));
+      parent.setState("userId", "user-123");
+      parent.withTraceContext("trace-1", "span-1");
+
+      AgenticContext child = parent.createChildContext(true, true, "New request");
+
+      // Child should have parent's history + new message
+      assertEquals(2, child.historySize());
+      // Child should have state
+      assertEquals("user-123", child.getState("userId").orElse(null));
+      // Child should have trace context (with same traceId)
+      assertTrue(child.hasTraceContext());
+      assertEquals("trace-1", child.parentTraceId().orElse(null));
+      // Turn count reset
+      assertEquals(0, child.getTurnCount());
+    }
+
+    @Test
+    @DisplayName("createChildContext with shareState copies state only")
+    void createChildContext_shareStateOnly_copiesStateButNotHistory() {
+      AgenticContext parent = AgenticContext.create();
+      parent.addInput(Message.user("Original"));
+      parent.setState("userId", "user-123");
+      parent.withTraceContext("trace-1", "span-1");
+      parent.withRequestId("req-1");
+
+      AgenticContext child = parent.createChildContext(true, false, "New request");
+
+      // Child should only have the new message (fresh history)
+      assertEquals(1, child.historySize());
+      // Child should have state
+      assertEquals("user-123", child.getState("userId").orElse(null));
+      // Child should have trace context
+      assertTrue(child.hasTraceContext());
+      assertEquals("trace-1", child.parentTraceId().orElse(null));
+      // Child should have request ID
+      assertEquals("req-1", child.requestId().orElse(null));
+    }
+
+    @Test
+    @DisplayName("createChildContext isolated creates completely clean context")
+    void createChildContext_isolated_createsCleanContext() {
+      AgenticContext parent = AgenticContext.create();
+      parent.addInput(Message.user("Original"));
+      parent.setState("userId", "user-123");
+      parent.withTraceContext("trace-1", "span-1");
+
+      AgenticContext child = parent.createChildContext(false, false, "New request");
+
+      // Child should only have the new message
+      assertEquals(1, child.historySize());
+      // No state
+      assertFalse(child.hasState("userId"));
+      // No trace context
+      assertFalse(child.hasTraceContext());
+    }
+
+    @Test
+    @DisplayName("createChildContext shareState without trace copies state but no trace")
+    void createChildContext_shareStateNoTrace_copiesStateOnly() {
+      AgenticContext parent = AgenticContext.create();
+      parent.setState("key", "value");
+      // No trace set
+
+      AgenticContext child = parent.createChildContext(true, false, "Request");
+
+      assertEquals("value", child.getState("key").orElse(null));
+      assertFalse(child.hasTraceContext());
+      assertEquals(1, child.historySize());
+    }
+  }
+
+  @Nested
   @DisplayName("Clear Functionality")
   class ClearFunctionality {
 

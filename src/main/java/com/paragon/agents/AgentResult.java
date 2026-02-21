@@ -1,5 +1,7 @@
 package com.paragon.agents;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.responses.spec.Response;
 import com.paragon.responses.spec.ResponseInputItem;
 import org.jspecify.annotations.NonNull;
@@ -395,6 +397,34 @@ public final class AgentResult {
    */
   public boolean hasRelatedResults() {
     return !relatedResults.isEmpty();
+  }
+
+  // ===== Conversion =====
+
+  /**
+   * Parses this result's output text into a typed {@link StructuredAgentResult}.
+   *
+   * <p>If this result is an error, the error is propagated. Otherwise the output JSON is
+   * deserialized to the given type.
+   *
+   * @param outputType   the target class to deserialize into
+   * @param objectMapper the Jackson mapper for JSON parsing
+   * @param <T>          the output type
+   * @return a structured result with parsed output, or an error result if parsing fails
+   */
+  public <T> @NonNull StructuredAgentResult<T> toStructured(
+          @NonNull Class<T> outputType, @NonNull ObjectMapper objectMapper) {
+    if (isError()) {
+      return StructuredAgentResult.error(error, output, finalResponse, history, toolExecutions, turnsUsed);
+    }
+    try {
+      T parsed = objectMapper.readValue(output, outputType);
+      return StructuredAgentResult.success(parsed, output, finalResponse, history, toolExecutions, turnsUsed);
+    } catch (JsonProcessingException e) {
+      return StructuredAgentResult.error(
+              new RuntimeException("Failed to parse structured output: " + e.getMessage(), e),
+              output, finalResponse, history, toolExecutions, turnsUsed);
+    }
   }
 
   // ===== Builder =====

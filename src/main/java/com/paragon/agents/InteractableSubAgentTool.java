@@ -4,7 +4,6 @@ import com.paragon.responses.annotations.FunctionMetadata;
 import com.paragon.responses.spec.FunctionTool;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.Message;
-import com.paragon.telemetry.processors.TraceIdGenerator;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -15,9 +14,8 @@ import java.util.Objects;
 /**
  * Wraps any Interactable as a FunctionTool, enabling composition of multi-agent patterns.
  *
- * <p>This extends the capabilities of {@link SubAgentTool} to support not just Agents,
- * but any Interactable implementation including RouterAgent, ParallelAgents, AgentNetwork,
- * and SupervisorAgent.
+ * <p>This is the primary tool for agent composition. It supports any Interactable implementation
+ * including Agent, RouterAgent, ParallelAgents, AgentNetwork, and SupervisorAgent.
  *
  * <h2>Usage Example</h2>
  *
@@ -39,8 +37,6 @@ import java.util.Objects;
 @FunctionMetadata(name = "", description = "")
 public final class InteractableSubAgentTool extends FunctionTool<InteractableSubAgentTool.InteractableParams> {
 
-  // ScopedValue for context propagation - virtual thread optimized
-  private static final ScopedValue<AgenticContext> CURRENT_CONTEXT = ScopedValue.newInstance();
   private final @NonNull Interactable target;
   private final @NonNull String toolName;
   private final @NonNull String toolDescription;
@@ -84,20 +80,46 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
     this.shareHistory = config.shareHistory;
   }
 
-  /**
-   * Runs a task with the current context set for sub-agent execution.
-   *
-   * <p>Uses ScopedValue for virtual-thread-safe context propagation.
-   *
-   * @param context the parent context to propagate
-   * @param task    the task to run with the context
-   */
-  static void runWithContext(@Nullable AgenticContext context, Runnable task) {
-    if (context != null) {
-      ScopedValue.where(CURRENT_CONTEXT, context).run(task);
-    } else {
-      task.run();
+  @Override
+  public @NonNull String getName() {
+    return toolName;
+  }
+
+  @Override
+  public @Nullable String getDescription() {
+    return toolDescription;
+  }
+
+  @Override
+  public @NonNull FunctionToolCallOutput call(@Nullable InteractableParams params) {
+    if (params == null || params.request() == null || params.request().isEmpty()) {
+      return FunctionToolCallOutput.error("Request cannot be empty");
     }
+
+    try {
+      AgenticContext childContext = buildChildContext(params.request());
+      AgentResult result = target.interact(childContext);
+
+      if (result.isError()) {
+        return FunctionToolCallOutput.error(
+                "'" + target.name() + "' failed: " + result.error().getMessage());
+      }
+
+      return FunctionToolCallOutput.success(result.output());
+    } catch (Exception e) {
+      return FunctionToolCallOutput.error(
+              "'" + target.name() + "' error: " + e.getMessage());
+    }
+  }
+
+  private AgenticContext buildChildContext(String request) {
+    return AgenticContext.current()
+            .map(parent -> parent.createChildContext(shareState, shareHistory, request))
+            .orElseGet(() -> {
+              AgenticContext isolated = AgenticContext.create();
+              isolated.addInput(Message.user(request));
+              return isolated;
+            });
   }
 
   private static String toSnakeCase(String input) {
@@ -119,83 +141,6 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
       }
     }
     return result.toString();
-  }
-
-  @Override
-  public @NonNull String getName() {
-    return toolName;
-  }
-
-  @Override
-  public @Nullable String getDescription() {
-    return toolDescription;
-  }
-
-  @Override
-  public @NonNull FunctionToolCallOutput call(@Nullable InteractableParams params) {
-    if (params == null || params.request() == null || params.request().isEmpty()) {
-      return FunctionToolCallOutput.error("Request cannot be empty");
-    }
-
-    try {
-      // Build child context based on configuration
-      AgenticContext childContext = buildChildContext(params.request());
-
-      // Invoke the interactable (blocking - cheap in virtual threads)
-      AgentResult result = target.interact(childContext);
-
-      if (result.isError()) {
-        return FunctionToolCallOutput.error(
-                "'" + target.name() + "' failed: " + result.error().getMessage());
-      }
-
-      return FunctionToolCallOutput.success(result.output());
-    } catch (Exception e) {
-      return FunctionToolCallOutput.error(
-              "'" + target.name() + "' error: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Builds the child context based on configuration.
-   *
-   * @param request the request message to send
-   * @return configured child context
-   */
-  private AgenticContext buildChildContext(String request) {
-    // Safely check if CURRENT_CONTEXT is bound (only set when called from Agent)
-    AgenticContext parentContext = CURRENT_CONTEXT.isBound() ? CURRENT_CONTEXT.get() : null;
-    AgenticContext childContext;
-
-    if (parentContext != null && shareHistory) {
-      // Fork full context including history
-      String childSpanId = TraceIdGenerator.generateSpanId();
-      childContext = parentContext.fork(childSpanId);
-      childContext.addInput(Message.user(request));
-    } else if (parentContext != null && shareState) {
-      // Fresh history but copy state
-      childContext = AgenticContext.create();
-
-      // Copy trace context for observability
-      if (parentContext.hasTraceContext()) {
-        String childSpanId = TraceIdGenerator.generateSpanId();
-        childContext.withTraceContext(parentContext.parentTraceId().orElseThrow(), childSpanId);
-      }
-      parentContext.requestId().ifPresent(childContext::withRequestId);
-
-      // Copy custom state
-      for (Map.Entry<String, Object> entry : parentContext.getAllState().entrySet()) {
-        childContext.setState(entry.getKey(), entry.getValue());
-      }
-
-      childContext.addInput(Message.user(request));
-    } else {
-      // Completely isolated
-      childContext = AgenticContext.create();
-      childContext.addInput(Message.user(request));
-    }
-
-    return childContext;
   }
 
   /**
@@ -254,26 +199,14 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
       return new Builder();
     }
 
-    /**
-     * Returns the description.
-     */
-    public @Nullable String description() {
-      return description;
-    }
+    /** Returns the description. */
+    public @Nullable String description() { return description; }
 
-    /**
-     * Returns whether state is shared.
-     */
-    public boolean shareState() {
-      return shareState;
-    }
+    /** Returns whether state is shared. */
+    public boolean shareState() { return shareState; }
 
-    /**
-     * Returns whether history is shared.
-     */
-    public boolean shareHistory() {
-      return shareHistory;
-    }
+    /** Returns whether history is shared. */
+    public boolean shareHistory() { return shareHistory; }
 
     /**
      * Builder for Config.
@@ -283,49 +216,23 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
       private boolean shareState = true;
       private boolean shareHistory = false;
 
-      private Builder() {
-      }
+      private Builder() {}
 
-      /**
-       * Sets the description for when to use this interactable.
-       *
-       * @param description the description
-       * @return this builder
-       */
       public @NonNull Builder description(@NonNull String description) {
         this.description = Objects.requireNonNull(description);
         return this;
       }
 
-      /**
-       * Sets whether to share custom state with the interactable.
-       *
-       * <p>Default: true
-       *
-       * @param shareState true to share state
-       * @return this builder
-       */
       public @NonNull Builder shareState(boolean shareState) {
         this.shareState = shareState;
         return this;
       }
 
-      /**
-       * Sets whether to share conversation history.
-       *
-       * <p>Default: false
-       *
-       * @param shareHistory true to share history
-       * @return this builder
-       */
       public @NonNull Builder shareHistory(boolean shareHistory) {
         this.shareHistory = shareHistory;
         return this;
       }
 
-      /**
-       * Builds the Config.
-       */
       public @NonNull Config build() {
         return new Config(this);
       }

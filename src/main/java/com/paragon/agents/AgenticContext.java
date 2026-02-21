@@ -2,7 +2,11 @@ package com.paragon.agents;
 
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.Message;
+import com.paragon.responses.spec.MessageRole;
 import com.paragon.responses.spec.ResponseInputItem;
+import com.paragon.responses.spec.Text;
+import com.paragon.responses.spec.UserMessage;
+import com.paragon.telemetry.processors.TraceIdGenerator;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -43,6 +47,9 @@ import java.util.*;
  * @since 1.0
  */
 public final class AgenticContext {
+
+  // ScopedValue for context propagation — virtual thread optimized
+  static final ScopedValue<AgenticContext> CURRENT_CONTEXT = ScopedValue.newInstance();
 
   private final List<ResponseInputItem> history;
   private final Map<String, Object> state;
@@ -275,6 +282,136 @@ public final class AgenticContext {
    */
   public int historySize() {
     return history.size();
+  }
+
+  // ===== Utility Methods =====
+
+  /**
+   * Extracts the text of the last user message from the conversation history.
+   *
+   * <p>Iterates backwards through history to find the most recent user message
+   * and returns its first text content.
+   *
+   * @return an Optional containing the last user message text, or empty if none found
+   */
+  public @NonNull Optional<String> extractLastUserMessageText() {
+    for (int i = history.size() - 1; i >= 0; i--) {
+      ResponseInputItem item = history.get(i);
+      if (item instanceof Message msg && msg.role() == MessageRole.USER) {
+        if (msg.content() != null) {
+          for (var content : msg.content()) {
+            if (content instanceof Text text) {
+              return Optional.of(text.text());
+            }
+          }
+        }
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Extracts the text of the last user message, or returns a fallback value.
+   *
+   * @param fallback the fallback value if no user message is found
+   * @return the last user message text, or the fallback
+   */
+  public @NonNull String extractLastUserMessageText(@NonNull String fallback) {
+    return extractLastUserMessageText().orElse(fallback);
+  }
+
+  /**
+   * Ensures this context has trace context set, generating IDs if not already present.
+   *
+   * @return this context for method chaining
+   */
+  public @NonNull AgenticContext ensureTraceContext() {
+    if (!hasTraceContext()) {
+      withTraceContext(TraceIdGenerator.generateTraceId(), TraceIdGenerator.generateSpanId());
+    }
+    return this;
+  }
+
+  /**
+   * Creates a child context for sub-agent execution based on sharing configuration.
+   *
+   * <ul>
+   *   <li>If shareHistory is true, forks the full context including history
+   *   <li>If shareState is true (but not history), copies state and trace but starts fresh history
+   *   <li>Otherwise, creates a completely isolated context
+   * </ul>
+   *
+   * @param shareState   whether to copy custom state to the child
+   * @param shareHistory whether to fork the full history to the child
+   * @param request      the user message to add to the child context
+   * @return a new child context configured according to the sharing parameters
+   */
+  public @NonNull AgenticContext createChildContext(
+          boolean shareState, boolean shareHistory, @NonNull String request) {
+    Objects.requireNonNull(request, "request cannot be null");
+    AgenticContext childContext;
+
+    if (shareHistory) {
+      String childSpanId = TraceIdGenerator.generateSpanId();
+      childContext = this.fork(childSpanId);
+      childContext.addInput(Message.user(request));
+    } else if (shareState) {
+      childContext = AgenticContext.create();
+      if (this.hasTraceContext()) {
+        String childSpanId = TraceIdGenerator.generateSpanId();
+        childContext.withTraceContext(this.parentTraceId().orElseThrow(), childSpanId);
+      }
+      this.requestId().ifPresent(childContext::withRequestId);
+      for (Map.Entry<String, Object> entry : this.getAllState().entrySet()) {
+        childContext.setState(entry.getKey(), entry.getValue());
+      }
+      childContext.addInput(Message.user(request));
+    } else {
+      childContext = AgenticContext.create();
+      childContext.addInput(Message.user(request));
+    }
+
+    return childContext;
+  }
+
+  // ===== Context Propagation =====
+
+  /**
+   * Runs a task with this context bound as the current context for sub-agent execution.
+   *
+   * <p>Uses {@link ScopedValue} for virtual-thread-safe context propagation.
+   *
+   * @param task the task to run within this context scope
+   */
+  void runAsCurrent(@NonNull Runnable task) {
+    ScopedValue.where(CURRENT_CONTEXT, this).run(task);
+  }
+
+  /**
+   * Calls a task with this context bound as the current context, returning the result.
+   *
+   * <p>Uses {@link ScopedValue} for virtual-thread-safe context propagation.
+   *
+   * @param task the task to call within this context scope
+   * @param <T>  the return type
+   * @return the result from the task
+   * @throws Exception if the task throws
+   */
+  <T> T callAsCurrent(ScopedValue.CallableOp<T, Exception> task) throws Exception {
+    return ScopedValue.where(CURRENT_CONTEXT, this).call(task);
+  }
+
+  /**
+   * Returns the currently bound context from the enclosing scope, if any.
+   *
+   * <p>Used by sub-agent tools to discover their parent context.
+   *
+   * @return an Optional containing the current context, or empty if none is bound
+   */
+  static @NonNull Optional<AgenticContext> current() {
+    return CURRENT_CONTEXT.isBound()
+            ? Optional.of(CURRENT_CONTEXT.get())
+            : Optional.empty();
   }
 
   // ===== Trace Context Methods =====

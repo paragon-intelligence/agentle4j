@@ -148,7 +148,7 @@ public final class NetworkStream {
     String parentSpanId = TraceIdGenerator.generateSpanId();
     context.withTraceContext(parentTraceId, parentSpanId);
 
-    String originalTopic = extractLastUserMessage();
+    String originalTopic = context.extractLastUserMessageText("[No topic provided]");
     List<AgentNetwork.Contribution> allContributions = new ArrayList<>();
 
     // Run rounds sequentially (blocking)
@@ -333,23 +333,6 @@ public final class NetworkStream {
 
     peerContext.addInput(Message.developer(Text.valueOf(roleReminder)));
     return peerContext;
-  }
-
-  private String extractLastUserMessage() {
-    List<ResponseInputItem> history = context.getHistory();
-    for (int i = history.size() - 1; i >= 0; i--) {
-      ResponseInputItem item = history.get(i);
-      if (item instanceof Message msg && "user".equals(msg.role())) {
-        if (msg.content() != null) {
-          for (var content : msg.content()) {
-            if (content instanceof Text text) {
-              return text.text();
-            }
-          }
-        }
-      }
-    }
-    return "[No topic provided]";
   }
 
   /**

@@ -268,20 +268,12 @@ class SupervisorAgentTest {
       SupervisorAgent supervisor = createTestSupervisor(worker);
       enqueueSuccessResponse("Result");
 
-      AgentResult result = supervisor.orchestrate("Test task");
+      AgentResult result = supervisor.interact("Test task");
 
       assertNotNull(result);
       assertInstanceOf(AgentResult.class, result);
     }
 
-    @Test
-    @DisplayName("orchestrate(String) validates null input")
-    void orchestrate_nullInput_throws() {
-      Agent worker = createTestAgent("Worker");
-      SupervisorAgent supervisor = createTestSupervisor(worker);
-
-      assertThrows(NullPointerException.class, () -> supervisor.orchestrate((String) null));
-    }
 
     @Test
     @DisplayName("orchestrate(Text) returns AgentResult")
@@ -290,7 +282,7 @@ class SupervisorAgentTest {
       SupervisorAgent supervisor = createTestSupervisor(worker);
       enqueueSuccessResponse("Result");
 
-      AgentResult result = supervisor.orchestrate(Text.valueOf("Test task"));
+      AgentResult result = supervisor.interact(Text.valueOf("Test task"));
 
       assertNotNull(result);
     }
@@ -302,7 +294,7 @@ class SupervisorAgentTest {
       SupervisorAgent supervisor = createTestSupervisor(worker);
       enqueueSuccessResponse("Result");
 
-      AgentResult result = supervisor.orchestrate(Message.user("Test task"));
+      AgentResult result = supervisor.interact(Message.user("Test task"));
 
       assertNotNull(result);
     }
@@ -317,7 +309,7 @@ class SupervisorAgentTest {
       context.addInput(Message.user("Test task"));
       enqueueSuccessResponse("Result");
 
-      AgentResult result = supervisor.orchestrate(context);
+      AgentResult result = supervisor.interact(context);
 
       assertNotNull(result);
     }
@@ -329,7 +321,7 @@ class SupervisorAgentTest {
       SupervisorAgent supervisor = createTestSupervisor(worker);
       enqueueSuccessResponse("Orchestrated result");
 
-      AgentResult result = supervisor.orchestrate("Do the task");
+      AgentResult result = supervisor.interact("Do the task");
 
       assertNotNull(result);
     }
@@ -345,7 +337,7 @@ class SupervisorAgentTest {
       Agent worker = createTestAgent("Worker");
       SupervisorAgent supervisor = createTestSupervisor(worker);
 
-      AgentStream stream = supervisor.orchestrateStream("Test task");
+      AgentStream stream = supervisor.interactStream("Test task");
 
       assertNotNull(stream);
       assertInstanceOf(AgentStream.class, stream);
@@ -360,18 +352,10 @@ class SupervisorAgentTest {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Test task"));
 
-      AgentStream stream = supervisor.orchestrateStream(context);
+      AgentStream stream = supervisor.interactStream(context);
 
       assertNotNull(stream);
     }
 
-    @Test
-    @DisplayName("orchestrateStream(String) validates null input")
-    void orchestrateStream_nullInput_throws() {
-      Agent worker = createTestAgent("Worker");
-      SupervisorAgent supervisor = createTestSupervisor(worker);
-
-      assertThrows(NullPointerException.class, () -> supervisor.orchestrateStream((String) null));
-    }
   }
 }

@@ -192,7 +192,7 @@ public final class AgentNetwork implements Interactable {
     context.withTraceContext(parentTraceId, parentSpanId);
 
     // Extract original topic for synthesis
-    String originalTopic = extractLastUserMessage(context);
+    String originalTopic = context.extractLastUserMessageText("[No topic provided]");
 
     // Run discussion rounds
     List<Contribution> contributions =
@@ -406,23 +406,6 @@ public final class AgentNetwork implements Interactable {
     AgenticContext synthContext = AgenticContext.create();
     synthContext.addInput(Message.user(synthPrompt.toString()));
     return synthesizer.interact(synthContext);
-  }
-
-  private String extractLastUserMessage(AgenticContext context) {
-    List<ResponseInputItem> history = context.getHistory();
-    for (int i = history.size() - 1; i >= 0; i--) {
-      ResponseInputItem item = history.get(i);
-      if (item instanceof Message msg && "user".equals(msg.role())) {
-        if (msg.content() != null) {
-          for (var content : msg.content()) {
-            if (content instanceof Text text) {
-              return text.text();
-            }
-          }
-        }
-      }
-    }
-    return "[No topic provided]";
   }
 
   // ===== Interactable Interface Implementation =====

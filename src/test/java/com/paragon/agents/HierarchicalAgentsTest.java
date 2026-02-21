@@ -327,18 +327,10 @@ class HierarchicalAgentsTest {
       HierarchicalAgents hierarchy = createTestHierarchy();
       enqueueSuccessResponse("Result");
 
-      AgentResult result = hierarchy.execute("Task");
+      AgentResult result = hierarchy.interact("Task");
 
       assertNotNull(result);
       assertInstanceOf(AgentResult.class, result);
-    }
-
-    @Test
-    @DisplayName("execute(String) validates null task")
-    void execute_nullTask_throws() {
-      HierarchicalAgents hierarchy = createTestHierarchy();
-
-      assertThrows(NullPointerException.class, () -> hierarchy.execute((String) null));
     }
 
     @Test
@@ -347,7 +339,7 @@ class HierarchicalAgentsTest {
       HierarchicalAgents hierarchy = createTestHierarchy();
       enqueueSuccessResponse("Result");
 
-      AgentResult result = hierarchy.execute(Text.valueOf("Task"));
+      AgentResult result = hierarchy.interact(Text.valueOf("Task"));
 
       assertNotNull(result);
     }
@@ -358,7 +350,7 @@ class HierarchicalAgentsTest {
       HierarchicalAgents hierarchy = createTestHierarchy();
       enqueueSuccessResponse("Result");
 
-      AgentResult result = hierarchy.execute(Message.user("Task"));
+      AgentResult result = hierarchy.interact(Message.user("Task"));
 
       assertNotNull(result);
     }
@@ -371,7 +363,7 @@ class HierarchicalAgentsTest {
       context.addInput(Message.user("Task"));
       enqueueSuccessResponse("Result");
 
-      AgentResult result = hierarchy.execute(context);
+      AgentResult result = hierarchy.interact(context);
 
       assertNotNull(result);
     }
@@ -386,7 +378,7 @@ class HierarchicalAgentsTest {
     void executeStream_string_returnsAgentStream() {
       HierarchicalAgents hierarchy = createTestHierarchy();
 
-      AgentStream stream = hierarchy.executeStream("Task");
+      AgentStream stream = hierarchy.interactStream("Task");
 
       assertNotNull(stream);
       assertInstanceOf(AgentStream.class, stream);
@@ -399,18 +391,11 @@ class HierarchicalAgentsTest {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Task"));
 
-      AgentStream stream = hierarchy.executeStream(context);
+      AgentStream stream = hierarchy.interactStream(context);
 
       assertNotNull(stream);
     }
 
-    @Test
-    @DisplayName("executeStream(String) validates null task")
-    void executeStream_nullTask_throws() {
-      HierarchicalAgents hierarchy = createTestHierarchy();
-
-      assertThrows(NullPointerException.class, () -> hierarchy.executeStream((String) null));
-    }
   }
 
   @Nested

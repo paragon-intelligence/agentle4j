@@ -133,7 +133,7 @@ public final class RouterStream {
    */
   public @NonNull AgentResult start() {
     // First, classify the input
-    Optional<String> inputTextOpt = extractLastUserMessage();
+    Optional<String> inputTextOpt = context.extractLastUserMessageText();
     if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
       AgentResult errorResult =
               AgentResult.error(
@@ -205,20 +205,4 @@ public final class RouterStream {
     return innerResult;
   }
 
-  private Optional<String> extractLastUserMessage() {
-    List<ResponseInputItem> history = context.getHistory();
-    for (int i = history.size() - 1; i >= 0; i--) {
-      ResponseInputItem item = history.get(i);
-      if (item instanceof Message msg && "user".equals(msg.role())) {
-        if (msg.content() != null) {
-          for (var content : msg.content()) {
-            if (content instanceof Text text) {
-              return Optional.of(text.text());
-            }
-          }
-        }
-      }
-    }
-    return Optional.empty();
-  }
 }

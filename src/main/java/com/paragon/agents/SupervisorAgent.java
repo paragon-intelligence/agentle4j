@@ -1,14 +1,11 @@
 package com.paragon.agents;
 
-import com.paragon.prompts.Prompt;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.TraceMetadata;
-import com.paragon.responses.spec.Message;
-import com.paragon.responses.spec.Text;
 import com.paragon.skills.Skill;
 import com.paragon.skills.SkillProvider;
 import com.paragon.skills.SkillStore;
-import com.paragon.telemetry.processors.TraceIdGenerator;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -137,108 +134,6 @@ public final class SupervisorAgent implements Interactable {
   }
 
   /**
-   * Orchestrates workers to complete a task.
-   *
-   * <p>The supervisor receives the task and uses its instructions to delegate subtasks to workers
-   * as needed, aggregating their outputs into a final result.
-   *
-   * @param input the task description
-   * @return the orchestrated result
-   */
-  public @NonNull AgentResult orchestrate(@NonNull String input) {
-    Objects.requireNonNull(input, "input cannot be null");
-    return supervisorAgent.interact(input);
-  }
-
-  /**
-   * Orchestrates workers with Text content.
-   *
-   * @param text the task text
-   * @return the orchestrated result
-   */
-  public @NonNull AgentResult orchestrate(@NonNull Text text) {
-    Objects.requireNonNull(text, "text cannot be null");
-    return supervisorAgent.interact(text);
-  }
-
-  /**
-   * Orchestrates workers with a Message.
-   *
-   * @param message the task message
-   * @return the orchestrated result
-   */
-  public @NonNull AgentResult orchestrate(@NonNull Message message) {
-    Objects.requireNonNull(message, "message cannot be null");
-    return supervisorAgent.interact(message);
-  }
-
-  /**
-   * Orchestrates workers with a Prompt.
-   *
-   * <p>The prompt's text content is extracted and used as the input.
-   *
-   * @param prompt the task prompt
-   * @return the orchestrated result
-   */
-  public @NonNull AgentResult orchestrate(@NonNull Prompt prompt) {
-    Objects.requireNonNull(prompt, "prompt cannot be null");
-    return orchestrate(prompt.text());
-  }
-
-  /**
-   * Orchestrates workers using an existing context.
-   *
-   * @param context the context with task history
-   * @return the orchestrated result
-   */
-  public @NonNull AgentResult orchestrate(@NonNull AgenticContext context) {
-    Objects.requireNonNull(context, "context cannot be null");
-
-    // Ensure trace correlation
-    if (!context.hasTraceContext()) {
-      context.withTraceContext(
-              TraceIdGenerator.generateTraceId(), TraceIdGenerator.generateSpanId());
-    }
-
-    return supervisorAgent.interact(context);
-  }
-
-  /**
-   * Orchestrates workers with streaming support.
-   *
-   * @param input the task description
-   * @return an AgentStream for processing streaming events
-   */
-  public @NonNull AgentStream orchestrateStream(@NonNull String input) {
-    Objects.requireNonNull(input, "input cannot be null");
-    return supervisorAgent.interactStream(input);
-  }
-
-  /**
-   * Orchestrates workers with streaming using a Prompt.
-   *
-   * <p>The prompt's text content is extracted and used as the input.
-   *
-   * @param prompt the task prompt
-   * @return an AgentStream for processing streaming events
-   */
-  public @NonNull AgentStream orchestrateStream(@NonNull Prompt prompt) {
-    Objects.requireNonNull(prompt, "prompt cannot be null");
-    return orchestrateStream(prompt.text());
-  }
-
-  /**
-   * Orchestrates workers with streaming using an existing context.
-   *
-   * @param context the context with task history
-   * @return an AgentStream for processing streaming events
-   */
-  public @NonNull AgentStream orchestrateStream(@NonNull AgenticContext context) {
-    Objects.requireNonNull(context, "context cannot be null");
-    return supervisorAgent.interactStream(context);
-  }
-
-  /**
    * Returns the underlying supervisor agent for advanced usage.
    */
   @NonNull
@@ -248,38 +143,30 @@ public final class SupervisorAgent implements Interactable {
 
   // ===== Interactable Interface Implementation =====
 
-  /**
-   * {@inheritDoc} Delegates to {@link #orchestrate(AgenticContext)}.
-   */
   @Override
   public @NonNull AgentResult interact(@NonNull AgenticContext context) {
-    return orchestrate(context);
+    Objects.requireNonNull(context, "context cannot be null");
+    context.ensureTraceContext();
+    return supervisorAgent.interact(context);
   }
 
-  /**
-   * {@inheritDoc} Delegates to {@link #orchestrate(AgenticContext)}. Trace propagated via Agent.
-   */
- @Override
+  @Override
   public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-    // Trace metadata is propagated through the underlying supervisorAgent
-    return orchestrate(context);
+    Objects.requireNonNull(context, "context cannot be null");
+    context.ensureTraceContext();
+    return supervisorAgent.interact(context, trace);
   }
 
-  /**
-   * {@inheritDoc} Delegates to {@link #orchestrateStream(AgenticContext)}.
-   */
   @Override
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
-    return orchestrateStream(context);
+    Objects.requireNonNull(context, "context cannot be null");
+    return supervisorAgent.interactStream(context);
   }
 
-  /**
-   * {@inheritDoc} Delegates to {@link #orchestrateStream(AgenticContext)}. Trace propagated via Agent.
-   */
   @Override
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-    // Trace metadata is propagated through the underlying supervisorAgent
-    return orchestrateStream(context);
+    Objects.requireNonNull(context, "context cannot be null");
+    return supervisorAgent.interactStream(context, trace);
   }
 
 
@@ -455,6 +342,35 @@ public final class SupervisorAgent implements Interactable {
     }
 
     /**
+     * Configures this supervisor to produce structured output of the specified type.
+     *
+     * <p>Returns a {@link StructuredBuilder} that builds a {@link SupervisorAgent.Structured}
+     * instead of a regular SupervisorAgent.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * var supervisor = SupervisorAgent.builder()
+     *     .model("openai/gpt-4o")
+     *     .responder(responder)
+     *     .instructions("Coordinate workers to produce a report")
+     *     .addWorker(researcher, "research facts")
+     *     .structured(Report.class)
+     *     .build();
+     *
+     * StructuredAgentResult<Report> result = supervisor.interactStructured("AI trends");
+     * Report report = result.output();
+     * }</pre>
+     *
+     * @param <T>        the output type
+     * @param outputType the class of the structured output
+     * @return a structured builder
+     */
+    public <T> @NonNull StructuredBuilder<T> structured(@NonNull Class<T> outputType) {
+      return new StructuredBuilder<>(this, outputType);
+    }
+
+    /**
      * Builds the SupervisorAgent.
      *
      * @return the configured supervisor
@@ -464,6 +380,128 @@ public final class SupervisorAgent implements Interactable {
         name = "Supervisor";
       }
       return new SupervisorAgent(this);
+    }
+  }
+
+  /**
+   * Builder for creating type-safe structured output supervisor agents.
+   *
+   * <p>Returned from {@code SupervisorAgent.builder().structured(Class)}.
+   *
+   * @param <T> the output type
+   */
+  public static final class StructuredBuilder<T> {
+    private final Builder parentBuilder;
+    private final Class<T> outputType;
+    private @Nullable ObjectMapper objectMapper;
+
+    private StructuredBuilder(@NonNull Builder parentBuilder, @NonNull Class<T> outputType) {
+      this.parentBuilder = Objects.requireNonNull(parentBuilder);
+      this.outputType = Objects.requireNonNull(outputType);
+    }
+
+    public @NonNull StructuredBuilder<T> name(@NonNull String name) {
+      parentBuilder.name(name);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> model(@NonNull String model) {
+      parentBuilder.model(model);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> instructions(@NonNull String instructions) {
+      parentBuilder.instructions(instructions);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> responder(@NonNull Responder responder) {
+      parentBuilder.responder(responder);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> addWorker(@NonNull Interactable worker, @NonNull String description) {
+      parentBuilder.addWorker(worker, description);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> maxTurns(int maxTurns) {
+      parentBuilder.maxTurns(maxTurns);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> addSkill(@NonNull Skill skill) {
+      parentBuilder.addSkill(skill);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> traceMetadata(@Nullable TraceMetadata trace) {
+      parentBuilder.traceMetadata(trace);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> objectMapper(@NonNull ObjectMapper objectMapper) {
+      this.objectMapper = Objects.requireNonNull(objectMapper);
+      return this;
+    }
+
+    /**
+     * Builds the type-safe structured supervisor agent.
+     *
+     * @return the configured Structured supervisor
+     */
+    public SupervisorAgent.Structured<T> build() {
+      SupervisorAgent supervisor = parentBuilder.build();
+      ObjectMapper mapper = objectMapper != null ? objectMapper : new ObjectMapper();
+      return new SupervisorAgent.Structured<>(supervisor, outputType, mapper);
+    }
+  }
+
+  /**
+   * Type-safe wrapper for supervisor agents with structured output.
+   *
+   * <p>Delegates all interaction to the wrapped SupervisorAgent and parses the final output
+   * as the specified type.
+   *
+   * @param <T> the output type
+   */
+  public static final class Structured<T> implements Interactable.Structured<T> {
+    private final SupervisorAgent supervisor;
+    private final Class<T> outputType;
+    private final ObjectMapper objectMapper;
+
+    private Structured(@NonNull SupervisorAgent supervisor, @NonNull Class<T> outputType, @NonNull ObjectMapper objectMapper) {
+      this.supervisor = Objects.requireNonNull(supervisor);
+      this.outputType = Objects.requireNonNull(outputType);
+      this.objectMapper = Objects.requireNonNull(objectMapper);
+    }
+
+    @Override
+    public @NonNull String name() {
+      return supervisor.name();
+    }
+
+    @Override
+    public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+      return supervisor.interact(context, trace);
+    }
+
+    @Override
+    public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+      return supervisor.interactStream(context, trace);
+    }
+
+    @Override
+    public @NonNull StructuredAgentResult<T> interactStructured(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+      AgentResult result = supervisor.interact(context, trace);
+      return result.toStructured(outputType, objectMapper);
+    }
+
+    /**
+     * Returns the structured output type.
+     */
+    public @NonNull Class<T> outputType() {
+      return outputType;
     }
   }
 }

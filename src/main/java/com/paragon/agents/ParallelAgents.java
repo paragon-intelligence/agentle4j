@@ -389,7 +389,7 @@ public final class ParallelAgents implements Interactable {
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
 
     // Extract original query for synthesis prompt
-    String originalQuery = extractLastUserMessage(context);
+    String originalQuery = context.extractLastUserMessageText("[No query provided]");
 
     // Run all members in parallel
     List<AgentResult> results = runAll(context);
@@ -541,25 +541,6 @@ public final class ParallelAgents implements Interactable {
     Objects.requireNonNull(context, "context cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
     return new ParallelStream(this, context, ParallelStream.Mode.SYNTHESIZE, synthesizer);
-  }
-
-  // ===== Helper Methods =====
-
-  private String extractLastUserMessage(AgenticContext context) {
-    List<ResponseInputItem> history = context.getHistory();
-    for (int i = history.size() - 1; i >= 0; i--) {
-      ResponseInputItem item = history.get(i);
-      if (item instanceof Message msg && "user".equals(msg.role())) {
-        if (msg.content() != null) {
-          for (var content : msg.content()) {
-            if (content instanceof Text text) {
-              return text.text();
-            }
-          }
-        }
-      }
-    }
-    return "[No query provided]";
   }
 
   // ===== Interactable Interface Implementation =====
