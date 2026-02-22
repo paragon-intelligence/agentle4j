@@ -106,8 +106,8 @@ nav:
     - Observability: guides/observability.md
     - Blueprints: guides/blueprints.md
   - API Reference:
-    - Overview: api/index.md
-    - ... | api/**
+    - api/index.md
+    - ...
   - Examples: examples/code-samples.md
   - Changelog: changelog.md
 

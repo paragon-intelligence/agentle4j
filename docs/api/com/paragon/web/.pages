@@ -3,9 +3,9 @@ nav:
   - article.md
   - click.md
   - executejavascript.md
-  - extractpayload.md
   - extractionpreferences.md
   - extractionresult.md
+  - extractpayload.md
   - generatepdf.md
   - location.md
   - pdfformat.md

@@ -49,6 +49,7 @@ nav:
   - doubleclickaction.md
   - dragaction.md
   - errorcode.md
+  - extends.md
   - file.md
   - filesearchfilter.md
   - filesearchrankingoptions.md
@@ -83,6 +84,7 @@ nav:
   - imagesize.md
   - incompletedetails.md
   - inputimagemask.md
+  - is.md
   - keypressaction.md
   - localshellaction.md
   - localshellcall.md
@@ -133,5 +135,3 @@ nav:
   - websearchfilters.md
   - websearchtool.md
   - websearchtoolcall.md
-  - extends.md
-  - is.md

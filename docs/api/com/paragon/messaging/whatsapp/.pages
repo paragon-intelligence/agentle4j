@@ -7,3 +7,7 @@ nav:
   - whatsappmediauploader.md
   - whatsappmessageserializer.md
   - whatsappmessagingprovider.md
+  - config
+  - messages
+  - payload
+  - response

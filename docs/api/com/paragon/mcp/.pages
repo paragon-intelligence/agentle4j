@@ -6,3 +6,4 @@ nav:
   - mcpremotetool.md
   - stdiomcpclient.md
   - streamablehttpmcpclient.md
+  - dto

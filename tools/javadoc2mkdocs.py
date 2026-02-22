@@ -657,6 +657,41 @@ def collect_java_files(src_root: Path, base_pkg: str = "") -> list[Path]:
     return sorted(src_root.rglob("*.java"))
 
 
+def _write_dir_pages(directory: Path) -> None:
+    """
+    Recursively write .pages files for the awesome-pages plugin.
+    Each .pages file lists only the direct children of its directory:
+      - index.md first (if present)
+    Then sub-directories and .md files in sorted order.
+    This mirrors the actual filesystem structure, so awesome-pages never
+    references a path that doesn't exist.
+    """
+    for dirpath in sorted(directory.rglob("*")):
+        if not dirpath.is_dir():
+            continue
+        children_dirs = sorted(
+            [c.name for c in dirpath.iterdir() if c.is_dir() and not c.name.startswith(".")]
+        )
+        children_md = sorted(
+            [c.name for c in dirpath.iterdir() if c.suffix == ".md"]
+        )
+        # index.md always comes first
+        ordered_md: list[str] = []
+        if "index.md" in children_md:
+            ordered_md.append("index.md")
+        ordered_md += [f for f in children_md if f != "index.md"]
+
+        nav_entries: list[str] = []
+        for md in ordered_md:
+            nav_entries.append(f"  - {md}")
+        for d in children_dirs:
+            nav_entries.append(f"  - {d}")
+
+        if nav_entries:
+            pages_content = "nav:\n" + "\n".join(nav_entries) + "\n"
+            (dirpath / ".pages").write_text(pages_content, encoding="utf-8")
+
+
 def generate_docs(
     src_root: Path,
     out_dir: Path,
@@ -718,24 +753,15 @@ def generate_docs(
         pkg_dir.mkdir(parents=True, exist_ok=True)
         index_page = render_package_index(pkg, docs)
         (pkg_dir / "index.md").write_text(index_page, encoding="utf-8")
-        # Write .pages for awesome-pages plugin: index first, then classes A–Z
-        pages_lines = ["nav:"]
-        pages_lines.append("  - index.md")
-        for doc in sorted(docs, key=lambda d: d.name):
-            pages_lines.append(f"  - {doc.name.lower()}.md")
-        (pkg_dir / ".pages").write_text("\n".join(pages_lines) + "\n", encoding="utf-8")
 
     # Write top-level API index
     api_index = render_api_index(all_docs)
     (out_dir / "index.md").write_text(api_index, encoding="utf-8")
 
-    # Top-level .pages for the api/ directory itself
-    top_pages = ["nav:", "  - index.md"]
-    for pkg in sorted(packages):
-        pkg_slug = pkg.replace(".", "/")
-        short = pkg.split(".")[-1]
-        top_pages.append(f"  - '{short}': {pkg_slug}")
-    (out_dir / ".pages").write_text("\n".join(top_pages) + "\n", encoding="utf-8")
+    # Write .pages files for every directory under out_dir.
+    # Each .pages file only references *direct* children of that directory,
+    # which is what mkdocs-awesome-pages expects.
+    _write_dir_pages(out_dir)
 
     print(f"[info] Written to {out_dir}/")
     return all_docs

@@ -2,12 +2,12 @@ nav:
   - index.md
   - agent.md
   - agentdefinition.md
+  - agenticcontext.md
   - agentnetwork.md
   - agentresult.md
   - agentrunstate.md
   - agentservice.md
   - agentstream.md
-  - agenticcontext.md
   - guardrailregistry.md
   - guardrailresult.md
   - handoff.md
@@ -31,3 +31,4 @@ nav:
   - subagenttool.md
   - supervisoragent.md
   - toolexecution.md
+  - context

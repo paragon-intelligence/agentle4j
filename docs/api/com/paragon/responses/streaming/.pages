@@ -43,8 +43,8 @@ nav:
   - responsecompletedevent.md
   - responsecreatedevent.md
   - responsefailedevent.md
-  - responseinprogressevent.md
   - responseincompleteevent.md
+  - responseinprogressevent.md
   - responsequeuedevent.md
   - responsestream.md
   - streamingerrorevent.md

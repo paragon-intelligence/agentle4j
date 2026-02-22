@@ -4,3 +4,10 @@ nav:
   - responder.md
   - responsesapiobjectmapper.md
   - tracemetadata.md
+  - annotations
+  - exception
+  - json
+  - openrouter
+  - spec
+  - streaming
+  - tools
