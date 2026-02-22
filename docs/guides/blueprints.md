@@ -423,6 +423,751 @@ Interactable restored = new ObjectMapper()
 
 ---
 
+## 📝 JSON-First Agent Definitions
+
+You don't need to write any Java code to define an agent. Write a JSON file by hand, deserialize it with Jackson, and call `toInteractable()` — you get a fully functional, live agent.
+
+```mermaid
+flowchart LR
+    J["📄 Hand-Written JSON"] -->|ObjectMapper.readValue| B["InteractableBlueprint"]
+    B -->|toInteractable| A["Live Agent"]
+    A -->|interact| R["AgentResult"]
+    
+    style J fill:#4caf50,color:#000
+    style B fill:#ff9800,color:#000
+    style A fill:#2196f3,color:#fff
+```
+
+### The Core Idea
+
+```java
+// 1. Write JSON by hand (or generate it, load from DB, receive over network, etc.)
+// 2. Deserialize → Blueprint → Agent. That's it.
+
+String json = Files.readString(Path.of("agents/my-agent.json"));
+
+Interactable agent = new ObjectMapper()
+    .readValue(json, InteractableBlueprint.class)
+    .toInteractable();
+
+AgentResult result = agent.interact("Hello!");
+```
+
+!!! tip "No Java Builder Code Needed"
+    The JSON **is** the agent definition. You never need to touch `Agent.builder()`. The blueprint format is a universal, language-agnostic agent configuration format that Jackson understands natively.
+
+---
+
+### JSON Schema Reference
+
+Every JSON agent file must have a `"type"` field that tells Jackson which blueprint record to use. Below is the complete field reference for each type.
+
+#### `"type": "agent"` — Single Agent
+
+This is the most common blueprint. It maps to `Agent.builder()`.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | `"agent"` | ✅ | Type discriminator |
+| `name` | string | ✅ | Agent name (used for logging, handoffs) |
+| `model` | string | ✅ | LLM model identifier (e.g., `"openai/gpt-4o"`) |
+| `instructions` | string | ✅ | System prompt — the agent's personality and behavior |
+| `maxTurns` | integer | ✅ | Maximum LLM turns in the agentic loop |
+| `responder` | object | ✅ | Responder configuration (see below) |
+| `toolClassNames` | string[] | ✅ | FQCNs of `FunctionTool` classes (use `[]` if none) |
+| `handoffs` | object[] | ✅ | Handoff descriptors (use `[]` if none) |
+| `inputGuardrails` | object[] | ✅ | Input guardrail references (use `[]` if none) |
+| `outputGuardrails` | object[] | ✅ | Output guardrail references (use `[]` if none) |
+| `temperature` | number | ❌ | LLM temperature (0.0–2.0) |
+| `outputType` | string | ❌ | FQCN of output class for structured output |
+| `traceMetadata` | object | ❌ | Trace metadata for observability |
+| `contextManagement` | object | ❌ | Context window management config |
+
+**Full example — a complete, hand-written agent JSON:**
+
+```json
+{
+  "type": "agent",
+  "name": "CustomerSupport",
+  "model": "openai/gpt-4o",
+  "instructions": "You are a professional customer support agent for Acme Corp.\n\nGuidelines:\n- Be friendly, concise, and solution-oriented\n- Always verify the customer's identity before discussing account details\n- If you cannot resolve an issue, escalate to a human agent\n- Never share internal policies or pricing formulas\n- Respond in the same language the customer uses",
+  "maxTurns": 15,
+  "temperature": 0.3,
+  "responder": {
+    "provider": "OPEN_ROUTER",
+    "apiKeyEnvVar": "OPENROUTER_API_KEY",
+    "retryPolicy": {
+      "maxRetries": 3,
+      "initialDelayMs": 1000,
+      "maxDelayMs": 30000,
+      "multiplier": 2.0,
+      "retryableStatusCodes": [429, 500, 502, 503]
+    }
+  },
+  "toolClassNames": [
+    "com.acme.tools.SearchKnowledgeBase",
+    "com.acme.tools.LookupOrder",
+    "com.acme.tools.CreateTicket"
+  ],
+  "handoffs": [
+    {
+      "name": "escalate_to_billing",
+      "description": "Transfer to billing specialist for payment issues, refunds, and invoice disputes",
+      "target": {
+        "type": "agent",
+        "name": "BillingSpecialist",
+        "model": "openai/gpt-4o",
+        "instructions": "You are a billing specialist. Handle refunds, invoice disputes, and payment issues.",
+        "maxTurns": 10,
+        "responder": {
+          "provider": "OPEN_ROUTER",
+          "apiKeyEnvVar": "OPENROUTER_API_KEY"
+        },
+        "toolClassNames": ["com.acme.tools.ProcessRefund"],
+        "handoffs": [],
+        "inputGuardrails": [],
+        "outputGuardrails": []
+      }
+    }
+  ],
+  "inputGuardrails": [
+    { "registryId": "profanity_filter" },
+    { "registryId": "max_length" }
+  ],
+  "outputGuardrails": [
+    { "registryId": "no_pii" }
+  ],
+  "contextManagement": {
+    "strategyType": "sliding",
+    "preserveDeveloperMessages": true,
+    "maxTokens": 4000
+  }
+}
+```
+
+---
+
+#### The `responder` Object
+
+The responder object tells the blueprint how to construct the HTTP client.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `provider` | string | ❌¹ | `"OPENAI"` or `"OPEN_ROUTER"` |
+| `baseUrl` | string | ❌¹ | Custom API endpoint URL |
+| `apiKeyEnvVar` | string | ❌ | Environment variable name for the API key |
+| `retryPolicy` | object | ❌ | Retry policy configuration |
+| `traceMetadata` | object | ❌ | Default trace metadata |
+
+¹ You must provide either `provider` **or** `baseUrl`, not both.
+
+**Minimal (uses provider defaults):**
+
+```json
+{
+  "provider": "OPEN_ROUTER",
+  "apiKeyEnvVar": "OPENROUTER_API_KEY"
+}
+```
+
+**Full with retry policy:**
+
+```json
+{
+  "provider": "OPENAI",
+  "apiKeyEnvVar": "OPENAI_API_KEY",
+  "retryPolicy": {
+    "maxRetries": 5,
+    "initialDelayMs": 500,
+    "maxDelayMs": 60000,
+    "multiplier": 1.5,
+    "retryableStatusCodes": [429, 500, 502, 503, 504]
+  }
+}
+```
+
+**Custom API endpoint (e.g., Azure OpenAI, local model):**
+
+```json
+{
+  "baseUrl": "https://my-azure-instance.openai.azure.com/openai",
+  "apiKeyEnvVar": "AZURE_OPENAI_KEY"
+}
+```
+
+!!! note "How API Keys Work"
+    The JSON never contains the actual API key — only the **name** of the environment variable. When `toInteractable()` is called, the blueprint reads `System.getenv("OPENROUTER_API_KEY")` to get the real key. This means the same JSON file works across dev, staging, and production — each environment just sets its own env var.
+
+---
+
+#### The `contextManagement` Object
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `strategyType` | string | ✅ | `"sliding"` or `"summarization"` |
+| `maxTokens` | integer | ✅ | Maximum context window size in tokens |
+| `preserveDeveloperMessages` | boolean | ❌ | Keep system/developer messages (sliding only) |
+| `summarizationModel` | string | ❌ | Model for summarization (summarization only) |
+| `keepRecentMessages` | integer | ❌ | Recent messages to keep verbatim (summarization only) |
+| `summarizationPrompt` | string | ❌ | Custom prompt for summarization |
+| `tokenCounterClassName` | string | ❌ | FQCN of custom `TokenCounter` implementation |
+
+**Sliding window:**
+
+```json
+{
+  "strategyType": "sliding",
+  "preserveDeveloperMessages": true,
+  "maxTokens": 4000
+}
+```
+
+**Summarization:**
+
+```json
+{
+  "strategyType": "summarization",
+  "summarizationModel": "openai/gpt-4o-mini",
+  "keepRecentMessages": 5,
+  "maxTokens": 8000
+}
+```
+
+---
+
+#### The `inputGuardrails` / `outputGuardrails` Arrays
+
+Each guardrail reference has one of two forms:
+
+**By registry ID** (for lambdas registered at startup):
+
+```json
+{ "registryId": "profanity_filter" }
+```
+
+**By class name** (for guardrails implemented as classes):
+
+```json
+{ "className": "com.acme.guards.ProfanityFilter" }
+```
+
+---
+
+#### `"type": "router"` — RouterAgent
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | `"router"` | ✅ | Type discriminator |
+| `name` | string | ✅ | Router name |
+| `model` | string | ✅ | Classification model (use a fast/cheap model) |
+| `responder` | object | ✅ | Responder config |
+| `routes` | object[] | ✅ | Array of `{ description, target }` |
+| `fallback` | object | ❌ | Default agent if classification fails |
+| `traceMetadata` | object | ❌ | Trace metadata |
+
+**Complete router example:**
+
+```json
+{
+  "type": "router",
+  "name": "CustomerServiceRouter",
+  "model": "openai/gpt-4o-mini",
+  "responder": {
+    "provider": "OPEN_ROUTER",
+    "apiKeyEnvVar": "OPENROUTER_API_KEY"
+  },
+  "routes": [
+    {
+      "description": "Billing inquiries: invoices, payments, refunds, subscription changes",
+      "target": {
+        "type": "agent",
+        "name": "BillingAgent",
+        "model": "openai/gpt-4o",
+        "instructions": "You are a billing specialist. Help customers with invoices, payments, and refund requests.",
+        "maxTurns": 10,
+        "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+        "toolClassNames": ["com.acme.tools.LookupInvoice", "com.acme.tools.ProcessRefund"],
+        "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+      }
+    },
+    {
+      "description": "Technical support: bugs, errors, crashes, installation problems",
+      "target": {
+        "type": "agent",
+        "name": "TechSupportAgent",
+        "model": "openai/gpt-4o",
+        "instructions": "You are a technical support engineer. Diagnose issues and provide step-by-step solutions.",
+        "maxTurns": 15,
+        "temperature": 0.2,
+        "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+        "toolClassNames": ["com.acme.tools.SearchDocs", "com.acme.tools.CheckSystemStatus"],
+        "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+      }
+    },
+    {
+      "description": "Sales: pricing, demos, enterprise plans, feature comparisons",
+      "target": {
+        "type": "agent",
+        "name": "SalesAgent",
+        "model": "openai/gpt-4o",
+        "instructions": "You are a sales representative. Help potential customers understand our products and pricing.",
+        "maxTurns": 10,
+        "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+        "toolClassNames": [],
+        "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+      }
+    }
+  ],
+  "fallback": {
+    "type": "agent",
+    "name": "GeneralAssistant",
+    "model": "openai/gpt-4o-mini",
+    "instructions": "You are a general assistant. Help the customer with their question.",
+    "maxTurns": 5,
+    "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+    "toolClassNames": [],
+    "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+  }
+}
+```
+
+---
+
+#### `"type": "supervisor"` — SupervisorAgent
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | `"supervisor"` | ✅ | Type discriminator |
+| `name` | string | ✅ | Supervisor name |
+| `model` | string | ✅ | Supervisor's LLM model |
+| `instructions` | string | ✅ | System prompt for the supervisor |
+| `maxTurns` | integer | ✅ | Max turns for supervisor loop |
+| `workers` | object[] | ✅ | Array of `{ worker, description }` |
+| `responder` | object | ✅ | Responder config |
+| `traceMetadata` | object | ❌ | Trace metadata |
+
+```json
+{
+  "type": "supervisor",
+  "name": "DevTeamLead",
+  "model": "openai/gpt-4o",
+  "instructions": "You lead a development team. Break down tasks and delegate to the right worker. Review their output before submitting.",
+  "maxTurns": 10,
+  "responder": {
+    "provider": "OPEN_ROUTER",
+    "apiKeyEnvVar": "OPENROUTER_API_KEY"
+  },
+  "workers": [
+    {
+      "description": "Writes production-quality code from specifications",
+      "worker": {
+        "type": "agent",
+        "name": "CodeWriter",
+        "model": "openai/gpt-4o",
+        "instructions": "You are a senior developer. Write clean, well-documented code.",
+        "maxTurns": 5,
+        "temperature": 0.2,
+        "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+        "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+      }
+    },
+    {
+      "description": "Reviews code for bugs, security issues, and style",
+      "worker": {
+        "type": "agent",
+        "name": "CodeReviewer",
+        "model": "openai/gpt-4o",
+        "instructions": "You are a code reviewer. Find bugs, security vulnerabilities, and suggest improvements.",
+        "maxTurns": 5,
+        "temperature": 0.1,
+        "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+        "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+      }
+    }
+  ]
+}
+```
+
+---
+
+#### `"type": "network"` — AgentNetwork
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | `"network"` | ✅ | Type discriminator |
+| `name` | string | ✅ | Network name |
+| `peers` | object[] | ✅ | Array of peer agent blueprints |
+| `maxRounds` | integer | ✅ | Maximum discussion rounds |
+| `synthesizer` | object | ❌ | Agent that summarizes the discussion |
+| `traceMetadata` | object | ❌ | Trace metadata |
+
+```json
+{
+  "type": "network",
+  "name": "ProductReviewPanel",
+  "maxRounds": 3,
+  "peers": [
+    {
+      "type": "agent",
+      "name": "UserAdvocate",
+      "model": "openai/gpt-4o",
+      "instructions": "You advocate for the end user. Prioritize usability, simplicity, and user experience above all else.",
+      "maxTurns": 5,
+      "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+      "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+    },
+    {
+      "type": "agent",
+      "name": "EngineeringLead",
+      "model": "openai/gpt-4o",
+      "instructions": "You represent engineering. Consider feasibility, technical debt, scalability, and maintainability.",
+      "maxTurns": 5,
+      "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+      "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+    },
+    {
+      "type": "agent",
+      "name": "BusinessAnalyst",
+      "model": "openai/gpt-4o",
+      "instructions": "You represent business interests. Consider ROI, market fit, competitive advantage, and revenue impact.",
+      "maxTurns": 5,
+      "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+      "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+    }
+  ],
+  "synthesizer": {
+    "type": "agent",
+    "name": "Moderator",
+    "model": "openai/gpt-4o",
+    "instructions": "You are a neutral moderator. Synthesize the discussion into a clear recommendation with pros and cons from each perspective.",
+    "maxTurns": 3,
+    "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+    "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+  }
+}
+```
+
+---
+
+#### `"type": "parallel"` — ParallelAgents
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | `"parallel"` | ✅ | Type discriminator |
+| `name` | string | ✅ | Name for this parallel group |
+| `members` | object[] | ✅ | Agent blueprints to run concurrently |
+| `traceMetadata` | object | ❌ | Trace metadata |
+
+```json
+{
+  "type": "parallel",
+  "name": "MultiPerspectiveAnalysis",
+  "members": [
+    {
+      "type": "agent",
+      "name": "TechnicalAnalyst",
+      "model": "openai/gpt-4o",
+      "instructions": "Analyze the input from a technical perspective.",
+      "maxTurns": 5,
+      "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+      "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+    },
+    {
+      "type": "agent",
+      "name": "BusinessAnalyst",
+      "model": "openai/gpt-4o",
+      "instructions": "Analyze the input from a business perspective.",
+      "maxTurns": 5,
+      "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+      "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+    }
+  ]
+}
+```
+
+---
+
+#### `"type": "hierarchical"` — HierarchicalAgents
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | `"hierarchical"` | ✅ | Type discriminator |
+| `executive` | object | ✅ | Top-level executive agent (must be `"type": "agent"`) |
+| `departments` | map | ✅ | Map of department name → `{ manager, workers }` |
+| `maxTurns` | integer | ✅ | Max turns for the hierarchy |
+| `traceMetadata` | object | ❌ | Trace metadata |
+
+```json
+{
+  "type": "hierarchical",
+  "maxTurns": 15,
+  "executive": {
+    "type": "agent",
+    "name": "CEO",
+    "model": "openai/gpt-4o",
+    "instructions": "You are the CEO. Delegate tasks to department managers and synthesize their results.",
+    "maxTurns": 5,
+    "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+    "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+  },
+  "departments": {
+    "Engineering": {
+      "manager": {
+        "type": "agent",
+        "name": "VP_Engineering",
+        "model": "openai/gpt-4o",
+        "instructions": "You manage the engineering department. Coordinate with your team to deliver technical solutions.",
+        "maxTurns": 5,
+        "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+        "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+      },
+      "workers": [
+        {
+          "type": "agent",
+          "name": "BackendDev",
+          "model": "openai/gpt-4o",
+          "instructions": "You are a backend developer. Build APIs and server-side logic.",
+          "maxTurns": 3,
+          "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+          "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+        },
+        {
+          "type": "agent",
+          "name": "FrontendDev",
+          "model": "openai/gpt-4o",
+          "instructions": "You are a frontend developer. Build user interfaces.",
+          "maxTurns": 3,
+          "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+          "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+        }
+      ]
+    },
+    "Marketing": {
+      "manager": {
+        "type": "agent",
+        "name": "VP_Marketing",
+        "model": "openai/gpt-4o",
+        "instructions": "You manage marketing. Create campaigns and analyze market trends.",
+        "maxTurns": 5,
+        "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+        "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+      },
+      "workers": [
+        {
+          "type": "agent",
+          "name": "ContentWriter",
+          "model": "openai/gpt-4o",
+          "instructions": "You write marketing content: blog posts, emails, and social media.",
+          "maxTurns": 3,
+          "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+          "toolClassNames": [], "handoffs": [], "inputGuardrails": [], "outputGuardrails": []
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+### Loading Agents from JSON
+
+#### Basic: Load and Run
+
+```java
+ObjectMapper mapper = new ObjectMapper();
+
+String json = Files.readString(Path.of("agents/support-agent.json"));
+Interactable agent = mapper.readValue(json, InteractableBlueprint.class)
+    .toInteractable();
+
+AgentResult result = agent.interact("I can't access my account");
+System.out.println(result.output());
+```
+
+#### Load from Classpath Resources
+
+```java
+// Load from src/main/resources/agents/support.json
+try (InputStream is = getClass().getResourceAsStream("/agents/support.json")) {
+    InteractableBlueprint blueprint = mapper.readValue(is, InteractableBlueprint.class);
+    Interactable agent = blueprint.toInteractable();
+}
+```
+
+#### Lazy Loading Registry
+
+Only construct agents when first requested:
+
+```java
+public class AgentRegistry {
+    private final ObjectMapper mapper = new ObjectMapper();
+    private final Map<String, Interactable> cache = new ConcurrentHashMap<>();
+    private final Path agentsDir;
+
+    public AgentRegistry(Path agentsDir) {
+        this.agentsDir = agentsDir;
+    }
+
+    /**
+     * Returns the agent with the given name.
+     * Loads from JSON on first access, then caches.
+     */
+    public Interactable get(String name) {
+        return cache.computeIfAbsent(name, this::loadAgent);
+    }
+
+    private Interactable loadAgent(String name) {
+        try {
+            Path jsonFile = agentsDir.resolve(name + ".json");
+            String json = Files.readString(jsonFile);
+            return mapper.readValue(json, InteractableBlueprint.class)
+                .toInteractable();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load agent: " + name, e);
+        }
+    }
+
+    /** Reload a specific agent (e.g., after config change). */
+    public void reload(String name) {
+        cache.remove(name);
+    }
+
+    /** List all available agent names. */
+    public List<String> listAvailable() throws IOException {
+        try (var files = Files.list(agentsDir)) {
+            return files
+                .filter(p -> p.toString().endsWith(".json"))
+                .map(p -> p.getFileName().toString().replace(".json", ""))
+                .toList();
+        }
+    }
+}
+```
+
+```java
+// Usage
+AgentRegistry registry = new AgentRegistry(Path.of("agents"));
+
+// List available agents
+registry.listAvailable().forEach(System.out::println);
+// → support-agent
+// → router
+// → dev-team
+
+// Lazy load and use
+Interactable support = registry.get("support-agent");
+AgentResult result = support.interact("Help me with my order");
+
+// Hot-reload after editing the JSON file
+registry.reload("support-agent");
+```
+
+---
+
+### Recommended Directory Structure
+
+Organize your JSON agent files by purpose:
+
+```
+src/main/resources/
+└── agents/
+    ├── simple/
+    │   ├── support.json          ← basic support agent
+    │   ├── sales.json            ← basic sales agent
+    │   └── general.json          ← general-purpose fallback
+    ├── routers/
+    │   ├── customer-service.json ← routes to support/sales/billing
+    │   └── internal.json         ← routes internal requests
+    ├── teams/
+    │   ├── dev-team.json         ← supervisor + code/review workers
+    │   └── content-team.json     ← supervisor + writer/editor workers
+    └── networks/
+        ├── debate-panel.json     ← multi-perspective discussion
+        └── review-board.json     ← product review committee
+```
+
+---
+
+### Spring Boot Integration
+
+Load JSON agents as Spring beans:
+
+```java
+@Configuration
+public class AgentConfig {
+
+    @Bean
+    public AgentRegistry agentRegistry() {
+        return new AgentRegistry(Path.of("src/main/resources/agents/simple"));
+    }
+
+    @Bean("supportAgent")
+    public Interactable supportAgent(AgentRegistry registry) {
+        return registry.get("support");
+    }
+
+    @Bean("customerServiceRouter")
+    public Interactable customerServiceRouter() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        String json = Files.readString(
+            Path.of("src/main/resources/agents/routers/customer-service.json"));
+        return mapper.readValue(json, InteractableBlueprint.class).toInteractable();
+    }
+}
+```
+
+```java
+@RestController
+@RequestMapping("/api/chat")
+public class ChatController {
+
+    private final Interactable router;
+
+    public ChatController(@Qualifier("customerServiceRouter") Interactable router) {
+        this.router = router;
+    }
+
+    @PostMapping
+    public ResponseEntity<String> chat(@RequestBody ChatRequest request) {
+        AgentResult result = router.interact(request.message());
+        return ResponseEntity.ok(result.output());
+    }
+}
+```
+
+---
+
+### Checklist: Before Running a JSON-Defined Agent
+
+Before calling `toInteractable()` on a blueprint loaded from JSON, make sure:
+
+- [x] **Environment variables** are set (`OPENROUTER_API_KEY`, `OPENAI_API_KEY`, etc.)
+- [x] **Tool classes** referenced in `toolClassNames` are on the classpath and have no-arg constructors
+- [x] **Named guardrails** referenced by `registryId` are registered via `InputGuardrail.named(...)` / `OutputGuardrail.named(...)` at startup
+- [x] **Class guardrails** referenced by `className` are on the classpath with no-arg constructors
+- [x] **Custom `TokenCounter`** classes (if any) are on the classpath
+
+!!! tip "Minimal Agent JSON"
+    The smallest valid agent JSON is just:
+
+    ```json
+    {
+      "type": "agent",
+      "name": "Mini",
+      "model": "openai/gpt-4o-mini",
+      "instructions": "You are a helpful assistant.",
+      "maxTurns": 5,
+      "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": "OPENROUTER_API_KEY" },
+      "toolClassNames": [],
+      "handoffs": [],
+      "inputGuardrails": [],
+      "outputGuardrails": []
+    }
+    ```
+
+---
+
 ## Practical Recipes
 
 ### 1. Store Agents in a Database
@@ -441,22 +1186,7 @@ Interactable agent = new ObjectMapper()
 AgentResult result = agent.interact("Help me with my order");
 ```
 
-### 2. Agent Config Files
-
-Store agent configurations as JSON files in your resources:
-
-```java
-// Save to file
-Path configPath = Path.of("agents/support-agent.json");
-Files.writeString(configPath, agent.toBlueprint().toJson(prettyMapper));
-
-// Load from file
-String json = Files.readString(Path.of("agents/support-agent.json"));
-Interactable agent = mapper.readValue(json, InteractableBlueprint.class)
-    .toInteractable();
-```
-
-### 3. Dynamic Agent Switching
+### 2. Dynamic Agent Switching
 
 ```java
 // Load different agents based on runtime config
@@ -469,7 +1199,7 @@ Interactable agent = mapper.readValue(json, InteractableBlueprint.class)
 // Switch agents without redeploying
 ```
 
-### 4. Agent Versioning and Diffing
+### 3. Agent Versioning and Diffing
 
 ```json
 // v1: agents/support-agent.json
@@ -491,7 +1221,7 @@ Interactable agent = mapper.readValue(json, InteractableBlueprint.class)
 }
 ```
 
-### 5. Cross-Service Agent Sharing
+### 4. Cross-Service Agent Sharing
 
 ```java
 // Service A: Create and serialize agent
@@ -505,7 +1235,7 @@ Interactable agent = mapper.readValue(json, InteractableBlueprint.class)
 agent.interact(userInput);
 ```
 
-### 6. Named Guardrails at Startup
+### 5. Named Guardrails at Startup
 
 Register named guardrails once at application startup so they're available during deserialization:
 
