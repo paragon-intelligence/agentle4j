@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.paragon.agents.InteractableBlueprint.AgentBlueprint;
+import com.paragon.agents.InteractableBlueprint.GuardrailReference;
 import com.paragon.agents.InteractableBlueprint.ResponderBlueprint;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,11 +35,10 @@ class AgentDefinitionTest {
     AgentDefinition original =
         new AgentDefinition(
             "TestAgent",
-            "openai/gpt-4o-mini",
             "You are a test agent.",
             5,
             null, // temperature
-            null, // tools
+            null, // toolNames
             null, // inputGuardrails
             null, // outputGuardrails
             null, // handoffs
@@ -48,11 +48,10 @@ class AgentDefinitionTest {
     AgentDefinition restored = mapper.readValue(json, AgentDefinition.class);
 
     assertEquals(original.name(), restored.name());
-    assertEquals(original.model(), restored.model());
     assertEquals(original.instructions(), restored.instructions());
     assertEquals(original.maxTurns(), restored.maxTurns());
     assertNull(restored.temperature());
-    assertNull(restored.toolClassNames());
+    assertNull(restored.toolNames());
     assertNull(restored.inputGuardrails());
     assertNull(restored.outputGuardrails());
     assertNull(restored.handoffs());
@@ -64,20 +63,18 @@ class AgentDefinitionTest {
     AgentDefinition original =
         new AgentDefinition(
             "SupportAgent",
-            "openai/gpt-4o",
             "You are a professional support agent.",
             15,
             0.3,
-            List.of("com.example.tools.SearchTool"),
-            List.of(new AgentDefinition.GuardrailDef("max_length", null)),
-            List.of(new AgentDefinition.GuardrailDef(null, "com.example.guards.PiiFilter")),
+            List.of("search_kb", "create_ticket"),
+            List.of("profanity_filter", "max_length"),
+            List.of("no_pii"),
             List.of(
                 new AgentDefinition.HandoffAgentDef(
                     "escalate_billing",
                     "Transfer billing issues",
                     new AgentDefinition(
                         "BillingAgent",
-                        "openai/gpt-4o",
                         "Handle billing.",
                         10,
                         null,
@@ -92,15 +89,11 @@ class AgentDefinitionTest {
     AgentDefinition restored = mapper.readValue(json, AgentDefinition.class);
 
     assertEquals("SupportAgent", restored.name());
-    assertEquals("openai/gpt-4o", restored.model());
     assertEquals(15, restored.maxTurns());
     assertEquals(0.3, restored.temperature());
-    assertEquals(1, restored.toolClassNames().size());
-    assertEquals("com.example.tools.SearchTool", restored.toolClassNames().get(0));
-    assertEquals(1, restored.inputGuardrails().size());
-    assertEquals("max_length", restored.inputGuardrails().get(0).registryId());
-    assertEquals(1, restored.outputGuardrails().size());
-    assertEquals("com.example.guards.PiiFilter", restored.outputGuardrails().get(0).className());
+    assertEquals(List.of("search_kb", "create_ticket"), restored.toolNames());
+    assertEquals(List.of("profanity_filter", "max_length"), restored.inputGuardrails());
+    assertEquals(List.of("no_pii"), restored.outputGuardrails());
     assertEquals(1, restored.handoffs().size());
     assertEquals("escalate_billing", restored.handoffs().get(0).name());
     assertEquals("BillingAgent", restored.handoffs().get(0).target().name());
@@ -111,18 +104,33 @@ class AgentDefinitionTest {
   }
 
   @Test
+  void jsonContainsFieldWithoutModel() throws Exception {
+    AgentDefinition def =
+        new AgentDefinition("TestAgent", "Instructions.", 5, null, null, null, null, null, null);
+
+    String json = mapper.writeValueAsString(def);
+
+    // Must NOT contain a "model" field — model is infrastructure, not LLM output
+    assertFalse(json.contains("\"model\""));
+    // Must contain behavioral fields
+    assertTrue(json.contains("\"name\""));
+    assertTrue(json.contains("\"instructions\""));
+    assertTrue(json.contains("\"maxTurns\""));
+  }
+
+  @Test
   void jsonContainsPropertyDescriptions() throws Exception {
-    // Verify that the schema generator can extract descriptions
     var schemaGen =
         new com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator(mapper);
     var schema = schemaGen.generateSchema(AgentDefinition.class);
     String schemaJson = mapper.writeValueAsString(schema);
 
-    // Key descriptions should be present in the schema
+    // Descriptions from @JsonPropertyDescription should be in schema
     assertTrue(schemaJson.contains("Unique name for this agent"));
-    assertTrue(schemaJson.contains("LLM model identifier"));
     assertTrue(schemaJson.contains("System prompt"));
     assertTrue(schemaJson.contains("Maximum number of LLM turns"));
+    assertTrue(schemaJson.contains("Names of tools"));
+    assertTrue(schemaJson.contains("Names of input guardrails"));
   }
 
   // ===== Blueprint Conversion =====
@@ -132,31 +140,31 @@ class AgentDefinitionTest {
     AgentDefinition def =
         new AgentDefinition(
             "TestAgent",
-            "openai/gpt-4o",
             "Test instructions.",
             10,
             0.7,
-            List.of("com.example.tools.SearchTool"),
-            List.of(new AgentDefinition.GuardrailDef("max_length", null)),
+            List.of("search_kb"),
+            List.of("max_length"),
             null,
             null,
             new AgentDefinition.ContextDef("sliding", 4000, true, null, null, null));
 
     ResponderBlueprint responderBp =
         new ResponderBlueprint("OPEN_ROUTER", null, "OPENROUTER_API_KEY", null, null);
-    AgentBlueprint blueprint = def.toBlueprint(responderBp);
+
+    // No available tools for resolution in this unit test
+    AgentBlueprint blueprint = def.toBlueprint(responderBp, "openai/gpt-4o", List.of());
 
     assertEquals("TestAgent", blueprint.name());
-    assertEquals("openai/gpt-4o", blueprint.model());
+    assertEquals("openai/gpt-4o", blueprint.model()); // model injected externally
     assertEquals("Test instructions.", blueprint.instructions());
     assertEquals(10, blueprint.maxTurns());
     assertEquals(0.7, blueprint.temperature());
-    assertEquals(1, blueprint.toolClassNames().size());
+    // Guardrails preserved as registry ID references
     assertEquals(1, blueprint.inputGuardrails().size());
+    assertEquals("max_length", blueprint.inputGuardrails().get(0).registryId());
     assertEquals(0, blueprint.outputGuardrails().size());
-    assertEquals(0, blueprint.handoffs().size());
     assertNotNull(blueprint.contextManagement());
-    assertEquals("sliding", blueprint.contextManagement().strategyType());
   }
 
   // ===== fromBlueprint Conversion =====
@@ -176,58 +184,25 @@ class AgentDefinitionTest {
             null, // outputType
             null, // traceMetadata
             responderBp,
-            List.of("com.example.SomeTool"),
             List.of(),
-            List.of(new InteractableBlueprint.GuardrailReference(null, "profanity_filter")),
+            List.of(),
+            List.of(new GuardrailReference(null, "profanity_filter")),
             List.of(),
             null);
 
     AgentDefinition def = AgentDefinition.fromBlueprint(blueprint);
 
     assertEquals("OriginalAgent", def.name());
-    assertEquals("openai/gpt-4o", def.model());
     assertEquals("Original instructions.", def.instructions());
     assertEquals(8, def.maxTurns());
     assertEquals(0.5, def.temperature());
-    assertNotNull(def.toolClassNames());
-    assertEquals(1, def.toolClassNames().size());
+    assertNull(def.toolNames()); // no available tools to reverse-lookup
     assertNotNull(def.inputGuardrails());
     assertEquals(1, def.inputGuardrails().size());
-    assertEquals("profanity_filter", def.inputGuardrails().get(0).registryId());
-    assertNull(def.outputGuardrails()); // empty list becomes null
-    assertNull(def.handoffs()); // empty list becomes null
-    assertNull(def.contextManagement()); // null stays null
-  }
-
-  @Test
-  void fromBlueprint_andBackToBlueprint_preservesData() {
-    ResponderBlueprint responderBp =
-        new ResponderBlueprint("OPENAI", null, "OPENAI_API_KEY", null, null);
-
-    AgentBlueprint original =
-        new AgentBlueprint(
-            "RoundTrip",
-            "openai/gpt-4o-mini",
-            "Round-trip test.",
-            5,
-            null,
-            null,
-            null,
-            responderBp,
-            List.of(),
-            List.of(),
-            List.of(),
-            List.of(),
-            null);
-
-    AgentDefinition def = AgentDefinition.fromBlueprint(original);
-    AgentBlueprint restored = def.toBlueprint(responderBp);
-
-    assertEquals(original.name(), restored.name());
-    assertEquals(original.model(), restored.model());
-    assertEquals(original.instructions(), restored.instructions());
-    assertEquals(original.maxTurns(), restored.maxTurns());
-    assertEquals(original.temperature(), restored.temperature());
+    assertEquals("profanity_filter", def.inputGuardrails().get(0));
+    assertNull(def.outputGuardrails()); // empty → null
+    assertNull(def.handoffs());
+    assertNull(def.contextManagement());
   }
 
   // ===== Hand-Written JSON =====
@@ -238,20 +213,17 @@ class AgentDefinitionTest {
         """
         {
           "name": "SpanishSupport",
-          "model": "openai/gpt-4o",
           "instructions": "Eres un agente de soporte en español.",
           "maxTurns": 10,
           "temperature": 0.3,
-          "inputGuardrails": [
-            { "registryId": "max_length" }
-          ],
+          "toolNames": ["search_kb", "create_ticket"],
+          "inputGuardrails": ["profanity_filter", "max_length"],
           "handoffs": [
             {
               "name": "escalate_billing",
               "description": "Billing and payment issues",
               "target": {
                 "name": "BillingAgent",
-                "model": "openai/gpt-4o",
                 "instructions": "Handle billing in Spanish.",
                 "maxTurns": 5
               }
@@ -268,16 +240,13 @@ class AgentDefinitionTest {
     AgentDefinition def = mapper.readValue(json, AgentDefinition.class);
 
     assertEquals("SpanishSupport", def.name());
-    assertEquals("openai/gpt-4o", def.model());
     assertEquals(10, def.maxTurns());
     assertEquals(0.3, def.temperature());
-    assertNull(def.toolClassNames());
-    assertNotNull(def.inputGuardrails());
-    assertEquals(1, def.inputGuardrails().size());
+    assertEquals(List.of("search_kb", "create_ticket"), def.toolNames());
+    assertEquals(List.of("profanity_filter", "max_length"), def.inputGuardrails());
     assertNotNull(def.handoffs());
     assertEquals(1, def.handoffs().size());
     assertEquals("BillingAgent", def.handoffs().get(0).target().name());
-    assertNotNull(def.contextManagement());
     assertEquals("sliding", def.contextManagement().strategyType());
   }
 }

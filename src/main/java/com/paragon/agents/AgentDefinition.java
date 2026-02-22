@@ -7,14 +7,12 @@ import com.paragon.agents.InteractableBlueprint.ContextBlueprint;
 import com.paragon.agents.InteractableBlueprint.GuardrailReference;
 import com.paragon.agents.InteractableBlueprint.HandoffDescriptor;
 import com.paragon.agents.InteractableBlueprint.ResponderBlueprint;
-import com.paragon.agents.context.ContextManagementConfig;
-import com.paragon.agents.context.SlidingWindowStrategy;
-import com.paragon.agents.context.SummarizationStrategy;
-import com.paragon.agents.context.TokenCounter;
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.FunctionTool;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -23,9 +21,14 @@ import org.slf4j.LoggerFactory;
 /**
  * A richly annotated agent definition record designed for <b>LLM structured output</b>.
  *
- * <p>Every field carries a {@link JsonPropertyDescription} annotation that produces a JSON Schema
- * description. When used as the output type of {@code interactStructured()}, the LLM sees these
- * descriptions and knows exactly what each field means and how to fill it.
+ * <p>Every field carries a {@link JsonPropertyDescription} that produces a JSON Schema description.
+ * When used as the output type of {@code interactStructured()}, the LLM sees these descriptions
+ * and knows exactly what each field means.
+ *
+ * <p>This record contains <b>only behavioral fields</b> — things the LLM can reason about.
+ * Infrastructure concerns (model, API provider, API keys, HTTP config) are provided externally
+ * via {@link #toInteractable(Responder, String)} or
+ * {@link #toInteractable(Responder, String, List)}.
  *
  * <h2>Meta-Agent Pattern</h2>
  *
@@ -34,32 +37,26 @@ import org.slf4j.LoggerFactory;
  * Interactable.Structured<AgentDefinition> metaAgent = Agent.builder()
  *     .name("AgentFactory")
  *     .model("openai/gpt-4o")
- *     .instructions("You create agent definitions based on user requirements.")
+ *     .instructions("""
+ *         You create agent definitions. Available tools you can assign:
+ *         - "search_kb": Searches the company knowledge base
+ *         - "create_ticket": Creates a support ticket
+ *
+ *         Available guardrails:
+ *         - "profanity_filter": blocks profanity
+ *         - "max_length": limits input to 10k chars
+ *         """)
  *     .structured(AgentDefinition.class)
  *     .responder(responder)
  *     .build();
  *
- * // Ask the LLM to define an agent
- * StructuredAgentResult<AgentDefinition> result = metaAgent.interactStructured(
- *     "Create a customer support agent that speaks Spanish and uses a knowledge base tool"
- * );
+ * AgentDefinition def = metaAgent.interactStructured(
+ *     "Create a customer support agent that speaks Spanish"
+ * ).output();
  *
- * // Convert to a live, functional agent
- * AgentDefinition definition = result.output();
- * Interactable newAgent = definition.toInteractable(responder);
- * AgentResult output = newAgent.interact("¿Cómo puedo recuperar mi contraseña?");
+ * // You provide infrastructure: responder, model, and available tools
+ * Interactable agent = def.toInteractable(responder, "openai/gpt-4o", availableTools);
  * }</pre>
- *
- * <h2>Design Notes</h2>
- *
- * <ul>
- *   <li>This record contains <b>only behavioral fields</b> — things the LLM should decide (name,
- *       model, instructions, tools, guardrails, etc.)
- *   <li>Infrastructure concerns ({@link Responder}, API keys, HTTP clients) are <b>never</b> part
- *       of this record — they are provided externally via {@link #toInteractable(Responder)}
- *   <li>All list fields are {@code @Nullable} and default to empty lists — the LLM can omit them
- *   <li>Bridges to the {@link InteractableBlueprint} system via {@link #toBlueprint(ResponderBlueprint)}
- * </ul>
  *
  * @see InteractableBlueprint.AgentBlueprint
  * @see Interactable.Structured
@@ -73,28 +70,21 @@ public record AgentDefinition(
                 + " 'CustomerSupport', 'CodeReviewer', 'TranslationAgent', 'DataAnalyst'.")
         @NonNull
         String name,
-    @JsonProperty(value = "model", required = true)
-        @JsonPropertyDescription(
-            "The LLM model identifier to use. Choose based on the agent's complexity and"
-                + " cost/quality tradeoffs. Examples: 'openai/gpt-4o' (highest quality),"
-                + " 'openai/gpt-4o-mini' (fast and cheap), 'anthropic/claude-3.5-sonnet',"
-                + " 'google/gemini-2.0-flash-001'.")
-        @NonNull
-        String model,
     @JsonProperty(value = "instructions", required = true)
         @JsonPropertyDescription(
             "System prompt that defines the agent's personality, behavior, constraints, and"
-                + " capabilities. This is the most important field — it shapes everything the agent"
-                + " does. Write clear, specific, and detailed instructions. Use newlines to"
-                + " separate sections. Include guidelines, prohibited actions, output formatting"
-                + " rules, and domain-specific knowledge.")
+                + " capabilities. This is the most important field — it shapes everything the"
+                + " agent does. Write clear, specific, and detailed instructions. Use newlines"
+                + " to separate sections. Include guidelines, prohibited actions, output"
+                + " formatting rules, and domain-specific knowledge.")
         @NonNull
         String instructions,
     @JsonProperty(value = "maxTurns", required = true)
         @JsonPropertyDescription(
-            "Maximum number of LLM turns in the agentic loop. Each tool call consumes one turn."
-                + " Recommended values: 1 for simple Q&A without tools, 5-10 for agents with a"
-                + " few tools, 10-20 for complex multi-step reasoning tasks. Must be at least 1.")
+            "Maximum number of LLM turns in the agentic loop. Each tool call consumes one"
+                + " turn. Recommended values: 1 for simple Q&A without tools, 5-10 for agents"
+                + " with a few tools, 10-20 for complex multi-step reasoning tasks. Must be at"
+                + " least 1.")
         int maxTurns,
     @JsonProperty("temperature")
         @JsonPropertyDescription(
@@ -104,44 +94,47 @@ public record AgentDefinition(
                 + " conversation, high (0.8-1.2) for creative writing.")
         @Nullable
         Double temperature,
-    @JsonProperty("toolClassNames")
+    @JsonProperty("toolNames")
         @JsonPropertyDescription(
-            "Fully qualified class names of FunctionTool implementations this agent can use."
-                + " Each tool must have a no-argument constructor. The agent will automatically"
-                + " call these tools when needed. Example: ['com.myapp.tools.SearchKnowledgeBase',"
-                + " 'com.myapp.tools.LookupOrder']. Omit or leave empty if the agent needs no"
-                + " tools.")
+            "Names of tools this agent should have access to. These are human-readable names"
+                + " that match the names of tools registered in the application (e.g.,"
+                + " 'search_knowledge_base', 'create_ticket', 'lookup_order'). The available"
+                + " tools and their descriptions should be listed in your instructions. Omit if"
+                + " the agent needs no tools.")
         @Nullable
-        List<String> toolClassNames,
+        List<String> toolNames,
     @JsonProperty("inputGuardrails")
         @JsonPropertyDescription(
-            "Guardrails that validate user input BEFORE it reaches the LLM. Each guardrail is"
-                + " referenced either by a registry ID (for lambda guardrails registered at"
-                + " startup) or by a fully qualified class name (for class-based guardrails with"
-                + " no-arg constructors). Omit if no input validation is needed.")
+            "Names of input guardrails to apply before user input reaches the LLM. These are"
+                + " IDs of guardrails registered at application startup (e.g.,"
+                + " 'profanity_filter', 'max_length', 'topic_filter'). The available guardrails"
+                + " and their behaviors should be listed in your instructions. Omit if no input"
+                + " validation is needed.")
         @Nullable
-        List<GuardrailDef> inputGuardrails,
+        List<String> inputGuardrails,
     @JsonProperty("outputGuardrails")
         @JsonPropertyDescription(
-            "Guardrails that validate LLM responses BEFORE returning them to the user. Same"
-                + " format as input guardrails. Use these to filter PII, enforce formatting, or"
-                + " block inappropriate content. Omit if no output validation is needed.")
+            "Names of output guardrails to apply before returning LLM responses to the user."
+                + " Same format as input guardrails. Use these to filter PII, enforce"
+                + " formatting, or block inappropriate content. Omit if no output validation is"
+                + " needed.")
         @Nullable
-        List<GuardrailDef> outputGuardrails,
+        List<String> outputGuardrails,
     @JsonProperty("handoffs")
         @JsonPropertyDescription(
-            "Other agents that this agent can delegate conversations to. When the agent detects"
-                + " that a user's request falls outside its expertise, it hands off to a"
-                + " specialized agent. Each handoff defines a target agent and a description of"
-                + " when to use it. Omit if the agent operates standalone.")
+            "Other agents that this agent can delegate conversations to. When the agent"
+                + " detects that a user's request falls outside its expertise, it hands off to"
+                + " a specialized agent. Each handoff defines the target agent inline. Omit if"
+                + " the agent operates standalone.")
         @Nullable
         List<HandoffAgentDef> handoffs,
     @JsonProperty("contextManagement")
         @JsonPropertyDescription(
             "Strategy for managing the conversation context window. When conversation history"
-                + " exceeds the token limit, this strategy decides what to keep and what to"
-                + " discard. Choose 'sliding' to trim old messages or 'summarization' to"
-                + " compress history into a summary. Omit to use no context management.")
+                + " exceeds the token limit, this strategy decides what to keep. Choose"
+                + " 'sliding' to trim old messages (simple, fast) or 'summarization' to"
+                + " compress history into a summary (preserves more context). Omit to use no"
+                + " context management.")
         @Nullable
         ContextDef contextManagement) {
 
@@ -150,35 +143,7 @@ public record AgentDefinition(
   // ===== Nested Records =====
 
   /**
-   * Reference to a guardrail — either by registry ID (for lambda guardrails) or by fully
-   * qualified class name (for class-based guardrails).
-   */
-  public record GuardrailDef(
-      @JsonProperty("registryId")
-          @JsonPropertyDescription(
-              "ID of a guardrail previously registered via InputGuardrail.named() or"
-                  + " OutputGuardrail.named(). Use this for lambda/anonymous guardrails that were"
-                  + " registered at application startup. Example: 'profanity_filter',"
-                  + " 'max_length', 'no_pii'.")
-          @Nullable
-          String registryId,
-      @JsonProperty("className")
-          @JsonPropertyDescription(
-              "Fully qualified class name of a guardrail implementation with a no-argument"
-                  + " constructor. Example: 'com.myapp.guards.ProfanityFilter'. Use this for"
-                  + " guardrails implemented as standalone classes.")
-          @Nullable
-          String className) {
-
-    /** Converts to the blueprint's {@link GuardrailReference}. */
-    public GuardrailReference toGuardrailReference() {
-      return new GuardrailReference(className, registryId);
-    }
-  }
-
-  /**
-   * Definition of an agent that this agent can hand off to. Contains a nested {@link
-   * AgentDefinition} for the target agent.
+   * Definition of an agent that this agent can hand off to. Defines the target agent inline.
    */
   public record HandoffAgentDef(
       @JsonProperty(value = "name", required = true)
@@ -192,35 +157,34 @@ public record AgentDefinition(
           @JsonPropertyDescription(
               "Description of WHEN this handoff should be triggered. The LLM reads this to"
                   + " decide whether to route the conversation. Be specific about the domains,"
-                  + " topics, or signals that indicate this handoff is appropriate. Example:"
-                  + " 'Transfer to billing for invoices, refunds, and payment disputes'.")
+                  + " topics, or signals. Example: 'Transfer to billing for invoices, refunds,"
+                  + " and payment disputes'.")
           @NonNull
           String description,
       @JsonProperty(value = "target", required = true)
           @JsonPropertyDescription(
               "The target agent definition that will handle the conversation after handoff."
-                  + " This is a full AgentDefinition — you define the specialist agent inline.")
+                  + " This is a full AgentDefinition — define the specialist agent inline.")
           @NonNull
           AgentDefinition target) {}
 
   /**
-   * Configuration for context window management. Controls how conversation history is trimmed
-   * when it grows too large.
+   * Context window management strategy configuration.
    */
   public record ContextDef(
       @JsonProperty(value = "strategyType", required = true)
           @JsonPropertyDescription(
               "The strategy type: 'sliding' drops oldest messages when context is full"
-                  + " (simple and fast), 'summarization' compresses old messages into a summary"
-                  + " using a secondary LLM call (preserves more context but costs an extra API"
-                  + " call). Choose 'sliding' for most use cases.")
+                  + " (simple, fast, recommended for most use cases), 'summarization' compresses"
+                  + " old messages into a summary (preserves more context but costs an extra API"
+                  + " call).")
           @NonNull
           String strategyType,
       @JsonProperty(value = "maxTokens", required = true)
           @JsonPropertyDescription(
               "Maximum number of tokens to keep in the context window. When exceeded, the"
-                  + " strategy activates. Typical values: 4000 for gpt-4o-mini, 8000 for"
-                  + " gpt-4o, 16000 for models with large context windows.")
+                  + " strategy activates. Typical values: 4000 for simple agents, 8000 for"
+                  + " conversational agents, 16000 for agents needing deep history.")
           int maxTokens,
       @JsonProperty("preserveDeveloperMessages")
           @JsonPropertyDescription(
@@ -230,7 +194,7 @@ public record AgentDefinition(
           Boolean preserveDeveloperMessages,
       @JsonProperty("summarizationModel")
           @JsonPropertyDescription(
-              "For 'summarization' strategy only: the LLM model to use for summarizing old"
+              "For 'summarization' strategy only: the model to use for summarizing old"
                   + " messages. Should be a fast, cheap model. Example: 'openai/gpt-4o-mini'.")
           @Nullable
           String summarizationModel,
@@ -242,8 +206,8 @@ public record AgentDefinition(
           Integer keepRecentMessages,
       @JsonProperty("summarizationPrompt")
           @JsonPropertyDescription(
-              "For 'summarization' strategy only: custom prompt for the summarization LLM."
-                  + " Omit to use the built-in default.")
+              "For 'summarization' strategy only: custom prompt for the summarization. Omit"
+                  + " to use the built-in default.")
           @Nullable
           String summarizationPrompt) {
 
@@ -258,34 +222,33 @@ public record AgentDefinition(
           maxTokens,
           null);
     }
-
-    /** Builds a live {@link ContextManagementConfig} from this definition. */
-    public ContextManagementConfig toConfig(@Nullable Responder responder) {
-      return toContextBlueprint().toConfig(responder);
-    }
   }
 
   // ===== Conversion Methods =====
 
   /**
-   * Reconstructs a fully functional {@link Interactable} agent using the provided
-   * {@link Responder}.
+   * Reconstructs a fully functional {@link Interactable} agent.
    *
-   * <p>This is the primary method for the <b>meta-agent pattern</b>: the LLM generates the
-   * agent definition (behavioral config), and the caller provides the infrastructure
-   * (API client).
+   * <p>The caller provides all infrastructure: the Responder (API client) and the model to use.
+   * Tool names from the definition are matched against the provided available tools by
+   * comparing each tool's {@code name()} (from {@code @FunctionMetadata}).
    *
    * <pre>{@code
-   * AgentDefinition def = metaAgent.interactStructured("Create a support agent")
-   *     .output();
-   * Interactable agent = def.toInteractable(responder);
-   * agent.interact("Hello!");
+   * List<FunctionTool<?>> tools = List.of(searchTool, ticketTool, refundTool);
+   * Interactable agent = definition.toInteractable(responder, "openai/gpt-4o", tools);
    * }</pre>
    *
-   * @param responder the Responder to use for LLM API calls
+   * @param responder the Responder for LLM API calls
+   * @param model the LLM model identifier (e.g., "openai/gpt-4o")
+   * @param availableTools all tools the agent may use; only those matching {@link #toolNames()}
+   *     are attached
    * @return a fully functional Agent
    */
-  public @NonNull Interactable toInteractable(@NonNull Responder responder) {
+  public @NonNull Interactable toInteractable(
+      @NonNull Responder responder,
+      @NonNull String model,
+      @NonNull List<FunctionTool<?>> availableTools) {
+
     Agent.Builder builder =
         Agent.builder()
             .name(name)
@@ -296,46 +259,47 @@ public record AgentDefinition(
 
     if (temperature != null) builder.temperature(temperature);
 
-    // Tools via reflection
-    if (toolClassNames != null) {
-      for (String toolClassName : toolClassNames) {
-        try {
-          @SuppressWarnings("unchecked")
-          FunctionTool<?> tool =
-              (FunctionTool<?>) Class.forName(toolClassName).getDeclaredConstructor().newInstance();
+    // Resolve tools by name
+    if (toolNames != null && !toolNames.isEmpty()) {
+      Map<String, FunctionTool<?>> toolMap =
+          availableTools.stream().collect(Collectors.toMap(FunctionTool::getName, t -> t, (a, b) -> a));
+      for (String toolName : toolNames) {
+        FunctionTool<?> tool = toolMap.get(toolName);
+        if (tool != null) {
           builder.addTool(tool);
-        } catch (Exception e) {
-          log.warn("Could not instantiate tool: {}", toolClassName, e);
+        } else {
+          log.warn("Tool '{}' requested by AgentDefinition '{}' not found in available tools",
+              toolName, name);
         }
       }
     }
 
-    // Input guardrails
+    // Resolve guardrails by registry ID
     if (inputGuardrails != null) {
-      for (GuardrailDef ref : inputGuardrails) {
-        try {
-          builder.addInputGuardrail(ref.toGuardrailReference().toInputGuardrail());
-        } catch (Exception e) {
-          log.warn("Could not restore input guardrail: {}", ref, e);
+      for (String id : inputGuardrails) {
+        InputGuardrail g = GuardrailRegistry.getInput(id);
+        if (g != null) {
+          builder.addInputGuardrail(g);
+        } else {
+          log.warn("Input guardrail '{}' not found in GuardrailRegistry", id);
         }
       }
     }
-
-    // Output guardrails
     if (outputGuardrails != null) {
-      for (GuardrailDef ref : outputGuardrails) {
-        try {
-          builder.addOutputGuardrail(ref.toGuardrailReference().toOutputGuardrail());
-        } catch (Exception e) {
-          log.warn("Could not restore output guardrail: {}", ref, e);
+      for (String id : outputGuardrails) {
+        OutputGuardrail g = GuardrailRegistry.getOutput(id);
+        if (g != null) {
+          builder.addOutputGuardrail(g);
+        } else {
+          log.warn("Output guardrail '{}' not found in GuardrailRegistry", id);
         }
       }
     }
 
-    // Handoffs (recursive)
+    // Handoffs (recursive — nested agents use the same responder + model)
     if (handoffs != null) {
       for (HandoffAgentDef hd : handoffs) {
-        Interactable target = hd.target().toInteractable(responder);
+        Interactable target = hd.target().toInteractable(responder, model, availableTools);
         if (target instanceof Agent targetAgent) {
           builder.addHandoff(
               Handoff.to(targetAgent)
@@ -348,43 +312,79 @@ public record AgentDefinition(
 
     // Context management
     if (contextManagement != null) {
-      builder.contextManagement(contextManagement.toConfig(responder));
+      builder.contextManagement(contextManagement.toContextBlueprint().toConfig(responder));
     }
 
     return builder.build();
   }
 
   /**
+   * Reconstructs a fully functional {@link Interactable} agent without tools.
+   *
+   * <p>Convenience overload for agents that don't use tools. Any tool names in the definition
+   * are ignored.
+   *
+   * @param responder the Responder for LLM API calls
+   * @param model the LLM model identifier
+   * @return a fully functional Agent
+   */
+  public @NonNull Interactable toInteractable(
+      @NonNull Responder responder, @NonNull String model) {
+    return toInteractable(responder, model, List.of());
+  }
+
+  /**
    * Converts this definition to an {@link AgentBlueprint}, bridging to the blueprint
    * serialization system.
    *
-   * <p>Requires a {@link ResponderBlueprint} because blueprints are self-contained (they
-   * include the responder configuration for environment-variable–based reconstruction).
+   * <p>Requires a {@link ResponderBlueprint} and a model because blueprints are self-contained.
    *
-   * @param responderBlueprint the responder configuration for the resulting blueprint
-   * @return an AgentBlueprint equivalent of this definition
+   * @param responderBlueprint the responder configuration
+   * @param model the LLM model identifier
+   * @param availableTools tools to resolve tool names to class names
+   * @return an AgentBlueprint equivalent
    */
-  public @NonNull AgentBlueprint toBlueprint(@NonNull ResponderBlueprint responderBlueprint) {
+  public @NonNull AgentBlueprint toBlueprint(
+      @NonNull ResponderBlueprint responderBlueprint,
+      @NonNull String model,
+      @NonNull List<FunctionTool<?>> availableTools) {
+
+    // Resolve tool names → class names
+    Map<String, FunctionTool<?>> toolMap =
+        availableTools.stream().collect(Collectors.toMap(FunctionTool::getName, t -> t, (a, b) -> a));
+    List<String> toolClassNames = new ArrayList<>();
+    if (toolNames != null) {
+      for (String toolName : toolNames) {
+        FunctionTool<?> tool = toolMap.get(toolName);
+        if (tool != null) {
+          toolClassNames.add(tool.getClass().getName());
+        }
+      }
+    }
+
+    // Guardrails → GuardrailReference
     List<GuardrailReference> inputRefs = new ArrayList<>();
     if (inputGuardrails != null) {
-      for (GuardrailDef g : inputGuardrails) {
-        inputRefs.add(g.toGuardrailReference());
+      for (String id : inputGuardrails) {
+        inputRefs.add(new GuardrailReference(null, id));
       }
     }
-
     List<GuardrailReference> outputRefs = new ArrayList<>();
     if (outputGuardrails != null) {
-      for (GuardrailDef g : outputGuardrails) {
-        outputRefs.add(g.toGuardrailReference());
+      for (String id : outputGuardrails) {
+        outputRefs.add(new GuardrailReference(null, id));
       }
     }
 
+    // Handoffs
     List<HandoffDescriptor> handoffDescriptors = new ArrayList<>();
     if (handoffs != null) {
       for (HandoffAgentDef hd : handoffs) {
         handoffDescriptors.add(
             new HandoffDescriptor(
-                hd.name(), hd.description(), hd.target().toBlueprint(responderBlueprint)));
+                hd.name(),
+                hd.description(),
+                hd.target().toBlueprint(responderBlueprint, model, availableTools)));
       }
     }
 
@@ -394,10 +394,10 @@ public record AgentDefinition(
         instructions,
         maxTurns,
         temperature,
-        null, // outputType — not part of behavioral definition
-        null, // traceMetadata — infrastructure concern
+        null, // outputType
+        null, // traceMetadata
         responderBlueprint,
-        toolClassNames != null ? toolClassNames : List.of(),
+        toolClassNames,
         handoffDescriptors,
         inputRefs,
         outputRefs,
@@ -407,31 +407,55 @@ public record AgentDefinition(
   /**
    * Creates an {@link AgentDefinition} from an existing {@link AgentBlueprint}.
    *
-   * <p>This is useful for extracting the behavioral configuration from a serialized blueprint,
-   * for example to edit it or use it as a template.
+   * <p>Infrastructure fields (model, responder) are stripped; behavioral fields are preserved.
+   * Tool class names are reverse-looked-up against the provided tools to recover human-readable
+   * names. If a tool class name can't be resolved, it is skipped.
    *
    * @param blueprint the source blueprint
-   * @return an AgentDefinition with the behavioral fields from the blueprint
+   * @param availableTools tools for reverse name lookup
+   * @return an AgentDefinition with only behavioral fields
    */
-  public static @NonNull AgentDefinition fromBlueprint(@NonNull AgentBlueprint blueprint) {
-    List<GuardrailDef> inputDefs = new ArrayList<>();
-    for (GuardrailReference ref : blueprint.inputGuardrails()) {
-      inputDefs.add(new GuardrailDef(ref.registryId(), ref.className()));
-    }
+  public static @NonNull AgentDefinition fromBlueprint(
+      @NonNull AgentBlueprint blueprint, @NonNull List<FunctionTool<?>> availableTools) {
 
-    List<GuardrailDef> outputDefs = new ArrayList<>();
-    for (GuardrailReference ref : blueprint.outputGuardrails()) {
-      outputDefs.add(new GuardrailDef(ref.registryId(), ref.className()));
-    }
+    // Reverse-lookup: class name → tool name
+    Map<String, String> classToName =
+        availableTools.stream()
+            .collect(Collectors.toMap(t -> t.getClass().getName(), FunctionTool::getName, (a, b) -> a));
 
-    List<HandoffAgentDef> handoffDefs = new ArrayList<>();
-    for (HandoffDescriptor hd : blueprint.handoffs()) {
-      if (hd.target() instanceof AgentBlueprint targetBlueprint) {
-        handoffDefs.add(
-            new HandoffAgentDef(hd.name(), hd.description(), fromBlueprint(targetBlueprint)));
+    List<String> toolNamesList = new ArrayList<>();
+    for (String fqcn : blueprint.toolClassNames()) {
+      String resolved = classToName.get(fqcn);
+      if (resolved != null) {
+        toolNamesList.add(resolved);
       }
     }
 
+    // Guardrails → registry IDs
+    List<String> inputIds = new ArrayList<>();
+    for (GuardrailReference ref : blueprint.inputGuardrails()) {
+      if (ref.registryId() != null) {
+        inputIds.add(ref.registryId());
+      }
+    }
+    List<String> outputIds = new ArrayList<>();
+    for (GuardrailReference ref : blueprint.outputGuardrails()) {
+      if (ref.registryId() != null) {
+        outputIds.add(ref.registryId());
+      }
+    }
+
+    // Handoffs
+    List<HandoffAgentDef> handoffDefs = new ArrayList<>();
+    for (HandoffDescriptor hd : blueprint.handoffs()) {
+      if (hd.target() instanceof AgentBlueprint targetBp) {
+        handoffDefs.add(
+            new HandoffAgentDef(
+                hd.name(), hd.description(), fromBlueprint(targetBp, availableTools)));
+      }
+    }
+
+    // Context
     ContextDef contextDef = null;
     if (blueprint.contextManagement() != null) {
       ContextBlueprint cb = blueprint.contextManagement();
@@ -447,14 +471,24 @@ public record AgentDefinition(
 
     return new AgentDefinition(
         blueprint.name(),
-        blueprint.model(),
         blueprint.instructions(),
         blueprint.maxTurns(),
         blueprint.temperature(),
-        blueprint.toolClassNames().isEmpty() ? null : blueprint.toolClassNames(),
-        inputDefs.isEmpty() ? null : inputDefs,
-        outputDefs.isEmpty() ? null : outputDefs,
+        toolNamesList.isEmpty() ? null : toolNamesList,
+        inputIds.isEmpty() ? null : inputIds,
+        outputIds.isEmpty() ? null : outputIds,
         handoffDefs.isEmpty() ? null : handoffDefs,
         contextDef);
+  }
+
+  /**
+   * Creates an {@link AgentDefinition} from an existing {@link AgentBlueprint} without tool
+   * name resolution.
+   *
+   * @param blueprint the source blueprint
+   * @return an AgentDefinition (tool names will be empty since they can't be resolved)
+   */
+  public static @NonNull AgentDefinition fromBlueprint(@NonNull AgentBlueprint blueprint) {
+    return fromBlueprint(blueprint, List.of());
   }
 }

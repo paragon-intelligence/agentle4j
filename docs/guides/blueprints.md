@@ -1172,17 +1172,23 @@ Before calling `toInteractable()` on a blueprint loaded from JSON, make sure:
 
 The `AgentDefinition` record is designed specifically for **LLM structured output**. It lets you build a **meta-agent**: an agent that creates other agents.
 
-Unlike `InteractableBlueprint`, `AgentDefinition`:
+`AgentDefinition` contains **only fields the LLM can reason about**:
 
-- Has `@JsonPropertyDescription` on **every** field — the LLM sees rich descriptions in the JSON Schema
-- Contains **only behavioral fields** — no infrastructure (no Responder, no API keys, no HTTP config)
-- Uses `@Nullable` lists — the LLM can omit fields like `toolClassNames` instead of generating `[]`
+- ✅ `name`, `instructions`, `maxTurns`, `temperature` — behavioral decisions
+- ✅ `toolNames` — human-readable names like `"search_kb"` (not Java class FQCNs)
+- ✅ `inputGuardrails` / `outputGuardrails` — registry IDs like `"profanity_filter"`
+- ✅ `handoffs` — nested agent definitions with descriptions
+- ✅ `contextManagement` — strategy type and token limits
+- ❌ No `model` — the LLM doesn't know your available models
+- ❌ No `Responder` — infrastructure is your responsibility
+- ❌ No tool class names — the LLM can't invent Java FQCNs
+- ❌ No guardrail class names — same reason
 
 ```mermaid
 flowchart LR
     U["User Request"] -->|"Create a Spanish support agent"| MA["Meta-Agent<br/>(structured output)"]
-    MA -->|"AgentDefinition JSON"| AD["AgentDefinition"]
-    AD -->|"toInteractable(responder)"| A["Live Agent"]
+    MA -->|"AgentDefinition JSON"| AD["AgentDefinition<br/>(behavior only)"]
+    AD -->|"+ responder + model + tools"| A["Live Agent"]
     
     style MA fill:#ff9800,color:#000
     style AD fill:#4caf50,color:#000
@@ -1192,74 +1198,77 @@ flowchart LR
 ### Basic Example
 
 ```java
-// 1. Create a meta-agent that outputs AgentDefinition
+// 1. Register tools and guardrails your agents can use
+List<FunctionTool<?>> availableTools = List.of(
+    new SearchKnowledgeBaseTool(),   // getName() returns "search_kb"
+    new CreateTicketTool(),          // getName() returns "create_ticket"
+    new LookupOrderTool()            // getName() returns "lookup_order"
+);
+InputGuardrail.named("profanity_filter", input -> { /* check */ });
+InputGuardrail.named("max_length", input -> { /* check */ });
+
+// 2. Create a meta-agent that outputs AgentDefinition
 Interactable.Structured<AgentDefinition> metaAgent = Agent.builder()
     .name("AgentFactory")
     .model("openai/gpt-4o")
     .instructions("""
-        You are an agent factory. Given a user's requirements, generate a complete
-        AgentDefinition that defines the agent they need. Choose appropriate:
-        - model (gpt-4o for complex, gpt-4o-mini for simple)
-        - temperature (low for factual, high for creative)
-        - maxTurns (more if tools are needed)
+        You create agent definitions. You decide:
         - instructions (detailed, specific, well-structured)
+        - maxTurns (1 for simple Q&A, 5-10 with tools, 10+ for complex tasks)
+        - temperature (low for factual, high for creative)
+
+        Available tools you can assign:
+        - "search_kb": Searches the company knowledge base by query
+        - "create_ticket": Creates a support ticket with subject and body
+        - "lookup_order": Looks up order details by order ID
+
+        Available guardrails:
+        - "profanity_filter": blocks profanity from user input
+        - "max_length": limits input to 10000 characters
         """)
     .structured(AgentDefinition.class)
     .responder(responder)
     .build();
 
-// 2. Ask the meta-agent to create an agent definition
-StructuredAgentResult<AgentDefinition> result = metaAgent.interactStructured(
-    "Create a customer support agent that speaks Spanish, uses a knowledge base, "
-    + "and filters profanity from user input"
-);
+// 3. Ask the LLM to define an agent
+AgentDefinition def = metaAgent.interactStructured(
+    "Create a customer support agent that speaks Spanish"
+).output();
 
-AgentDefinition definition = result.output();
-// The LLM filled in: name, model, instructions, maxTurns, temperature,
-// toolClassNames, inputGuardrails — all from its own judgment.
-
-// 3. Convert to a live agent (YOU provide the responder)
-Interactable supportAgent = definition.toInteractable(responder);
-
-// 4. Use it
-AgentResult output = supportAgent.interact("¿Cómo puedo recuperar mi contraseña?");
+// 4. Convert to a live agent — YOU provide responder, model, and tools
+Interactable agent = def.toInteractable(responder, "openai/gpt-4o", availableTools);
+agent.interact("¿Cómo puedo recuperar mi contraseña?");
 ```
 
-!!! tip "Why `toInteractable(Responder)`?"
-    The LLM decides **what** the agent does (behavior). **You** decide **how** it connects to the API (infrastructure). API keys, providers, and retry policies are your responsibility — the LLM never sees them.
+!!! tip "Why `toInteractable(Responder, String model, List<FunctionTool<?>>)`?"
+    The LLM decides **what** the agent does (behavior). **You** decide **how** it runs (infrastructure). The LLM picks tool names like `"search_kb"` from your documented list; you provide the actual tool instances for resolution.
 
 ### What the LLM Outputs
 
-When the LLM generates an `AgentDefinition`, it produces JSON like:
+The LLM produces pure behavioral JSON — no infrastructure:
 
 ```json
 {
   "name": "SpanishSupport",
-  "model": "openai/gpt-4o",
-  "instructions": "Eres un agente de soporte profesional...\n\nDirectrices:\n- Responde siempre en español\n- Verifica la identidad del cliente\n- Usa la base de conocimientos antes de responder",
+  "instructions": "Eres un agente de soporte profesional...",
   "maxTurns": 10,
   "temperature": 0.3,
-  "toolClassNames": ["com.acme.tools.SearchKnowledgeBase"],
-  "inputGuardrails": [
-    { "registryId": "profanity_filter" }
-  ]
+  "toolNames": ["search_kb"],
+  "inputGuardrails": ["profanity_filter"]
 }
 ```
-
-Notice: **no responder, no API keys, no retry policies**. Only pure agent behavior.
 
 ### `AgentDefinition` Field Reference
 
 | Field | Type | Required | LLM sees this description |
 |-------|------|----------|--------------------------|
 | `name` | string | ✅ | Unique name for identification in logs and handoffs |
-| `model` | string | ✅ | LLM model identifier (e.g., `openai/gpt-4o`) |
 | `instructions` | string | ✅ | System prompt — personality, behavior, constraints |
 | `maxTurns` | integer | ✅ | Max turns in the agentic loop |
 | `temperature` | number | ❌ | Response randomness (0.0–2.0) |
-| `toolClassNames` | string[] | ❌ | FQCNs of `FunctionTool` classes |
-| `inputGuardrails` | GuardrailDef[] | ❌ | Input validators (by `registryId` or `className`) |
-| `outputGuardrails` | GuardrailDef[] | ❌ | Output validators |
+| `toolNames` | string[] | ❌ | Human-readable tool names (matched against provided tools) |
+| `inputGuardrails` | string[] | ❌ | Guardrail registry IDs for input validation |
+| `outputGuardrails` | string[] | ❌ | Guardrail registry IDs for output validation |
 | `handoffs` | HandoffAgentDef[] | ❌ | Agents to delegate to (recursive) |
 | `contextManagement` | ContextDef | ❌ | Context window strategy (`sliding` / `summarization`) |
 
@@ -1268,15 +1277,12 @@ Notice: **no responder, no API keys, no retry policies**. Only pure agent behavi
 The LLM can define nested agents for handoffs:
 
 ```java
-StructuredAgentResult<AgentDefinition> result = metaAgent.interactStructured(
-    "Create a front desk agent that routes billing questions to a specialist"
-);
+AgentDefinition def = metaAgent.interactStructured(
+    "Create a front desk agent that routes billing to a specialist"
+).output();
 
-AgentDefinition def = result.output();
-// def.handoffs() contains a HandoffAgentDef with a nested AgentDefinition
-// for the billing specialist — the LLM defined both agents!
-
-Interactable frontDesk = def.toInteractable(responder);
+// def.handoffs() contains nested AgentDefinitions — the LLM defined both!
+Interactable frontDesk = def.toInteractable(responder, "openai/gpt-4o", availableTools);
 ```
 
 ### Bridging to Blueprints
@@ -1284,40 +1290,37 @@ Interactable frontDesk = def.toInteractable(responder);
 Convert between `AgentDefinition` and `InteractableBlueprint`:
 
 ```java
-// Definition → Blueprint (add responder config for self-contained serialization)
+// Definition → Blueprint (add model + responder for self-contained serialization)
 ResponderBlueprint responderBp = ResponderBlueprint.from(responder);
-AgentBlueprint blueprint = definition.toBlueprint(responderBp);
-String json = blueprint.toJson();  // Full blueprint JSON with responder
+AgentBlueprint blueprint = definition.toBlueprint(responderBp, "openai/gpt-4o", availableTools);
 
-// Blueprint → Definition (extract behavioral config)
-AgentDefinition def = AgentDefinition.fromBlueprint(blueprint);
+// Blueprint → Definition (strip infrastructure, keep behavior)
+AgentDefinition def = AgentDefinition.fromBlueprint(blueprint, availableTools);
 ```
 
 ### Dynamic Agent Factory
-
-Combine the meta-agent with a registry for a complete dynamic agent system:
 
 ```java
 public class DynamicAgentFactory {
     private final Interactable.Structured<AgentDefinition> metaAgent;
     private final Responder responder;
+    private final String model;
+    private final List<FunctionTool<?>> tools;
     private final Map<String, Interactable> cache = new ConcurrentHashMap<>();
 
-    /** Ask the LLM to create an agent for a given purpose. */
     public Interactable createAgent(String purpose) {
         return cache.computeIfAbsent(purpose, key -> {
             AgentDefinition def = metaAgent.interactStructured(
                 "Create an agent for: " + key
             ).output();
-            return def.toInteractable(responder);
+            return def.toInteractable(responder, model, tools);
         });
     }
 }
 
 // Usage
-DynamicAgentFactory factory = new DynamicAgentFactory(metaAgent, responder);
+DynamicAgentFactory factory = new DynamicAgentFactory(metaAgent, responder, "openai/gpt-4o", tools);
 Interactable agent = factory.createAgent("answering questions about Brazilian tax law");
-agent.interact("Qual é a alíquota do ICMS em São Paulo?");
 ```
 
 ---
