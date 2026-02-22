@@ -3,6 +3,7 @@ package com.paragon.agents;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.agents.context.ContextManagementConfig;
+import com.paragon.agents.toolsearch.ToolRegistry;
 import com.paragon.prompts.Prompt;
 import com.paragon.responses.Responder;
 import com.paragon.responses.TraceMetadata;
@@ -128,6 +129,9 @@ public final class Agent implements Serializable, Interactable {
   private final @NonNull TelemetryContext telemetryContext;
   private final @Nullable TraceMetadata traceMetadata;
 
+  // ===== Tool Search =====
+  private final @Nullable ToolRegistry toolRegistry;
+
   // ===== Context Management =====
   private final @Nullable ContextManagementConfig contextManagementConfig;
 
@@ -155,6 +159,9 @@ public final class Agent implements Serializable, Interactable {
     // Context management
     this.contextManagementConfig = builder.contextManagementConfig;
 
+    // Tool search registry
+    this.toolRegistry = builder.toolRegistry;
+
     // Build augmented instructions with skills
     Prompt baseInstructions =
         Objects.requireNonNull(builder.instructions, "instructions are required");
@@ -170,13 +177,23 @@ public final class Agent implements Serializable, Interactable {
       this.instructions = baseInstructions;
     }
 
-    // Copy tools (no skills here - skills augment prompt, not tools)
-    this.tools = List.copyOf(builder.tools);
+    // Copy tools — if a tool registry is present, include all registry tools
+    if (toolRegistry != null) {
+      List<FunctionTool<?>> allTools = new ArrayList<>(builder.tools);
+      for (FunctionTool<?> regTool : toolRegistry.allTools()) {
+        if (!allTools.contains(regTool)) {
+          allTools.add(regTool);
+        }
+      }
+      this.tools = List.copyOf(allTools);
+    } else {
+      this.tools = List.copyOf(builder.tools);
+    }
     this.handoffs = List.copyOf(builder.handoffs);
     this.inputGuardrails = List.copyOf(builder.inputGuardrails);
     this.outputGuardrails = List.copyOf(builder.outputGuardrails);
 
-    // Build tool store
+    // Build tool store — ALL tools must be registered for execution
     this.objectMapper = builder.objectMapper != null ? builder.objectMapper : new ObjectMapper();
     this.toolStore = FunctionToolStore.create(objectMapper);
     for (FunctionTool<?> tool : tools) {
@@ -350,6 +367,15 @@ public final class Agent implements Serializable, Interactable {
    */
   public @NonNull List<Handoff> handoffs() {
     return handoffs;
+  }
+
+  /**
+   * Returns the tool registry, if one is configured.
+   *
+   * @return the tool registry or null if not using tool search
+   */
+  public @Nullable ToolRegistry toolRegistry() {
+    return toolRegistry;
   }
 
   /** Returns the tool store. Package-private for AgentStream. */
@@ -814,11 +840,19 @@ public final class Agent implements Serializable, Interactable {
     CreateResponsePayload.Builder builder =
         CreateResponsePayload.builder().model(model).instructions(instructions.text()).input(input);
 
-    // Add tools
-    for (FunctionTool<?> tool : tools) {
-      builder.addTool(tool);
+    // Add tools — use registry to dynamically select, or include all
+    if (toolRegistry != null) {
+      String inputText = extractInputTextForToolSearch(input);
+      List<FunctionTool<?>> resolvedTools = toolRegistry.resolveTools(inputText);
+      for (FunctionTool<?> tool : resolvedTools) {
+        builder.addTool(tool);
+      }
+    } else {
+      for (FunctionTool<?> tool : tools) {
+        builder.addTool(tool);
+      }
     }
-    // Add handoff tools
+    // Add handoff tools (always included, not searchable)
     for (Handoff handoff : handoffs) {
       builder.addTool(handoff.asTool());
     }
@@ -829,6 +863,21 @@ public final class Agent implements Serializable, Interactable {
     }
 
     return builder.build();
+  }
+
+  /**
+   * Extracts text from the conversation input for tool search.
+   * Uses the most recent user message as the search query.
+   */
+  private String extractInputTextForToolSearch(List<ResponseInputItem> input) {
+    // Walk backwards to find the most recent user message
+    for (int i = input.size() - 1; i >= 0; i--) {
+      ResponseInputItem item = input.get(i);
+      if (item instanceof Message msg && MessageRole.USER.equals(msg.role())) {
+        return msg.getTextContent();
+      }
+    }
+    return "";
   }
 
   // ===== Private Helper Methods =====
@@ -1042,6 +1091,8 @@ public final class Agent implements Serializable, Interactable {
     private @Nullable ContextManagementConfig contextManagementConfig;
     // Trace metadata
     private @Nullable TraceMetadata traceMetadata;
+    // Tool search registry
+    private @Nullable ToolRegistry toolRegistry;
 
     /**
      * Sets the agent's name (required).
@@ -1198,6 +1249,27 @@ public final class Agent implements Serializable, Interactable {
       for (FunctionTool<?> tool : tools) {
         addTool(tool);
       }
+      return this;
+    }
+
+    /**
+     * Sets a {@link com.paragon.agents.toolsearch.ToolRegistry} for dynamic tool selection.
+     *
+     * <p>When a registry is configured, the agent dynamically selects which tools to include in
+     * each API call based on the user's input, using the registry's search strategy. This is
+     * useful when the agent has many tools and sending all of them would waste context tokens.
+     *
+     * <p>Tools configured via {@link #addTool} are always included (eager). The registry's
+     * deferred tools are only included when the search strategy deems them relevant.
+     *
+     * @param toolRegistry the tool registry
+     * @return this builder
+     * @see com.paragon.agents.toolsearch.ToolRegistry
+     * @see com.paragon.agents.toolsearch.ToolSearchStrategy
+     */
+    public @NonNull Builder toolRegistry(
+        @NonNull ToolRegistry toolRegistry) {
+      this.toolRegistry = Objects.requireNonNull(toolRegistry, "toolRegistry cannot be null");
       return this;
     }
 
