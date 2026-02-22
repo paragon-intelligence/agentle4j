@@ -87,6 +87,31 @@ public sealed interface InteractableBlueprint
    */
   Interactable toInteractable();
 
+  /**
+   * Serializes this blueprint to a JSON string using the provided {@link ObjectMapper}.
+   *
+   * @param mapper the ObjectMapper to use for serialization
+   * @return a JSON string representation of this blueprint
+   * @throws java.io.UncheckedIOException if serialization fails
+   */
+  default @NonNull String toJson(@NonNull ObjectMapper mapper) {
+    try {
+      return mapper.writeValueAsString(this);
+    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+      throw new java.io.UncheckedIOException(e);
+    }
+  }
+
+  /**
+   * Serializes this blueprint to a JSON string using a default {@link ObjectMapper}.
+   *
+   * @return a JSON string representation of this blueprint
+   * @throws java.io.UncheckedIOException if serialization fails
+   */
+  default @NonNull String toJson() {
+    return toJson(new ObjectMapper());
+  }
+
   // ===== Helper Records (not part of sealed hierarchy) =====
 
   /**

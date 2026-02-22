@@ -104,6 +104,7 @@ nav:
     - Messaging: guides/messaging.md
     - Spring Boot: guides/spring-boot.md
     - Observability: guides/observability.md
+    - Blueprints: guides/blueprints.md
   - API Reference: api.md
   - Examples: examples/code-samples.md
   - Changelog: changelog.md
