@@ -105,9 +105,7 @@ nav:
     - Spring Boot: guides/spring-boot.md
     - Observability: guides/observability.md
     - Blueprints: guides/blueprints.md
-  - API Reference:
-    - api/index.md
-    - ...
+  - API Reference: api/index.md
   - Examples: examples/code-samples.md
   - Changelog: changelog.md
 
