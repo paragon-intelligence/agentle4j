@@ -5,6 +5,28 @@ All notable changes to Agentle4j will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Tool Planning (Programmatic Tool Calling)** — Batch multiple tool calls into a single declarative execution plan
+  - `Agent.Builder.enableToolPlanning()` opt-in API
+  - `ToolPlanTool` meta-tool registered as `execute_tool_plan`
+  - Declarative plan format with `steps`, `output_steps`, and `$ref` references
+  - `$ref:step_id` and `$ref:step_id.field.nested` reference syntax for data flow between steps
+  - Topological sorting with wave-based parallel execution using virtual threads (`StructuredTaskScope`)
+  - Fail-forward error handling — failed steps don't block independent work
+  - Context window savings — intermediate results never enter the LLM context
+  - Automatic instruction augmentation when tool planning is enabled
+  - 52 new tests across `PlanReferenceResolverTest`, `ToolPlanExecutorTest`, and `ToolPlanToolTest`
+
+### Documentation
+
+- Added [Tool Planning Guide](guides/tool-planning.md) with diagrams, examples, and best practices
+- Updated [Tools Guide](guides/tools.md) with tool planning cross-reference
+- Updated [Agents Guide](guides/agents.md) with tool planning section and updated comparison table
+- Added tool planning code sample to examples
+
 ## [0.4.0] - 2026-01-04
 
 ### Added

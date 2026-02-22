@@ -449,6 +449,29 @@ System.out.println(response.outputText());
 
 ---
 
+## Tool Planning (Batching Multiple Calls)
+
+When your agent needs to call multiple tools — especially when some depend on others' results — you can enable **tool planning** to batch them into a single execution plan. The LLM produces a declarative plan with `$ref` references for data flow, and the framework executes it locally with automatic parallel execution:
+
+```java
+Agent agent = Agent.builder()
+    .name("DataPipeline")
+    .instructions("You orchestrate data pipeline tasks.")
+    .addTool(new FetchDatabaseTool())
+    .addTool(new FetchApiTool())
+    .addTool(new MergeResultsTool())
+    .enableToolPlanning()  // Enables the execute_tool_plan meta-tool
+    .build();
+```
+
+!!! tip "Return Structured JSON from Tools"
+    Tools used in plans work best when they return structured JSON output.
+    This enables the LLM to use `$ref:step_id.field` to extract specific values.
+
+See the [Tool Planning Guide](tool-planning.md) for full details on the plan format, `$ref` syntax, parallel execution, and error handling.
+
+---
+
 ## Best Practices
 
 ### ✅ Do
@@ -538,5 +561,6 @@ public class RateLimitedTool extends FunctionTool<Params> {
 
 ## Next Steps
 
+- [Tool Planning Guide](tool-planning.md) - Batch multiple tool calls into execution plans
 - [Agents Guide](agents.md) - Use tools with the Agent framework
 - [Streaming Guide](streaming.md) - Handle tool calls in streams

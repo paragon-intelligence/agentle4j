@@ -1060,14 +1060,15 @@ Agent orchestrator = Agent.builder()
     .build();
 ```
 
-### Sub-Agent vs Handoff vs Parallel
+### Sub-Agent vs Handoff vs Parallel vs Tool Planning
 
-| Feature | Sub-Agent | Handoff | Parallel |
-|---------|-----------|---------|----------|
-| **Control Flow** | Delegate → Return → Continue | Transfer → End | Run Concurrently |
-| **Parent Continues** | ✅ Yes | ❌ No | ✅ Yes (after all complete) |
-| **Use Case** | Need output mid-execution | Route to specialist permanently | Get multiple perspectives |
-| **Context** | Configurable | Forked | Copied |
+| Feature | Sub-Agent | Handoff | Parallel | Tool Planning |
+|---------|-----------|---------|----------|---------------|
+| **Control Flow** | Delegate → Return → Continue | Transfer → End | Run Concurrently | Plan → Execute locally → Return |
+| **Parent Continues** | ✅ Yes | ❌ No | ✅ Yes (after all complete) | ✅ Yes |
+| **Use Case** | Need output mid-execution | Route to specialist permanently | Get multiple perspectives | Batch tool calls with dependencies |
+| **Context** | Configurable | Forked | Copied | Only output_steps returned |
+| **LLM Round-trips** | 1+ per sub-agent turn | 1 handoff | 1 per agent | 1 for the entire plan |
 
 ### Error Handling
 
@@ -1085,6 +1086,40 @@ Agent orchestrator = Agent.builder()
     .addSubAgent(analyst, "For analysis")
     .build();
 ```
+
+---
+
+## 🗺️ Tool Planning (Batching Tool Calls)
+
+When an agent has multiple tools and needs to call several of them in sequence — especially when some calls depend on others' results — **tool planning** lets the LLM batch all the calls into a single declarative plan. The framework executes it locally with automatic parallel execution and `$ref` data flow, returning only the final results to the context window.
+
+```java
+Agent agent = Agent.builder()
+    .name("ResearchAssistant")
+    .model("openai/gpt-4o")
+    .instructions("You gather and compare data from multiple sources.")
+    .responder(responder)
+    .addTool(new GetWeatherTool())
+    .addTool(new GetNewsTool())
+    .addTool(new CompareDataTool())
+    .enableToolPlanning()
+    .build();
+
+// The LLM can now produce a plan like:
+// Step 1: get_weather("Tokyo")      ─┐ (parallel)
+// Step 2: get_weather("London")     ─┘
+// Step 3: compare_data($ref:1, $ref:2)  ← uses both results
+// Only step 3's output goes back to the LLM context
+AgentResult result = agent.interact("Compare the weather in Tokyo and London");
+```
+
+Key benefits:
+- **Fewer LLM round-trips** — 1 plan call instead of N individual tool calls
+- **Automatic parallelism** — Independent steps execute concurrently
+- **Context savings** — Intermediate results never enter the context window
+- **Fail-forward** — Failed steps don't block independent work
+
+See the [Tool Planning Guide](tool-planning.md) for full details on the plan format, `$ref` syntax, and error handling.
 
 ---
 
@@ -1570,5 +1605,6 @@ new AgentService(hierarchy);
 ## Next Steps
 
 - [Function Tools Guide](tools.md) - Create custom tools
+- [Tool Planning Guide](tool-planning.md) - Batch multiple tool calls into execution plans
 - [Streaming Guide](streaming.md) - Advanced streaming patterns
 - [Observability Guide](observability.md) - Monitor your agents
