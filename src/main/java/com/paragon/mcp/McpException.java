@@ -7,6 +7,7 @@ import org.jspecify.annotations.Nullable;
  * Exception thrown when MCP operations fail.
  *
  * <p>This exception wraps various failure modes including:
+ *
  * <ul>
  *   <li>Connection failures (server not reachable, process failed to start)
  *   <li>Protocol errors (invalid JSON-RPC, unexpected response format)

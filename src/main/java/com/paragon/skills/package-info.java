@@ -1,17 +1,18 @@
 /**
  * Agent Skills for extending agent capabilities.
  *
- * <p>This package provides a modular system for packaging and loading agent capabilities
- * as reusable "skills". Skills follow the progressive disclosure pattern: only metadata
- * is loaded upfront, while instructions and tools are loaded on-demand when invoked.
+ * <p>This package provides a modular system for packaging and loading agent capabilities as
+ * reusable "skills". Skills follow the progressive disclosure pattern: only metadata is loaded
+ * upfront, while instructions and tools are loaded on-demand when invoked.
  *
  * <h2>Core Concepts</h2>
  *
  * <ul>
- *   <li>{@link com.paragon.skills.Skill} - Value object for skill definition (name, description, instructions, tools)
- *   <li>{@link com.paragon.skills.SkillTool} - FunctionTool wrapper for on-demand skill invocation
+ *   <li>{@link com.paragon.skills.Skill} - Value object for skill definition (name, description,
+ *       instructions, tools)
  *   <li>{@link com.paragon.skills.SkillStore} - Registry for managing available skills
- *   <li>{@link com.paragon.skills.SkillProvider} - Interface for loading skills from various sources
+ *   <li>{@link com.paragon.skills.SkillProvider} - Interface for loading skills from various
+ *       sources
  * </ul>
  *
  * <h2>Providers</h2>

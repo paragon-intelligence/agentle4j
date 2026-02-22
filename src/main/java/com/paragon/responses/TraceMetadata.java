@@ -1,7 +1,7 @@
 package com.paragon.responses;
 
-import org.jspecify.annotations.Nullable;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Metadata for OpenRouter trace/observability support.
@@ -21,7 +21,8 @@ import java.util.Map;
  *     .build();
  * }</pre>
  *
- * @see <a href="https://openrouter.ai/docs/guides/features/broadcast/langfuse">OpenRouter Langfuse Documentation</a>
+ * @see <a href="https://openrouter.ai/docs/guides/features/broadcast/langfuse">OpenRouter Langfuse
+ *     Documentation</a>
  * @since 1.0
  */
 public record TraceMetadata(

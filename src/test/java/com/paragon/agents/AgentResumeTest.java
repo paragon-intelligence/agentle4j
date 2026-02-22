@@ -1,20 +1,17 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.FunctionToolCall;
 import com.paragon.responses.spec.Message;
+import java.util.ArrayList;
+import java.util.List;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-/**
- * Tests for Agent resume functionality and AgentRunState.
- */
+/** Tests for Agent resume functionality and AgentRunState. */
 @DisplayName("Agent Resume and Run State")
 class AgentResumeTest {
 
@@ -26,7 +23,7 @@ class AgentResumeTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
     responder =
-            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -40,11 +37,11 @@ class AgentResumeTest {
 
   private Agent createTestAgent() {
     return Agent.builder()
-            .name("TestAgent")
-            .model("test-model")
-            .instructions("Test instructions")
-            .responder(responder)
-            .build();
+        .name("TestAgent")
+        .model("test-model")
+        .instructions("Test instructions")
+        .responder(responder)
+        .build();
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -53,12 +50,12 @@ class AgentResumeTest {
 
   private FunctionToolCall createTestToolCall() {
     return new FunctionToolCall(
-            "{\"param\":\"value\"}", // arguments
-            "call_123", // callId
-            "test_function", // name
-            "id_456", // id
-            null // status
-    );
+        "{\"param\":\"value\"}", // arguments
+        "call_123", // callId
+        "test_function", // name
+        "id_456", // id
+        null // status
+        );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -67,40 +64,40 @@ class AgentResumeTest {
 
   private void enqueueSuccessResponse(String text) {
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "message",
-                          "id": "msg_001",
-                          "role": "assistant",
-                          "content": [
-                            {
-                              "type": "output_text",
-                              "text": "%s"
-                            }
-                          ]
-                        }
-                      ],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(text);
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_001",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(text);
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -118,7 +115,7 @@ class AgentResumeTest {
       FunctionToolCall call = createTestToolCall();
 
       AgentRunState state =
-              AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
 
       assertTrue(state.isPendingApproval());
       assertFalse(state.isCompleted());
@@ -135,7 +132,7 @@ class AgentResumeTest {
       AgenticContext context = AgenticContext.create();
 
       AgentRunState state =
-              AgentRunState.completed("TestAgent", context, null, new ArrayList<>(), 3);
+          AgentRunState.completed("TestAgent", context, null, new ArrayList<>(), 3);
 
       assertTrue(state.isCompleted());
       assertFalse(state.isPendingApproval());
@@ -165,7 +162,7 @@ class AgentResumeTest {
       List<ToolExecution> executions = new ArrayList<>();
 
       AgentRunState state =
-              AgentRunState.pendingApproval("TestAgent", context, call, null, executions, 1);
+          AgentRunState.pendingApproval("TestAgent", context, call, null, executions, 1);
 
       List<ToolExecution> returned = state.toolExecutions();
       assertNotSame(executions, returned);
@@ -186,7 +183,7 @@ class AgentResumeTest {
       AgenticContext context = AgenticContext.create();
       FunctionToolCall call = createTestToolCall();
       AgentRunState state =
-              AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
 
       state.approveToolCall("Tool output");
 
@@ -202,7 +199,7 @@ class AgentResumeTest {
       AgenticContext context = AgenticContext.create();
       FunctionToolCall call = createTestToolCall();
       AgentRunState state =
-              AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
 
       state.rejectToolCall();
 
@@ -218,7 +215,7 @@ class AgentResumeTest {
       AgenticContext context = AgenticContext.create();
       FunctionToolCall call = createTestToolCall();
       AgentRunState state =
-              AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
 
       state.rejectToolCall("User denied access");
 
@@ -233,7 +230,7 @@ class AgentResumeTest {
     void approveToolCallThrowsIfNotPending() {
       AgenticContext context = AgenticContext.create();
       AgentRunState state =
-              AgentRunState.completed("TestAgent", context, null, new ArrayList<>(), 1);
+          AgentRunState.completed("TestAgent", context, null, new ArrayList<>(), 1);
 
       assertThrows(IllegalStateException.class, () -> state.approveToolCall("output"));
     }
@@ -252,7 +249,7 @@ class AgentResumeTest {
     void rejectToolCallWithReasonThrowsIfNotPending() {
       AgenticContext context = AgenticContext.create();
       AgentRunState state =
-              AgentRunState.completed("TestAgent", context, null, new ArrayList<>(), 1);
+          AgentRunState.completed("TestAgent", context, null, new ArrayList<>(), 1);
 
       assertThrows(IllegalStateException.class, () -> state.rejectToolCall("reason"));
     }
@@ -280,7 +277,7 @@ class AgentResumeTest {
       Agent agent = createTestAgent();
       AgenticContext context = AgenticContext.create();
       AgentRunState state =
-              AgentRunState.completed("TestAgent", context, null, new ArrayList<>(), 1);
+          AgentRunState.completed("TestAgent", context, null, new ArrayList<>(), 1);
 
       assertThrows(IllegalStateException.class, () -> agent.resume(state));
     }
@@ -292,7 +289,7 @@ class AgentResumeTest {
       AgenticContext context = AgenticContext.create();
       FunctionToolCall call = createTestToolCall();
       AgentRunState state =
-              AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
 
       // No approveToolCall() or rejectToolCall() called
       assertThrows(IllegalStateException.class, () -> agent.resume(state));
@@ -323,7 +320,7 @@ class AgentResumeTest {
       AgenticContext context = AgenticContext.create();
       FunctionToolCall call = createTestToolCall();
       AgentRunState state =
-              AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
 
       // No approveToolCall() or rejectToolCall() called
       assertThrows(IllegalStateException.class, () -> agent.resumeStream(state));
@@ -347,7 +344,7 @@ class AgentResumeTest {
       FunctionToolCall call = createTestToolCall();
 
       AgentRunState state =
-              AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
       state.approveToolCall("Tool executed successfully");
 
       enqueueSuccessResponse("Resume response");
@@ -366,7 +363,7 @@ class AgentResumeTest {
       FunctionToolCall call = createTestToolCall();
 
       AgentRunState state =
-              AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
       state.rejectToolCall("User denied");
 
       enqueueSuccessResponse("After rejection");
@@ -385,7 +382,7 @@ class AgentResumeTest {
       FunctionToolCall call = createTestToolCall();
 
       AgentRunState state =
-              AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
       state.rejectToolCall();
 
       enqueueSuccessResponse("After rejection with default");
@@ -404,7 +401,7 @@ class AgentResumeTest {
       FunctionToolCall call = createTestToolCall();
 
       AgentRunState state =
-              AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
       state.approveToolCall("Approved output");
 
       AgentStream stream = agent.resumeStream(state);
@@ -421,7 +418,7 @@ class AgentResumeTest {
       FunctionToolCall call = createTestToolCall();
 
       AgentRunState state =
-              AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("TestAgent", context, call, null, new ArrayList<>(), 1);
       state.rejectToolCall("Rejected");
 
       AgentStream stream = agent.resumeStream(state);
@@ -441,9 +438,9 @@ class AgentResumeTest {
       FunctionToolCall call = createTestToolCall();
 
       AgentRunState pending =
-              AgentRunState.pendingApproval("Test", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("Test", context, call, null, new ArrayList<>(), 1);
       AgentRunState completed =
-              AgentRunState.completed("Test", context, null, new ArrayList<>(), 1);
+          AgentRunState.completed("Test", context, null, new ArrayList<>(), 1);
       AgentRunState failed = AgentRunState.failed("Test", context, 1);
 
       assertEquals(AgentRunState.Status.PENDING_TOOL_APPROVAL, pending.status());
@@ -472,7 +469,7 @@ class AgentResumeTest {
       AgenticContext context = AgenticContext.create();
       FunctionToolCall call = createTestToolCall();
       AgentRunState state =
-              AgentRunState.pendingApproval("Test", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("Test", context, call, null, new ArrayList<>(), 1);
 
       state.approveToolCall("output");
       AgentRunState.ToolApprovalResult result = state.approvalResult();
@@ -487,7 +484,7 @@ class AgentResumeTest {
       AgenticContext context = AgenticContext.create();
       FunctionToolCall call = createTestToolCall();
       AgentRunState state =
-              AgentRunState.pendingApproval("Test", context, call, null, new ArrayList<>(), 1);
+          AgentRunState.pendingApproval("Test", context, call, null, new ArrayList<>(), 1);
 
       state.rejectToolCall();
       AgentRunState.ToolApprovalResult result = state.approvalResult();

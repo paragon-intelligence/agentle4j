@@ -147,14 +147,15 @@ public abstract class McpClient implements AutoCloseable {
    * @return the tool result
    * @throws McpException if the call fails or client not initialized
    */
-  public @NonNull McpToolResult callTool(@NonNull String name, @Nullable Map<String, Object> arguments)
-      throws McpException {
+  public @NonNull McpToolResult callTool(
+      @NonNull String name, @Nullable Map<String, Object> arguments) throws McpException {
     Objects.requireNonNull(name, "name cannot be null");
     ensureInitialized();
 
     log.debug("Calling tool: {} with arguments: {}", name, arguments);
 
-    Map<String, Object> params = Map.of("name", name, "arguments", arguments != null ? arguments : Map.of());
+    Map<String, Object> params =
+        Map.of("name", name, "arguments", arguments != null ? arguments : Map.of());
 
     var request = JsonRpcRequest.create(nextRequestId(), "tools/call", params);
     sendRequest(request);
@@ -182,7 +183,8 @@ public abstract class McpClient implements AutoCloseable {
    * @return list of MCP remote tools
    * @throws McpException if listing fails
    */
-  public @NonNull List<McpRemoteTool> asTools(@Nullable Set<String> allowedToolNames) throws McpException {
+  public @NonNull List<McpRemoteTool> asTools(@Nullable Set<String> allowedToolNames)
+      throws McpException {
     List<McpToolDefinition> definitions = listTools();
     List<McpRemoteTool> tools = new ArrayList<>();
 
@@ -192,7 +194,8 @@ public abstract class McpClient implements AutoCloseable {
       }
     }
 
-    log.info("Created {} tools from MCP server (filtered: {})", tools.size(), allowedToolNames != null);
+    log.info(
+        "Created {} tools from MCP server (filtered: {})", tools.size(), allowedToolNames != null);
     return tools;
   }
 
@@ -274,7 +277,8 @@ public abstract class McpClient implements AutoCloseable {
 
     try {
       JsonNode node = objectMapper.valueToTree(result);
-      serverProtocolVersion = node.has("protocolVersion") ? node.get("protocolVersion").asText() : null;
+      serverProtocolVersion =
+          node.has("protocolVersion") ? node.get("protocolVersion").asText() : null;
 
       if (node.has("serverInfo")) {
         JsonNode serverInfo = node.get("serverInfo");
@@ -286,7 +290,8 @@ public abstract class McpClient implements AutoCloseable {
     }
   }
 
-  private @NonNull List<McpToolDefinition> parseToolsList(@Nullable Object result) throws McpException {
+  private @NonNull List<McpToolDefinition> parseToolsList(@Nullable Object result)
+      throws McpException {
     if (result == null) {
       return List.of();
     }
@@ -298,8 +303,7 @@ public abstract class McpClient implements AutoCloseable {
       }
 
       JsonNode toolsNode = node.get("tools");
-      return objectMapper.convertValue(
-          toolsNode, new TypeReference<List<McpToolDefinition>>() {});
+      return objectMapper.convertValue(toolsNode, new TypeReference<List<McpToolDefinition>>() {});
     } catch (Exception e) {
       throw McpException.protocolError("Failed to parse tools list: " + e.getMessage());
     }

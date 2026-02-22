@@ -1,21 +1,19 @@
 package com.paragon.messaging.whatsapp.messages;
 
 import com.paragon.messaging.core.MediaMessageInterface;
-import com.paragon.messaging.core.OutboundMessage;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-
 import java.util.Optional;
 
 /**
  * Sealed interface for media messages with validation.
  *
- * <p>Supports image, video, audio, document, and sticker message types.</p>
+ * <p>Supports image, video, audio, document, and sticker message types.
  */
-public sealed interface MediaMessage extends MediaMessageInterface permits
-        MediaMessage.Image,
+public sealed interface MediaMessage extends MediaMessageInterface
+    permits MediaMessage.Image,
         MediaMessage.Video,
         MediaMessage.Audio,
         MediaMessage.Document,
@@ -25,36 +23,25 @@ public sealed interface MediaMessage extends MediaMessageInterface permits
 
   Optional<String> caption();
 
-  /**
-   * Fonte de mídia (URL ou ID).
-   */
+  /** Fonte de mídia (URL ou ID). */
   sealed interface MediaSource permits MediaSource.Url, MediaSource.MediaId {
 
     record Url(
-            @NotBlank(message = "URL cannot be blank")
+        @NotBlank(message = "URL cannot be blank")
             @Pattern(regexp = "^https?://.*", message = "URL must start with http:// or https://")
-            String url
-    ) implements MediaSource {
-    }
+            String url)
+        implements MediaSource {}
 
-    record MediaId(
-            @NotBlank(message = "Media ID cannot be blank")
-            String id
-    ) implements MediaSource {
-    }
+    record MediaId(@NotBlank(message = "Media ID cannot be blank") String id)
+        implements MediaSource {}
   }
 
-  /**
-   * Mensagem de imagem.
-   */
+  /** Mensagem de imagem. */
   record Image(
-          @NotNull(message = "Image source cannot be null")
-          MediaSource source,
-
-          Optional<@Size(max = 1024, message = "Caption cannot exceed 1024 characters") String> caption,
-
-          String replyToMessageId
-  ) implements MediaMessage {
+      @NotNull(message = "Image source cannot be null") MediaSource source,
+      Optional<@Size(max = 1024, message = "Caption cannot exceed 1024 characters") String> caption,
+      String replyToMessageId)
+      implements MediaMessage {
 
     public Image(MediaSource source) {
       this(source, Optional.empty(), null);
@@ -75,17 +62,12 @@ public sealed interface MediaMessage extends MediaMessageInterface permits
     }
   }
 
-  /**
-   * Mensagem de vídeo.
-   */
+  /** Mensagem de vídeo. */
   record Video(
-          @NotNull(message = "Video source cannot be null")
-          MediaSource source,
-
-          Optional<@Size(max = 1024) String> caption,
-
-          String replyToMessageId
-  ) implements MediaMessage {
+      @NotNull(message = "Video source cannot be null") MediaSource source,
+      Optional<@Size(max = 1024) String> caption,
+      String replyToMessageId)
+      implements MediaMessage {
 
     public Video(MediaSource source) {
       this(source, Optional.empty(), null);
@@ -106,15 +88,10 @@ public sealed interface MediaMessage extends MediaMessageInterface permits
     }
   }
 
-  /**
-   * Mensagem de áudio.
-   */
+  /** Mensagem de áudio. */
   record Audio(
-          @NotNull(message = "Audio source cannot be null")
-          MediaSource source,
-
-          String replyToMessageId
-  ) implements MediaMessage {
+      @NotNull(message = "Audio source cannot be null") MediaSource source, String replyToMessageId)
+      implements MediaMessage {
 
     public Audio(MediaSource source) {
       this(source, null);
@@ -136,18 +113,13 @@ public sealed interface MediaMessage extends MediaMessageInterface permits
     }
   }
 
-  /**
-   * Mensagem de documento.
-   */
+  /** Mensagem de documento. */
   record Document(
-          @NotNull(message = "Document source cannot be null")
-          MediaSource source,
-
-          Optional<@Size(max = 1000) String> filename,
-          Optional<@Size(max = 1024) String> caption,
-
-          String replyToMessageId
-  ) implements MediaMessage {
+      @NotNull(message = "Document source cannot be null") MediaSource source,
+      Optional<@Size(max = 1000) String> filename,
+      Optional<@Size(max = 1024) String> caption,
+      String replyToMessageId)
+      implements MediaMessage {
 
     public Document(MediaSource source, String filename) {
       this(source, Optional.ofNullable(filename), Optional.empty(), null);
@@ -168,15 +140,11 @@ public sealed interface MediaMessage extends MediaMessageInterface permits
     }
   }
 
-  /**
-   * Mensagem de sticker.
-   */
+  /** Mensagem de sticker. */
   record Sticker(
-          @NotNull(message = "Sticker source cannot be null")
-          MediaSource source,
-
-          String replyToMessageId
-  ) implements MediaMessage {
+      @NotNull(message = "Sticker source cannot be null") MediaSource source,
+      String replyToMessageId)
+      implements MediaMessage {
 
     public Sticker(MediaSource source) {
       this(source, null);

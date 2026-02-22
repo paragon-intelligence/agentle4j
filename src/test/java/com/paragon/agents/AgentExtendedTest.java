@@ -1,5 +1,7 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.agents.context.ContextManagementConfig;
 import com.paragon.agents.context.SlidingWindowStrategy;
@@ -8,16 +10,13 @@ import com.paragon.responses.Responder;
 import com.paragon.responses.annotations.FunctionMetadata;
 import com.paragon.responses.spec.*;
 import com.paragon.telemetry.TelemetryContext;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.*;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static org.junit.jupiter.api.Assertions.*;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.*;
 
 /**
  * Extended tests for Agent.java covering advanced scenarios: - Tool execution and callbacks -
@@ -36,7 +35,7 @@ class AgentExtendedTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
     responder =
-            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
     objectMapper = new ObjectMapper();
   }
 
@@ -51,11 +50,11 @@ class AgentExtendedTest {
 
   private Agent createTestAgent() {
     return Agent.builder()
-            .name("TestAgent")
-            .model("test-model")
-            .instructions("Test instructions")
-            .responder(responder)
-            .build();
+        .name("TestAgent")
+        .model("test-model")
+        .instructions("Test instructions")
+        .responder(responder)
+        .build();
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -64,40 +63,40 @@ class AgentExtendedTest {
 
   private void enqueueSuccessResponse(String text) {
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "message",
-                          "id": "msg_001",
-                          "role": "assistant",
-                          "content": [
-                            {
-                              "type": "output_text",
-                              "text": "%s"
-                            }
-                          ]
-                        }
-                      ],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(text);
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_001",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(text);
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -106,40 +105,40 @@ class AgentExtendedTest {
 
   private void enqueueStructuredResponse(String structuredJson) {
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "message",
-                          "id": "msg_001",
-                          "role": "assistant",
-                          "content": [
-                            {
-                              "type": "output_text",
-                              "text": "%s"
-                            }
-                          ]
-                        }
-                      ],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(structuredJson);
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_001",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(structuredJson);
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -148,36 +147,36 @@ class AgentExtendedTest {
 
   private void enqueueToolCallResponse(String toolName, String arguments) {
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "function_call",
-                          "id": "fc_001",
-                          "call_id": "call_123",
-                          "name": "%s",
-                          "arguments": "%s"
-                        }
-                      ],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(toolName, arguments.replace("\"", "\\\""));
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "function_call",
+              "id": "fc_001",
+              "call_id": "call_123",
+              "name": "%s",
+              "arguments": "%s"
+            }
+          ],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(toolName, arguments.replace("\"", "\\\""));
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -189,41 +188,41 @@ class AgentExtendedTest {
     for (int i = 0; i < toolNames.size(); i++) {
       if (i > 0) outputBuilder.append(",");
       outputBuilder.append(
-              """
-                      {
-                        "type": "function_call",
-                        "id": "fc_%03d",
-                        "call_id": "call_%d",
-                        "name": "%s",
-                        "arguments": "%s"
-                      }
-                      """
-                      .formatted(i, i, toolNames.get(i), arguments.get(i).replace("\"", "\\\"")));
+          """
+          {
+            "type": "function_call",
+            "id": "fc_%03d",
+            "call_id": "call_%d",
+            "name": "%s",
+            "arguments": "%s"
+          }
+          """
+              .formatted(i, i, toolNames.get(i), arguments.get(i).replace("\"", "\\\"")));
     }
 
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [%s],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(outputBuilder.toString());
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [%s],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(outputBuilder.toString());
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -232,51 +231,49 @@ class AgentExtendedTest {
 
   private void enqueueHandoffResponse(String handoffName, String arguments) {
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "function_call",
-                          "id": "fc_001",
-                          "call_id": "call_123",
-                          "name": "%s",
-                          "arguments": "%s"
-                        }
-                      ],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(handoffName, arguments.replace("\"", "\\\""));
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "function_call",
+              "id": "fc_001",
+              "call_id": "call_123",
+              "name": "%s",
+              "arguments": "%s"
+            }
+          ],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(handoffName, arguments.replace("\"", "\\\""));
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RESUME METHODS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  public record TestArgs(String query) {
-  }
+  public record TestArgs(String query) {}
 
   // ═══════════════════════════════════════════════════════════════════════════
   // TRACE CONTEXT
   // ═══════════════════════════════════════════════════════════════════════════
 
-  public record PersonInfo(String name, int age) {
-  }
+  public record PersonInfo(String name, int age) {}
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CONFIGURATION OPTIONS
@@ -395,13 +392,13 @@ class AgentExtendedTest {
       Map<String, String> metadata = Map.of("key1", "value1", "key2", "value2");
 
       Agent agent =
-              Agent.builder()
-                      .name("MetadataAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .metadata(metadata)
-                      .build();
+          Agent.builder()
+              .name("MetadataAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .metadata(metadata)
+              .build();
 
       assertNotNull(agent);
       assertEquals("MetadataAgent", agent.name());
@@ -413,13 +410,13 @@ class AgentExtendedTest {
       ObjectMapper customMapper = new ObjectMapper();
 
       Agent agent =
-              Agent.builder()
-                      .name("MapperAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .objectMapper(customMapper)
-                      .build();
+          Agent.builder()
+              .name("MapperAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .objectMapper(customMapper)
+              .build();
 
       assertNotNull(agent);
     }
@@ -431,13 +428,13 @@ class AgentExtendedTest {
       FailingTool tool2 = new FailingTool();
 
       Agent agent =
-              Agent.builder()
-                      .name("MultiToolAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .addTools(tool1, tool2)
-                      .build();
+          Agent.builder()
+              .name("MultiToolAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addTools(tool1, tool2)
+              .build();
 
       assertNotNull(agent);
       assertNotNull(agent.toolStore());
@@ -447,13 +444,13 @@ class AgentExtendedTest {
     @DisplayName("builder with temperature set")
     void builderWithTemperature() {
       Agent agent =
-              Agent.builder()
-                      .name("TempAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .temperature(0.5)
-                      .build();
+          Agent.builder()
+              .name("TempAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .temperature(0.5)
+              .build();
 
       assertNotNull(agent);
     }
@@ -462,13 +459,13 @@ class AgentExtendedTest {
     @DisplayName("builder with maxOutputTokens set")
     void builderWithMaxOutputTokens() {
       Agent agent =
-              Agent.builder()
-                      .name("TokenAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .maxOutputTokens(2000)
-                      .build();
+          Agent.builder()
+              .name("TokenAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .maxOutputTokens(2000)
+              .build();
 
       assertNotNull(agent);
     }
@@ -477,44 +474,44 @@ class AgentExtendedTest {
     @DisplayName("builder rejects negative maxTurns")
     void builderRejectsNegativeMaxTurns() {
       assertThrows(
-              IllegalArgumentException.class,
-              () -> {
-                Agent.builder()
-                        .name("InvalidAgent")
-                        .model("test-model")
-                        .instructions("Test")
-                        .responder(responder)
-                        .maxTurns(-1)
-                        .build();
-              });
+          IllegalArgumentException.class,
+          () -> {
+            Agent.builder()
+                .name("InvalidAgent")
+                .model("test-model")
+                .instructions("Test")
+                .responder(responder)
+                .maxTurns(-1)
+                .build();
+          });
     }
 
     @Test
     @DisplayName("builder rejects zero maxTurns")
     void builderRejectsZeroMaxTurns() {
       assertThrows(
-              IllegalArgumentException.class,
-              () -> {
-                Agent.builder()
-                        .name("InvalidAgent")
-                        .model("test-model")
-                        .instructions("Test")
-                        .responder(responder)
-                        .maxTurns(0)
-                        .build();
-              });
+          IllegalArgumentException.class,
+          () -> {
+            Agent.builder()
+                .name("InvalidAgent")
+                .model("test-model")
+                .instructions("Test")
+                .responder(responder)
+                .maxTurns(0)
+                .build();
+          });
     }
 
     @Test
     @DisplayName("builder handles empty instructions")
     void builderHandlesEmptyInstructions() {
       Agent agent =
-              Agent.builder()
-                      .name("EmptyInstructionsAgent")
-                      .model("test-model")
-                      .instructions("")
-                      .responder(responder)
-                      .build();
+          Agent.builder()
+              .name("EmptyInstructionsAgent")
+              .model("test-model")
+              .instructions("")
+              .responder(responder)
+              .build();
 
       assertNotNull(agent);
       assertEquals("", agent.instructions().toString());
@@ -533,13 +530,13 @@ class AgentExtendedTest {
       FunctionTool<TestArgs> tool = new TestTool(capturedArg);
 
       Agent agent =
-              Agent.builder()
-                      .name("ToolAgent")
-                      .model("test-model")
-                      .instructions("Use tools when needed")
-                      .responder(responder)
-                      .addTool(tool)
-                      .build();
+          Agent.builder()
+              .name("ToolAgent")
+              .model("test-model")
+              .instructions("Use tools when needed")
+              .responder(responder)
+              .addTool(tool)
+              .build();
 
       // First response triggers tool call
       enqueueToolCallResponse("test_tool", "{\"query\": \"search term\"}");
@@ -559,13 +556,13 @@ class AgentExtendedTest {
       FunctionTool<TestArgs> tool = new FailingTool();
 
       Agent agent =
-              Agent.builder()
-                      .name("ToolAgent")
-                      .model("test-model")
-                      .instructions("Use tools")
-                      .responder(responder)
-                      .addTool(tool)
-                      .build();
+          Agent.builder()
+              .name("ToolAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(tool)
+              .build();
 
       // First response triggers tool call
       enqueueToolCallResponse("failing_tool", "{\"query\": \"test\"}");
@@ -588,18 +585,18 @@ class AgentExtendedTest {
       FunctionTool<TestArgs> tool2 = new CountingTool("tool_two", callCount);
 
       Agent agent =
-              Agent.builder()
-                      .name("MultiToolAgent")
-                      .model("test-model")
-                      .instructions("Use tools")
-                      .responder(responder)
-                      .addTool(tool1)
-                      .addTool(tool2)
-                      .build();
+          Agent.builder()
+              .name("MultiToolAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(tool1)
+              .addTool(tool2)
+              .build();
 
       // Response with two tool calls
       enqueueMultiToolCallResponse(
-              List.of("tool_one", "tool_two"), List.of("{\"query\": \"a\"}", "{\"query\": \"b\"}"));
+          List.of("tool_one", "tool_two"), List.of("{\"query\": \"a\"}", "{\"query\": \"b\"}"));
       enqueueSuccessResponse("Both tools completed");
 
       AgentResult result = agent.interact("Run both tools");
@@ -615,13 +612,13 @@ class AgentExtendedTest {
       FunctionTool<TestArgs> tool = new ConfirmationTool();
 
       Agent agent =
-              Agent.builder()
-                      .name("ConfirmAgent")
-                      .model("test-model")
-                      .instructions("Use confirmation tool")
-                      .responder(responder)
-                      .addTool(tool)
-                      .build();
+          Agent.builder()
+              .name("ConfirmAgent")
+              .model("test-model")
+              .instructions("Use confirmation tool")
+              .responder(responder)
+              .addTool(tool)
+              .build();
 
       // LLM calls the confirmation tool
       enqueueToolCallResponse("confirmation_tool", "{\"query\": \"delete everything\"}");
@@ -642,21 +639,21 @@ class AgentExtendedTest {
     @DisplayName("agent can be configured with handoffs")
     void agentCanBeConfiguredWithHandoffs() {
       Agent targetAgent =
-              Agent.builder()
-                      .name("TargetAgent")
-                      .model("test-model")
-                      .instructions("Handle the handoff")
-                      .responder(responder)
-                      .build();
+          Agent.builder()
+              .name("TargetAgent")
+              .model("test-model")
+              .instructions("Handle the handoff")
+              .responder(responder)
+              .build();
 
       Agent mainAgent =
-              Agent.builder()
-                      .name("MainAgent")
-                      .model("test-model")
-                      .instructions("Handoff when needed")
-                      .responder(responder)
-                      .addHandoff(Handoff.to(targetAgent).build())
-                      .build();
+          Agent.builder()
+              .name("MainAgent")
+              .model("test-model")
+              .instructions("Handoff when needed")
+              .responder(responder)
+              .addHandoff(Handoff.to(targetAgent).build())
+              .build();
 
       assertEquals(1, mainAgent.handoffs().size());
       assertEquals("TargetAgent", mainAgent.handoffs().get(0).targetAgent().name());
@@ -666,21 +663,21 @@ class AgentExtendedTest {
     @DisplayName("handoff tool is added to available tools")
     void handoffToolIsAddedToTools() {
       Agent targetAgent =
-              Agent.builder()
-                      .name("SupportAgent")
-                      .model("test-model")
-                      .instructions("Handle support")
-                      .responder(responder)
-                      .build();
+          Agent.builder()
+              .name("SupportAgent")
+              .model("test-model")
+              .instructions("Handle support")
+              .responder(responder)
+              .build();
 
       Agent mainAgent =
-              Agent.builder()
-                      .name("Router")
-                      .model("test-model")
-                      .instructions("Route to agents")
-                      .responder(responder)
-                      .addHandoff(Handoff.to(targetAgent).build())
-                      .build();
+          Agent.builder()
+              .name("Router")
+              .model("test-model")
+              .instructions("Route to agents")
+              .responder(responder)
+              .addHandoff(Handoff.to(targetAgent).build())
+              .build();
 
       // Handoff should be registered
       assertEquals(1, mainAgent.handoffs().size());
@@ -692,12 +689,12 @@ class AgentExtendedTest {
     @DisplayName("handoff is triggered and executes target agent")
     void handoffIsTriggeredAndExecutesTargetAgent() throws Exception {
       Agent targetAgent =
-              Agent.builder()
-                      .name("SupportAgent")
-                      .model("test-model")
-                      .instructions("Handle support")
-                      .responder(responder)
-                      .build();
+          Agent.builder()
+              .name("SupportAgent")
+              .model("test-model")
+              .instructions("Handle support")
+              .responder(responder)
+              .build();
 
       // 1. Main agent triggers handoff (uses the auto-generated handoff tool name:
       // transfer_to_<snake_case_name>)
@@ -706,13 +703,13 @@ class AgentExtendedTest {
       enqueueSuccessResponse("I am the support agent handling your request");
 
       Agent mainAgent =
-              Agent.builder()
-                      .name("Router")
-                      .model("test-model")
-                      .instructions("Route to agents")
-                      .responder(responder)
-                      .addHandoff(Handoff.to(targetAgent).build())
-                      .build();
+          Agent.builder()
+              .name("Router")
+              .model("test-model")
+              .instructions("Route to agents")
+              .responder(responder)
+              .addHandoff(Handoff.to(targetAgent).build())
+              .build();
 
       AgentResult result = mainAgent.interact("I need support");
 
@@ -725,22 +722,22 @@ class AgentExtendedTest {
     @DisplayName("handoff with custom description")
     void handoffWithCustomDescription() {
       Agent targetAgent =
-              Agent.builder()
-                      .name("BillingAgent")
-                      .model("test-model")
-                      .instructions("Handle billing")
-                      .responder(responder)
-                      .build();
+          Agent.builder()
+              .name("BillingAgent")
+              .model("test-model")
+              .instructions("Handle billing")
+              .responder(responder)
+              .build();
 
       Agent mainAgent =
-              Agent.builder()
-                      .name("Router")
-                      .model("test-model")
-                      .instructions("Route to agents")
-                      .responder(responder)
-                      .addHandoff(
-                              Handoff.to(targetAgent).withDescription("Transfer for billing questions").build())
-                      .build();
+          Agent.builder()
+              .name("Router")
+              .model("test-model")
+              .instructions("Route to agents")
+              .responder(responder)
+              .addHandoff(
+                  Handoff.to(targetAgent).withDescription("Transfer for billing questions").build())
+              .build();
 
       assertEquals(1, mainAgent.handoffs().size());
       assertEquals("Transfer for billing questions", mainAgent.handoffs().get(0).description());
@@ -750,21 +747,21 @@ class AgentExtendedTest {
     @DisplayName("handoff with custom name")
     void handoffWithCustomName() {
       Agent targetAgent =
-              Agent.builder()
-                      .name("SalesAgent")
-                      .model("test-model")
-                      .instructions("Handle sales")
-                      .responder(responder)
-                      .build();
+          Agent.builder()
+              .name("SalesAgent")
+              .model("test-model")
+              .instructions("Handle sales")
+              .responder(responder)
+              .build();
 
       Agent mainAgent =
-              Agent.builder()
-                      .name("Router")
-                      .model("test-model")
-                      .instructions("Route to agents")
-                      .responder(responder)
-                      .addHandoff(Handoff.to(targetAgent).withName("route_to_sales").build())
-                      .build();
+          Agent.builder()
+              .name("Router")
+              .model("test-model")
+              .instructions("Route to agents")
+              .responder(responder)
+              .addHandoff(Handoff.to(targetAgent).withName("route_to_sales").build())
+              .build();
 
       assertEquals(1, mainAgent.handoffs().size());
       assertEquals("route_to_sales", mainAgent.handoffs().get(0).name());
@@ -781,14 +778,14 @@ class AgentExtendedTest {
       FunctionTool<TestArgs> tool = new SimpleTestTool();
 
       Agent agent =
-              Agent.builder()
-                      .name("LoopAgent")
-                      .model("test-model")
-                      .instructions("Keep calling tools")
-                      .responder(responder)
-                      .addTool(tool)
-                      .maxTurns(2)
-                      .build();
+          Agent.builder()
+              .name("LoopAgent")
+              .model("test-model")
+              .instructions("Keep calling tools")
+              .responder(responder)
+              .addTool(tool)
+              .maxTurns(2)
+              .build();
 
       // Response with tool call (turn 1)
       enqueueToolCallResponse("simple_test_tool", "{\"query\": \"a\"}");
@@ -801,8 +798,8 @@ class AgentExtendedTest {
       assertTrue(result.isError());
       assertNotNull(result.error());
       assertTrue(
-              result.error().getMessage().contains("max")
-                      || result.error().getMessage().toLowerCase().contains("turn"));
+          result.error().getMessage().contains("max")
+              || result.error().getMessage().toLowerCase().contains("turn"));
     }
   }
 
@@ -814,19 +811,19 @@ class AgentExtendedTest {
     @DisplayName("output guardrail failure returns error result")
     void outputGuardrailFailureReturnsError() throws Exception {
       Agent agent =
-              Agent.builder()
-                      .name("GuardedAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .addOutputGuardrail(
-                              (output, ctx) -> {
-                                if (output.contains("forbidden")) {
-                                  return GuardrailResult.failed("Output contains forbidden content");
-                                }
-                                return GuardrailResult.passed();
-                              })
-                      .build();
+          Agent.builder()
+              .name("GuardedAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addOutputGuardrail(
+                  (output, ctx) -> {
+                    if (output.contains("forbidden")) {
+                      return GuardrailResult.failed("Output contains forbidden content");
+                    }
+                    return GuardrailResult.passed();
+                  })
+              .build();
 
       enqueueSuccessResponse("This is forbidden content");
 
@@ -840,19 +837,19 @@ class AgentExtendedTest {
     @DisplayName("output guardrail passes for valid content")
     void outputGuardrailPassesForValidContent() throws Exception {
       Agent agent =
-              Agent.builder()
-                      .name("GuardedAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .addOutputGuardrail(
-                              (output, ctx) -> {
-                                if (output.contains("forbidden")) {
-                                  return GuardrailResult.failed("Output contains forbidden content");
-                                }
-                                return GuardrailResult.passed();
-                              })
-                      .build();
+          Agent.builder()
+              .name("GuardedAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addOutputGuardrail(
+                  (output, ctx) -> {
+                    if (output.contains("forbidden")) {
+                      return GuardrailResult.failed("Output contains forbidden content");
+                    }
+                    return GuardrailResult.passed();
+                  })
+              .build();
 
       enqueueSuccessResponse("This is perfectly fine content");
 
@@ -870,20 +867,20 @@ class AgentExtendedTest {
     @DisplayName("agent with context management applies strategy")
     void agentWithContextManagement() throws Exception {
       ContextManagementConfig config =
-              ContextManagementConfig.builder()
-                      .strategy(new SlidingWindowStrategy())
-                      .maxTokens(1000)
-                      .tokenCounter(new SimpleTestTokenCounter())
-                      .build();
+          ContextManagementConfig.builder()
+              .strategy(new SlidingWindowStrategy())
+              .maxTokens(1000)
+              .tokenCounter(new SimpleTestTokenCounter())
+              .build();
 
       Agent agent =
-              Agent.builder()
-                      .name("ManagedAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .contextManagement(config)
-                      .build();
+          Agent.builder()
+              .name("ManagedAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .contextManagement(config)
+              .build();
 
       enqueueSuccessResponse("Response with context management");
 
@@ -899,20 +896,20 @@ class AgentExtendedTest {
       SlidingWindowStrategy strategy = SlidingWindowStrategy.preservingDeveloperMessage();
 
       ContextManagementConfig config =
-              ContextManagementConfig.builder()
-                      .strategy(strategy)
-                      .maxTokens(100)
-                      .tokenCounter(new SimpleTestTokenCounter())
-                      .build();
+          ContextManagementConfig.builder()
+              .strategy(strategy)
+              .maxTokens(100)
+              .tokenCounter(new SimpleTestTokenCounter())
+              .build();
 
       Agent agent =
-              Agent.builder()
-                      .name("WindowAgent")
-                      .model("test-model")
-                      .instructions("System prompt")
-                      .responder(responder)
-                      .contextManagement(config)
-                      .build();
+          Agent.builder()
+              .name("WindowAgent")
+              .model("test-model")
+              .instructions("System prompt")
+              .responder(responder)
+              .contextManagement(config)
+              .build();
 
       enqueueSuccessResponse("Response");
 
@@ -1014,13 +1011,13 @@ class AgentExtendedTest {
     @DisplayName("temperature is applied to requests")
     void temperatureIsApplied() throws Exception {
       Agent agent =
-              Agent.builder()
-                      .name("TempAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .temperature(0.7)
-                      .build();
+          Agent.builder()
+              .name("TempAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .temperature(0.7)
+              .build();
 
       enqueueSuccessResponse("Response");
 
@@ -1035,13 +1032,13 @@ class AgentExtendedTest {
       ObjectMapper customMapper = new ObjectMapper();
 
       Agent agent =
-              Agent.builder()
-                      .name("MapperAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .objectMapper(customMapper)
-                      .build();
+          Agent.builder()
+              .name("MapperAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .objectMapper(customMapper)
+              .build();
 
       enqueueSuccessResponse("Response");
 
@@ -1054,16 +1051,16 @@ class AgentExtendedTest {
     @DisplayName("telemetry context is used")
     void telemetryContextIsUsed() throws Exception {
       TelemetryContext telemetryContext =
-              TelemetryContext.builder().traceName("test-trace").userId("user-123").build();
+          TelemetryContext.builder().traceName("test-trace").userId("user-123").build();
 
       Agent agent =
-              Agent.builder()
-                      .name("TelemetryAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .telemetryContext(telemetryContext)
-                      .build();
+          Agent.builder()
+              .name("TelemetryAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .telemetryContext(telemetryContext)
+              .build();
 
       enqueueSuccessResponse("Response");
 
@@ -1081,18 +1078,17 @@ class AgentExtendedTest {
     @DisplayName("structured agent parses output correctly")
     void structuredAgentParsesOutput() throws Exception {
       Agent.Structured<PersonInfo> agent =
-              Agent.builder()
-                      .name("ExtractorAgent")
-                      .model("test-model")
-                      .instructions("Extract person info")
-                      .responder(responder)
-                      .structured(PersonInfo.class)
-                      .build();
+          Agent.builder()
+              .name("ExtractorAgent")
+              .model("test-model")
+              .instructions("Extract person info")
+              .responder(responder)
+              .structured(PersonInfo.class)
+              .build();
 
       enqueueStructuredResponse("{\\\"name\\\": \\\"John\\\", \\\"age\\\": 30}");
 
-      StructuredAgentResult<PersonInfo> result =
-              agent.interact("Extract: John is 30");
+      StructuredAgentResult<PersonInfo> result = agent.interact("Extract: John is 30");
 
       assertNotNull(result);
       if (result.output() != null) {
@@ -1105,19 +1101,18 @@ class AgentExtendedTest {
     @DisplayName("structured agent handles parsing failure")
     void structuredAgentHandlesParsingFailure() throws Exception {
       Agent.Structured<PersonInfo> agent =
-              Agent.builder()
-                      .name("ExtractorAgent")
-                      .model("test-model")
-                      .instructions("Extract person info")
-                      .responder(responder)
-                      .structured(PersonInfo.class)
-                      .build();
+          Agent.builder()
+              .name("ExtractorAgent")
+              .model("test-model")
+              .instructions("Extract person info")
+              .responder(responder)
+              .structured(PersonInfo.class)
+              .build();
 
       // Invalid JSON that can't be parsed to PersonInfo
       enqueueSuccessResponse("This is not valid JSON");
 
-      StructuredAgentResult<PersonInfo> result =
-              agent.interact("Parse this");
+      StructuredAgentResult<PersonInfo> result = agent.interact("Parse this");
 
       // Result may indicate error or have null output
       assertNotNull(result);
@@ -1186,13 +1181,13 @@ class AgentExtendedTest {
     @DisplayName("input guardrail failure returns error in streaming")
     void inputGuardrailFailureReturnsErrorInStreaming() {
       Agent agent =
-              Agent.builder()
-                      .name("GuardrailAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .addInputGuardrail((inputText, ctx) -> GuardrailResult.failed("Input not allowed"))
-                      .build();
+          Agent.builder()
+              .name("GuardrailAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addInputGuardrail((inputText, ctx) -> GuardrailResult.failed("Input not allowed"))
+              .build();
 
       AgentStream stream = agent.interactStream("This should fail");
 
@@ -1206,22 +1201,22 @@ class AgentExtendedTest {
       AtomicInteger guardrailCallCount = new AtomicInteger(0);
 
       Agent agent =
-              Agent.builder()
-                      .name("MultiGuardrailAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .addInputGuardrail(
-                              (inputText, ctx) -> {
-                                guardrailCallCount.incrementAndGet();
-                                return GuardrailResult.passed();
-                              })
-                      .addInputGuardrail(
-                              (inputText, ctx) -> {
-                                guardrailCallCount.incrementAndGet();
-                                return GuardrailResult.passed();
-                              })
-                      .build();
+          Agent.builder()
+              .name("MultiGuardrailAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addInputGuardrail(
+                  (inputText, ctx) -> {
+                    guardrailCallCount.incrementAndGet();
+                    return GuardrailResult.passed();
+                  })
+              .addInputGuardrail(
+                  (inputText, ctx) -> {
+                    guardrailCallCount.incrementAndGet();
+                    return GuardrailResult.passed();
+                  })
+              .build();
 
       enqueueSuccessResponse("Response");
 

@@ -93,7 +93,8 @@ public record StructuredAgentResult<T>(
    * @return a minimal success result
    */
   @SuppressWarnings("unchecked")
-  public static <T> @NonNull StructuredAgentResult<T> success(@NonNull T output, @NonNull String rawOutput) {
+  public static <T> @NonNull StructuredAgentResult<T> success(
+      @NonNull T output, @NonNull String rawOutput) {
     return new StructuredAgentResult<>(
         output, rawOutput, null, List.of(), List.of(), 0, null, null);
   }
@@ -138,14 +139,6 @@ public record StructuredAgentResult<T>(
    */
   @SuppressWarnings("unchecked")
   public static <T> @NonNull StructuredAgentResult<T> error(@NonNull Throwable error) {
-    return new StructuredAgentResult<>(
-        (T) null,
-        "",
-        null,
-        List.of(),
-        List.of(),
-        0,
-        null,
-        error);
+    return new StructuredAgentResult<>((T) null, "", null, List.of(), List.of(), 0, null, error);
   }
 }

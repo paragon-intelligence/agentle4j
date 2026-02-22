@@ -3,10 +3,11 @@ package com.paragon.messaging.batching;
 /**
  * Estratégia para lidar com backpressure quando buffer do usuário está cheio.
  *
- * <p>Backpressure ocorre quando mensagens chegam mais rápido que podem ser
- * processadas, causando enchimento do buffer até capacidade máxima.</p>
+ * <p>Backpressure ocorre quando mensagens chegam mais rápido que podem ser processadas, causando
+ * enchimento do buffer até capacidade máxima.
  *
- * <p><b>Exemplo:</b></p>
+ * <p><b>Exemplo:</b>
+ *
  * <pre>{@code
  * BatchingConfig config = BatchingConfig.builder()
  *     .maxBufferSize(50)
@@ -22,13 +23,14 @@ public enum BackpressureStrategy {
   /**
    * Descarta mensagem nova (buffer inalterado).
    *
-   * <p><b>Use quando:</b> Mensagens antigas têm mais contexto.</p>
+   * <p><b>Use quando:</b> Mensagens antigas têm mais contexto.
    *
-   * <p><b>Comportamento:</b></p>
+   * <p><b>Comportamento:</b>
+   *
    * <ul>
-   *   <li>Nova mensagem é descartada silenciosamente</li>
-   *   <li>Buffer preserva mensagens mais antigas</li>
-   *   <li>Sem notificação ao usuário</li>
+   *   <li>Nova mensagem é descartada silenciosamente
+   *   <li>Buffer preserva mensagens mais antigas
+   *   <li>Sem notificação ao usuário
    * </ul>
    */
   DROP_NEW,
@@ -36,13 +38,14 @@ public enum BackpressureStrategy {
   /**
    * Descarta mensagem mais antiga para dar espaço à nova.
    *
-   * <p><b>Use quando:</b> Mensagens recentes são mais relevantes.</p>
+   * <p><b>Use quando:</b> Mensagens recentes são mais relevantes.
    *
-   * <p><b>Comportamento:</b></p>
+   * <p><b>Comportamento:</b>
+   *
    * <ul>
-   *   <li>Mensagem mais antiga é removida</li>
-   *   <li>Nova mensagem é adicionada</li>
-   *   <li>Sem notificação ao usuário</li>
+   *   <li>Mensagem mais antiga é removida
+   *   <li>Nova mensagem é adicionada
+   *   <li>Sem notificação ao usuário
    * </ul>
    */
   DROP_OLDEST,
@@ -50,13 +53,14 @@ public enum BackpressureStrategy {
   /**
    * Rejeita mensagem nova e opcionalmente notifica usuário.
    *
-   * <p><b>Use quando:</b> Quer informar que está enviando rápido demais.</p>
+   * <p><b>Use quando:</b> Quer informar que está enviando rápido demais.
    *
-   * <p><b>Comportamento:</b></p>
+   * <p><b>Comportamento:</b>
+   *
    * <ul>
-   *   <li>Nova mensagem é rejeitada</li>
-   *   <li>Notificação opcional enviada ao usuário</li>
-   *   <li>Buffer inalterado</li>
+   *   <li>Nova mensagem é rejeitada
+   *   <li>Notificação opcional enviada ao usuário
+   *   <li>Buffer inalterado
    * </ul>
    */
   REJECT_WITH_NOTIFICATION,
@@ -64,29 +68,31 @@ public enum BackpressureStrategy {
   /**
    * Bloqueia até espaço ficar disponível (espera síncrona).
    *
-   * <p><b>Use quando:</b> Perda de mensagem é inaceitável.</p>
+   * <p><b>Use quando:</b> Perda de mensagem é inaceitável.
    *
-   * <p><b>Comportamento:</b></p>
+   * <p><b>Comportamento:</b>
+   *
    * <ul>
-   *   <li>Webhook bloqueia (200 OK atrasado)</li>
-   *   <li>Mensagem é enfileirada quando espaço disponível</li>
-   *   <li><b>Risco:</b> Pode causar timeout do webhook</li>
+   *   <li>Webhook bloqueia (200 OK atrasado)
+   *   <li>Mensagem é enfileirada quando espaço disponível
+   *   <li><b>Risco:</b> Pode causar timeout do webhook
    * </ul>
    *
-   * <p><b>Aviso:</b> Webhooks da Meta timeout após 20 segundos!</p>
+   * <p><b>Aviso:</b> Webhooks da Meta timeout após 20 segundos!
    */
   BLOCK_UNTIL_SPACE,
 
   /**
    * Processa buffer imediatamente, depois aceita nova mensagem.
    *
-   * <p><b>Use quando:</b> Quer processar acumuladas quando buffer enche.</p>
+   * <p><b>Use quando:</b> Quer processar acumuladas quando buffer enche.
    *
-   * <p><b>Comportamento:</b></p>
+   * <p><b>Comportamento:</b>
+   *
    * <ul>
-   *   <li>Buffer atual é enviado ao processor imediatamente</li>
-   *   <li>Nova mensagem inicia buffer fresco</li>
-   *   <li>Sem perda de mensagens</li>
+   *   <li>Buffer atual é enviado ao processor imediatamente
+   *   <li>Nova mensagem inicia buffer fresco
+   *   <li>Sem perda de mensagens
    * </ul>
    */
   FLUSH_AND_ACCEPT;

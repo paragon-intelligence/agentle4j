@@ -8,9 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for the InMemorySkillProvider class.
- */
+/** Tests for the InMemorySkillProvider class. */
 @DisplayName("InMemorySkillProvider")
 class InMemorySkillProviderTest {
 
@@ -42,10 +40,11 @@ class InMemorySkillProviderTest {
     @Test
     @DisplayName("builder pattern works")
     void builder_works() {
-      InMemorySkillProvider provider = InMemorySkillProvider.builder()
-          .add(createSkill("skill-1"))
-          .add(createSkill("skill-2"))
-          .build();
+      InMemorySkillProvider provider =
+          InMemorySkillProvider.builder()
+              .add(createSkill("skill-1"))
+              .add(createSkill("skill-2"))
+              .build();
 
       assertEquals(2, provider.size());
     }
@@ -125,10 +124,7 @@ class InMemorySkillProviderTest {
 
     @BeforeEach
     void setUp() {
-      provider = InMemorySkillProvider.of(
-          createSkill("skill-1"),
-          createSkill("skill-2")
-      );
+      provider = InMemorySkillProvider.of(createSkill("skill-1"), createSkill("skill-2"));
     }
 
     @Test
@@ -143,9 +139,11 @@ class InMemorySkillProviderTest {
     @Test
     @DisplayName("provide throws when skill not found")
     void provide_throwsWhenNotFound() {
-      assertThrows(SkillProviderException.class, () -> {
-        provider.provide("nonexistent");
-      });
+      assertThrows(
+          SkillProviderException.class,
+          () -> {
+            provider.provide("nonexistent");
+          });
     }
 
     @Test

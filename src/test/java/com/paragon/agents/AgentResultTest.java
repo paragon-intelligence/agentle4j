@@ -1,17 +1,14 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.paragon.responses.spec.*;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-/**
- * Tests for AgentResult factory methods and accessors.
- */
+/** Tests for AgentResult factory methods and accessors. */
 @DisplayName("AgentResult")
 class AgentResultTest {
 
@@ -21,44 +18,43 @@ class AgentResultTest {
 
   private Response createMinimalResponse() {
     return new Response(
-            null,
-            null,
-            System.currentTimeMillis() / 1000,
-            null,
-            "resp_123",
-            null,
-            null,
-            null,
-            null,
-            null,
-            "gpt-4o",
-            ResponseObject.RESPONSE,
-            List.of(
-                    new OutputMessage<Void>(
-                            List.of(Text.valueOf("Test")), "msg_1", InputMessageStatus.COMPLETED, null)),
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            ResponseGenerationStatus.COMPLETED,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null);
+        null,
+        null,
+        System.currentTimeMillis() / 1000,
+        null,
+        "resp_123",
+        null,
+        null,
+        null,
+        null,
+        null,
+        "gpt-4o",
+        ResponseObject.RESPONSE,
+        List.of(
+            new OutputMessage<Void>(
+                List.of(Text.valueOf("Test")), "msg_1", InputMessageStatus.COMPLETED, null)),
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        ResponseGenerationStatus.COMPLETED,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // STATUS CHECKS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  public record TestPerson(String name, int age) {
-  }
+  public record TestPerson(String name, int age) {}
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ACCESSORS
@@ -94,8 +90,8 @@ class AgentResultTest {
       TestPerson parsed = new TestPerson("John", 30);
 
       AgentResult result =
-              AgentResult.successWithParsed(
-                      "{\"name\":\"John\",\"age\":30}", parsed, response, context, executions, 1);
+          AgentResult.successWithParsed(
+              "{\"name\":\"John\",\"age\":30}", parsed, response, context, executions, 1);
 
       assertTrue(result.isSuccess());
       assertEquals("{\"name\":\"John\",\"age\":30}", result.output());
@@ -134,9 +130,9 @@ class AgentResultTest {
     void pausedCreatesPausedResult() {
       AgenticContext context = AgenticContext.create();
       FunctionToolCall pendingCall =
-              new FunctionToolCall("{}", "call-123", "test_tool", null, null);
+          new FunctionToolCall("{}", "call-123", "test_tool", null, null);
       AgentRunState state =
-              AgentRunState.pendingApproval("TestAgent", context, pendingCall, null, List.of(), 1);
+          AgentRunState.pendingApproval("TestAgent", context, pendingCall, null, List.of(), 1);
 
       AgentResult result = AgentResult.paused(state, context);
 
@@ -205,7 +201,7 @@ class AgentResultTest {
       AgenticContext context = AgenticContext.create();
       FunctionToolCall call = new FunctionToolCall("{}", "call-1", "tool", null, null);
       AgentRunState state =
-              AgentRunState.pendingApproval("Agent", context, call, null, List.of(), 1);
+          AgentRunState.pendingApproval("Agent", context, call, null, List.of(), 1);
 
       AgentResult result = AgentResult.paused(state, context);
 
@@ -260,12 +256,12 @@ class AgentResultTest {
       AgenticContext context = AgenticContext.create();
       Response response = createMinimalResponse();
       ToolExecution exec =
-              new ToolExecution(
-                      "tool",
-                      "call-1",
-                      "{}",
-                      FunctionToolCallOutput.success("output"),
-                      java.time.Duration.ofMillis(100));
+          new ToolExecution(
+              "tool",
+              "call-1",
+              "{}",
+              FunctionToolCallOutput.success("output"),
+              java.time.Duration.ofMillis(100));
       List<ToolExecution> executions = List.of(exec);
 
       AgentResult result = AgentResult.success("output", response, context, executions, 1);
@@ -298,7 +294,7 @@ class AgentResultTest {
       AgenticContext context = AgenticContext.create();
       FunctionToolCall call = new FunctionToolCall("{}", "call-1", "tool", null, null);
       AgentRunState state =
-              AgentRunState.pendingApproval("Agent", context, call, null, List.of(), 1);
+          AgentRunState.pendingApproval("Agent", context, call, null, List.of(), 1);
 
       AgentResult result = AgentResult.paused(state, context);
 
@@ -332,7 +328,7 @@ class AgentResultTest {
       TestPerson person = new TestPerson("Jane", 25);
 
       AgentResult result =
-              AgentResult.successWithParsed("{}", person, response, context, List.of(), 1);
+          AgentResult.successWithParsed("{}", person, response, context, List.of(), 1);
 
       assertNotNull(result.parsed());
       TestPerson parsed = (TestPerson) result.parsed();

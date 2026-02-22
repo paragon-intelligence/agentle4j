@@ -1,34 +1,33 @@
 package com.paragon.messaging.whatsapp;
 
-import jakarta.validation.Valid;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
-import okhttp3.*;
-
+import com.paragon.messaging.core.MessageResponse;
 import com.paragon.messaging.core.MessagingException;
 import com.paragon.messaging.core.MessagingProvider;
-import com.paragon.messaging.core.MessageResponse;
 import com.paragon.messaging.core.OutboundMessage;
 import com.paragon.messaging.core.Recipient;
 import com.paragon.messaging.whatsapp.config.WhatsAppConfig;
 import com.paragon.messaging.whatsapp.messages.*;
-
+import jakarta.validation.Valid;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import okhttp3.*;
 
 /**
  * Implementação do provedor WhatsApp Business Cloud API usando Virtual Threads.
  *
- * <p><b>Virtual Thread Best Practices Aplicadas:</b></p>
+ * <p><b>Virtual Thread Best Practices Aplicadas:</b>
+ *
  * <ul>
- *   <li>Código síncrono/bloqueante - sem CompletableFuture</li>
- *   <li>Rate limiting via Semaphore (limita recursos, não threads)</li>
- *   <li>OkHttpClient injetado para reutilização de connection pool</li>
- *   <li>Validação com Bean Validation</li>
+ *   <li>Código síncrono/bloqueante - sem CompletableFuture
+ *   <li>Rate limiting via Semaphore (limita recursos, não threads)
+ *   <li>OkHttpClient injetado para reutilização de connection pool
+ *   <li>Validação com Bean Validation
  * </ul>
  *
  * @author Your Name
@@ -40,9 +39,7 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
   private static final String BASE_URL = "https://graph.facebook.com/" + API_VERSION;
   private static final MediaType JSON = MediaType.get("application/json");
 
-  /**
-   * Validador compartilhado (thread-safe, criado uma vez).
-   */
+  /** Validador compartilhado (thread-safe, criado uma vez). */
   private static final Validator VALIDATOR = createValidator();
 
   private final Semaphore httpRateLimiter;
@@ -52,15 +49,14 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
   private final String baseUrl;
   private final WhatsAppMessageSerializer serializer = new WhatsAppMessageSerializer();
 
-  /**
-   * Constructor from WhatsAppConfig.
-   */
+  /** Constructor from WhatsAppConfig. */
   public WhatsAppMessagingProvider(WhatsAppConfig config) {
     Objects.requireNonNull(config, "WhatsAppConfig cannot be null");
     this.phoneNumberId = config.phoneNumberId();
     this.accessToken = config.accessToken();
     this.baseUrl = config.apiBaseUrl() + "/" + config.apiVersion();
-    this.httpClient = new OkHttpClient.Builder()
+    this.httpClient =
+        new OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(config.requestTimeout(), TimeUnit.MILLISECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
@@ -70,14 +66,12 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
     this.httpRateLimiter = new Semaphore(config.maxConcurrentRequests());
   }
 
-  /**
-   * Construtor com rate limiting customizável.
-   */
+  /** Construtor com rate limiting customizável. */
   public WhatsAppMessagingProvider(
-          String phoneNumberId,
-          String accessToken,
-          OkHttpClient httpClient,
-          int maxConcurrentRequests) {
+      String phoneNumberId,
+      String accessToken,
+      OkHttpClient httpClient,
+      int maxConcurrentRequests) {
 
     this.phoneNumberId = Objects.requireNonNull(phoneNumberId, "Phone number ID cannot be null");
     this.accessToken = Objects.requireNonNull(accessToken, "Access token cannot be null");
@@ -91,27 +85,21 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
     this.httpRateLimiter = new Semaphore(maxConcurrentRequests);
   }
 
-  /**
-   * Construtor com rate limiting padrão (80 requisições simultâneas).
-   */
+  /** Construtor com rate limiting padrão (80 requisições simultâneas). */
   public WhatsAppMessagingProvider(
-          String phoneNumberId,
-          String accessToken,
-          OkHttpClient httpClient) {
+      String phoneNumberId, String accessToken, OkHttpClient httpClient) {
     this(phoneNumberId, accessToken, httpClient, 80);
   }
 
-  /**
-   * Factory method para criar OkHttpClient com configurações recomendadas.
-   */
+  /** Factory method para criar OkHttpClient com configurações recomendadas. */
   public static OkHttpClient createDefaultHttpClient() {
     return new OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            .connectionPool(new ConnectionPool(50, 5, TimeUnit.MINUTES))
-            .retryOnConnectionFailure(false)
-            .build();
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .connectionPool(new ConnectionPool(50, 5, TimeUnit.MINUTES))
+        .retryOnConnectionFailure(false)
+        .build();
   }
 
   private static Validator createValidator() {
@@ -131,9 +119,8 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
   }
 
   @Override
-  public MessageResponse sendMessage(
-          @Valid Recipient recipient,
-          @Valid OutboundMessage message) throws MessagingException {
+  public MessageResponse sendMessage(@Valid Recipient recipient, @Valid OutboundMessage message)
+      throws MessagingException {
 
     // Validar inputs
     validateInput(recipient);
@@ -157,10 +144,13 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
       String jsonPayload = serializer.serialize(recipient, message);
 
       // Criar requisição HTTP
-      Request request = new Request.Builder()
+      Request request =
+          new Request.Builder()
               .url(baseUrl + "/" + phoneNumberId + "/messages")
               .addHeader("Authorization", "Bearer " + accessToken)
-              .post(RequestBody.create(jsonPayload.getBytes(java.nio.charset.StandardCharsets.UTF_8), JSON))
+              .post(
+                  RequestBody.create(
+                      jsonPayload.getBytes(java.nio.charset.StandardCharsets.UTF_8), JSON))
               .build();
 
       // Enviar requisição
@@ -169,7 +159,11 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
       }
 
     } catch (IOException e) {
-      return new MessageResponse(null, MessageResponse.MessageStatus.FAILED, Instant.now(), "HTTP request failed: " + e.getMessage());
+      return new MessageResponse(
+          null,
+          MessageResponse.MessageStatus.FAILED,
+          Instant.now(),
+          "HTTP request failed: " + e.getMessage());
     } finally {
       httpRateLimiter.release();
     }
@@ -178,7 +172,8 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
   private <T> void validateInput(T object) throws MessagingException {
     var violations = VALIDATOR.validate(object);
     if (!violations.isEmpty()) {
-      String errors = violations.stream()
+      String errors =
+          violations.stream()
               .map(v -> v.getPropertyPath() + ": " + v.getMessage())
               .reduce((a, b) -> a + "; " + b)
               .orElse("Validation failed");
@@ -186,9 +181,7 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
     }
   }
 
-  /**
-   * Processa a resposta HTTP.
-   */
+  /** Processa a resposta HTTP. */
   private MessageResponse parseResponse(Response response) {
     int statusCode = response.code();
     String body;
@@ -197,20 +190,26 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
       ResponseBody responseBody = response.body();
       body = responseBody != null ? responseBody.string() : "";
     } catch (IOException e) {
-      return new MessageResponse(null, MessageResponse.MessageStatus.FAILED, Instant.now(), "Failed to read response: " + e.getMessage());
+      return new MessageResponse(
+          null,
+          MessageResponse.MessageStatus.FAILED,
+          Instant.now(),
+          "Failed to read response: " + e.getMessage());
     }
 
     if (statusCode >= 200 && statusCode < 300) {
       String messageId = extractMessageId(body);
       return new MessageResponse(messageId, MessageResponse.MessageStatus.SENT, Instant.now());
     } else {
-      return new MessageResponse(null, MessageResponse.MessageStatus.FAILED, Instant.now(), "API error: " + statusCode + " - " + body);
+      return new MessageResponse(
+          null,
+          MessageResponse.MessageStatus.FAILED,
+          Instant.now(),
+          "API error: " + statusCode + " - " + body);
     }
   }
 
-  /**
-   * Extrai message ID da resposta (parsing simplificado).
-   */
+  /** Extrai message ID da resposta (parsing simplificado). */
   private String extractMessageId(String responseBody) {
     int idStart = responseBody.indexOf("\"id\":\"") + 6;
     if (idStart > 5) {
@@ -222,14 +221,10 @@ public class WhatsAppMessagingProvider implements MessagingProvider {
     return "unknown_id";
   }
 
-  /**
-   * Retorna estatísticas de uso do rate limiter.
-   */
+  /** Retorna estatísticas de uso do rate limiter. */
   public RateLimiterStats getRateLimiterStats() {
     return new RateLimiterStats(
-            httpRateLimiter.availablePermits(),
-            httpRateLimiter.getQueueLength()
-    );
+        httpRateLimiter.availablePermits(), httpRateLimiter.getQueueLength());
   }
 
   public record RateLimiterStats(int availablePermits, int queuedThreads) {

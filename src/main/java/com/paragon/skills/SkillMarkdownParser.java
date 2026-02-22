@@ -26,9 +26,10 @@ import org.jspecify.annotations.NonNull;
  * <h2>YAML Frontmatter</h2>
  *
  * <p>The frontmatter section (between --- markers) must contain:
+ *
  * <ul>
- *   <li><b>name</b> (required): Lowercase letters, numbers, and hyphens only. Max 64 chars.</li>
- *   <li><b>description</b> (required): When to use this skill. Max 1024 chars.</li>
+ *   <li><b>name</b> (required): Lowercase letters, numbers, and hyphens only. Max 64 chars.
+ *   <li><b>description</b> (required): When to use this skill. Max 1024 chars.
  * </ul>
  *
  * <h2>Markdown Body</h2>
@@ -146,8 +147,7 @@ public final class SkillMarkdownParser {
     String name = extractValue(frontmatter, NAME_PATTERN, "name");
     String description = extractValue(frontmatter, DESCRIPTION_PATTERN, "description");
 
-    return name != null && !name.isBlank() 
-        && description != null && !description.isBlank();
+    return name != null && !name.isBlank() && description != null && !description.isBlank();
   }
 
   private String extractValue(String yaml, Pattern pattern, String fieldName) {

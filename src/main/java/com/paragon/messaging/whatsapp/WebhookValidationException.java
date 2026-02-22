@@ -2,9 +2,7 @@ package com.paragon.messaging.whatsapp;
 
 import com.paragon.messaging.core.MessagingException;
 
-/**
- * Exceção lançada quando há problemas na validação de webhook.
- */
+/** Exceção lançada quando há problemas na validação de webhook. */
 public class WebhookValidationException extends MessagingException {
 
   public WebhookValidationException(String message) {

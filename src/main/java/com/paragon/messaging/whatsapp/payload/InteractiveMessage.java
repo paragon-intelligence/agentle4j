@@ -9,25 +9,20 @@ public final class InteractiveMessage extends AbstractInboundMessage {
 
   public final InteractiveContent interactive;
 
-  /**
-   * Convenience field for button reply content (null if not a button reply).
-   */
+  /** Convenience field for button reply content (null if not a button reply). */
   public final ReplyData buttonReply;
 
-  /**
-   * Convenience field for list reply content (null if not a list reply).
-   */
+  /** Convenience field for list reply content (null if not a list reply). */
   public final ReplyData listReply;
 
   @JsonCreator
   public InteractiveMessage(
-          @JsonProperty("from") String from,
-          @JsonProperty("id") String id,
-          @JsonProperty("timestamp") String timestamp,
-          @JsonProperty("type") String type,
-          @JsonProperty("context") MessageContext context,
-          @JsonProperty("interactive") InteractiveContent interactive
-  ) {
+      @JsonProperty("from") String from,
+      @JsonProperty("id") String id,
+      @JsonProperty("timestamp") String timestamp,
+      @JsonProperty("type") String type,
+      @JsonProperty("context") MessageContext context,
+      @JsonProperty("interactive") InteractiveContent interactive) {
     super(from, id, timestamp, type, context);
     this.interactive = interactive;
 
@@ -45,15 +40,13 @@ public final class InteractiveMessage extends AbstractInboundMessage {
   }
 
   @JsonTypeInfo(
-          use = JsonTypeInfo.Id.NAME,
-          include = JsonTypeInfo.As.EXISTING_PROPERTY,
-          property = "type"
-  )
+      use = JsonTypeInfo.Id.NAME,
+      include = JsonTypeInfo.As.EXISTING_PROPERTY,
+      property = "type")
   @JsonSubTypes({
-          @JsonSubTypes.Type(value = ButtonReply.class, name = "button_reply"),
-          @JsonSubTypes.Type(value = ListReply.class, name = "list_reply"),
-          @JsonSubTypes.Type(value = NfmReply.class, name = "nfm_reply")
+    @JsonSubTypes.Type(value = ButtonReply.class, name = "button_reply"),
+    @JsonSubTypes.Type(value = ListReply.class, name = "list_reply"),
+    @JsonSubTypes.Type(value = NfmReply.class, name = "nfm_reply")
   })
-  public sealed interface InteractiveContent permits ButtonReply, ListReply, NfmReply {
-  }
+  public sealed interface InteractiveContent permits ButtonReply, ListReply, NfmReply {}
 }

@@ -1,10 +1,13 @@
 package com.paragon.agents.context;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.paragon.agents.Agent;
 import com.paragon.agents.AgentResult;
 import com.paragon.agents.AgenticContext;
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
+import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -13,13 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-/**
- * Integration tests for Agent with context management.
- */
+/** Integration tests for Agent with context management. */
 @DisplayName("Agent Context Management Integration")
 class AgenticContextWindowIntegrationTest {
 
@@ -32,7 +29,7 @@ class AgenticContextWindowIntegrationTest {
     mockWebServer.start();
 
     responder =
-            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   void tearDown() throws Exception {
@@ -41,40 +38,40 @@ class AgenticContextWindowIntegrationTest {
 
   private void enqueueSuccessResponse(String text) {
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "message",
-                          "id": "msg_001",
-                          "role": "assistant",
-                          "content": [
-                            {
-                              "type": "output_text",
-                              "text": "%s"
-                            }
-                          ]
-                        }
-                      ],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(text);
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_001",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(text);
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   @Nested
@@ -85,19 +82,19 @@ class AgenticContextWindowIntegrationTest {
     @DisplayName("contextManagement method sets config")
     void contextManagement_setsConfig() {
       ContextManagementConfig config =
-              ContextManagementConfig.builder()
-                      .strategy(new SlidingWindowStrategy())
-                      .maxTokens(4000)
-                      .build();
+          ContextManagementConfig.builder()
+              .strategy(new SlidingWindowStrategy())
+              .maxTokens(4000)
+              .build();
 
       Agent agent =
-              Agent.builder()
-                      .name("Test")
-                      .model("test-model")
-                      .instructions("Test instructions")
-                      .responder(responder)
-                      .contextManagement(config)
-                      .build();
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test instructions")
+              .responder(responder)
+              .contextManagement(config)
+              .build();
 
       assertNotNull(agent);
     }
@@ -106,20 +103,20 @@ class AgenticContextWindowIntegrationTest {
     @DisplayName("contextManagement with custom counter")
     void contextManagement_withCustomCounter() {
       ContextManagementConfig config =
-              ContextManagementConfig.builder()
-                      .strategy(new SlidingWindowStrategy())
-                      .maxTokens(4000)
-                      .tokenCounter(new SimpleTokenCounter(3))
-                      .build();
+          ContextManagementConfig.builder()
+              .strategy(new SlidingWindowStrategy())
+              .maxTokens(4000)
+              .tokenCounter(new SimpleTokenCounter(3))
+              .build();
 
       Agent agent =
-              Agent.builder()
-                      .name("Test")
-                      .model("test-model")
-                      .instructions("Test instructions")
-                      .responder(responder)
-                      .contextManagement(config)
-                      .build();
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test instructions")
+              .responder(responder)
+              .contextManagement(config)
+              .build();
 
       assertNotNull(agent);
     }
@@ -128,12 +125,12 @@ class AgenticContextWindowIntegrationTest {
     @DisplayName("agent works without context management configured")
     void agentWorksWithoutContextManagement() throws Exception {
       Agent agent =
-              Agent.builder()
-                      .name("Test")
-                      .model("test-model")
-                      .instructions("Test instructions")
-                      .responder(responder)
-                      .build();
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test instructions")
+              .responder(responder)
+              .build();
 
       enqueueSuccessResponse("Response");
 
@@ -152,19 +149,19 @@ class AgenticContextWindowIntegrationTest {
     @DisplayName("sliding window reduces context for long conversations")
     void slidingWindow_reducesContext() throws Exception {
       ContextManagementConfig config =
-              ContextManagementConfig.builder()
-                      .strategy(new SlidingWindowStrategy())
-                      .maxTokens(200)
-                      .build();
+          ContextManagementConfig.builder()
+              .strategy(new SlidingWindowStrategy())
+              .maxTokens(200)
+              .build();
 
       Agent agent =
-              Agent.builder()
-                      .name("Test")
-                      .model("test-model")
-                      .instructions("Test instructions")
-                      .responder(responder)
-                      .contextManagement(config)
-                      .build();
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test instructions")
+              .responder(responder)
+              .contextManagement(config)
+              .build();
 
       AgenticContext context = AgenticContext.create();
 
@@ -194,19 +191,19 @@ class AgenticContextWindowIntegrationTest {
     @DisplayName("agent works normally when context is under limit")
     void agentWorksNormally_whenUnderLimit() throws Exception {
       ContextManagementConfig config =
-              ContextManagementConfig.builder()
-                      .strategy(new SlidingWindowStrategy())
-                      .maxTokens(10000)
-                      .build();
+          ContextManagementConfig.builder()
+              .strategy(new SlidingWindowStrategy())
+              .maxTokens(10000)
+              .build();
 
       Agent agent =
-              Agent.builder()
-                      .name("Test")
-                      .model("test-model")
-                      .instructions("Test instructions")
-                      .responder(responder)
-                      .contextManagement(config)
-                      .build();
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test instructions")
+              .responder(responder)
+              .contextManagement(config)
+              .build();
 
       enqueueSuccessResponse("Response");
 
@@ -225,26 +222,25 @@ class AgenticContextWindowIntegrationTest {
     @DisplayName("structured builder supports contextManagement")
     void structuredBuilder_supportsContextManagement() {
       ContextManagementConfig config =
-              ContextManagementConfig.builder()
-                      .strategy(new SlidingWindowStrategy())
-                      .maxTokens(4000)
-                      .build();
+          ContextManagementConfig.builder()
+              .strategy(new SlidingWindowStrategy())
+              .maxTokens(4000)
+              .build();
 
       Agent.Structured<TestOutput> agent =
-              Agent.builder()
-                      .name("Test")
-                      .model("test-model")
-                      .instructions("Test instructions")
-                      .responder(responder)
-                      .structured(TestOutput.class)
-                      .contextManagement(config)
-                      .build();
+          Agent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test instructions")
+              .responder(responder)
+              .structured(TestOutput.class)
+              .contextManagement(config)
+              .build();
 
       assertNotNull(agent);
     }
 
-    record TestOutput(String message) {
-    }
+    record TestOutput(String message) {}
   }
 
   // Helper methods
@@ -257,10 +253,10 @@ class AgenticContextWindowIntegrationTest {
     @DisplayName("builder creates valid config")
     void builderCreatesValidConfig() {
       ContextManagementConfig config =
-              ContextManagementConfig.builder()
-                      .strategy(new SlidingWindowStrategy())
-                      .maxTokens(4000)
-                      .build();
+          ContextManagementConfig.builder()
+              .strategy(new SlidingWindowStrategy())
+              .maxTokens(4000)
+              .build();
 
       assertNotNull(config.strategy());
       assertEquals(4000, config.maxTokens());
@@ -271,20 +267,20 @@ class AgenticContextWindowIntegrationTest {
     @DisplayName("throws when strategy is null")
     void throwsWhenStrategyNull() {
       assertThrows(
-              NullPointerException.class,
-              () -> ContextManagementConfig.builder().maxTokens(4000).build());
+          NullPointerException.class,
+          () -> ContextManagementConfig.builder().maxTokens(4000).build());
     }
 
     @Test
     @DisplayName("throws when maxTokens is not positive")
     void throwsWhenMaxTokensNotPositive() {
       assertThrows(
-              IllegalArgumentException.class,
-              () ->
-                      ContextManagementConfig.builder()
-                              .strategy(new SlidingWindowStrategy())
-                              .maxTokens(0)
-                              .build());
+          IllegalArgumentException.class,
+          () ->
+              ContextManagementConfig.builder()
+                  .strategy(new SlidingWindowStrategy())
+                  .maxTokens(0)
+                  .build());
     }
   }
 }

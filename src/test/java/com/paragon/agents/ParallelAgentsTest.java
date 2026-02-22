@@ -1,18 +1,17 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.Text;
+import java.util.List;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Comprehensive tests for ParallelAgents.
@@ -33,7 +32,7 @@ class ParallelAgentsTest {
     mockWebServer.start();
 
     responder =
-            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   void tearDown() throws Exception {
@@ -42,49 +41,49 @@ class ParallelAgentsTest {
 
   private Agent createTestAgent(String name) {
     return Agent.builder()
-            .name(name)
-            .model("test-model")
-            .instructions("Test instructions")
-            .responder(responder)
-            .build();
+        .name(name)
+        .model("test-model")
+        .instructions("Test instructions")
+        .responder(responder)
+        .build();
   }
 
   private void enqueueSuccessResponse(String text) {
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "message",
-                          "id": "msg_001",
-                          "role": "assistant",
-                          "content": [
-                            {
-                              "type": "output_text",
-                              "text": "%s"
-                            }
-                          ]
-                        }
-                      ],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(text);
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_001",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(text);
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   @Nested
@@ -135,8 +134,8 @@ class ParallelAgentsTest {
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
       assertThrows(
-              UnsupportedOperationException.class,
-              () -> orchestrator.members().add(createTestAgent("New")));
+          UnsupportedOperationException.class,
+          () -> orchestrator.members().add(createTestAgent("New")));
     }
   }
 
@@ -362,8 +361,8 @@ class ParallelAgentsTest {
       ParallelAgents orchestrator = ParallelAgents.of(worker);
 
       assertThrows(
-              NullPointerException.class,
-              () -> orchestrator.runAndSynthesize((String) null, synthesizer));
+          NullPointerException.class,
+          () -> orchestrator.runAndSynthesize((String) null, synthesizer));
     }
 
     @Test
@@ -385,8 +384,7 @@ class ParallelAgentsTest {
       enqueueSuccessResponse("Worker output");
       enqueueSuccessResponse("Synthesized result");
 
-      AgentResult result =
-              orchestrator.runAndSynthesize(Text.valueOf("Task"), synthesizer);
+      AgentResult result = orchestrator.runAndSynthesize(Text.valueOf("Task"), synthesizer);
 
       assertNotNull(result);
     }
@@ -401,8 +399,7 @@ class ParallelAgentsTest {
       enqueueSuccessResponse("Worker output");
       enqueueSuccessResponse("Synthesized result");
 
-      AgentResult result =
-              orchestrator.runAndSynthesize(Message.user("Task"), synthesizer);
+      AgentResult result = orchestrator.runAndSynthesize(Message.user("Task"), synthesizer);
 
       assertNotNull(result);
     }
@@ -420,8 +417,7 @@ class ParallelAgentsTest {
       enqueueSuccessResponse("Worker output");
       enqueueSuccessResponse("Synthesized result");
 
-      AgentResult result =
-              orchestrator.runAndSynthesize(context, synthesizer);
+      AgentResult result = orchestrator.runAndSynthesize(context, synthesizer);
 
       assertNotNull(result);
     }
@@ -524,7 +520,8 @@ class ParallelAgentsTest {
       Agent agent = createTestAgent("Test");
       ParallelAgents orchestrator = ParallelAgents.of(agent);
 
-      assertThrows(NullPointerException.class, () -> orchestrator.runAllStream((AgenticContext) null));
+      assertThrows(
+          NullPointerException.class, () -> orchestrator.runAllStream((AgenticContext) null));
     }
   }
 }

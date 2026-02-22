@@ -7,9 +7,8 @@ public record Metadata(String displayPhoneNumber, String phoneNumberId) {
 
   @JsonCreator
   public Metadata(
-          @JsonProperty("display_phone_number") String displayPhoneNumber,
-          @JsonProperty("phone_number_id") String phoneNumberId
-  ) {
+      @JsonProperty("display_phone_number") String displayPhoneNumber,
+      @JsonProperty("phone_number_id") String phoneNumberId) {
     this.displayPhoneNumber = displayPhoneNumber;
     this.phoneNumberId = phoneNumberId;
   }

@@ -1,8 +1,7 @@
 package com.paragon.messaging.batching;
 
-import java.time.Instant;
 import com.paragon.messaging.whatsapp.payload.InboundMessage;
-
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -12,10 +11,10 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Buffer de mensagens para um único usuário (thread-safe).
  *
- * <p>Usa {@link ConcurrentLinkedQueue} para garantir thread safety sem locks.
- * Cada usuário tem seu próprio buffer isolado.</p>
+ * <p>Usa {@link ConcurrentLinkedQueue} para garantir thread safety sem locks. Cada usuário tem seu
+ * próprio buffer isolado.
  *
- * <p><b>Thread Safety:</b> Todas operações são thread-safe.</p>
+ * <p><b>Thread Safety:</b> Todas operações são thread-safe.
  *
  * @author Agentle Team
  * @since 1.0
@@ -113,9 +112,7 @@ public class UserMessageBuffer {
     }
   }
 
-  /**
-   * Cancela tarefa agendada atual.
-   */
+  /** Cancela tarefa agendada atual. */
   public void cancelScheduledTask() {
     ScheduledFuture<?> task = scheduledTask.getAndSet(null);
     if (task != null && !task.isDone()) {

@@ -5,36 +5,30 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
-
 import java.util.List;
 
-/**
- * Mensagem baseada em template pré-aprovado.
- */
+/** Mensagem baseada em template pré-aprovado. */
 public record TemplateMessage(
-
-        @NotBlank(message = "Template name cannot be blank")
-        @Pattern(regexp = "[a-z0-9_]+", message = "Template name must contain only lowercase letters, numbers, and underscores")
+    @NotBlank(message = "Template name cannot be blank")
+        @Pattern(
+            regexp = "[a-z0-9_]+",
+            message = "Template name must contain only lowercase letters, numbers, and underscores")
         String name,
-
-        @NotBlank(message = "Language code cannot be blank")
-        @Pattern(regexp = "[a-z]{2}(_[A-Z]{2})?", message = "Language code must be in format 'xx' or 'xx_XX' (e.g., 'en', 'pt', 'pt_BR', 'en_US')")
+    @NotBlank(message = "Language code cannot be blank")
+        @Pattern(
+            regexp = "[a-z]{2}(_[A-Z]{2})?",
+            message =
+                "Language code must be in format 'xx' or 'xx_XX' (e.g., 'en', 'pt', 'pt_BR',"
+                    + " 'en_US')")
         String languageCode,
-
-        @NotNull(message = "Components cannot be null")
-        @Valid
-        List<TemplateComponent> components
-
-) implements TemplateMessageInterface {
+    @NotNull(message = "Components cannot be null") @Valid List<TemplateComponent> components)
+    implements TemplateMessageInterface {
 
   public TemplateMessage {
     components = List.copyOf(components);
   }
 
-  /**
-   * Convenience constructor for template without components.
-   */
+  /** Convenience constructor for template without components. */
   public TemplateMessage(String name, String languageCode) {
     this(name, languageCode, List.of());
   }
@@ -48,13 +42,8 @@ public record TemplateMessage(
     return OutboundMessageType.TEMPLATE;
   }
 
-  /**
-   * Componente de template (simplificado para exemplo).
-   */
-  public record TemplateComponent(
-          @NotBlank String type,
-          @NotNull List<String> parameters
-  ) {
+  /** Componente de template (simplificado para exemplo). */
+  public record TemplateComponent(@NotBlank String type, @NotNull List<String> parameters) {
     public TemplateComponent {
       parameters = List.copyOf(parameters);
     }

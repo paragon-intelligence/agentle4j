@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 import okhttp3.*;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Embedding provider for OpenRouter's embedding API with built-in retry support.
@@ -69,7 +68,8 @@ public class OpenRouterEmbeddingProvider implements EmbeddingProvider {
   }
 
   @Override
-  public @NonNull List<Embedding> createEmbeddings(@NonNull List<String> input, @NonNull String model) {
+  public @NonNull List<Embedding> createEmbeddings(
+      @NonNull List<String> input, @NonNull String model) {
     Objects.requireNonNull(input, "input cannot be null");
     Objects.requireNonNull(model, "model cannot be null");
 
@@ -112,8 +112,7 @@ public class OpenRouterEmbeddingProvider implements EmbeddingProvider {
                   response.code(), response.message(), json));
         }
 
-        EmbeddingResponse embeddingResponse =
-            objectMapper.readValue(json, EmbeddingResponse.class);
+        EmbeddingResponse embeddingResponse = objectMapper.readValue(json, EmbeddingResponse.class);
         return embeddingResponse.data();
       }
     } catch (IOException e) {

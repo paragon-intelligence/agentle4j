@@ -1,18 +1,18 @@
 package com.paragon.messaging.store;
 
 import com.paragon.messaging.core.OutboundMessage;
-
 import java.util.List;
 
 /**
  * Interface para persistência e deduplicação de mensagens.
  *
- * <p>Implementações podem usar:</p>
+ * <p>Implementações podem usar:
+ *
  * <ul>
- *   <li>In-memory (LRU cache)</li>
- *   <li>Redis</li>
- *   <li>Database SQL</li>
- *   <li>NoSQL</li>
+ *   <li>In-memory (LRU cache)
+ *   <li>Redis
+ *   <li>Database SQL
+ *   <li>NoSQL
  * </ul>
  *
  * @author Agentle Team
@@ -28,8 +28,7 @@ public interface MessageStore {
   static MessageStore noOp() {
     return new MessageStore() {
       @Override
-      public void store(String userId, OutboundMessage message) {
-      }
+      public void store(String userId, OutboundMessage message) {}
 
       @Override
       public List<OutboundMessage> retrieve(String userId) {
@@ -37,8 +36,7 @@ public interface MessageStore {
       }
 
       @Override
-      public void remove(String userId) {
-      }
+      public void remove(String userId) {}
 
       @Override
       public boolean hasProcessed(String userId, String messageId) {
@@ -46,15 +44,14 @@ public interface MessageStore {
       }
 
       @Override
-      public void markProcessed(String userId, String messageId) {
-      }
+      public void markProcessed(String userId, String messageId) {}
     };
   }
 
   /**
    * Armazena mensagem no buffer do usuário.
    *
-   * @param userId  ID do usuário
+   * @param userId ID do usuário
    * @param message mensagem
    */
   void store(String userId, OutboundMessage message);
@@ -77,7 +74,7 @@ public interface MessageStore {
   /**
    * Verifica se mensagem já foi processada.
    *
-   * @param userId    ID do usuário
+   * @param userId ID do usuário
    * @param messageId ID da mensagem
    * @return true se já processada
    */
@@ -86,7 +83,7 @@ public interface MessageStore {
   /**
    * Marca mensagem como processada.
    *
-   * @param userId    ID do usuário
+   * @param userId ID do usuário
    * @param messageId ID da mensagem
    */
   void markProcessed(String userId, String messageId);

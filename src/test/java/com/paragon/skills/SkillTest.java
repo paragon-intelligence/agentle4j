@@ -7,9 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for the Skill class.
- */
+/** Tests for the Skill class. */
 @DisplayName("Skill")
 class SkillTest {
 
@@ -27,11 +25,12 @@ class SkillTest {
     @Test
     @DisplayName("build() creates skill with required fields")
     void build_createsSkillWithRequiredFields() {
-      Skill skill = Skill.builder()
-          .name("test-skill")
-          .description("A test skill")
-          .instructions("You are a test skill")
-          .build();
+      Skill skill =
+          Skill.builder()
+              .name("test-skill")
+              .description("A test skill")
+              .instructions("You are a test skill")
+              .build();
 
       assertEquals("test-skill", skill.name());
       assertEquals("A test skill", skill.description());
@@ -41,56 +40,56 @@ class SkillTest {
     @Test
     @DisplayName("build() throws when name is null")
     void build_throwsWhenNameNull() {
-      assertThrows(NullPointerException.class, () -> {
-        Skill.builder()
-            .description("A test skill")
-            .instructions("Instructions")
-            .build();
-      });
+      assertThrows(
+          NullPointerException.class,
+          () -> {
+            Skill.builder().description("A test skill").instructions("Instructions").build();
+          });
     }
 
     @Test
     @DisplayName("build() throws when description is null")
     void build_throwsWhenDescriptionNull() {
-      assertThrows(NullPointerException.class, () -> {
-        Skill.builder()
-            .name("test-skill")
-            .instructions("Instructions")
-            .build();
-      });
+      assertThrows(
+          NullPointerException.class,
+          () -> {
+            Skill.builder().name("test-skill").instructions("Instructions").build();
+          });
     }
 
     @Test
     @DisplayName("build() throws when instructions is null")
     void build_throwsWhenInstructionsNull() {
-      assertThrows(NullPointerException.class, () -> {
-        Skill.builder()
-            .name("test-skill")
-            .description("A test skill")
-            .build();
-      });
+      assertThrows(
+          NullPointerException.class,
+          () -> {
+            Skill.builder().name("test-skill").description("A test skill").build();
+          });
     }
 
     @Test
     @DisplayName("name must be lowercase with hyphens")
     void name_mustBeLowercaseWithHyphens() {
-      assertThrows(IllegalArgumentException.class, () -> {
-        Skill.builder()
-            .name("Test_Skill")
-            .description("A test skill")
-            .instructions("Instructions")
-            .build();
-      });
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> {
+            Skill.builder()
+                .name("Test_Skill")
+                .description("A test skill")
+                .instructions("Instructions")
+                .build();
+          });
     }
 
     @Test
     @DisplayName("name allows lowercase letters, numbers, and hyphens")
     void name_allowsValidCharacters() {
-      Skill skill = Skill.builder()
-          .name("test-skill-123")
-          .description("A test skill")
-          .instructions("Instructions")
-          .build();
+      Skill skill =
+          Skill.builder()
+              .name("test-skill-123")
+              .description("A test skill")
+              .instructions("Instructions")
+              .build();
 
       assertEquals("test-skill-123", skill.name());
     }
@@ -98,24 +97,23 @@ class SkillTest {
     @Test
     @DisplayName("description cannot be empty")
     void description_cannotBeEmpty() {
-      assertThrows(IllegalArgumentException.class, () -> {
-        Skill.builder()
-            .name("test-skill")
-            .description("")
-            .instructions("Instructions")
-            .build();
-      });
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> {
+            Skill.builder().name("test-skill").description("").instructions("Instructions").build();
+          });
     }
 
     @Test
     @DisplayName("instructions accepts Prompt")
     void instructions_acceptsPrompt() {
       Prompt prompt = Prompt.of("You are {{role}}");
-      Skill skill = Skill.builder()
-          .name("test-skill")
-          .description("A test skill")
-          .instructions(prompt)
-          .build();
+      Skill skill =
+          Skill.builder()
+              .name("test-skill")
+              .description("A test skill")
+              .instructions(prompt)
+              .build();
 
       assertEquals(prompt, skill.instructions());
     }
@@ -123,12 +121,13 @@ class SkillTest {
     @Test
     @DisplayName("addResource adds resource to skill")
     void addResource_addsResourceToSkill() {
-      Skill skill = Skill.builder()
-          .name("test-skill")
-          .description("A test skill")
-          .instructions("Instructions")
-          .addResource("FORMS.md", "Form filling guide")
-          .build();
+      Skill skill =
+          Skill.builder()
+              .name("test-skill")
+              .description("A test skill")
+              .instructions("Instructions")
+              .addResource("FORMS.md", "Form filling guide")
+              .build();
 
       assertEquals(1, skill.resources().size());
       assertTrue(skill.hasResources());
@@ -169,9 +168,11 @@ class SkillTest {
     void resources_returnsUnmodifiableMap() {
       Skill skill = Skill.of("test-skill", "A test skill", "Instructions");
 
-      assertThrows(UnsupportedOperationException.class, () -> {
-        skill.resources().put("test", Prompt.of("test"));
-      });
+      assertThrows(
+          UnsupportedOperationException.class,
+          () -> {
+            skill.resources().put("test", Prompt.of("test"));
+          });
     }
   }
 
@@ -209,7 +210,7 @@ class SkillTest {
       Skill skill = Skill.of("test-skill", "A test skill", "You help with tasks.");
 
       String section = skill.toPromptSection();
-      
+
       assertTrue(section.contains("## Skill: test-skill"));
       assertTrue(section.contains("**When to use**: A test skill"));
       assertTrue(section.contains("You help with tasks."));
@@ -218,15 +219,16 @@ class SkillTest {
     @Test
     @DisplayName("toPromptSection includes resources")
     void toPromptSection_includesResources() {
-      Skill skill = Skill.builder()
-          .name("test-skill")
-          .description("A test skill")
-          .instructions("Instructions")
-          .addResource("FORMS.md", "Form filling guide")
-          .build();
+      Skill skill =
+          Skill.builder()
+              .name("test-skill")
+              .description("A test skill")
+              .instructions("Instructions")
+              .addResource("FORMS.md", "Form filling guide")
+              .build();
 
       String section = skill.toPromptSection();
-      
+
       assertTrue(section.contains("### FORMS.md"));
       assertTrue(section.contains("Form filling guide"));
     }
@@ -239,12 +241,13 @@ class SkillTest {
     @Test
     @DisplayName("toString includes name and counts")
     void toString_includesNameAndCounts() {
-      Skill skill = Skill.builder()
-          .name("test-skill")
-          .description("A test skill")
-          .instructions("Instructions")
-          .addResource("FORMS.md", "Guide")
-          .build();
+      Skill skill =
+          Skill.builder()
+              .name("test-skill")
+              .description("A test skill")
+              .instructions("Instructions")
+              .addResource("FORMS.md", "Guide")
+              .build();
 
       String str = skill.toString();
       assertTrue(str.contains("test-skill"));

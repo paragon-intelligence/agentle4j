@@ -127,9 +127,7 @@ class ResponderRetryTest {
     Responder responder = createResponder(RetryPolicy.defaults());
 
     RuntimeException ex =
-        assertThrows(
-            RuntimeException.class,
-            () -> responder.respond(createPayload()));
+        assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
     assertTrue(ex.getMessage().contains("400"));
     assertEquals(1, mockWebServer.getRequestCount()); // No retry
@@ -142,9 +140,7 @@ class ResponderRetryTest {
     Responder responder = createResponder(RetryPolicy.defaults());
 
     RuntimeException ex =
-        assertThrows(
-            RuntimeException.class,
-            () -> responder.respond(createPayload()));
+        assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
     assertTrue(ex.getMessage().contains("401"));
     assertEquals(1, mockWebServer.getRequestCount());
@@ -157,9 +153,7 @@ class ResponderRetryTest {
     Responder responder = createResponder(RetryPolicy.defaults());
 
     RuntimeException ex =
-        assertThrows(
-            RuntimeException.class,
-            () -> responder.respond(createPayload()));
+        assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
     assertTrue(ex.getMessage().contains("404"));
     assertEquals(1, mockWebServer.getRequestCount());
@@ -181,9 +175,7 @@ class ResponderRetryTest {
     Responder responder = createResponder(policy);
 
     RuntimeException ex =
-        assertThrows(
-            RuntimeException.class,
-            () -> responder.respond(createPayload()));
+        assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
     assertTrue(ex.getMessage().contains("500"));
     assertEquals(4, mockWebServer.getRequestCount()); // 1 initial + 3 retries
@@ -196,9 +188,7 @@ class ResponderRetryTest {
     Responder responder = createResponder(RetryPolicy.disabled());
 
     RuntimeException ex =
-        assertThrows(
-            RuntimeException.class,
-            () -> responder.respond(createPayload()));
+        assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
     assertTrue(ex.getMessage().contains("429"));
     assertEquals(1, mockWebServer.getRequestCount());

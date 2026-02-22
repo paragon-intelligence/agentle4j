@@ -1,19 +1,18 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.paragon.responses.Responder;
 import com.paragon.responses.annotations.FunctionMetadata;
 import com.paragon.responses.spec.*;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static org.junit.jupiter.api.Assertions.*;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.*;
 
 /**
  * Extended tests for AgentStream.java covering: - Full streaming loop execution - Callback
@@ -31,7 +30,7 @@ class AgentStreamExtendedTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
     responder =
-            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -45,11 +44,11 @@ class AgentStreamExtendedTest {
 
   private Agent createTestAgent() {
     return Agent.builder()
-            .name("TestAgent")
-            .model("test-model")
-            .instructions("Test instructions")
-            .responder(responder)
-            .build();
+        .name("TestAgent")
+        .model("test-model")
+        .instructions("Test instructions")
+        .responder(responder)
+        .build();
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -58,40 +57,40 @@ class AgentStreamExtendedTest {
 
   private void enqueueSuccessResponse(String text) {
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "message",
-                          "id": "msg_001",
-                          "role": "assistant",
-                          "content": [
-                            {
-                              "type": "output_text",
-                              "text": "%s"
-                            }
-                          ]
-                        }
-                      ],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(text);
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_001",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(text);
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -100,36 +99,36 @@ class AgentStreamExtendedTest {
 
   private void enqueueToolCallResponse(String toolName, String arguments) {
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "function_call",
-                          "id": "fc_001",
-                          "call_id": "call_123",
-                          "name": "%s",
-                          "arguments": "%s"
-                        }
-                      ],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(toolName, arguments.replace("\"", "\\\""));
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "function_call",
+              "id": "fc_001",
+              "call_id": "call_123",
+              "name": "%s",
+              "arguments": "%s"
+            }
+          ],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(toolName, arguments.replace("\"", "\\\""));
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -141,49 +140,48 @@ class AgentStreamExtendedTest {
     for (int i = 0; i < toolNames.size(); i++) {
       if (i > 0) outputBuilder.append(",");
       outputBuilder.append(
-              """
-                      {
-                        "type": "function_call",
-                        "id": "fc_%03d",
-                        "call_id": "call_%d",
-                        "name": "%s",
-                        "arguments": "%s"
-                      }
-                      """
-                      .formatted(i, i, toolNames.get(i), arguments.get(i).replace("\"", "\\\"")));
+          """
+          {
+            "type": "function_call",
+            "id": "fc_%03d",
+            "call_id": "call_%d",
+            "name": "%s",
+            "arguments": "%s"
+          }
+          """
+              .formatted(i, i, toolNames.get(i), arguments.get(i).replace("\"", "\\\"")));
     }
 
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [%s],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(outputBuilder.toString());
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [%s],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(outputBuilder.toString());
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // PAUSE HANDLER
   // ═══════════════════════════════════════════════════════════════════════════
 
-  public record TestArgs(String value) {
-  }
+  public record TestArgs(String value) {}
 
   // ═══════════════════════════════════════════════════════════════════════════
   // OUTPUT GUARDRAILS
@@ -226,9 +224,9 @@ class AgentStreamExtendedTest {
   // ═══════════════════════════════════════════════════════════════════════════
 
   @FunctionMetadata(
-          name = "dangerous_tool",
-          description = "A dangerous tool",
-          requiresConfirmation = true)
+      name = "dangerous_tool",
+      description = "A dangerous tool",
+      requiresConfirmation = true)
   private static class DangerousTool extends FunctionTool<TestArgs> {
     @Override
     public FunctionToolCallOutput call(TestArgs params) {
@@ -248,8 +246,7 @@ class AgentStreamExtendedTest {
 
       AtomicReference<AgentResult> resultRef = new AtomicReference<>();
 
-      AgentResult result =
-              agent.interactStream("Hello").onComplete(resultRef::set).start();
+      AgentResult result = agent.interactStream("Hello").onComplete(resultRef::set).start();
 
       assertNotNull(result);
       assertTrue(result.isSuccess());
@@ -329,11 +326,7 @@ class AgentStreamExtendedTest {
 
       AtomicReference<Response> responseRef = new AtomicReference<>();
 
-      agent
-              .interactStream("Hello")
-              .onTurnComplete(responseRef::set)
-              .start()
-      ;
+      agent.interactStream("Hello").onTurnComplete(responseRef::set).start();
 
       assertNotNull(responseRef);
       assertNotNull(responseRef.get().id());
@@ -360,15 +353,14 @@ class AgentStreamExtendedTest {
 
       // Enqueue malformed response to cause parsing error
       mockWebServer.enqueue(
-              new MockResponse()
-                      .setResponseCode(200)
-                      .setBody("not json")
-                      .addHeader("Content-Type", "application/json"));
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody("not json")
+              .addHeader("Content-Type", "application/json"));
 
       AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
-      AgentResult result =
-              agent.interactStream("Hello").onError(errorRef::set).start();
+      AgentResult result = agent.interactStream("Hello").onError(errorRef::set).start();
 
       // Either error callback was called or result is error
       assertTrue(errorRef != null || result.isError());
@@ -385,24 +377,20 @@ class AgentStreamExtendedTest {
       FunctionTool<TestArgs> tool = new SimpleTool();
 
       Agent agent =
-              Agent.builder()
-                      .name("ToolAgent")
-                      .model("test-model")
-                      .instructions("Use tools")
-                      .responder(responder)
-                      .addTool(tool)
-                      .build();
+          Agent.builder()
+              .name("ToolAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(tool)
+              .build();
 
       enqueueToolCallResponse("simple_tool", "{\"value\": \"test\"}");
       enqueueSuccessResponse("Tool completed");
 
       AtomicReference<ToolExecution> execRef = new AtomicReference<>();
 
-      agent
-              .interactStream("Call the tool")
-              .onToolExecuted(execRef::set)
-              .start()
-      ;
+      agent.interactStream("Call the tool").onToolExecuted(execRef::set).start();
 
       assertNotNull(execRef);
       assertEquals("simple_tool", execRef.get().toolName());
@@ -415,26 +403,22 @@ class AgentStreamExtendedTest {
       FunctionTool<TestArgs> tool2 = new ToolTwo();
 
       Agent agent =
-              Agent.builder()
-                      .name("MultiToolAgent")
-                      .model("test-model")
-                      .instructions("Use tools")
-                      .responder(responder)
-                      .addTool(tool1)
-                      .addTool(tool2)
-                      .build();
+          Agent.builder()
+              .name("MultiToolAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(tool1)
+              .addTool(tool2)
+              .build();
 
       enqueueMultiToolCallResponse(
-              List.of("tool_one", "tool_two"), List.of("{\"value\": \"a\"}", "{\"value\": \"b\"}"));
+          List.of("tool_one", "tool_two"), List.of("{\"value\": \"a\"}", "{\"value\": \"b\"}"));
       enqueueSuccessResponse("Done");
 
       List<ToolExecution> executions = new ArrayList<>();
 
-      agent
-              .interactStream("Call tools")
-              .onToolExecuted(executions::add)
-              .start()
-      ;
+      agent.interactStream("Call tools").onToolExecuted(executions::add).start();
 
       assertEquals(2, executions.size());
     }
@@ -450,13 +434,13 @@ class AgentStreamExtendedTest {
       FunctionTool<TestArgs> dangerousTool = new DangerousTool();
 
       Agent agent =
-              Agent.builder()
-                      .name("HitlAgent")
-                      .model("test-model")
-                      .instructions("Use tools")
-                      .responder(responder)
-                      .addTool(dangerousTool)
-                      .build();
+          Agent.builder()
+              .name("HitlAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(dangerousTool)
+              .build();
 
       enqueueToolCallResponse("dangerous_tool", "{\"value\": \"test\"}");
       enqueueSuccessResponse("Tool completed");
@@ -465,15 +449,14 @@ class AgentStreamExtendedTest {
       AtomicReference<FunctionToolCall> pendingCall = new AtomicReference<>();
 
       agent
-              .interactStream("Run dangerous tool")
-              .onToolCallPending(
-                      (call, approve) -> {
-                        callbackCalled.set(true);
-                        pendingCall.set(call);
-                        approve.accept(true); // Approve the tool
-                      })
-              .start()
-      ;
+          .interactStream("Run dangerous tool")
+          .onToolCallPending(
+              (call, approve) -> {
+                callbackCalled.set(true);
+                pendingCall.set(call);
+                approve.accept(true); // Approve the tool
+              })
+          .start();
 
       assertTrue(callbackCalled.get());
       assertNotNull(pendingCall.get());
@@ -486,13 +469,13 @@ class AgentStreamExtendedTest {
       FunctionTool<TestArgs> dangerousTool = new DangerousTool();
 
       Agent agent =
-              Agent.builder()
-                      .name("HitlAgent")
-                      .model("test-model")
-                      .instructions("Use tools")
-                      .responder(responder)
-                      .addTool(dangerousTool)
-                      .build();
+          Agent.builder()
+              .name("HitlAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(dangerousTool)
+              .build();
 
       enqueueToolCallResponse("dangerous_tool", "{\"value\": \"test\"}");
       enqueueSuccessResponse("Tool rejected");
@@ -500,11 +483,10 @@ class AgentStreamExtendedTest {
       AtomicBoolean toolExecuted = new AtomicBoolean(false);
 
       agent
-              .interactStream("Run dangerous tool")
-              .onToolCallPending((call, approve) -> approve.accept(false)) // Reject
-              .onToolExecuted(exec -> toolExecuted.set(true))
-              .start()
-      ;
+          .interactStream("Run dangerous tool")
+          .onToolCallPending((call, approve) -> approve.accept(false)) // Reject
+          .onToolExecuted(exec -> toolExecuted.set(true))
+          .start();
 
       // Tool should NOT be executed when rejected
       assertFalse(toolExecuted.get());
@@ -516,13 +498,13 @@ class AgentStreamExtendedTest {
       FunctionTool<TestArgs> safeTool = new SimpleTool();
 
       Agent agent =
-              Agent.builder()
-                      .name("SafeAgent")
-                      .model("test-model")
-                      .instructions("Use tools")
-                      .responder(responder)
-                      .addTool(safeTool)
-                      .build();
+          Agent.builder()
+              .name("SafeAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(safeTool)
+              .build();
 
       enqueueToolCallResponse("simple_tool", "{\"value\": \"test\"}");
       enqueueSuccessResponse("Done");
@@ -531,11 +513,10 @@ class AgentStreamExtendedTest {
       AtomicBoolean toolExecuted = new AtomicBoolean(false);
 
       agent
-              .interactStream("Run safe tool")
-              .onToolCallPending((call, approve) -> confirmationCalled.set(true))
-              .onToolExecuted(exec -> toolExecuted.set(true))
-              .start()
-      ;
+          .interactStream("Run safe tool")
+          .onToolCallPending((call, approve) -> confirmationCalled.set(true))
+          .onToolExecuted(exec -> toolExecuted.set(true))
+          .start();
 
       // Safe tool should NOT trigger confirmation
       assertFalse(confirmationCalled.get());
@@ -558,23 +539,20 @@ class AgentStreamExtendedTest {
       FunctionTool<TestArgs> dangerousTool = new DangerousTool();
 
       Agent agent =
-              Agent.builder()
-                      .name("PauseAgent")
-                      .model("test-model")
-                      .instructions("Use tools")
-                      .responder(responder)
-                      .addTool(dangerousTool)
-                      .build();
+          Agent.builder()
+              .name("PauseAgent")
+              .model("test-model")
+              .instructions("Use tools")
+              .responder(responder)
+              .addTool(dangerousTool)
+              .build();
 
       enqueueToolCallResponse("dangerous_tool", "{\"value\": \"test\"}");
 
       AtomicReference<AgentRunState> pauseStateRef = new AtomicReference<>();
 
       AgentResult result =
-              agent
-                      .interactStream("Run dangerous tool")
-                      .onPause(pauseStateRef::set)
-                      .start();
+          agent.interactStream("Run dangerous tool").onPause(pauseStateRef::set).start();
 
       assertNotNull(pauseStateRef);
       assertTrue(pauseStateRef.get().isPendingApproval());
@@ -591,29 +569,26 @@ class AgentStreamExtendedTest {
     @DisplayName("onGuardrailFailed is called when output guardrail fails")
     void onGuardrailFailedIsCalled() throws Exception {
       Agent agent =
-              Agent.builder()
-                      .name("GuardedAgent")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .addOutputGuardrail(
-                              (output, ctx) -> {
-                                if (output.contains("forbidden")) {
-                                  return GuardrailResult.failed("Contains forbidden content");
-                                }
-                                return GuardrailResult.passed();
-                              })
-                      .build();
+          Agent.builder()
+              .name("GuardedAgent")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addOutputGuardrail(
+                  (output, ctx) -> {
+                    if (output.contains("forbidden")) {
+                      return GuardrailResult.failed("Contains forbidden content");
+                    }
+                    return GuardrailResult.passed();
+                  })
+              .build();
 
       enqueueSuccessResponse("This is forbidden content");
 
       AtomicReference<GuardrailResult.Failed> failedRef = new AtomicReference<>();
 
       AgentResult result =
-              agent
-                      .interactStream("Generate response")
-                      .onGuardrailFailed(failedRef::set)
-                      .start();
+          agent.interactStream("Generate response").onGuardrailFailed(failedRef::set).start();
 
       assertNotNull(failedRef);
       assertTrue(failedRef.get().reason().contains("forbidden"));
@@ -633,10 +608,7 @@ class AgentStreamExtendedTest {
 
       AtomicReference<AgentResult> completedRef = new AtomicReference<>();
 
-      AgentResult result =
-              AgentStream.failed(failedResult)
-                      .onComplete(completedRef::set)
-                      .start();
+      AgentResult result = AgentStream.failed(failedResult).onComplete(completedRef::set).start();
 
       assertNotNull(result);
       assertTrue(result.isError());

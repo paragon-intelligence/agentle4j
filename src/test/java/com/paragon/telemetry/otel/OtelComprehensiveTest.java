@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Comprehensive coverage tests for all OTEL (OpenTelemetry) DTOs.
- * Tests construction, factory methods, builders, and JSON serialization.
+ * Comprehensive coverage tests for all OTEL (OpenTelemetry) DTOs. Tests construction, factory
+ * methods, builders, and JSON serialization.
  */
 @DisplayName("OTEL Comprehensive Coverage Tests")
 class OtelComprehensiveTest {
@@ -278,7 +278,12 @@ class OtelComprehensiveTest {
     @DisplayName("should default to internal kind")
     void shouldDefaultToInternalKind() {
       OtelSpan span =
-          OtelSpan.builder().traceId("t").spanId("s").name("internal").startTimeNanos(1000L).build();
+          OtelSpan.builder()
+              .traceId("t")
+              .spanId("s")
+              .name("internal")
+              .startTimeNanos(1000L)
+              .build();
 
       assertEquals(OtelSpan.SPAN_KIND_INTERNAL, span.kind());
     }
@@ -334,11 +339,9 @@ class OtelComprehensiveTest {
     @Test
     @DisplayName("should create gauge metric")
     void shouldCreateGaugeMetric() {
-      List<OtelDataPoint> dataPoints =
-          List.of(OtelDataPoint.gaugeInt(100L, List.of()));
+      List<OtelDataPoint> dataPoints = List.of(OtelDataPoint.gaugeInt(100L, List.of()));
 
-      OtelMetric metric =
-          OtelMetric.gauge("token_count", "Number of tokens", "tokens", dataPoints);
+      OtelMetric metric = OtelMetric.gauge("token_count", "Number of tokens", "tokens", dataPoints);
 
       assertEquals("token_count", metric.name());
       assertEquals("Number of tokens", metric.description());
@@ -350,8 +353,7 @@ class OtelComprehensiveTest {
     @Test
     @DisplayName("should create counter metric")
     void shouldCreateCounterMetric() {
-      List<OtelDataPoint> dataPoints =
-          List.of(OtelDataPoint.counterInt(1000L, 42L, List.of()));
+      List<OtelDataPoint> dataPoints = List.of(OtelDataPoint.counterInt(1000L, 42L, List.of()));
 
       OtelMetric metric =
           OtelMetric.counter("request_count", "Total requests", "count", dataPoints);
@@ -366,8 +368,7 @@ class OtelComprehensiveTest {
     @Test
     @DisplayName("OtelGauge should hold data points")
     void otelGaugeShouldHoldDataPoints() {
-      List<OtelDataPoint> dataPoints =
-          List.of(OtelDataPoint.gaugeDouble(3.14, List.of()));
+      List<OtelDataPoint> dataPoints = List.of(OtelDataPoint.gaugeDouble(3.14, List.of()));
 
       OtelMetric.OtelGauge gauge = new OtelMetric.OtelGauge(dataPoints);
       assertEquals(1, gauge.dataPoints().size());
@@ -376,8 +377,7 @@ class OtelComprehensiveTest {
     @Test
     @DisplayName("OtelSum should hold data points")
     void otelSumShouldHoldDataPoints() {
-      List<OtelDataPoint> dataPoints =
-          List.of(OtelDataPoint.counterInt(0L, 100L, List.of()));
+      List<OtelDataPoint> dataPoints = List.of(OtelDataPoint.counterInt(0L, 100L, List.of()));
 
       OtelMetric.OtelSum sum =
           new OtelMetric.OtelSum(dataPoints, "AGGREGATION_TEMPORALITY_CUMULATIVE", true);
@@ -510,8 +510,7 @@ class OtelComprehensiveTest {
     @Test
     @DisplayName("should handle span with null optional fields")
     void shouldHandleSpanWithNullOptionalFields() {
-      OtelSpan span =
-          new OtelSpan("trace", "span", null, "name", 1, "1000", null, null, null);
+      OtelSpan span = new OtelSpan("trace", "span", null, "name", 1, "1000", null, null, null);
 
       assertNull(span.parentSpanId());
       assertNull(span.endTimeUnixNano());
@@ -536,8 +535,7 @@ class OtelComprehensiveTest {
     @Test
     @DisplayName("should handle unicode in log body")
     void shouldHandleUnicodeInLogBody() {
-      OtelLogRecord log =
-          OtelLogRecord.info("Hello 世界 🌍", List.of(), null, null);
+      OtelLogRecord log = OtelLogRecord.info("Hello 世界 🌍", List.of(), null, null);
 
       assertEquals("Hello 世界 🌍", log.body());
     }

@@ -7,15 +7,17 @@ import java.util.UUID;
 /**
  * Contexto de requisição usando ScopedValues (Java 25).
  *
- * <p><b>Por que ScopedValues em vez de ThreadLocal?</b></p>
+ * <p><b>Por que ScopedValues em vez de ThreadLocal?</b>
+ *
  * <ul>
- *   <li>ThreadLocal com milhões de virtual threads = explosão de memória</li>
- *   <li>ScopedValues são imutáveis e automaticamente limpos</li>
- *   <li>Integração nativa com Structured Concurrency</li>
- *   <li>Herdados automaticamente por subtasks</li>
+ *   <li>ThreadLocal com milhões de virtual threads = explosão de memória
+ *   <li>ScopedValues são imutáveis e automaticamente limpos
+ *   <li>Integração nativa com Structured Concurrency
+ *   <li>Herdados automaticamente por subtasks
  * </ul>
  *
- * <p><b>Uso:</b></p>
+ * <p><b>Uso:</b>
+ *
  * <pre>{@code
  * // Definir contexto para a requisição
  * var context = new RequestContext("user-123", "api-key-456");
@@ -39,25 +41,22 @@ import java.util.UUID;
  * @since 2.0
  */
 public record RequestContext(
-        String requestId,
-        String userId,
-        String apiKey,
-        Instant timestamp,
-        String clientIp,
-        String userAgent
-) {
+    String requestId,
+    String userId,
+    String apiKey,
+    Instant timestamp,
+    String clientIp,
+    String userAgent) {
 
   /**
    * ScopedValue para o contexto da requisição atual.
    *
-   * <p>ScopedValues são thread-safe, imutáveis e automaticamente limpos.
-   * Diferente de ThreadLocal, não causam memory leaks com virtual threads.</p>
+   * <p>ScopedValues são thread-safe, imutáveis e automaticamente limpos. Diferente de ThreadLocal,
+   * não causam memory leaks com virtual threads.
    */
   public static final ScopedValue<RequestContext> CURRENT = ScopedValue.newInstance();
 
-  /**
-   * Construtor compacto com valores padrão.
-   */
+  /** Construtor compacto com valores padrão. */
   public RequestContext {
     if (requestId == null || requestId.isBlank()) {
       requestId = UUID.randomUUID().toString();
@@ -73,9 +72,7 @@ public record RequestContext(
     }
   }
 
-  /**
-   * Construtor conveniente apenas com userId e apiKey.
-   */
+  /** Construtor conveniente apenas com userId e apiKey. */
   public RequestContext(String userId, String apiKey) {
     this(null, userId, apiKey, null, null, null);
   }
@@ -111,7 +108,7 @@ public record RequestContext(
   /**
    * Executa uma operação dentro de um contexto.
    *
-   * @param context   contexto a ser usado
+   * @param context contexto a ser usado
    * @param operation operação a executar
    */
   public static void runInContext(RequestContext context, Runnable operation) {
@@ -121,9 +118,9 @@ public record RequestContext(
   /**
    * Executa uma operação dentro de um contexto, retornando um valor.
    *
-   * @param context   contexto a ser usado
+   * @param context contexto a ser usado
    * @param operation operação a executar
-   * @param <T>       tipo do retorno
+   * @param <T> tipo do retorno
    * @return resultado da operação
    */
 }

@@ -5,13 +5,12 @@ import com.paragon.prompts.Prompt;
 import com.paragon.responses.Responder;
 import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.*;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A specialized agent for routing inputs to appropriate target agents.
@@ -84,9 +83,7 @@ public final class RouterAgent implements Interactable {
     return new Builder();
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public @NonNull String name() {
     return name;
@@ -94,14 +91,21 @@ public final class RouterAgent implements Interactable {
 
   @Override
   public @NonNull InteractableBlueprint toBlueprint() {
-    List<InteractableBlueprint.RouteBlueprint> routeBlueprints = routes.stream()
-        .map(r -> new InteractableBlueprint.RouteBlueprint(
-            r.target().toBlueprint(), r.description()))
-        .toList();
+    List<InteractableBlueprint.RouteBlueprint> routeBlueprints =
+        routes.stream()
+            .map(
+                r ->
+                    new InteractableBlueprint.RouteBlueprint(
+                        r.target().toBlueprint(), r.description()))
+            .toList();
     InteractableBlueprint fallbackBlueprint = fallback != null ? fallback.toBlueprint() : null;
     return new InteractableBlueprint.RouterAgentBlueprint(
-        name, model, routeBlueprints, fallbackBlueprint,
-        InteractableBlueprint.ResponderBlueprint.from(responder), traceMetadata);
+        name,
+        model,
+        routeBlueprints,
+        fallbackBlueprint,
+        InteractableBlueprint.ResponderBlueprint.from(responder),
+        traceMetadata);
   }
 
   /**
@@ -140,25 +144,29 @@ public final class RouterAgent implements Interactable {
     // Build routing prompt
     StringBuilder routingPrompt = new StringBuilder();
     routingPrompt.append(
-            "You are a routing classifier. Based on the user input, select the most appropriate"
-                    + " handler.\n\n");
+        "You are a routing classifier. Based on the user input, select the most appropriate"
+            + " handler.\n\n");
     routingPrompt.append("Available handlers:\n");
     for (int i = 0; i < routes.size(); i++) {
       Route route = routes.get(i);
       routingPrompt
-              .append(i + 1)
-              .append(". ")
-              .append(route.target.name())
-              .append(" - handles: ")
-              .append(route.description)
-              .append("\n");
+          .append(i + 1)
+          .append(". ")
+          .append(route.target.name())
+          .append(" - handles: ")
+          .append(route.description)
+          .append("\n");
     }
     routingPrompt.append("\nUser input: \"").append(input).append("\"\n\n");
-    routingPrompt.append("Respond with ONLY the handler number (e.g., \"1\" or \"2\"). Nothing else.");
+    routingPrompt.append(
+        "Respond with ONLY the handler number (e.g., \"1\" or \"2\"). Nothing else.");
 
     // Call LLM for classification
     CreateResponsePayload payload =
-            CreateResponsePayload.builder().model(model).addUserMessage(routingPrompt.toString()).build();
+        CreateResponsePayload.builder()
+            .model(model)
+            .addUserMessage(routingPrompt.toString())
+            .build();
 
     Response response = responder.respond(payload);
 
@@ -196,8 +204,7 @@ public final class RouterAgent implements Interactable {
 
   // ===== Package-private accessors for RouterStream =====
 
-  @NonNull
-  List<Route> getRoutes() {
+  @NonNull List<Route> getRoutes() {
     return routes;
   }
 
@@ -205,13 +212,11 @@ public final class RouterAgent implements Interactable {
     return Optional.ofNullable(fallback);
   }
 
-  @NonNull
-  String getModel() {
+  @NonNull String getModel() {
     return model;
   }
 
-  @NonNull
-  Responder getResponder() {
+  @NonNull Responder getResponder() {
     return responder;
   }
 
@@ -223,19 +228,20 @@ public final class RouterAgent implements Interactable {
   }
 
   @Override
-  public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+  public @NonNull AgentResult interact(
+      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     Objects.requireNonNull(context, "context cannot be null");
 
     Optional<String> inputTextOpt = context.extractLastUserMessageText();
     if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
       return AgentResult.error(
-              new IllegalStateException("No user message found in context for routing"), context, 0);
+          new IllegalStateException("No user message found in context for routing"), context, 0);
     }
 
     Optional<Interactable> selectedOpt = classify(inputTextOpt.get());
     if (selectedOpt.isEmpty()) {
       return AgentResult.error(
-              new IllegalStateException("No suitable route found for input"), context, 0);
+          new IllegalStateException("No suitable route found for input"), context, 0);
     }
 
     return selectedOpt.get().interact(context, trace);
@@ -247,33 +253,32 @@ public final class RouterAgent implements Interactable {
   }
 
   @Override
-  public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+  public @NonNull AgentStream interactStream(
+      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     Objects.requireNonNull(context, "context cannot be null");
 
     Optional<String> inputTextOpt = context.extractLastUserMessageText();
     if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
       return AgentStream.failed(
-              AgentResult.error(
-                      new IllegalStateException("No user message found in context for routing"),
-                      context, 0));
+          AgentResult.error(
+              new IllegalStateException("No user message found in context for routing"),
+              context,
+              0));
     }
 
     Optional<Interactable> selected = classify(inputTextOpt.get());
     if (selected.isEmpty()) {
       return AgentStream.failed(
-              AgentResult.error(
-                      new IllegalStateException("No suitable route found for input"), context, 0));
+          AgentResult.error(
+              new IllegalStateException("No suitable route found for input"), context, 0));
     }
 
     return selected.get().interactStream(context, trace);
   }
 
-
   // ===== Inner Classes =====
 
-  /**
-   * Represents a route to a target.
-   */
+  /** Represents a route to a target. */
   public record Route(@NonNull Interactable target, @NonNull String description) {
     public Route {
       Objects.requireNonNull(target, "target cannot be null");
@@ -281,9 +286,7 @@ public final class RouterAgent implements Interactable {
     }
   }
 
-  /**
-   * Builder for RouterAgent.
-   */
+  /** Builder for RouterAgent. */
   public static final class Builder {
     private final List<Route> routes = new ArrayList<>();
     private @Nullable String name;
@@ -292,8 +295,7 @@ public final class RouterAgent implements Interactable {
     private Interactable fallback;
     private TraceMetadata traceMetadata;
 
-    private Builder() {
-    }
+    private Builder() {}
 
     /**
      * Sets the name for this router.
@@ -333,7 +335,7 @@ public final class RouterAgent implements Interactable {
      *
      * <p>The target can be any Interactable: Agent, RouterAgent, ParallelAgents, etc.
      *
-     * @param target      the target Interactable
+     * @param target the target Interactable
      * @param description keywords/phrases this target handles (e.g., "billing, invoices, payments")
      * @return this builder
      */
@@ -369,8 +371,8 @@ public final class RouterAgent implements Interactable {
     /**
      * Configures this router to produce structured output of the specified type.
      *
-     * <p>Returns a {@link StructuredBuilder} that builds a {@link RouterAgent.Structured}
-     * instead of a regular RouterAgent.
+     * <p>Returns a {@link StructuredBuilder} that builds a {@link RouterAgent.Structured} instead
+     * of a regular RouterAgent.
      *
      * <p>All routed agents are expected to produce output parseable as the specified type.
      *
@@ -389,7 +391,7 @@ public final class RouterAgent implements Interactable {
      * TicketResponse ticket = result.output();
      * }</pre>
      *
-     * @param <T>        the output type
+     * @param <T> the output type
      * @param outputType the class of the structured output
      * @return a structured builder
      */
@@ -439,7 +441,8 @@ public final class RouterAgent implements Interactable {
       return this;
     }
 
-    public @NonNull StructuredBuilder<T> addRoute(@NonNull Interactable target, @NonNull String description) {
+    public @NonNull StructuredBuilder<T> addRoute(
+        @NonNull Interactable target, @NonNull String description) {
       parentBuilder.addRoute(target, description);
       return this;
     }
@@ -474,8 +477,8 @@ public final class RouterAgent implements Interactable {
   /**
    * Type-safe wrapper for router agents with structured output.
    *
-   * <p>Delegates all interaction to the wrapped RouterAgent and parses the routed agent's
-   * output as the specified type.
+   * <p>Delegates all interaction to the wrapped RouterAgent and parses the routed agent's output as
+   * the specified type.
    *
    * @param <T> the output type
    */
@@ -484,7 +487,10 @@ public final class RouterAgent implements Interactable {
     private final Class<T> outputType;
     private final ObjectMapper objectMapper;
 
-    private Structured(@NonNull RouterAgent router, @NonNull Class<T> outputType, @NonNull ObjectMapper objectMapper) {
+    private Structured(
+        @NonNull RouterAgent router,
+        @NonNull Class<T> outputType,
+        @NonNull ObjectMapper objectMapper) {
       this.router = Objects.requireNonNull(router);
       this.outputType = Objects.requireNonNull(outputType);
       this.objectMapper = Objects.requireNonNull(objectMapper);
@@ -496,24 +502,25 @@ public final class RouterAgent implements Interactable {
     }
 
     @Override
-    public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    public @NonNull AgentResult interact(
+        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       return router.interact(context, trace);
     }
 
     @Override
-    public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    public @NonNull AgentStream interactStream(
+        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       return router.interactStream(context, trace);
     }
 
     @Override
-    public @NonNull StructuredAgentResult<T> interactStructured(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    public @NonNull StructuredAgentResult<T> interactStructured(
+        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       AgentResult result = router.interact(context, trace);
       return result.toStructured(outputType, objectMapper);
     }
 
-    /**
-     * Returns the structured output type.
-     */
+    /** Returns the structured output type. */
     public @NonNull Class<T> outputType() {
       return outputType;
     }

@@ -65,9 +65,7 @@ class ResponderExceptionIntegrationTest {
       Responder responder = createResponder(RetryPolicy.disabled());
 
       RuntimeException ex =
-          assertThrows(
-              RuntimeException.class,
-              () -> responder.respond(createPayload()));
+          assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
       // Verify the exception message contains the status code
       assertTrue(ex.getMessage().contains("429"));
@@ -105,9 +103,7 @@ class ResponderExceptionIntegrationTest {
       Responder responder = createResponder(RetryPolicy.disabled());
 
       RuntimeException ex =
-          assertThrows(
-              RuntimeException.class,
-              () -> responder.respond(createPayload()));
+          assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
       assertTrue(ex.getMessage().contains("401"));
     }
@@ -123,9 +119,7 @@ class ResponderExceptionIntegrationTest {
       Responder responder = createResponder(RetryPolicy.disabled());
 
       RuntimeException ex =
-          assertThrows(
-              RuntimeException.class,
-              () -> responder.respond(createPayload()));
+          assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
       assertTrue(ex.getMessage().contains("403"));
     }
@@ -137,9 +131,7 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.defaults());
 
-      assertThrows(
-          RuntimeException.class,
-          () -> responder.respond(createPayload()));
+      assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
       assertEquals(1, mockWebServer.getRequestCount()); // No retry
     }
@@ -160,9 +152,7 @@ class ResponderExceptionIntegrationTest {
       Responder responder = createResponder(RetryPolicy.disabled());
 
       RuntimeException ex =
-          assertThrows(
-              RuntimeException.class,
-              () -> responder.respond(createPayload()));
+          assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
       assertTrue(ex.getMessage().contains("500"));
     }
@@ -178,9 +168,7 @@ class ResponderExceptionIntegrationTest {
       Responder responder = createResponder(RetryPolicy.disabled());
 
       RuntimeException ex =
-          assertThrows(
-              RuntimeException.class,
-              () -> responder.respond(createPayload()));
+          assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
       assertTrue(ex.getMessage().contains("503"));
     }
@@ -217,9 +205,7 @@ class ResponderExceptionIntegrationTest {
       Responder responder = createResponder(RetryPolicy.disabled());
 
       RuntimeException ex =
-          assertThrows(
-              RuntimeException.class,
-              () -> responder.respond(createPayload()));
+          assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
       assertTrue(ex.getMessage().contains("400"));
     }
@@ -235,9 +221,7 @@ class ResponderExceptionIntegrationTest {
       Responder responder = createResponder(RetryPolicy.disabled());
 
       RuntimeException ex =
-          assertThrows(
-              RuntimeException.class,
-              () -> responder.respond(createPayload()));
+          assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
       assertTrue(ex.getMessage().contains("404"));
     }
@@ -253,9 +237,7 @@ class ResponderExceptionIntegrationTest {
       Responder responder = createResponder(RetryPolicy.disabled());
 
       RuntimeException ex =
-          assertThrows(
-              RuntimeException.class,
-              () -> responder.respond(createPayload()));
+          assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
       assertTrue(ex.getMessage().contains("422"));
     }
@@ -267,9 +249,7 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.defaults());
 
-      assertThrows(
-          RuntimeException.class,
-          () -> responder.respond(createPayload()));
+      assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
       assertEquals(1, mockWebServer.getRequestCount()); // No retry
     }
@@ -286,9 +266,7 @@ class ResponderExceptionIntegrationTest {
 
       Responder responder = createResponder(RetryPolicy.disabled());
 
-      assertThrows(
-          RuntimeException.class,
-          () -> responder.respond(createPayload()));
+      assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
     }
 
     @Test
@@ -319,9 +297,7 @@ class ResponderExceptionIntegrationTest {
       Responder responder = createResponder(RetryPolicy.disabled());
 
       RuntimeException ex =
-          assertThrows(
-              RuntimeException.class,
-              () -> responder.respond(createPayload()));
+          assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
       String message = ex.getMessage();
       assertTrue(
@@ -338,9 +314,7 @@ class ResponderExceptionIntegrationTest {
       Responder responder = createResponder(RetryPolicy.disabled());
 
       RuntimeException ex =
-          assertThrows(
-              RuntimeException.class,
-              () -> responder.respond(createPayload()));
+          assertThrows(RuntimeException.class, () -> responder.respond(createPayload()));
 
       // Error message or cause should contain the response body
       assertNotNull(ex.getMessage());

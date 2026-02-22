@@ -1,17 +1,16 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static org.junit.jupiter.api.Assertions.*;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.*;
 
 /**
  * Tests for RouterStream.
@@ -29,7 +28,7 @@ class RouterStreamTest {
     mockWebServer = new MockWebServer();
     mockWebServer.start();
     responder =
-            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -43,10 +42,10 @@ class RouterStreamTest {
 
   private RouterAgent createSimpleRouter() {
     return RouterAgent.builder()
-            .model("test-model")
-            .responder(responder)
-            .addRoute(createTestAgent("Default", "Default agent"), "Default route")
-            .build();
+        .model("test-model")
+        .responder(responder)
+        .addRoute(createTestAgent("Default", "Default agent"), "Default route")
+        .build();
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -55,11 +54,11 @@ class RouterStreamTest {
 
   private Agent createTestAgent(String name, String instructions) {
     return Agent.builder()
-            .name(name)
-            .model("test-model")
-            .instructions(instructions)
-            .responder(responder)
-            .build();
+        .name(name)
+        .model("test-model")
+        .instructions(instructions)
+        .responder(responder)
+        .build();
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -69,36 +68,36 @@ class RouterStreamTest {
   private void enqueueRouteClassificationResponse(String agentName) {
     // Classification response that includes the agent name
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "message",
-                          "id": "msg_001",
-                          "role": "assistant",
-                          "content": [
-                            {
-                              "type": "output_text",
-                              "text": "%s"
-                            }
-                          ]
-                        }
-                      ],
-                      "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
-                    }
-                    """
-                    .formatted(agentName);
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_001",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
+        }
+        """
+            .formatted(agentName);
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -107,36 +106,36 @@ class RouterStreamTest {
 
   private void enqueueSuccessResponse(String text) {
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "message",
-                          "id": "msg_001",
-                          "role": "assistant",
-                          "content": [
-                            {
-                              "type": "output_text",
-                              "text": "%s"
-                            }
-                          ]
-                        }
-                      ],
-                      "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
-                    }
-                    """
-                    .formatted(text);
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_001",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
+        }
+        """
+            .formatted(text);
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   @Nested
@@ -263,22 +262,15 @@ class RouterStreamTest {
       context.addInput(Message.user("Hello"));
 
       RouterStream stream =
-              router
-                      .routeStream(context)
-                      .onRouteSelected(agent -> {
-                      })
-                      .onTextDelta(delta -> {
-                      })
-                      .onComplete(result -> {
-                      })
-                      .onError(error -> {
-                      })
-                      .onTurnStart(turn -> {
-                      })
-                      .onToolExecuted(exec -> {
-                      })
-                      .onHandoff(handoff -> {
-                      });
+          router
+              .routeStream(context)
+              .onRouteSelected(agent -> {})
+              .onTextDelta(delta -> {})
+              .onComplete(result -> {})
+              .onError(error -> {})
+              .onTurnStart(turn -> {})
+              .onToolExecuted(exec -> {})
+              .onHandoff(handoff -> {});
 
       assertNotNull(stream);
     }
@@ -299,8 +291,7 @@ class RouterStreamTest {
       AtomicReference<AgentResult> resultRef = new AtomicReference<>();
 
       AgentResult result =
-              router.routeStream(context).onError(errorRef::set).onComplete(resultRef::set).start();
-
+          router.routeStream(context).onError(errorRef::set).onComplete(resultRef::set).start();
 
       assertTrue(result.isError());
       assertNotNull(errorRef);
@@ -316,9 +307,7 @@ class RouterStreamTest {
 
       AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
-      AgentResult result =
-              router.routeStream(context).onError(errorRef::set).start();
-
+      AgentResult result = router.routeStream(context).onError(errorRef::set).start();
 
       assertTrue(result.isError());
     }
@@ -340,21 +329,19 @@ class RouterStreamTest {
       Agent supportAgent = createTestAgent("Support", "Handle support issues");
 
       RouterAgent router =
-              RouterAgent.builder()
-                      .model("test-model")
-                      .responder(responder)
-                      .addRoute(salesAgent, "Sales inquiries")
-                      .addRoute(supportAgent, "Support issues")
-                      .build();
+          RouterAgent.builder()
+              .model("test-model")
+              .responder(responder)
+              .addRoute(salesAgent, "Sales inquiries")
+              .addRoute(supportAgent, "Support issues")
+              .build();
 
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("I want to buy something"));
 
       AtomicBoolean completed = new AtomicBoolean(false);
 
-      AgentResult result =
-              router.routeStream(context).onComplete(r -> completed.set(true)).start();
-
+      AgentResult result = router.routeStream(context).onComplete(r -> completed.set(true)).start();
 
       // Test that we get some result
       assertNotNull(result);
@@ -371,20 +358,18 @@ class RouterStreamTest {
       Agent salesAgent = createTestAgent("Sales", "Sales");
 
       RouterAgent router =
-              RouterAgent.builder()
-                      .model("test-model")
-                      .responder(responder)
-                      .addRoute(salesAgent, "Sales")
-                      .build();
+          RouterAgent.builder()
+              .model("test-model")
+              .responder(responder)
+              .addRoute(salesAgent, "Sales")
+              .build();
 
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Buy something"));
 
       List<String> deltas = new ArrayList<>();
 
-      AgentResult result =
-              router.routeStream(context).onTextDelta(deltas::add).start();
-
+      AgentResult result = router.routeStream(context).onTextDelta(deltas::add).start();
 
       // Deltas may or may not be captured depending on streaming behavior
       assertNotNull(deltas);

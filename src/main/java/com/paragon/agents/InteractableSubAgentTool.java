@@ -4,12 +4,11 @@ import com.paragon.responses.annotations.FunctionMetadata;
 import com.paragon.responses.spec.FunctionTool;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.Message;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Wraps any Interactable as a FunctionTool, enabling composition of multi-agent patterns.
@@ -35,7 +34,8 @@ import java.util.Objects;
  * @since 1.0
  */
 @FunctionMetadata(name = "", description = "")
-public final class InteractableSubAgentTool extends FunctionTool<InteractableSubAgentTool.InteractableParams> {
+public final class InteractableSubAgentTool
+    extends FunctionTool<InteractableSubAgentTool.InteractableParams> {
 
   private final @NonNull Interactable target;
   private final @NonNull String toolName;
@@ -46,7 +46,7 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
   /**
    * Creates an InteractableSubAgentTool with a description.
    *
-   * @param target      the interactable to invoke as a tool
+   * @param target the interactable to invoke as a tool
    * @param description description of when to use this interactable
    */
   public InteractableSubAgentTool(@NonNull Interactable target, @NonNull String description) {
@@ -61,21 +61,25 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
    */
   public InteractableSubAgentTool(@NonNull Interactable target, @NonNull Config config) {
     super(
+        Map.of(
+            "type",
+            "object",
+            "properties",
             Map.of(
-                    "type", "object",
-                    "properties", Map.of(
-                            "request", Map.of(
-                                    "type", "string",
-                                    "description", "The message/request to send to the interactable")),
-                    "required", List.of("request"),
-                    "additionalProperties", false),
-            true);
+                "request",
+                Map.of(
+                    "type", "string",
+                    "description", "The message/request to send to the interactable")),
+            "required",
+            List.of("request"),
+            "additionalProperties",
+            false),
+        true);
 
     this.target = Objects.requireNonNull(target, "target cannot be null");
     this.toolName = "invoke_" + toSnakeCase(target.name());
-    this.toolDescription = config.description != null
-            ? config.description
-            : "Invoke " + target.name();
+    this.toolDescription =
+        config.description != null ? config.description : "Invoke " + target.name();
     this.shareState = config.shareState;
     this.shareHistory = config.shareHistory;
   }
@@ -102,20 +106,20 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
 
       if (result.isError()) {
         return FunctionToolCallOutput.error(
-                "'" + target.name() + "' failed: " + result.error().getMessage());
+            "'" + target.name() + "' failed: " + result.error().getMessage());
       }
 
       return FunctionToolCallOutput.success(result.output());
     } catch (Exception e) {
-      return FunctionToolCallOutput.error(
-              "'" + target.name() + "' error: " + e.getMessage());
+      return FunctionToolCallOutput.error("'" + target.name() + "' error: " + e.getMessage());
     }
   }
 
   private AgenticContext buildChildContext(String request) {
     return AgenticContext.current()
-            .map(parent -> parent.createChildContext(shareState, shareHistory, request))
-            .orElseGet(() -> {
+        .map(parent -> parent.createChildContext(shareState, shareHistory, request))
+        .orElseGet(
+            () -> {
               AgenticContext isolated = AgenticContext.create();
               isolated.addInput(Message.user(request));
               return isolated;
@@ -175,12 +179,9 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
    *
    * @param request The message/request to send to the interactable
    */
-  public record InteractableParams(@NonNull String request) {
-  }
+  public record InteractableParams(@NonNull String request) {}
 
-  /**
-   * Configuration for interactable sub-agent behavior.
-   */
+  /** Configuration for interactable sub-agent behavior. */
   public static final class Config {
     private final @Nullable String description;
     private final boolean shareState;
@@ -192,25 +193,27 @@ public final class InteractableSubAgentTool extends FunctionTool<InteractableSub
       this.shareHistory = builder.shareHistory;
     }
 
-    /**
-     * Creates a new Config builder.
-     */
+    /** Creates a new Config builder. */
     public static @NonNull Builder builder() {
       return new Builder();
     }
 
     /** Returns the description. */
-    public @Nullable String description() { return description; }
+    public @Nullable String description() {
+      return description;
+    }
 
     /** Returns whether state is shared. */
-    public boolean shareState() { return shareState; }
+    public boolean shareState() {
+      return shareState;
+    }
 
     /** Returns whether history is shared. */
-    public boolean shareHistory() { return shareHistory; }
+    public boolean shareHistory() {
+      return shareHistory;
+    }
 
-    /**
-     * Builder for Config.
-     */
+    /** Builder for Config. */
     public static final class Builder {
       private @Nullable String description;
       private boolean shareState = true;

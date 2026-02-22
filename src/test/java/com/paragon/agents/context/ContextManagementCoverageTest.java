@@ -10,9 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Coverage tests for context management configuration and strategies.
- */
+/** Coverage tests for context management configuration and strategies. */
 @DisplayName("Context Management Coverage Tests")
 class ContextManagementCoverageTest {
 
@@ -29,10 +27,7 @@ class ContextManagementCoverageTest {
       ContextWindowStrategy strategy = createMockStrategy();
 
       ContextManagementConfig config =
-          ContextManagementConfig.builder()
-              .strategy(strategy)
-              .maxTokens(4000)
-              .build();
+          ContextManagementConfig.builder().strategy(strategy).maxTokens(4000).build();
 
       assertEquals(strategy, config.strategy());
       assertEquals(4000, config.maxTokens());
@@ -131,8 +126,7 @@ class ContextManagementCoverageTest {
     @DisplayName("should implement manage method correctly")
     void shouldImplementManageMethodCorrectly() {
       // Pass-through strategy
-      ContextWindowStrategy passThrough =
-          (history, maxTokens, counter) -> new ArrayList<>(history);
+      ContextWindowStrategy passThrough = (history, maxTokens, counter) -> new ArrayList<>(history);
 
       List<ResponseInputItem> input = new ArrayList<>();
       List<ResponseInputItem> result = passThrough.manage(input, 1000, createMockTokenCounter());
@@ -190,8 +184,7 @@ class ContextManagementCoverageTest {
       TokenCounter counter = createMockTokenCounter();
 
       // Strategy that returns original history if under limit
-      ContextWindowStrategy strategy =
-          (history, maxTokens, c) -> new ArrayList<>(history);
+      ContextWindowStrategy strategy = (history, maxTokens, c) -> new ArrayList<>(history);
 
       ContextManagementConfig config =
           ContextManagementConfig.builder()

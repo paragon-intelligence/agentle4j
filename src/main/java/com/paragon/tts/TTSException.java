@@ -1,5 +1,3 @@
 package com.paragon.tts;
 
-public class TTSException extends Exception {
-
-}
+public class TTSException extends Exception {}

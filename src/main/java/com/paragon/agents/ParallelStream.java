@@ -1,12 +1,7 @@
 package com.paragon.agents;
 
 import com.paragon.responses.spec.Message;
-import com.paragon.responses.spec.ResponseInputItem;
-import com.paragon.responses.spec.Text;
 import com.paragon.telemetry.processors.TraceIdGenerator;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +10,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Streaming wrapper for ParallelAgents that provides event callbacks during parallel execution.
@@ -43,12 +40,16 @@ public final class ParallelStream {
   private Consumer<AgentResult> onSynthesisComplete;
   private Consumer<Throwable> onError;
   private BiConsumer<Interactable, Integer> onAgentTurnStart;
+
   ParallelStream(ParallelAgents orchestrator, AgenticContext context, Mode mode) {
     this(orchestrator, context, mode, null);
   }
 
   ParallelStream(
-          ParallelAgents orchestrator, AgenticContext context, Mode mode, @Nullable Interactable synthesizer) {
+      ParallelAgents orchestrator,
+      AgenticContext context,
+      Mode mode,
+      @Nullable Interactable synthesizer) {
     this.orchestrator = Objects.requireNonNull(orchestrator);
     this.context = Objects.requireNonNull(context);
     this.mode = Objects.requireNonNull(mode);
@@ -61,7 +62,8 @@ public final class ParallelStream {
    * @param callback receives the member and text chunk
    * @return this stream
    */
-  public @NonNull ParallelStream onAgentTextDelta(@NonNull BiConsumer<Interactable, String> callback) {
+  public @NonNull ParallelStream onAgentTextDelta(
+      @NonNull BiConsumer<Interactable, String> callback) {
     this.onAgentTextDelta = Objects.requireNonNull(callback);
     return this;
   }
@@ -72,7 +74,8 @@ public final class ParallelStream {
    * @param callback receives the member and its result
    * @return this stream
    */
-  public @NonNull ParallelStream onAgentComplete(@NonNull BiConsumer<Interactable, AgentResult> callback) {
+  public @NonNull ParallelStream onAgentComplete(
+      @NonNull BiConsumer<Interactable, AgentResult> callback) {
     this.onAgentComplete = Objects.requireNonNull(callback);
     return this;
   }
@@ -127,7 +130,8 @@ public final class ParallelStream {
    * @param callback receives the member and turn number
    * @return this stream
    */
-  public @NonNull ParallelStream onAgentTurnStart(@NonNull BiConsumer<Interactable, Integer> callback) {
+  public @NonNull ParallelStream onAgentTurnStart(
+      @NonNull BiConsumer<Interactable, Integer> callback) {
     this.onAgentTurnStart = Objects.requireNonNull(callback);
     return this;
   }
@@ -137,7 +141,8 @@ public final class ParallelStream {
    *
    * <p>On virtual threads, blocking is efficient and does not consume platform threads.
    *
-   * @return results based on mode: List&lt;AgentResult&gt; for ALL, AgentResult for FIRST/SYNTHESIZE
+   * @return results based on mode: List&lt;AgentResult&gt; for ALL, AgentResult for
+   *     FIRST/SYNTHESIZE
    */
   public @NonNull Object start() {
     try {
@@ -165,27 +170,29 @@ public final class ParallelStream {
     List<Thread> threads = new ArrayList<>();
 
     for (Interactable member : members) {
-      Thread thread = Thread.startVirtualThread(() -> {
-        AgenticContext ctx = context.copy();
-        ctx.withTraceContext(parentTraceId, parentSpanId);
+      Thread thread =
+          Thread.startVirtualThread(
+              () -> {
+                AgenticContext ctx = context.copy();
+                ctx.withTraceContext(parentTraceId, parentSpanId);
 
-        AgentStream stream = member.interactStream(ctx);
+                AgentStream stream = member.interactStream(ctx);
 
-        if (onAgentTextDelta != null) {
-          stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
-        }
+                if (onAgentTextDelta != null) {
+                  stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
+                }
 
-        if (onAgentTurnStart != null) {
-          stream.onTurnStart(turn -> onAgentTurnStart.accept(member, turn));
-        }
+                if (onAgentTurnStart != null) {
+                  stream.onTurnStart(turn -> onAgentTurnStart.accept(member, turn));
+                }
 
-        AgentResult result = stream.start();
-        results.add(result);
+                AgentResult result = stream.start();
+                results.add(result);
 
-        if (onAgentComplete != null) {
-          onAgentComplete.accept(member, result);
-        }
-      });
+                if (onAgentComplete != null) {
+                  onAgentComplete.accept(member, result);
+                }
+              });
       threads.add(thread);
     }
 
@@ -215,28 +222,30 @@ public final class ParallelStream {
     List<Thread> threads = new ArrayList<>();
 
     for (Interactable member : members) {
-      Thread thread = Thread.startVirtualThread(() -> {
-        AgenticContext ctx = context.copy();
-        AgentStream stream = member.interactStream(ctx);
+      Thread thread =
+          Thread.startVirtualThread(
+              () -> {
+                AgenticContext ctx = context.copy();
+                AgentStream stream = member.interactStream(ctx);
 
-        if (onAgentTextDelta != null) {
-          stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
-        }
+                if (onAgentTextDelta != null) {
+                  stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
+                }
 
-        AgentResult result = stream.start();
+                AgentResult result = stream.start();
 
-        if (onAgentComplete != null) {
-          onAgentComplete.accept(member, result);
-        }
+                if (onAgentComplete != null) {
+                  onAgentComplete.accept(member, result);
+                }
 
-        // Only the first to complete wins
-        if (firstCompleted.compareAndSet(false, true)) {
-          firstResult.set(result);
-          if (onFirstComplete != null) {
-            onFirstComplete.accept(result);
-          }
-        }
-      });
+                // Only the first to complete wins
+                if (firstCompleted.compareAndSet(false, true)) {
+                  firstResult.set(result);
+                  if (onFirstComplete != null) {
+                    onFirstComplete.accept(result);
+                  }
+                }
+              });
       threads.add(thread);
     }
 
@@ -268,23 +277,25 @@ public final class ParallelStream {
     List<Thread> threads = new ArrayList<>();
 
     for (Interactable member : members) {
-      Thread thread = Thread.startVirtualThread(() -> {
-        AgenticContext ctx = context.copy();
-        ctx.withTraceContext(parentTraceId, parentSpanId);
+      Thread thread =
+          Thread.startVirtualThread(
+              () -> {
+                AgenticContext ctx = context.copy();
+                ctx.withTraceContext(parentTraceId, parentSpanId);
 
-        AgentStream stream = member.interactStream(ctx);
+                AgentStream stream = member.interactStream(ctx);
 
-        if (onAgentTextDelta != null) {
-          stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
-        }
+                if (onAgentTextDelta != null) {
+                  stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
+                }
 
-        AgentResult result = stream.start();
-        results.add(result);
+                AgentResult result = stream.start();
+                results.add(result);
 
-        if (onAgentComplete != null) {
-          onAgentComplete.accept(member, result);
-        }
-      });
+                if (onAgentComplete != null) {
+                  onAgentComplete.accept(member, result);
+                }
+              });
       threads.add(thread);
     }
 
@@ -309,14 +320,11 @@ public final class ParallelStream {
       AgentResult result = results.get(i);
       synthesisPrompt.append("--- ").append(member.name()).append(" ---\n");
       if (result.isError()) {
-        synthesisPrompt
-                .append("[ERROR: ")
-                .append(result.error().getMessage())
-                .append("]\n");
+        synthesisPrompt.append("[ERROR: ").append(result.error().getMessage()).append("]\n");
       } else {
         synthesisPrompt
-                .append(result.output() != null ? result.output() : "[No output]")
-                .append("\n");
+            .append(result.output() != null ? result.output() : "[No output]")
+            .append("\n");
       }
       synthesisPrompt.append("\n");
     }
@@ -341,21 +349,13 @@ public final class ParallelStream {
     return synthResult;
   }
 
-  /**
-   * Execution mode for the parallel stream.
-   */
+  /** Execution mode for the parallel stream. */
   enum Mode {
-    /**
-     * Wait for all agents to complete.
-     */
+    /** Wait for all agents to complete. */
     ALL,
-    /**
-     * Return when first agent completes.
-     */
+    /** Return when first agent completes. */
     FIRST,
-    /**
-     * Run all, then synthesize.
-     */
+    /** Run all, then synthesize. */
     SYNTHESIZE
   }
 }

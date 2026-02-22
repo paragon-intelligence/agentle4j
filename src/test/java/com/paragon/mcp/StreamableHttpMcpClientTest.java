@@ -53,8 +53,7 @@ class StreamableHttpMcpClientTest {
     // Enqueue initialized notification response (202 Accepted)
     server.enqueue(new MockResponse().setResponseCode(202));
 
-    var client =
-        StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
+    var client = StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
 
     client.connect();
 
@@ -109,8 +108,7 @@ class StreamableHttpMcpClientTest {
                 }
                 """));
 
-    var client =
-        StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
+    var client = StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
 
     client.connect();
     var tools = client.listTools();
@@ -150,8 +148,7 @@ class StreamableHttpMcpClientTest {
                 }
                 """));
 
-    var client =
-        StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
+    var client = StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
 
     client.connect();
     var result = client.callTool("get_weather", Map.of("location", "NYC"));
@@ -204,12 +201,12 @@ class StreamableHttpMcpClientTest {
     server.enqueue(
         new MockResponse()
             .addHeader("Content-Type", "application/json")
-            .setBody("""
+            .setBody(
+                """
                 {"jsonrpc":"2.0","id":2,"result":{"tools":[]}}
                 """));
 
-    var client =
-        StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
+    var client = StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
 
     client.connect();
     assertEquals("session-12345", client.getSessionId());
@@ -235,8 +232,7 @@ class StreamableHttpMcpClientTest {
                 {"jsonrpc":"2.0","id":1,"error":{"code":-32600,"message":"Invalid Request"}}
                 """));
 
-    var client =
-        StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
+    var client = StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
 
     var exception = assertThrows(McpException.class, client::connect);
     assertTrue(exception.getMessage().contains("Invalid Request"));
@@ -249,8 +245,7 @@ class StreamableHttpMcpClientTest {
   void shouldHandleHttpError() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(500).setBody("Internal Server Error"));
 
-    var client =
-        StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
+    var client = StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
 
     var exception = assertThrows(McpException.class, client::connect);
     assertTrue(exception.getMessage().contains("500"));
@@ -260,8 +255,7 @@ class StreamableHttpMcpClientTest {
 
   @Test
   void shouldRejectOperationsBeforeConnect() {
-    var client =
-        StreamableHttpMcpClient.builder().serverUrl("http://localhost:9999/mcp").build();
+    var client = StreamableHttpMcpClient.builder().serverUrl("http://localhost:9999/mcp").build();
 
     var exception = assertThrows(McpException.class, client::listTools);
     assertTrue(exception.getMessage().contains("not initialized"));
@@ -290,8 +284,7 @@ class StreamableHttpMcpClientTest {
                 {"jsonrpc":"2.0","id":2,"result":{"tools":[{"name":"tool1","inputSchema":{"type":"object"}},{"name":"tool2","inputSchema":{"type":"object"}}]}}
                 """));
 
-    var client =
-        StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
+    var client = StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
 
     client.connect();
     var tools = client.asTools();
@@ -324,8 +317,7 @@ class StreamableHttpMcpClientTest {
                 {"jsonrpc":"2.0","id":2,"result":{"tools":[{"name":"allowed","inputSchema":{"type":"object"}},{"name":"not_allowed","inputSchema":{"type":"object"}}]}}
                 """));
 
-    var client =
-        StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
+    var client = StreamableHttpMcpClient.builder().serverUrl(server.url("/mcp").toString()).build();
 
     client.connect();
     var tools = client.asTools(java.util.Set.of("allowed"));

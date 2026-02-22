@@ -3,14 +3,12 @@ package com.paragon.agents;
 import com.paragon.prompts.Prompt;
 import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.Message;
-import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import com.paragon.telemetry.processors.TraceIdGenerator;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.util.*;
 import java.util.concurrent.StructuredTaskScope;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Implements the Network pattern: decentralized peer-to-peer agent communication.
@@ -76,16 +74,12 @@ public final class AgentNetwork implements Interactable {
     }
   }
 
-  /**
-   * Creates a new AgentNetwork builder.
-   */
+  /** Creates a new AgentNetwork builder. */
   public static @NonNull Builder builder() {
     return new Builder();
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public @NonNull String name() {
     return name;
@@ -93,9 +87,8 @@ public final class AgentNetwork implements Interactable {
 
   @Override
   public @NonNull InteractableBlueprint toBlueprint() {
-    List<InteractableBlueprint> peerBlueprints = peers.stream()
-        .map(Interactable::toBlueprint)
-        .toList();
+    List<InteractableBlueprint> peerBlueprints =
+        peers.stream().map(Interactable::toBlueprint).toList();
     InteractableBlueprint synthBlueprint = synthesizer != null ? synthesizer.toBlueprint() : null;
     return new InteractableBlueprint.AgentNetworkBlueprint(
         name, peerBlueprints, maxRounds, synthBlueprint, traceMetadata);
@@ -124,8 +117,7 @@ public final class AgentNetwork implements Interactable {
    *
    * @return the synthesizer, or null if not set
    */
-  @Nullable
-  Interactable getSynthesizer() {
+  @Nullable Interactable getSynthesizer() {
     return synthesizer;
   }
 
@@ -205,8 +197,7 @@ public final class AgentNetwork implements Interactable {
     String originalTopic = context.extractLastUserMessageText("[No topic provided]");
 
     // Run discussion rounds
-    List<Contribution> contributions =
-            runDiscussionRounds(context, parentTraceId, parentSpanId);
+    List<Contribution> contributions = runDiscussionRounds(context, parentTraceId, parentSpanId);
 
     // Synthesize if configured
     if (synthesizer != null) {
@@ -234,7 +225,8 @@ public final class AgentNetwork implements Interactable {
     String parentTraceId = TraceIdGenerator.generateTraceId();
     String parentSpanId = TraceIdGenerator.generateSpanId();
 
-    try (var scope = StructuredTaskScope.open(StructuredTaskScope.Joiner.awaitAllSuccessfulOrThrow())) {
+    try (var scope =
+        StructuredTaskScope.open(StructuredTaskScope.Joiner.awaitAllSuccessfulOrThrow())) {
       List<StructuredTaskScope.Subtask<Contribution>> subtasks = new ArrayList<>();
 
       for (Interactable peer : peers) {
@@ -243,11 +235,11 @@ public final class AgentNetwork implements Interactable {
         ctx.withTraceContext(parentTraceId, parentSpanId);
 
         subtasks.add(
-                scope.fork(
-                        () -> {
-                          AgentResult result = peer.interact(ctx);
-                          return new Contribution(peer, 1, result.output(), result.isError());
-                        }));
+            scope.fork(
+                () -> {
+                  AgentResult result = peer.interact(ctx);
+                  return new Contribution(peer, 1, result.output(), result.isError());
+                }));
       }
 
       scope.join();
@@ -348,7 +340,7 @@ public final class AgentNetwork implements Interactable {
   }
 
   private List<Contribution> runDiscussionRounds(
-          AgenticContext sharedContext, String parentTraceId, String parentSpanId) {
+      AgenticContext sharedContext, String parentTraceId, String parentSpanId) {
 
     List<Contribution> allContributions = Collections.synchronizedList(new ArrayList<>());
 
@@ -367,7 +359,7 @@ public final class AgentNetwork implements Interactable {
         // Add contribution to shared context for next peers
         if (!isError && output != null) {
           Message contribution =
-                  Message.assistant(Text.valueOf("[" + peer.name() + "]: " + output));
+              Message.assistant(Text.valueOf("[" + peer.name() + "]: " + output));
           sharedContext.addInput(contribution);
         }
 
@@ -378,23 +370,24 @@ public final class AgentNetwork implements Interactable {
     return new ArrayList<>(allContributions);
   }
 
-  private AgenticContext buildPeerContext(AgenticContext sharedContext, Interactable peer, int round) {
+  private AgenticContext buildPeerContext(
+      AgenticContext sharedContext, Interactable peer, int round) {
     AgenticContext peerContext = sharedContext.copy();
 
     // Add role reminder for this peer
     String roleReminder =
-            String.format(
-                    "You are %s participating in round %d of a discussion. "
-                            + "Consider the previous contributions and add your unique perspective. "
-                            + "Be constructive and build on others' ideas.",
-                    peer.name(), round);
+        String.format(
+            "You are %s participating in round %d of a discussion. "
+                + "Consider the previous contributions and add your unique perspective. "
+                + "Be constructive and build on others' ideas.",
+            peer.name(), round);
 
     peerContext.addInput(Message.developer(Text.valueOf(roleReminder)));
     return peerContext;
   }
 
   private AgentResult synthesizeContributions(
-          List<Contribution> contributions, String originalTopic) {
+      List<Contribution> contributions, String originalTopic) {
 
     StringBuilder synthPrompt = new StringBuilder();
     synthPrompt.append("Original discussion topic: ").append(originalTopic).append("\n\n");
@@ -438,7 +431,8 @@ public final class AgentNetwork implements Interactable {
    * interactions.
    */
   @Override
-  public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+  public @NonNull AgentResult interact(
+      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     // AgentNetwork doesn't directly use trace metadata; peers handle their own traces
     return toAgentResult(discuss(context));
   }
@@ -467,7 +461,8 @@ public final class AgentNetwork implements Interactable {
    * metadata is propagated through peer interactions.
    */
   @Override
-  public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+  public @NonNull AgentStream interactStream(
+      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     // AgentNetwork doesn't directly use trace metadata; peers handle their own traces
     if (synthesizer == null) {
       NetworkResult result = discuss(context);
@@ -477,7 +472,6 @@ public final class AgentNetwork implements Interactable {
     String synthesisPrompt = buildSynthesisPrompt(result);
     return synthesizer.interactStream(synthesisPrompt);
   }
-
 
   private AgentResult toAgentResult(NetworkResult networkResult) {
     String output;
@@ -507,11 +501,9 @@ public final class AgentNetwork implements Interactable {
     return sb.toString();
   }
 
-  /**
-   * Represents a contribution from a peer.
-   */
+  /** Represents a contribution from a peer. */
   public record Contribution(
-          @NonNull Interactable peer, int round, @Nullable String output, boolean isError) {
+      @NonNull Interactable peer, int round, @Nullable String output, boolean isError) {
     public Contribution {
       Objects.requireNonNull(peer, "peer cannot be null");
       if (round < 1) {
@@ -520,41 +512,31 @@ public final class AgentNetwork implements Interactable {
     }
   }
 
-  /**
-   * Result of a network discussion.
-   */
+  /** Result of a network discussion. */
   public record NetworkResult(
-          @NonNull List<Contribution> contributions, @Nullable String synthesis) {
+      @NonNull List<Contribution> contributions, @Nullable String synthesis) {
     public NetworkResult {
       Objects.requireNonNull(contributions, "contributions cannot be null");
     }
 
-    /**
-     * Returns all contributions from a specific peer.
-     */
+    /** Returns all contributions from a specific peer. */
     public @NonNull List<Contribution> contributionsFrom(@NonNull Interactable peer) {
       Objects.requireNonNull(peer, "peer cannot be null");
       return contributions.stream().filter(c -> c.peer().equals(peer)).toList();
     }
 
-    /**
-     * Returns all contributions from a specific round.
-     */
+    /** Returns all contributions from a specific round. */
     public @NonNull List<Contribution> contributionsFromRound(int round) {
       return contributions.stream().filter(c -> c.round() == round).toList();
     }
 
-    /**
-     * Returns the final contribution (last in sequence).
-     */
+    /** Returns the final contribution (last in sequence). */
     public @Nullable Contribution lastContribution() {
       return contributions.isEmpty() ? null : contributions.get(contributions.size() - 1);
     }
   }
 
-  /**
-   * Builder for AgentNetwork.
-   */
+  /** Builder for AgentNetwork. */
   public static final class Builder {
     private final List<Interactable> peers = new ArrayList<>();
     private @Nullable String name;
@@ -562,8 +544,7 @@ public final class AgentNetwork implements Interactable {
     private @Nullable Interactable synthesizer;
     private @Nullable TraceMetadata traceMetadata;
 
-    private Builder() {
-    }
+    private Builder() {}
 
     /**
      * Sets the name for this network.

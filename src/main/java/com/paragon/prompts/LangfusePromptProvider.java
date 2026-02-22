@@ -249,8 +249,7 @@ public final class LangfusePromptProvider implements PromptProvider {
     try {
       // Use the list API with name filter to check existence
       LangfusePromptListResponse response = fetchPromptListWithRetry(promptId, 1, 1, 0);
-      return response.getData().stream()
-          .anyMatch(meta -> promptId.equals(meta.getName()));
+      return response.getData().stream().anyMatch(meta -> promptId.equals(meta.getName()));
     } catch (PromptProviderException e) {
       if (e.getMessage() != null && e.getMessage().contains("not found")) {
         return false;
@@ -271,7 +270,7 @@ public final class LangfusePromptProvider implements PromptProvider {
     try {
       while (true) {
         LangfusePromptListResponse response = fetchPromptListWithRetry(null, page, limit, 0);
-        
+
         for (LangfusePromptListResponse.PromptMeta meta : response.getData()) {
           if (meta.getName() != null) {
             promptIds.add(meta.getName());
@@ -314,11 +313,11 @@ public final class LangfusePromptProvider implements PromptProvider {
     }
   }
 
-  private LangfusePromptListResponse fetchPromptList(
-      @Nullable String name, int page, int limit) {
+  private LangfusePromptListResponse fetchPromptList(@Nullable String name, int page, int limit) {
 
     HttpUrl.Builder urlBuilder =
-        HttpUrl.parse(baseUrl + "/api/public/v2/prompts").newBuilder()
+        HttpUrl.parse(baseUrl + "/api/public/v2/prompts")
+            .newBuilder()
             .addQueryParameter("page", String.valueOf(page))
             .addQueryParameter("limit", String.valueOf(limit));
 

@@ -1,6 +1,4 @@
-/**
- * AI Generated/Updated file to help with the development of the Agentle library.
- */
+/** AI Generated/Updated file to help with the development of the Agentle library. */
 package com.paragon;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,11 +12,10 @@ import com.paragon.responses.json.JsonSchemaProducer;
 import com.paragon.responses.spec.*;
 import com.paragon.telemetry.langfuse.LangfuseProcessor;
 import io.github.cdimascio.dotenv.Dotenv;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.util.List;
 import java.util.Scanner;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Agentle Usage Examples
@@ -140,18 +137,18 @@ public class Main {
 
     var langfuseProcessor = LangfuseProcessor.fromEnv();
     Responder responder =
-            Responder.builder()
-                    .openRouter()
-                    .apiKey(apiKey)
-                    .addTelemetryProcessor(langfuseProcessor)
-                    .build();
+        Responder.builder()
+            .openRouter()
+            .apiKey(apiKey)
+            .addTelemetryProcessor(langfuseProcessor)
+            .build();
 
     var payload =
-            CreateResponsePayload.builder()
-                    .model(DEFAULT_MODEL)
-                    .addDeveloperMessage("You are a helpful assistant.")
-                    .addUserMessage("Hello, how are you?")
-                    .build();
+        CreateResponsePayload.builder()
+            .model(DEFAULT_MODEL)
+            .addDeveloperMessage("You are a helpful assistant.")
+            .addUserMessage("Hello, how are you?")
+            .build();
 
     Response response = responder.respond(payload);
     System.out.println("🤖 Response: " + response.outputText());
@@ -165,13 +162,13 @@ public class Main {
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
     CreateResponsePayload payload =
-            CreateResponsePayload.builder()
-                    .model(DEFAULT_MODEL)
-                    .addDeveloperMessage(
-                            "You are a helpful assistant. Always respond with structured data.")
-                    .addUserMessage("Tell me about the weather in Paris.")
-                    .withStructuredOutput(WeatherInfo.class)
-                    .build();
+        CreateResponsePayload.builder()
+            .model(DEFAULT_MODEL)
+            .addDeveloperMessage(
+                "You are a helpful assistant. Always respond with structured data.")
+            .addUserMessage("Tell me about the weather in Paris.")
+            .withStructuredOutput(WeatherInfo.class)
+            .build();
 
     Response response = responder.respond(payload);
     System.out.println("🌤️ Structured Response: " + response.outputText());
@@ -193,12 +190,12 @@ public class Main {
     toolStore.add(weatherTool);
 
     CreateResponsePayload payload =
-            CreateResponsePayload.builder()
-                    .model(DEFAULT_MODEL)
-                    .addDeveloperMessage("You are a helpful weather assistant.")
-                    .addUserMessage("What's the weather like in Tokyo? Use celsius.")
-                    .addTool(weatherTool)
-                    .build();
+        CreateResponsePayload.builder()
+            .model(DEFAULT_MODEL)
+            .addDeveloperMessage("You are a helpful weather assistant.")
+            .addUserMessage("What's the weather like in Tokyo? Use celsius.")
+            .addTool(weatherTool)
+            .build();
 
     Response response = responder.respond(payload);
 
@@ -217,26 +214,26 @@ public class Main {
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
     List<Message> messages =
-            List.of(
-                    Message.developer("You are a creative storyteller."),
-                    Message.user("Write a one-sentence story about a robot."));
+        List.of(
+            Message.developer("You are a creative storyteller."),
+            Message.user("Write a one-sentence story about a robot."));
 
     // Low temperature = deterministic
     CreateResponsePayload focusedPayload =
-            CreateResponsePayload.builder()
-                    .model(DEFAULT_MODEL)
-                    .addMessages(messages)
-                    .temperature(0.2)
-                    .build();
+        CreateResponsePayload.builder()
+            .model(DEFAULT_MODEL)
+            .addMessages(messages)
+            .temperature(0.2)
+            .build();
 
     // High temperature = creative
     CreateResponsePayload creativePayload =
-            CreateResponsePayload.builder()
-                    .model(DEFAULT_MODEL)
-                    .addMessages(messages)
-                    .temperature(1.5)
-                    .topP(0.9)
-                    .build();
+        CreateResponsePayload.builder()
+            .model(DEFAULT_MODEL)
+            .addMessages(messages)
+            .temperature(1.5)
+            .topP(0.9)
+            .build();
 
     System.out.println("🎯 Low Temperature (0.2) - Focused:");
     System.out.println("   " + responder.respond(focusedPayload).outputText());
@@ -254,11 +251,11 @@ public class Main {
 
     // Turn 1
     CreateResponsePayload turn1 =
-            CreateResponsePayload.builder()
-                    .model(DEFAULT_MODEL)
-                    .addDeveloperMessage("You are a helpful math tutor.")
-                    .addUserMessage("What is the Pythagorean theorem?")
-                    .build();
+        CreateResponsePayload.builder()
+            .model(DEFAULT_MODEL)
+            .addDeveloperMessage("You are a helpful math tutor.")
+            .addUserMessage("What is the Pythagorean theorem?")
+            .build();
 
     Response response1 = responder.respond(turn1);
     String reply1 = response1.outputText();
@@ -266,13 +263,13 @@ public class Main {
 
     // Turn 2 (includes context)
     CreateResponsePayload turn2 =
-            CreateResponsePayload.builder()
-                    .model(DEFAULT_MODEL)
-                    .addDeveloperMessage("You are a helpful math tutor.")
-                    .addUserMessage("What is the Pythagorean theorem?")
-                    .addAssistantMessage(reply1)
-                    .addUserMessage("Can you give me an example?")
-                    .build();
+        CreateResponsePayload.builder()
+            .model(DEFAULT_MODEL)
+            .addDeveloperMessage("You are a helpful math tutor.")
+            .addUserMessage("What is the Pythagorean theorem?")
+            .addAssistantMessage(reply1)
+            .addUserMessage("Can you give me an example?")
+            .build();
 
     Response response2 = responder.respond(turn2);
     System.out.println("\n📚 Turn 2: " + response2.outputText());
@@ -286,21 +283,21 @@ public class Main {
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
     Image imageContent =
-            Image.fromUrl(
-                    "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg");
+        Image.fromUrl(
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg");
 
     UserMessage userMessage =
-            Message.builder()
-                    .addText("What animal is in this image? Describe it briefly.")
-                    .addContent(imageContent)
-                    .asUser();
+        Message.builder()
+            .addText("What animal is in this image? Describe it briefly.")
+            .addContent(imageContent)
+            .asUser();
 
     var payload =
-            CreateResponsePayload.builder()
-                    .model(DEFAULT_MODEL)
-                    .addDeveloperMessage("You are a helpful image analyst.")
-                    .addMessage(userMessage)
-                    .build();
+        CreateResponsePayload.builder()
+            .model(DEFAULT_MODEL)
+            .addDeveloperMessage("You are a helpful image analyst.")
+            .addMessage(userMessage)
+            .build();
 
     var response = responder.respond(payload);
     System.out.println("🖼️ Vision Response: " + response.outputText());
@@ -319,31 +316,31 @@ public class Main {
     FunctionTool<GetWeatherParams> weatherTool = toolFactory.create(GetWeatherTool.class);
 
     List<Message> messages =
-            List.of(
-                    Message.developer("You are a weather assistant."),
-                    Message.user("What's the weather in Tokyo?"));
+        List.of(
+            Message.developer("You are a weather assistant."),
+            Message.user("What's the weather in Tokyo?"));
 
     // REQUIRED: Force tool call
     CreateResponsePayload requiredPayload =
-            CreateResponsePayload.builder()
-                    .model(DEFAULT_MODEL)
-                    .addMessages(messages)
-                    .addTool(weatherTool)
-                    .toolChoice(ToolChoiceMode.REQUIRED)
-                    .build();
+        CreateResponsePayload.builder()
+            .model(DEFAULT_MODEL)
+            .addMessages(messages)
+            .addTool(weatherTool)
+            .toolChoice(ToolChoiceMode.REQUIRED)
+            .build();
 
     Response required = responder.respond(requiredPayload);
     System.out.println(
-            "🔧 ToolChoice=REQUIRED - Tool called: " + !required.functionToolCalls().isEmpty());
+        "🔧 ToolChoice=REQUIRED - Tool called: " + !required.functionToolCalls().isEmpty());
 
     // NONE: Prevent tool calling
     CreateResponsePayload nonePayload =
-            CreateResponsePayload.builder()
-                    .model(DEFAULT_MODEL)
-                    .addMessages(messages)
-                    .addTool(weatherTool)
-                    .toolChoice(ToolChoiceMode.NONE)
-                    .build();
+        CreateResponsePayload.builder()
+            .model(DEFAULT_MODEL)
+            .addMessages(messages)
+            .addTool(weatherTool)
+            .toolChoice(ToolChoiceMode.NONE)
+            .build();
 
     Response none = responder.respond(nonePayload);
     System.out.println("🚫 ToolChoice=NONE - Response: " + none.outputText());
@@ -357,12 +354,12 @@ public class Main {
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
     CreateResponsePayload shortPayload =
-            CreateResponsePayload.builder()
-                    .model(DEFAULT_MODEL)
-                    .addDeveloperMessage("You are a helpful assistant.")
-                    .addUserMessage("Explain quantum computing.")
-                    .maxOutputTokens(50)
-                    .build();
+        CreateResponsePayload.builder()
+            .model(DEFAULT_MODEL)
+            .addDeveloperMessage("You are a helpful assistant.")
+            .addUserMessage("Explain quantum computing.")
+            .maxOutputTokens(50)
+            .build();
 
     Response response = responder.respond(shortPayload);
     System.out.println("📏 Response (max 50 tokens): " + response.outputText());
@@ -376,24 +373,24 @@ public class Main {
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
     var payload =
-            CreateResponsePayload.builder()
-                    .model(DEFAULT_MODEL)
-                    .addDeveloperMessage("You are a helpful assistant.")
-                    .addUserMessage("Tell me a short poem about the ocean.")
-                    .streaming()
-                    .build();
+        CreateResponsePayload.builder()
+            .model(DEFAULT_MODEL)
+            .addDeveloperMessage("You are a helpful assistant.")
+            .addUserMessage("Tell me a short poem about the ocean.")
+            .streaming()
+            .build();
 
     System.out.println("🎬 Streaming:");
     responder
-            .respond(payload)
-            .onTextDelta(
-                    delta -> {
-                      System.out.print(delta);
-                      System.out.flush();
-                    })
-            .onComplete(response -> System.out.println("\n✅ Stream completed!"))
-            .onError(error -> System.out.println("\n❌ Error: " + error.getMessage()))
-            .start();
+        .respond(payload)
+        .onTextDelta(
+            delta -> {
+              System.out.print(delta);
+              System.out.flush();
+            })
+        .onComplete(response -> System.out.println("\n✅ Stream completed!"))
+        .onError(error -> System.out.println("\n❌ Error: " + error.getMessage()))
+        .start();
 
     try {
       Thread.sleep(5000);
@@ -410,35 +407,35 @@ public class Main {
     Responder responder = Responder.builder().openRouter().apiKey(apiKey).build();
 
     var payload =
-            CreateResponsePayload.builder()
-                    .model(DEFAULT_MODEL)
-                    .addDeveloperMessage("You are a helpful assistant that generates person data.")
-                    .addUserMessage("Create a fictional software engineer from Brazil named João.")
-                    .withStructuredOutput(StreamedPerson.class)
-                    .streaming()
-                    .build();
+        CreateResponsePayload.builder()
+            .model(DEFAULT_MODEL)
+            .addDeveloperMessage("You are a helpful assistant that generates person data.")
+            .addUserMessage("Create a fictional software engineer from Brazil named João.")
+            .withStructuredOutput(StreamedPerson.class)
+            .streaming()
+            .build();
 
     System.out.println("🎬 Streaming JSON:");
     responder
-            .respond(payload)
-            .onTextDelta(
-                    delta -> {
-                      System.out.print(delta);
-                      System.out.flush();
-                    })
-            .onParsedComplete(
-                    parsed -> {
-                      StreamedPerson person = parsed.outputParsed();
-                      System.out.println(
-                              "\n✅ Parsed: "
-                                      + person.name()
-                                      + ", "
-                                      + person.age()
-                                      + " yo, "
-                                      + person.occupation());
-                    })
-            .onError(error -> System.out.println("\n❌ Error: " + error.getMessage()))
-            .start();
+        .respond(payload)
+        .onTextDelta(
+            delta -> {
+              System.out.print(delta);
+              System.out.flush();
+            })
+        .onParsedComplete(
+            parsed -> {
+              StreamedPerson person = parsed.outputParsed();
+              System.out.println(
+                  "\n✅ Parsed: "
+                      + person.name()
+                      + ", "
+                      + person.age()
+                      + " yo, "
+                      + person.occupation());
+            })
+        .onError(error -> System.out.println("\n❌ Error: " + error.getMessage()))
+        .start();
 
     try {
       Thread.sleep(10000);
@@ -463,12 +460,12 @@ public class Main {
 
     // Create a simple agent
     Agent agent =
-            Agent.builder()
-                    .name("Assistant")
-                    .instructions("You are a helpful AI assistant. Be concise and friendly.")
-                    .model(DEFAULT_MODEL)
-                    .responder(responder)
-                    .build();
+        Agent.builder()
+            .name("Assistant")
+            .instructions("You are a helpful AI assistant. Be concise and friendly.")
+            .model(DEFAULT_MODEL)
+            .responder(responder)
+            .build();
 
     // ⚠️ KEY: Create ONE context and REUSE it for multi-turn conversation
     AgenticContext context = AgenticContext.create();
@@ -496,28 +493,28 @@ public class Main {
 
     // Create an agent with input and output guardrails
     Agent agent =
-            Agent.builder()
-                    .name("SecureAssistant")
-                    .instructions("You are a helpful assistant.")
-                    .model(DEFAULT_MODEL)
-                    .responder(responder)
-                    // Input guardrail: block requests containing "password"
-                    .addInputGuardrail(
-                            (input, ctx) -> {
-                              if (input.toLowerCase().contains("password")) {
-                                return GuardrailResult.failed("Cannot discuss passwords for security reasons");
-                              }
-                              return GuardrailResult.passed();
-                            })
-                    // Output guardrail: ensure responses are not too long
-                    .addOutputGuardrail(
-                            (output, ctx) -> {
-                              if (output.length() > 500) {
-                                return GuardrailResult.failed("Response too long");
-                              }
-                              return GuardrailResult.passed();
-                            })
-                    .build();
+        Agent.builder()
+            .name("SecureAssistant")
+            .instructions("You are a helpful assistant.")
+            .model(DEFAULT_MODEL)
+            .responder(responder)
+            // Input guardrail: block requests containing "password"
+            .addInputGuardrail(
+                (input, ctx) -> {
+                  if (input.toLowerCase().contains("password")) {
+                    return GuardrailResult.failed("Cannot discuss passwords for security reasons");
+                  }
+                  return GuardrailResult.passed();
+                })
+            // Output guardrail: ensure responses are not too long
+            .addOutputGuardrail(
+                (output, ctx) -> {
+                  if (output.length() > 500) {
+                    return GuardrailResult.failed("Response too long");
+                  }
+                  return GuardrailResult.passed();
+                })
+            .build();
 
     // Test 1: Valid input
     System.out.println("📤 Sending: 'Tell me a joke.'");
@@ -545,32 +542,32 @@ public class Main {
 
     // Create a specialist agent
     Agent billingAgent =
-            Agent.builder()
-                    .name("BillingSpecialist")
-                    .instructions("You are a billing specialist. Help with invoices and payments.")
-                    .model(DEFAULT_MODEL)
-                    .responder(responder)
-                    .build();
+        Agent.builder()
+            .name("BillingSpecialist")
+            .instructions("You are a billing specialist. Help with invoices and payments.")
+            .model(DEFAULT_MODEL)
+            .responder(responder)
+            .build();
 
     // Create a triage agent that can hand off to billing
     Agent triageAgent =
-            Agent.builder()
-                    .name("TriageAgent")
-                    .instructions(
-                            "You are a front-desk agent. Route billing questions to the billing specialist.")
-                    .model(DEFAULT_MODEL)
-                    .responder(responder)
-                    // Add a handoff to billing agent
-                    .addHandoff(
-                            Handoff.to(billingAgent)
-                                    .withDescription("Hand off billing-related questions to the billing specialist")
-                                    .build())
-                    .build();
+        Agent.builder()
+            .name("TriageAgent")
+            .instructions(
+                "You are a front-desk agent. Route billing questions to the billing specialist.")
+            .model(DEFAULT_MODEL)
+            .responder(responder)
+            // Add a handoff to billing agent
+            .addHandoff(
+                Handoff.to(billingAgent)
+                    .withDescription("Hand off billing-related questions to the billing specialist")
+                    .build())
+            .build();
 
     System.out.println("📤 Sending: 'I have a question about my invoice from last month.'");
 
     AgentResult result =
-            triageAgent.interact("I have a question about my invoice from last month.");
+        triageAgent.interact("I have a question about my invoice from last month.");
     System.out.println("📥 Response: " + result.output());
 
     if (result.handoffAgent() != null) {
@@ -590,28 +587,28 @@ public class Main {
 
     // Create specialized agents
     Agent optimistAgent =
-            Agent.builder()
-                    .name("Optimist")
-                    .instructions("You always see the positive side. Give a brief optimistic perspective.")
-                    .model(DEFAULT_MODEL)
-                    .responder(responder)
-                    .build();
+        Agent.builder()
+            .name("Optimist")
+            .instructions("You always see the positive side. Give a brief optimistic perspective.")
+            .model(DEFAULT_MODEL)
+            .responder(responder)
+            .build();
 
     Agent pessimistAgent =
-            Agent.builder()
-                    .name("Pessimist")
-                    .instructions("You always consider the risks. Give a brief cautionary perspective.")
-                    .model(DEFAULT_MODEL)
-                    .responder(responder)
-                    .build();
+        Agent.builder()
+            .name("Pessimist")
+            .instructions("You always consider the risks. Give a brief cautionary perspective.")
+            .model(DEFAULT_MODEL)
+            .responder(responder)
+            .build();
 
     Agent synthesizerAgent =
-            Agent.builder()
-                    .name("Synthesizer")
-                    .instructions("Combine different perspectives into a balanced summary.")
-                    .model(DEFAULT_MODEL)
-                    .responder(responder)
-                    .build();
+        Agent.builder()
+            .name("Synthesizer")
+            .instructions("Combine different perspectives into a balanced summary.")
+            .model(DEFAULT_MODEL)
+            .responder(responder)
+            .build();
 
     // Create parallel orchestrator
     ParallelAgents team = ParallelAgents.of(optimistAgent, pessimistAgent);
@@ -637,38 +634,38 @@ public class Main {
 
     // Create specialist agents
     Agent techSupport =
-            Agent.builder()
-                    .name("TechSupport")
-                    .instructions("You help with technical issues. Be technical and precise.")
-                    .model(DEFAULT_MODEL)
-                    .responder(responder)
-                    .build();
+        Agent.builder()
+            .name("TechSupport")
+            .instructions("You help with technical issues. Be technical and precise.")
+            .model(DEFAULT_MODEL)
+            .responder(responder)
+            .build();
 
     Agent salesAgent =
-            Agent.builder()
-                    .name("Sales")
-                    .instructions("You help with pricing and purchases. Be persuasive and helpful.")
-                    .model(DEFAULT_MODEL)
-                    .responder(responder)
-                    .build();
+        Agent.builder()
+            .name("Sales")
+            .instructions("You help with pricing and purchases. Be persuasive and helpful.")
+            .model(DEFAULT_MODEL)
+            .responder(responder)
+            .build();
 
     Agent generalAgent =
-            Agent.builder()
-                    .name("GeneralSupport")
-                    .instructions("You handle general inquiries.")
-                    .model(DEFAULT_MODEL)
-                    .responder(responder)
-                    .build();
+        Agent.builder()
+            .name("GeneralSupport")
+            .instructions("You handle general inquiries.")
+            .model(DEFAULT_MODEL)
+            .responder(responder)
+            .build();
 
     // Create router
     RouterAgent router =
-            RouterAgent.builder()
-                    .model(DEFAULT_MODEL)
-                    .responder(responder)
-                    .addRoute(techSupport, "technical issues, bugs, errors, crashes, not working")
-                    .addRoute(salesAgent, "pricing, purchase, buy, upgrade, subscription")
-                    .fallback(generalAgent)
-                    .build();
+        RouterAgent.builder()
+            .model(DEFAULT_MODEL)
+            .responder(responder)
+            .addRoute(techSupport, "technical issues, bugs, errors, crashes, not working")
+            .addRoute(salesAgent, "pricing, purchase, buy, upgrade, subscription")
+            .fallback(generalAgent)
+            .build();
 
     // Test routing
     String techQuery = "My application keeps crashing when I try to save files.";
@@ -677,7 +674,7 @@ public class Main {
     // Classify without executing
     var classified = router.classify(techQuery);
     System.out.println(
-            "📍 Would route to: " + classified.map(Interactable::name).orElse("fallback"));
+        "📍 Would route to: " + classified.map(Interactable::name).orElse("fallback"));
 
     // Route and execute
     AgentResult result = router.interact(techQuery);
@@ -725,9 +722,9 @@ public class Main {
     System.out.println("═".repeat(60));
     try {
       System.out.println(
-              ResponsesApiObjectMapper.create()
-                      .writerWithDefaultPrettyPrinter()
-                      .writeValueAsString(response));
+          ResponsesApiObjectMapper.create()
+              .writerWithDefaultPrettyPrinter()
+              .writeValueAsString(response));
     } catch (JsonProcessingException e) {
       System.out.println("Error serializing response: " + e.getMessage());
     }
@@ -740,25 +737,22 @@ public class Main {
   }
 
   /** Structured output for the streaming example. */
-  public record StreamedPerson(String name, int age, String occupation, String bio) {
-  }
+  public record StreamedPerson(String name, int age, String occupation, String bio) {}
 
   /** Example structured output record for weather information. */
   public record WeatherInfo(
-          @NonNull String location, @NonNull String description, int temperatureCelsius) {
-  }
+      @NonNull String location, @NonNull String description, int temperatureCelsius) {}
 
   /** Parameters for the get_weather function tool. */
-  public record GetWeatherParams(@NonNull String location, @NonNull TemperatureUnit unit) {
-  }
+  public record GetWeatherParams(@NonNull String location, @NonNull TemperatureUnit unit) {}
 
   /**
    * Example function tool that retrieves weather information. In a real application, this would
    * call an actual weather API.
    */
   @FunctionMetadata(
-          name = "get_weather",
-          description = "Gets the current weather in a given location.")
+      name = "get_weather",
+      description = "Gets the current weather in a given location.")
   public static class GetWeatherTool extends FunctionTool<GetWeatherParams> {
     @Override
     public @NonNull FunctionToolCallOutput call(@Nullable GetWeatherParams params) {
@@ -770,8 +764,8 @@ public class Main {
       int temperature = params.unit() == TemperatureUnit.CELSIUS ? 25 : 77;
 
       return FunctionToolCallOutput.success(
-              String.format(
-                      "The weather in %s is %d%s and sunny.", params.location(), temperature, unitSymbol));
+          String.format(
+              "The weather in %s is %d%s and sunny.", params.location(), temperature, unitSymbol));
     }
   }
 }

@@ -1,24 +1,24 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static org.junit.jupiter.api.Assertions.*;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.*;
 
 /**
  * Comprehensive tests for NetworkStream.
  *
  * <p>Tests cover:
+ *
  * <ul>
  *   <li>Callback registration
  *   <li>Discussion mode streaming
@@ -40,7 +40,7 @@ class NetworkStreamTest {
     mockWebServer.start();
 
     responder =
-            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -50,11 +50,11 @@ class NetworkStreamTest {
 
   private Agent createTestAgent(String name) {
     return Agent.builder()
-            .name(name)
-            .model("test-model")
-            .instructions("Test instructions for " + name)
-            .responder(responder)
-            .build();
+        .name(name)
+        .model("test-model")
+        .instructions("Test instructions for " + name)
+        .responder(responder)
+        .build();
   }
 
   private AgentNetwork createTestNetwork() {
@@ -67,25 +67,25 @@ class NetworkStreamTest {
   private void enqueueStreamingResponse(String text) {
     // SSE format for streaming
     String sseData =
-            """
-                    data: {"type":"response.output_item.added","item":{"id":"item_1","type":"message","role":"assistant"}}
-                    
-                    data: {"type":"response.content_part.added","part":{"type":"text","text":""}}
-                    
-                    data: {"type":"response.output_text.delta","delta":"%s"}
-                    
-                    data: {"type":"response.output_text.done","text":"%s"}
-                    
-                    data: {"type":"response.done","response":{"id":"resp_1","status":"completed","output":[{"type":"message","id":"msg_1","role":"assistant","content":[{"type":"output_text","text":"%s"}]}],"usage":{"input_tokens":10,"output_tokens":5,"total_tokens":15}}}
-                    
-                    """
-                    .formatted(text, text, text);
+        """
+        data: {"type":"response.output_item.added","item":{"id":"item_1","type":"message","role":"assistant"}}
+
+        data: {"type":"response.content_part.added","part":{"type":"text","text":""}}
+
+        data: {"type":"response.output_text.delta","delta":"%s"}
+
+        data: {"type":"response.output_text.done","text":"%s"}
+
+        data: {"type":"response.done","response":{"id":"resp_1","status":"completed","output":[{"type":"message","id":"msg_1","role":"assistant","content":[{"type":"output_text","text":"%s"}]}],"usage":{"input_tokens":10,"output_tokens":5,"total_tokens":15}}}
+
+        """
+            .formatted(text, text, text);
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(sseData)
-                    .addHeader("Content-Type", "text/event-stream"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(sseData)
+            .addHeader("Content-Type", "text/event-stream"));
   }
 
   @Nested
@@ -98,8 +98,7 @@ class NetworkStreamTest {
       AgentNetwork network = createTestNetwork();
       NetworkStream stream = network.discussStream("Topic");
 
-      NetworkStream result = stream.onPeerTextDelta((agent, delta) -> {
-      });
+      NetworkStream result = stream.onPeerTextDelta((agent, delta) -> {});
 
       assertSame(stream, result);
     }
@@ -110,8 +109,7 @@ class NetworkStreamTest {
       AgentNetwork network = createTestNetwork();
       NetworkStream stream = network.discussStream("Topic");
 
-      NetworkStream result = stream.onPeerComplete((agent, result2) -> {
-      });
+      NetworkStream result = stream.onPeerComplete((agent, result2) -> {});
 
       assertSame(stream, result);
     }
@@ -122,8 +120,7 @@ class NetworkStreamTest {
       AgentNetwork network = createTestNetwork();
       NetworkStream stream = network.discussStream("Topic");
 
-      NetworkStream result = stream.onRoundStart(round -> {
-      });
+      NetworkStream result = stream.onRoundStart(round -> {});
 
       assertSame(stream, result);
     }
@@ -134,8 +131,7 @@ class NetworkStreamTest {
       AgentNetwork network = createTestNetwork();
       NetworkStream stream = network.discussStream("Topic");
 
-      NetworkStream result = stream.onRoundComplete(contributions -> {
-      });
+      NetworkStream result = stream.onRoundComplete(contributions -> {});
 
       assertSame(stream, result);
     }
@@ -146,8 +142,7 @@ class NetworkStreamTest {
       AgentNetwork network = createTestNetwork();
       NetworkStream stream = network.discussStream("Topic");
 
-      NetworkStream result = stream.onSynthesisTextDelta(delta -> {
-      });
+      NetworkStream result = stream.onSynthesisTextDelta(delta -> {});
 
       assertSame(stream, result);
     }
@@ -158,8 +153,7 @@ class NetworkStreamTest {
       AgentNetwork network = createTestNetwork();
       NetworkStream stream = network.discussStream("Topic");
 
-      NetworkStream result = stream.onComplete(networkResult -> {
-      });
+      NetworkStream result = stream.onComplete(networkResult -> {});
 
       assertSame(stream, result);
     }
@@ -170,8 +164,7 @@ class NetworkStreamTest {
       AgentNetwork network = createTestNetwork();
       NetworkStream stream = network.discussStream("Topic");
 
-      NetworkStream result = stream.onError(error -> {
-      });
+      NetworkStream result = stream.onError(error -> {});
 
       assertSame(stream, result);
     }
@@ -246,8 +239,7 @@ class NetworkStreamTest {
       enqueueStreamingResponse("Response 4"); // Round 2, peer 2
 
       AgentNetwork.NetworkResult result =
-              network.discussStream("Topic").onComplete(r -> {
-              }).start();
+          network.discussStream("Topic").onComplete(r -> {}).start();
 
       assertNotNull(result);
       assertNotNull(result.contributions());
@@ -260,7 +252,7 @@ class NetworkStreamTest {
       Agent peer2 = createTestAgent("Peer2");
 
       AgentNetwork network =
-              AgentNetwork.builder().addPeer(peer1).addPeer(peer2).maxRounds(2).build();
+          AgentNetwork.builder().addPeer(peer1).addPeer(peer2).maxRounds(2).build();
 
       // 2 rounds * 2 peers = 4 responses
       enqueueStreamingResponse("R1P1");
@@ -272,10 +264,10 @@ class NetworkStreamTest {
       CountDownLatch latch = new CountDownLatch(1);
 
       network
-              .discussStream("Topic")
-              .onRoundStart(rounds::add)
-              .onComplete(r -> latch.countDown())
-              .start();
+          .discussStream("Topic")
+          .onRoundStart(rounds::add)
+          .onComplete(r -> latch.countDown())
+          .start();
 
       assertTrue(latch.await(10, TimeUnit.SECONDS));
       assertEquals(2, rounds.size());
@@ -296,10 +288,10 @@ class NetworkStreamTest {
       CountDownLatch latch = new CountDownLatch(1);
 
       network
-              .discussStream("Topic")
-              .onPeerComplete((agent, result) -> peerCompleteCount.incrementAndGet())
-              .onComplete(r -> latch.countDown())
-              .start();
+          .discussStream("Topic")
+          .onPeerComplete((agent, result) -> peerCompleteCount.incrementAndGet())
+          .onComplete(r -> latch.countDown())
+          .start();
 
       assertTrue(latch.await(10, TimeUnit.SECONDS));
       assertEquals(4, peerCompleteCount.get()); // 2 peers * 2 rounds
@@ -339,10 +331,10 @@ class NetworkStreamTest {
       CountDownLatch latch = new CountDownLatch(1);
 
       network
-              .broadcastStream("Message")
-              .onPeerComplete((agent, result) -> peerCompleteCount.incrementAndGet())
-              .onComplete(r -> latch.countDown())
-              .start();
+          .broadcastStream("Message")
+          .onPeerComplete((agent, result) -> peerCompleteCount.incrementAndGet())
+          .onComplete(r -> latch.countDown())
+          .start();
 
       assertTrue(latch.await(10, TimeUnit.SECONDS));
       assertEquals(2, peerCompleteCount.get());
@@ -359,13 +351,13 @@ class NetworkStreamTest {
       CountDownLatch latch = new CountDownLatch(1);
 
       network
-              .broadcastStream("Message")
-              .onComplete(
-                      r -> {
-                        resultRef.set(r);
-                        latch.countDown();
-                      })
-              .start();
+          .broadcastStream("Message")
+          .onComplete(
+              r -> {
+                resultRef.set(r);
+                latch.countDown();
+              })
+          .start();
 
       assertTrue(latch.await(10, TimeUnit.SECONDS));
       AgentNetwork.NetworkResult result = resultRef.get();
@@ -388,12 +380,12 @@ class NetworkStreamTest {
       Agent synthesizer = createTestAgent("Synthesizer");
 
       AgentNetwork network =
-              AgentNetwork.builder()
-                      .addPeer(peer1)
-                      .addPeer(peer2)
-                      .maxRounds(1)
-                      .synthesizer(synthesizer)
-                      .build();
+          AgentNetwork.builder()
+              .addPeer(peer1)
+              .addPeer(peer2)
+              .maxRounds(1)
+              .synthesizer(synthesizer)
+              .build();
 
       // Verify synthesizer is configured
       assertNotNull(network.getSynthesizer());
@@ -405,4 +397,3 @@ class NetworkStreamTest {
     }
   }
 }
-

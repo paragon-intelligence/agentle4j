@@ -7,9 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Comprehensive tests for ComputerUseAction implementations.
- */
+/** Comprehensive tests for ComputerUseAction implementations. */
 @DisplayName("Computer Use Actions Tests")
 class ComputerUseActionsTest {
 
@@ -25,7 +23,7 @@ class ComputerUseActionsTest {
     void shouldCreateWithLeftButton() {
       Coordinate coord = Coordinate.Factory.getCoordinate(100, 200);
       ClickAction action = new ClickAction(ClickButton.LEFT, coord);
-      
+
       assertEquals(ClickButton.LEFT, action.button());
       assertEquals(coord, action.coordinate());
     }
@@ -35,7 +33,7 @@ class ComputerUseActionsTest {
     void shouldCreateWithRightButton() {
       Coordinate coord = Coordinate.Factory.getCoordinate(50, 75);
       ClickAction action = new ClickAction(ClickButton.RIGHT, coord);
-      
+
       assertEquals(ClickButton.RIGHT, action.button());
     }
 
@@ -44,7 +42,7 @@ class ComputerUseActionsTest {
     void toStringShouldContainButtonAndCoordinate() {
       Coordinate coord = Coordinate.Factory.getCoordinate(100, 200);
       ClickAction action = new ClickAction(ClickButton.LEFT, coord);
-      
+
       String str = action.toString();
       assertTrue(str.contains("click"));
       assertTrue(str.contains("button"));
@@ -55,7 +53,7 @@ class ComputerUseActionsTest {
     void shouldImplementComputerUseAction() {
       Coordinate coord = Coordinate.Factory.getCoordinate(0, 0);
       ClickAction action = new ClickAction(ClickButton.LEFT, coord);
-      
+
       assertInstanceOf(ComputerUseAction.class, action);
     }
   }
@@ -135,7 +133,7 @@ class ComputerUseActionsTest {
     void shouldCreateWithCoordinate() {
       Coordinate coord = Coordinate.Factory.getCoordinate(300, 400);
       DoubleClickAction action = new DoubleClickAction(coord);
-      
+
       assertEquals(coord, action.coordinate());
     }
 
@@ -160,7 +158,7 @@ class ComputerUseActionsTest {
     void shouldCreateWithCoordinate() {
       Coordinate coord = Coordinate.Factory.getCoordinate(500, 600);
       MoveAction action = new MoveAction(coord);
-      
+
       assertEquals(coord, action.coordinate());
     }
   }
@@ -199,7 +197,7 @@ class ComputerUseActionsTest {
     void shouldCreateScrollAction() {
       Coordinate coord = Coordinate.Factory.getCoordinate(100, 100);
       ScrollAction action = new ScrollAction(0, -100, coord);
-      
+
       assertEquals(coord, action.coordinate());
       assertEquals(0, action.scrollX());
       assertEquals(-100, action.scrollY());

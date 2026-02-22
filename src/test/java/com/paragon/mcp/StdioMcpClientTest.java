@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.mcp.dto.JsonRpcResponse;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -64,10 +63,7 @@ class StdioMcpClientTest {
   @Test
   void shouldAcceptWorkingDirectory() {
     var client =
-        StdioMcpClient.builder()
-            .command("echo", "test")
-            .workingDirectory(Path.of("/tmp"))
-            .build();
+        StdioMcpClient.builder().command("echo", "test").workingDirectory(Path.of("/tmp")).build();
 
     assertNotNull(client);
     client.close();
@@ -119,14 +115,12 @@ class StdioMcpClientTest {
 
   @Test
   void shouldHandleNonExistentCommand() {
-    var client =
-        StdioMcpClient.builder()
-            .command("this-command-does-not-exist-12345")
-            .build();
+    var client = StdioMcpClient.builder().command("this-command-does-not-exist-12345").build();
 
     var exception = assertThrows(McpException.class, client::connect);
-    assertTrue(exception.getMessage().contains("Connection failed") 
-        || exception.getMessage().contains("failed"));
+    assertTrue(
+        exception.getMessage().contains("Connection failed")
+            || exception.getMessage().contains("failed"));
 
     client.close();
   }

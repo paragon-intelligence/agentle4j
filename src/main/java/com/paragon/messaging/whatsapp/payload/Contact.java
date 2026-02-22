@@ -15,10 +15,7 @@ public class Contact {
   public final Profile profile;
 
   @JsonCreator
-  public Contact(
-          @JsonProperty("wa_id") String waId,
-          @JsonProperty("profile") Profile profile
-  ) {
+  public Contact(@JsonProperty("wa_id") String waId, @JsonProperty("profile") Profile profile) {
     this.waId = waId;
     this.profile = profile;
   }

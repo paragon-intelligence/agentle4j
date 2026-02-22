@@ -8,39 +8,31 @@ import jakarta.validation.constraints.NotNull;
  * Representa um destinatário de mensagem com validação automática.
  *
  * @param identifier identificador do destinatário (número de telefone, user ID, email)
- * @param type       tipo de destinatário
+ * @param type tipo de destinatário
  * @author Your Name
  * @since 2.0
  */
 public record Recipient(
-
-        @NotBlank(message = "Recipient identifier cannot be blank")
-        String identifier,
-
-        @NotNull(message = "Recipient type cannot be null")
-        RecipientType type
-
-) {
+    @NotBlank(message = "Recipient identifier cannot be blank") String identifier,
+    @NotNull(message = "Recipient type cannot be null") RecipientType type) {
 
   /**
    * Cria um destinatário usando número de telefone.
    *
-   * <p>O número será validado automaticamente quando usado com @Valid.</p>
+   * <p>O número será validado automaticamente quando usado com @Valid.
    *
    * @param phoneNumber número de telefone no formato E.164 (ex: +5511999999999)
    * @return destinatário validado
    * @throws IllegalArgumentException se o número não estiver em formato E.164
    */
-  public static Recipient ofPhoneNumber(
-          @NotBlank String phoneNumber
-  ) {
+  public static Recipient ofPhoneNumber(@NotBlank String phoneNumber) {
     return new Recipient(phoneNumber, RecipientType.PHONE_NUMBER);
   }
 
   /**
    * Cria um destinatário usando número de telefone com normalização automática.
    *
-   * <p>Este método tenta normalizar o número removendo espaços, parênteses, etc.</p>
+   * <p>Este método tenta normalizar o número removendo espaços, parênteses, etc.
    *
    * @param phoneNumber número de telefone em qualquer formato
    * @return destinatário validado
@@ -51,8 +43,7 @@ public record Recipient(
     String normalized = phoneNumber.replaceAll("[^+0-9]", "");
     if (normalized.isEmpty() || !normalized.startsWith("+")) {
       throw new IllegalArgumentException(
-              "Cannot normalize phone number to E.164 format: " + phoneNumber
-      );
+          "Cannot normalize phone number to E.164 format: " + phoneNumber);
     }
     return new Recipient(normalized, RecipientType.PHONE_NUMBER);
   }
@@ -105,8 +96,7 @@ public record Recipient(
   }
 
   /**
-   * Returns the recipient value (alias for identifier()).
-   * Provided for API compatibility.
+   * Returns the recipient value (alias for identifier()). Provided for API compatibility.
    *
    * @return the recipient identifier
    */
@@ -114,23 +104,15 @@ public record Recipient(
     return identifier;
   }
 
-  /**
-   * Tipos de destinatário suportados.
-   */
+  /** Tipos de destinatário suportados. */
   public enum RecipientType {
-    /**
-     * Número de telefone (formato E.164).
-     */
+    /** Número de telefone (formato E.164). */
     PHONE_NUMBER,
 
-    /**
-     * ID de usuário específico da plataforma.
-     */
+    /** ID de usuário específico da plataforma. */
     USER_ID,
 
-    /**
-     * Endereço de email.
-     */
+    /** Endereço de email. */
     EMAIL
   }
 }

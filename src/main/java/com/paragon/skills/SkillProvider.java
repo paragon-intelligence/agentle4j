@@ -8,9 +8,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Provider interface for loading skills from various sources.
  *
- * <p>Implementations may load skills from the filesystem, remote URLs,
- * in-memory registries, or any other storage mechanism. This abstraction
- * allows applications to centralize skill management.
+ * <p>Implementations may load skills from the filesystem, remote URLs, in-memory registries, or any
+ * other storage mechanism. This abstraction allows applications to centralize skill management.
  *
  * <h2>Usage Examples</h2>
  *
@@ -40,8 +39,8 @@ public interface SkillProvider {
    * Retrieves a skill by its identifier.
    *
    * @param skillId the unique identifier for the skill (e.g., skill name, path)
-   * @param filters optional key-value pairs to filter the skill. Supported filters
-   *     depend on the implementation (e.g., version, label).
+   * @param filters optional key-value pairs to filter the skill. Supported filters depend on the
+   *     implementation (e.g., version, label).
    * @return the retrieved {@link Skill}
    * @throws NullPointerException if skillId is null
    * @throws SkillProviderException if the skill cannot be retrieved
@@ -56,7 +55,8 @@ public interface SkillProvider {
    * @throws NullPointerException if skillId is null
    * @throws SkillProviderException if the skill cannot be retrieved
    */
-  @NonNull default Skill provide(@NonNull String skillId) {
+  @NonNull
+  default Skill provide(@NonNull String skillId) {
     return provide(skillId, null);
   }
 

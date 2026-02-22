@@ -1,20 +1,20 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.Text;
+import java.util.List;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Comprehensive tests for AgentNetwork.
  *
  * <p>Tests cover:
+ *
  * <ul>
  *   <li>Builder validation
  *   <li>Peer management
@@ -36,7 +36,7 @@ class AgentNetworkTest {
     mockWebServer.start();
 
     responder =
-            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -46,11 +46,11 @@ class AgentNetworkTest {
 
   private Agent createTestAgent(String name) {
     return Agent.builder()
-            .name(name)
-            .model("test-model")
-            .instructions("Test instructions for " + name)
-            .responder(responder)
-            .build();
+        .name(name)
+        .model("test-model")
+        .instructions("Test instructions for " + name)
+        .responder(responder)
+        .build();
   }
 
   private AgentNetwork createTestNetwork() {
@@ -62,40 +62,40 @@ class AgentNetworkTest {
 
   private void enqueueSuccessResponse(String text) {
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "message",
-                          "id": "msg_001",
-                          "role": "assistant",
-                          "content": [
-                            {
-                              "type": "output_text",
-                              "text": "%s"
-                            }
-                          ]
-                        }
-                      ],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(text);
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_001",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(text);
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   @Nested
@@ -127,7 +127,7 @@ class AgentNetworkTest {
       Agent peer = createTestAgent("Peer");
 
       assertThrows(
-              IllegalArgumentException.class, () -> AgentNetwork.builder().addPeer(peer).build());
+          IllegalArgumentException.class, () -> AgentNetwork.builder().addPeer(peer).build());
     }
 
     @Test
@@ -168,7 +168,7 @@ class AgentNetworkTest {
       Agent peer2 = createTestAgent("Peer2");
 
       AgentNetwork network =
-              AgentNetwork.builder().addPeer(peer1).addPeer(peer2).maxRounds(5).build();
+          AgentNetwork.builder().addPeer(peer1).addPeer(peer2).maxRounds(5).build();
 
       assertEquals(5, network.maxRounds());
     }
@@ -181,7 +181,7 @@ class AgentNetworkTest {
       Agent synth = createTestAgent("Synthesizer");
 
       AgentNetwork network =
-              AgentNetwork.builder().addPeer(peer1).addPeer(peer2).synthesizer(synth).build();
+          AgentNetwork.builder().addPeer(peer1).addPeer(peer2).synthesizer(synth).build();
 
       assertNotNull(network);
     }
@@ -253,8 +253,7 @@ class AgentNetworkTest {
       enqueueSuccessResponse("Response 3");
       enqueueSuccessResponse("Response 4");
 
-      AgentNetwork.NetworkResult result =
-              network.discuss(Text.valueOf("Topic"));
+      AgentNetwork.NetworkResult result = network.discuss(Text.valueOf("Topic"));
 
       assertNotNull(result);
     }
@@ -269,8 +268,7 @@ class AgentNetworkTest {
       enqueueSuccessResponse("Response 3");
       enqueueSuccessResponse("Response 4");
 
-      AgentNetwork.NetworkResult result =
-              network.discuss(Message.user("Topic"));
+      AgentNetwork.NetworkResult result = network.discuss(Message.user("Topic"));
 
       assertNotNull(result);
     }
@@ -328,7 +326,8 @@ class AgentNetworkTest {
     @DisplayName("Contribution validates null agent")
     void contribution_nullAgent_throws() {
       assertThrows(
-              NullPointerException.class, () -> new AgentNetwork.Contribution(null, 1, "output", false));
+          NullPointerException.class,
+          () -> new AgentNetwork.Contribution(null, 1, "output", false));
     }
 
     @Test
@@ -336,8 +335,8 @@ class AgentNetworkTest {
     void contribution_invalidRound_throws() {
       Agent agent = createTestAgent("Test");
       assertThrows(
-              IllegalArgumentException.class,
-              () -> new AgentNetwork.Contribution(agent, 0, "output", false));
+          IllegalArgumentException.class,
+          () -> new AgentNetwork.Contribution(agent, 0, "output", false));
     }
 
     @Test
@@ -366,10 +365,10 @@ class AgentNetworkTest {
       Agent agent2 = createTestAgent("Agent2");
 
       List<AgentNetwork.Contribution> contributions =
-              List.of(
-                      new AgentNetwork.Contribution(agent1, 1, "First", false),
-                      new AgentNetwork.Contribution(agent2, 1, "Second", false),
-                      new AgentNetwork.Contribution(agent1, 2, "Third", false));
+          List.of(
+              new AgentNetwork.Contribution(agent1, 1, "First", false),
+              new AgentNetwork.Contribution(agent2, 1, "Second", false),
+              new AgentNetwork.Contribution(agent1, 2, "Third", false));
 
       AgentNetwork.NetworkResult result = new AgentNetwork.NetworkResult(contributions, null);
 
@@ -384,10 +383,10 @@ class AgentNetworkTest {
       Agent agent2 = createTestAgent("Agent2");
 
       List<AgentNetwork.Contribution> contributions =
-              List.of(
-                      new AgentNetwork.Contribution(agent1, 1, "First", false),
-                      new AgentNetwork.Contribution(agent2, 1, "Second", false),
-                      new AgentNetwork.Contribution(agent1, 2, "Third", false));
+          List.of(
+              new AgentNetwork.Contribution(agent1, 1, "First", false),
+              new AgentNetwork.Contribution(agent2, 1, "Second", false),
+              new AgentNetwork.Contribution(agent1, 2, "Third", false));
 
       AgentNetwork.NetworkResult result = new AgentNetwork.NetworkResult(contributions, null);
 
@@ -401,9 +400,9 @@ class AgentNetworkTest {
       Agent agent = createTestAgent("Agent");
 
       List<AgentNetwork.Contribution> contributions =
-              List.of(
-                      new AgentNetwork.Contribution(agent, 1, "First", false),
-                      new AgentNetwork.Contribution(agent, 2, "Last", false));
+          List.of(
+              new AgentNetwork.Contribution(agent, 1, "First", false),
+              new AgentNetwork.Contribution(agent, 2, "Last", false));
 
       AgentNetwork.NetworkResult result = new AgentNetwork.NetworkResult(contributions, null);
 

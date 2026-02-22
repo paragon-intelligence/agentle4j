@@ -3,18 +3,16 @@ package com.paragon.agents;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paragon.agents.InteractableBlueprint.*;
 import com.paragon.http.RetryPolicy;
 import com.paragon.responses.TraceMetadata;
-import com.paragon.agents.InteractableBlueprint.*;
 import java.util.*;
 import org.junit.jupiter.api.*;
 
 /**
- * Tests for the InteractableBlueprint sealed hierarchy:
- * - Jackson serialization/deserialization roundtrip
- * - Polymorphic type discrimination
- * - Guardrail registry integration
- * - Helper records (ResponderBlueprint, RetryPolicyBlueprint, GuardrailReference)
+ * Tests for the InteractableBlueprint sealed hierarchy: - Jackson serialization/deserialization
+ * roundtrip - Polymorphic type discrimination - Guardrail registry integration - Helper records
+ * (ResponderBlueprint, RetryPolicyBlueprint, GuardrailReference)
  */
 class InteractableBlueprintTest {
 
@@ -23,7 +21,8 @@ class InteractableBlueprintTest {
   @BeforeEach
   void setUp() {
     mapper = new ObjectMapper();
-    mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    mapper.configure(
+        com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     GuardrailRegistry.clear();
   }
 
@@ -32,7 +31,8 @@ class InteractableBlueprintTest {
   @Test
   void responderBlueprintRoundtrip() throws Exception {
     var retryPolicy = new RetryPolicyBlueprint(3, 1000, 30000, 2.0, Set.of(429, 500));
-    var blueprint = new ResponderBlueprint("OPEN_ROUTER", null, "OPENROUTER_API_KEY", retryPolicy, null);
+    var blueprint =
+        new ResponderBlueprint("OPEN_ROUTER", null, "OPENROUTER_API_KEY", retryPolicy, null);
 
     String json = mapper.writeValueAsString(blueprint);
     var restored = mapper.readValue(json, ResponderBlueprint.class);
@@ -81,10 +81,21 @@ class InteractableBlueprintTest {
   @Test
   void agentBlueprintRoundtrip() throws Exception {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, "OPENROUTER_API_KEY", null, null);
-    var blueprint = new AgentBlueprint(
-        "SupportAgent", "gpt-4o", "You are a helpful support agent.",
-        10, 0.7, null, null, responder,
-        List.of(), List.of(), List.of(), List.of(), null);
+    var blueprint =
+        new AgentBlueprint(
+            "SupportAgent",
+            "gpt-4o",
+            "You are a helpful support agent.",
+            10,
+            0.7,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
 
     String json = mapper.writeValueAsString(blueprint);
     assertNotNull(json);
@@ -109,11 +120,25 @@ class InteractableBlueprintTest {
 
   @Test
   void agentBlueprintWithTraceMetadata() throws Exception {
-    var trace = new TraceMetadata("trace-1", "myTrace", "span-1", "gen-1", null, "prod", Map.of("key", "value"));
+    var trace =
+        new TraceMetadata(
+            "trace-1", "myTrace", "span-1", "gen-1", null, "prod", Map.of("key", "value"));
     var responder = new ResponderBlueprint("OPENAI", null, "OPENAI_API_KEY", null, trace);
-    var blueprint = new AgentBlueprint(
-        "TracedAgent", "gpt-4", "Instructions", 5, null, null,
-        trace, responder, List.of(), List.of(), List.of(), List.of(), null);
+    var blueprint =
+        new AgentBlueprint(
+            "TracedAgent",
+            "gpt-4",
+            "Instructions",
+            5,
+            null,
+            null,
+            trace,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
 
     String json = mapper.writeValueAsString(blueprint);
     InteractableBlueprint restored = mapper.readValue(json, InteractableBlueprint.class);
@@ -127,11 +152,21 @@ class InteractableBlueprintTest {
   @Test
   void agentBlueprintWithTools() throws Exception {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, "OPENROUTER_API_KEY", null, null);
-    var blueprint = new AgentBlueprint(
-        "ToolAgent", "gpt-4o", "Help the user",
-        10, null, null, null, responder,
-        List.of("com.example.GetWeatherTool", "com.example.SearchTool"),
-        List.of(), List.of(), List.of(), null);
+    var blueprint =
+        new AgentBlueprint(
+            "ToolAgent",
+            "gpt-4o",
+            "Help the user",
+            10,
+            null,
+            null,
+            null,
+            responder,
+            List.of("com.example.GetWeatherTool", "com.example.SearchTool"),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
 
     String json = mapper.writeValueAsString(blueprint);
     InteractableBlueprint restored = mapper.readValue(json, InteractableBlueprint.class);
@@ -145,10 +180,21 @@ class InteractableBlueprintTest {
   @Test
   void agentBlueprintWithOutputType() throws Exception {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
-    var blueprint = new AgentBlueprint(
-        "StructuredAgent", "gpt-4o", "Extract data",
-        10, null, "java.lang.String", null, responder,
-        List.of(), List.of(), List.of(), List.of(), null);
+    var blueprint =
+        new AgentBlueprint(
+            "StructuredAgent",
+            "gpt-4o",
+            "Extract data",
+            10,
+            null,
+            "java.lang.String",
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
 
     String json = mapper.writeValueAsString(blueprint);
     AgentBlueprint restored = (AgentBlueprint) mapper.readValue(json, InteractableBlueprint.class);
@@ -160,10 +206,36 @@ class InteractableBlueprintTest {
   @Test
   void agentNetworkBlueprintRoundtrip() throws Exception {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
-    var peer1 = new AgentBlueprint("Peer1", "gpt-4o", "Peer 1 instructions", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
-    var peer2 = new AgentBlueprint("Peer2", "gpt-4o", "Peer 2 instructions", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
+    var peer1 =
+        new AgentBlueprint(
+            "Peer1",
+            "gpt-4o",
+            "Peer 1 instructions",
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
+    var peer2 =
+        new AgentBlueprint(
+            "Peer2",
+            "gpt-4o",
+            "Peer 2 instructions",
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
 
     var network = new AgentNetworkBlueprint("TestNetwork", List.of(peer1, peer2), 3, null, null);
 
@@ -183,15 +255,31 @@ class InteractableBlueprintTest {
   @Test
   void agentNetworkWithSynthesizer() throws Exception {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
-    var peer = new AgentBlueprint("Peer", "gpt-4o", "Inst", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
-    var synth = new AgentBlueprint("Synth", "gpt-4o", "Synthesize", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
+    var peer =
+        new AgentBlueprint(
+            "Peer", "gpt-4o", "Inst", 5, null, null, null, responder, List.of(), List.of(),
+            List.of(), List.of(), null);
+    var synth =
+        new AgentBlueprint(
+            "Synth",
+            "gpt-4o",
+            "Synthesize",
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
 
     var network = new AgentNetworkBlueprint("Net", List.of(peer, peer), 2, synth, null);
 
     String json = mapper.writeValueAsString(network);
-    AgentNetworkBlueprint restored = (AgentNetworkBlueprint) mapper.readValue(json, InteractableBlueprint.class);
+    AgentNetworkBlueprint restored =
+        (AgentNetworkBlueprint) mapper.readValue(json, InteractableBlueprint.class);
 
     assertNotNull(restored.synthesizer());
     assertInstanceOf(AgentBlueprint.class, restored.synthesizer());
@@ -203,13 +291,26 @@ class InteractableBlueprintTest {
   @Test
   void supervisorAgentBlueprintRoundtrip() throws Exception {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
-    var worker = new AgentBlueprint("Worker1", "gpt-4o", "Do research", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
+    var worker =
+        new AgentBlueprint(
+            "Worker1",
+            "gpt-4o",
+            "Do research",
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
     var workerBp = new WorkerBlueprint(worker, "Research assistant");
 
-    var supervisor = new SupervisorAgentBlueprint(
-        "Supervisor", "gpt-4o", "Manage workers", 10,
-        List.of(workerBp), responder, null);
+    var supervisor =
+        new SupervisorAgentBlueprint(
+            "Supervisor", "gpt-4o", "Manage workers", 10, List.of(workerBp), responder, null);
 
     String json = mapper.writeValueAsString(supervisor);
     assertTrue(json.contains("\"type\":\"supervisor\""));
@@ -229,10 +330,36 @@ class InteractableBlueprintTest {
   @Test
   void parallelAgentsBlueprintRoundtrip() throws Exception {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
-    var member1 = new AgentBlueprint("Fast", "gpt-4o-mini", "Quick answers", 3, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
-    var member2 = new AgentBlueprint("Deep", "gpt-4o", "Detailed answers", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
+    var member1 =
+        new AgentBlueprint(
+            "Fast",
+            "gpt-4o-mini",
+            "Quick answers",
+            3,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
+    var member2 =
+        new AgentBlueprint(
+            "Deep",
+            "gpt-4o",
+            "Detailed answers",
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
 
     var parallel = new ParallelAgentsBlueprint("ParallelTeam", List.of(member1, member2), null);
 
@@ -252,19 +379,62 @@ class InteractableBlueprintTest {
   @Test
   void routerAgentBlueprintRoundtrip() throws Exception {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
-    var target1 = new AgentBlueprint("Sales", "gpt-4o", "Sales agent", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
-    var target2 = new AgentBlueprint("Support", "gpt-4o", "Support agent", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
-    var fallback = new AgentBlueprint("General", "gpt-4o", "General agent", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
+    var target1 =
+        new AgentBlueprint(
+            "Sales",
+            "gpt-4o",
+            "Sales agent",
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
+    var target2 =
+        new AgentBlueprint(
+            "Support",
+            "gpt-4o",
+            "Support agent",
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
+    var fallback =
+        new AgentBlueprint(
+            "General",
+            "gpt-4o",
+            "General agent",
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
 
-    var router = new RouterAgentBlueprint(
-        "Router", "gpt-4o",
-        List.of(
-            new RouteBlueprint(target1, "Sales inquiries"),
-            new RouteBlueprint(target2, "Support tickets")),
-        fallback, responder, null);
+    var router =
+        new RouterAgentBlueprint(
+            "Router",
+            "gpt-4o",
+            List.of(
+                new RouteBlueprint(target1, "Sales inquiries"),
+                new RouteBlueprint(target2, "Support tickets")),
+            fallback,
+            responder,
+            null);
 
     String json = mapper.writeValueAsString(router);
     assertTrue(json.contains("\"type\":\"router\""));
@@ -285,16 +455,54 @@ class InteractableBlueprintTest {
   @Test
   void hierarchicalAgentsBlueprintRoundtrip() throws Exception {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
-    var exec = new AgentBlueprint("CEO", "gpt-4o", "Lead the company", 10, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
-    var manager = new AgentBlueprint("EngineeringMgr", "gpt-4o", "Manage engineering", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
-    var worker = new AgentBlueprint("Developer", "gpt-4o-mini", "Write code", 3, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
+    var exec =
+        new AgentBlueprint(
+            "CEO",
+            "gpt-4o",
+            "Lead the company",
+            10,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
+    var manager =
+        new AgentBlueprint(
+            "EngineeringMgr",
+            "gpt-4o",
+            "Manage engineering",
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
+    var worker =
+        new AgentBlueprint(
+            "Developer",
+            "gpt-4o-mini",
+            "Write code",
+            3,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
 
     var dept = new DepartmentBlueprint(manager, List.of(worker));
-    var hierarchical = new HierarchicalAgentsBlueprint(
-        exec, Map.of("Engineering", dept), 10, null);
+    var hierarchical = new HierarchicalAgentsBlueprint(exec, Map.of("Engineering", dept), 10, null);
 
     String json = mapper.writeValueAsString(hierarchical);
     assertTrue(json.contains("\"type\":\"hierarchical\""));
@@ -314,8 +522,13 @@ class InteractableBlueprintTest {
 
   @Test
   void guardrailRegistryInputRoundtrip() {
-    InputGuardrail guard = InputGuardrail.named("no_spam", (input, ctx) ->
-        input.contains("spam") ? GuardrailResult.failed("Spam detected") : GuardrailResult.passed());
+    InputGuardrail guard =
+        InputGuardrail.named(
+            "no_spam",
+            (input, ctx) ->
+                input.contains("spam")
+                    ? GuardrailResult.failed("Spam detected")
+                    : GuardrailResult.passed());
 
     assertInstanceOf(NamedInputGuardrail.class, guard);
     assertEquals("no_spam", ((NamedInputGuardrail) guard).id());
@@ -334,8 +547,13 @@ class InteractableBlueprintTest {
 
   @Test
   void guardrailRegistryOutputRoundtrip() {
-    OutputGuardrail guard = OutputGuardrail.named("max_length", (output, ctx) ->
-        output.length() > 1000 ? GuardrailResult.failed("Too long") : GuardrailResult.passed());
+    OutputGuardrail guard =
+        OutputGuardrail.named(
+            "max_length",
+            (output, ctx) ->
+                output.length() > 1000
+                    ? GuardrailResult.failed("Too long")
+                    : GuardrailResult.passed());
 
     assertInstanceOf(NamedOutputGuardrail.class, guard);
 
@@ -373,13 +591,21 @@ class InteractableBlueprintTest {
     OutputGuardrail.named("length_check", (output, ctx) -> GuardrailResult.passed());
 
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
-    var blueprint = new AgentBlueprint(
-        "GuardedAgent", "gpt-4o", "Be safe",
-        10, null, null, null, responder,
-        List.of(), List.of(),
-        List.of(new GuardrailReference(null, "profanity_filter")),
-        List.of(new GuardrailReference(null, "length_check")),
-        null);
+    var blueprint =
+        new AgentBlueprint(
+            "GuardedAgent",
+            "gpt-4o",
+            "Be safe",
+            10,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(new GuardrailReference(null, "profanity_filter")),
+            List.of(new GuardrailReference(null, "length_check")),
+            null);
 
     String json = mapper.writeValueAsString(blueprint);
     AgentBlueprint restored = (AgentBlueprint) mapper.readValue(json, InteractableBlueprint.class);
@@ -395,9 +621,21 @@ class InteractableBlueprintTest {
   @Test
   void handoffDescriptorRoundtrip() throws Exception {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
-    var targetAgent = new AgentBlueprint(
-        "EscalationAgent", "gpt-4o", "Handle escalation", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
+    var targetAgent =
+        new AgentBlueprint(
+            "EscalationAgent",
+            "gpt-4o",
+            "Handle escalation",
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
 
     var handoff = new HandoffDescriptor("escalate", "Escalate to specialist", targetAgent);
 
@@ -413,15 +651,37 @@ class InteractableBlueprintTest {
   @Test
   void agentBlueprintWithHandoffsRoundtrip() throws Exception {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
-    var target = new AgentBlueprint("Target", "gpt-4o", "Target agent", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
+    var target =
+        new AgentBlueprint(
+            "Target",
+            "gpt-4o",
+            "Target agent",
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
 
-    var blueprint = new AgentBlueprint(
-        "SourceAgent", "gpt-4o", "Source agent",
-        10, null, null, null, responder,
-        List.of(),
-        List.of(new HandoffDescriptor("handoff_to_target", "Transfer to target agent", target)),
-        List.of(), List.of(), null);
+    var blueprint =
+        new AgentBlueprint(
+            "SourceAgent",
+            "gpt-4o",
+            "Source agent",
+            10,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(new HandoffDescriptor("handoff_to_target", "Transfer to target agent", target)),
+            List.of(),
+            List.of(),
+            null);
 
     String json = mapper.writeValueAsString(blueprint);
     AgentBlueprint restored = (AgentBlueprint) mapper.readValue(json, InteractableBlueprint.class);
@@ -447,7 +707,8 @@ class InteractableBlueprintTest {
 
   @Test
   void contextBlueprintSummarization() throws Exception {
-    var ctx = new ContextBlueprint("summarization", null, "gpt-4o-mini", 5, "Summarize this", 8000, null);
+    var ctx =
+        new ContextBlueprint("summarization", null, "gpt-4o-mini", 5, "Summarize this", 8000, null);
 
     String json = mapper.writeValueAsString(ctx);
     ContextBlueprint restored = mapper.readValue(json, ContextBlueprint.class);
@@ -463,10 +724,21 @@ class InteractableBlueprintTest {
   void agentBlueprintWithContextManagement() throws Exception {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
     var ctx = new ContextBlueprint("sliding", true, null, null, null, 4000, null);
-    var blueprint = new AgentBlueprint(
-        "CtxAgent", "gpt-4o", "Managed context",
-        10, null, null, null, responder,
-        List.of(), List.of(), List.of(), List.of(), ctx);
+    var blueprint =
+        new AgentBlueprint(
+            "CtxAgent",
+            "gpt-4o",
+            "Managed context",
+            10,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            ctx);
 
     String json = mapper.writeValueAsString(blueprint);
     AgentBlueprint restored = (AgentBlueprint) mapper.readValue(json, InteractableBlueprint.class);
@@ -481,29 +753,36 @@ class InteractableBlueprintTest {
   @Test
   void polymorphicDeserializationAllTypes() throws Exception {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
-    var agent = new AgentBlueprint("A", "m", "i", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
+    var agent =
+        new AgentBlueprint(
+            "A", "m", "i", 5, null, null, null, responder, List.of(), List.of(), List.of(),
+            List.of(), null);
 
     // Each type serializes with the correct "type" discriminator
-    Map<String, InteractableBlueprint> blueprints = Map.of(
-        "agent", agent,
-        "network", new AgentNetworkBlueprint("N", List.of(agent, agent), 2, null, null),
-        "supervisor", new SupervisorAgentBlueprint("S", "m", "i", 5,
-            List.of(new WorkerBlueprint(agent, "d")), responder, null),
-        "parallel", new ParallelAgentsBlueprint("P", List.of(agent), null),
-        "router", new RouterAgentBlueprint("R", "m",
-            List.of(new RouteBlueprint(agent, "d")), null, responder, null),
-        "hierarchical", new HierarchicalAgentsBlueprint(agent, Map.of("d",
-            new DepartmentBlueprint(agent, List.of(agent))), 5, null));
+    Map<String, InteractableBlueprint> blueprints =
+        Map.of(
+            "agent", agent,
+            "network", new AgentNetworkBlueprint("N", List.of(agent, agent), 2, null, null),
+            "supervisor",
+                new SupervisorAgentBlueprint(
+                    "S", "m", "i", 5, List.of(new WorkerBlueprint(agent, "d")), responder, null),
+            "parallel", new ParallelAgentsBlueprint("P", List.of(agent), null),
+            "router",
+                new RouterAgentBlueprint(
+                    "R", "m", List.of(new RouteBlueprint(agent, "d")), null, responder, null),
+            "hierarchical",
+                new HierarchicalAgentsBlueprint(
+                    agent, Map.of("d", new DepartmentBlueprint(agent, List.of(agent))), 5, null));
 
     for (var entry : blueprints.entrySet()) {
       String json = mapper.writeValueAsString(entry.getValue());
-      assertTrue(json.contains("\"type\":\"" + entry.getKey() + "\""),
+      assertTrue(
+          json.contains("\"type\":\"" + entry.getKey() + "\""),
           "Expected type discriminator '" + entry.getKey() + "' in JSON: " + json);
 
       InteractableBlueprint restored = mapper.readValue(json, InteractableBlueprint.class);
-      assertEquals(entry.getValue().name(), restored.name(),
-          "Name mismatch for type: " + entry.getKey());
+      assertEquals(
+          entry.getValue().name(), restored.name(), "Name mismatch for type: " + entry.getKey());
     }
   }
 
@@ -514,25 +793,75 @@ class InteractableBlueprintTest {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, "OPENROUTER_API_KEY", null, null);
 
     // Build a complex constellation: Router → Supervisor → Agent + Network
-    var codeAgent = new AgentBlueprint("CodeAgent", "gpt-4o", "Write code", 10, 0.2, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
-    var reviewAgent = new AgentBlueprint("ReviewAgent", "gpt-4o", "Review code", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
+    var codeAgent =
+        new AgentBlueprint(
+            "CodeAgent",
+            "gpt-4o",
+            "Write code",
+            10,
+            0.2,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
+    var reviewAgent =
+        new AgentBlueprint(
+            "ReviewAgent",
+            "gpt-4o",
+            "Review code",
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
 
-    var devSupervisor = new SupervisorAgentBlueprint("DevSupervisor", "gpt-4o", "Manage dev",
-        10, List.of(
-            new WorkerBlueprint(codeAgent, "Code writer"),
-            new WorkerBlueprint(reviewAgent, "Code reviewer")),
-        responder, null);
+    var devSupervisor =
+        new SupervisorAgentBlueprint(
+            "DevSupervisor",
+            "gpt-4o",
+            "Manage dev",
+            10,
+            List.of(
+                new WorkerBlueprint(codeAgent, "Code writer"),
+                new WorkerBlueprint(reviewAgent, "Code reviewer")),
+            responder,
+            null);
 
-    var salesAgent = new AgentBlueprint("Sales", "gpt-4o", "Handle sales", 5, null, null, null,
-        responder, List.of(), List.of(), List.of(), List.of(), null);
+    var salesAgent =
+        new AgentBlueprint(
+            "Sales",
+            "gpt-4o",
+            "Handle sales",
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
 
-    var router = new RouterAgentBlueprint("MainRouter", "gpt-4o",
-        List.of(
-            new RouteBlueprint(devSupervisor, "Development tasks"),
-            new RouteBlueprint(salesAgent, "Sales inquiries")),
-        null, responder, null);
+    var router =
+        new RouterAgentBlueprint(
+            "MainRouter",
+            "gpt-4o",
+            List.of(
+                new RouteBlueprint(devSupervisor, "Development tasks"),
+                new RouteBlueprint(salesAgent, "Sales inquiries")),
+            null,
+            responder,
+            null);
 
     // Full roundtrip
     String json = mapper.writeValueAsString(router);

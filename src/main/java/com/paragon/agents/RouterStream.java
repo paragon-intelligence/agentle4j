@@ -1,15 +1,10 @@
 package com.paragon.agents;
 
 import com.paragon.responses.Responder;
-import com.paragon.responses.spec.Message;
-import com.paragon.responses.spec.ResponseInputItem;
-import com.paragon.responses.spec.Text;
-import org.jspecify.annotations.NonNull;
-
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Streaming wrapper for RouterAgent that provides event callbacks during routing and execution.
@@ -136,10 +131,10 @@ public final class RouterStream {
     Optional<String> inputTextOpt = context.extractLastUserMessageText();
     if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
       AgentResult errorResult =
-              AgentResult.error(
-                      new IllegalStateException("No user message found in context for routing"),
-                      context,
-                      0);
+          AgentResult.error(
+              new IllegalStateException("No user message found in context for routing"),
+              context,
+              0);
       if (onError != null) {
         onError.accept(errorResult.error());
       }
@@ -156,8 +151,8 @@ public final class RouterStream {
 
     if (selectedOpt.isEmpty()) {
       AgentResult errorResult =
-              AgentResult.error(
-                      new IllegalStateException("No suitable route found for input"), context, 0);
+          AgentResult.error(
+              new IllegalStateException("No suitable route found for input"), context, 0);
       if (onError != null) {
         onError.accept(errorResult.error());
       }
@@ -204,5 +199,4 @@ public final class RouterStream {
 
     return innerResult;
   }
-
 }

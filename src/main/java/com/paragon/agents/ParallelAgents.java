@@ -3,17 +3,15 @@ package com.paragon.agents;
 import com.paragon.prompts.Prompt;
 import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.Message;
-import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import com.paragon.telemetry.processors.TraceIdGenerator;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.StructuredTaskScope;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Orchestrates parallel execution of multiple agents.
@@ -21,8 +19,8 @@ import java.util.concurrent.StructuredTaskScope;
  * <p>From Chapter 7 (Multi-Agent Collaboration): "Multiple agents work on different parts of a
  * problem simultaneously, and their results are later combined."
  *
- * <p><b>Virtual Thread Design:</b> Uses Java 21+ structured concurrency for parallel execution.
- * All agents run on virtual threads, making parallel execution cheap and efficient.
+ * <p><b>Virtual Thread Design:</b> Uses Java 21+ structured concurrency for parallel execution. All
+ * agents run on virtual threads, making parallel execution cheap and efficient.
  *
  * <p><b>Trace Correlation:</b> All parallel agents share the same parent traceId, enabling
  * end-to-end debugging of fan-out patterns.
@@ -60,7 +58,10 @@ public final class ParallelAgents implements Interactable {
   private final @NonNull List<Interactable> members;
   private final @Nullable TraceMetadata traceMetadata;
 
-  private ParallelAgents(@NonNull String name, @NonNull List<Interactable> members, @Nullable TraceMetadata traceMetadata) {
+  private ParallelAgents(
+      @NonNull String name,
+      @NonNull List<Interactable> members,
+      @Nullable TraceMetadata traceMetadata) {
     if (members.isEmpty()) {
       throw new IllegalArgumentException("At least one member is required");
     }
@@ -96,19 +97,18 @@ public final class ParallelAgents implements Interactable {
   /**
    * Creates a named parallel orchestrator with the given members.
    *
-   * @param name    the name for this orchestrator
+   * @param name the name for this orchestrator
    * @param members the members to run in parallel
    * @return a new ParallelAgents instance
    */
-  public static @NonNull ParallelAgents named(@NonNull String name, @NonNull Interactable... members) {
+  public static @NonNull ParallelAgents named(
+      @NonNull String name, @NonNull Interactable... members) {
     Objects.requireNonNull(name, "name cannot be null");
     Objects.requireNonNull(members, "members cannot be null");
     return new ParallelAgents(name, Arrays.asList(members), null);
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public @NonNull String name() {
     return name;
@@ -116,9 +116,8 @@ public final class ParallelAgents implements Interactable {
 
   @Override
   public @NonNull InteractableBlueprint toBlueprint() {
-    List<InteractableBlueprint> memberBlueprints = members.stream()
-        .map(Interactable::toBlueprint)
-        .toList();
+    List<InteractableBlueprint> memberBlueprints =
+        members.stream().map(Interactable::toBlueprint).toList();
     return new InteractableBlueprint.ParallelAgentsBlueprint(name, memberBlueprints, traceMetadata);
   }
 
@@ -136,8 +135,8 @@ public final class ParallelAgents implements Interactable {
   /**
    * Runs all agents concurrently with the same input.
    *
-   * <p>Each agent receives the same input and processes it independently with a fresh context.
-   * Uses virtual threads for parallel execution.
+   * <p>Each agent receives the same input and processes it independently with a fresh context. Uses
+   * virtual threads for parallel execution.
    *
    * @param input the input text for all agents
    * @return list of results, in the same order as agents()
@@ -208,7 +207,8 @@ public final class ParallelAgents implements Interactable {
     String parentTraceId = TraceIdGenerator.generateTraceId();
     String parentSpanId = TraceIdGenerator.generateSpanId();
 
-    try (var scope = StructuredTaskScope.open(StructuredTaskScope.Joiner.awaitAllSuccessfulOrThrow())) {
+    try (var scope =
+        StructuredTaskScope.open(StructuredTaskScope.Joiner.awaitAllSuccessfulOrThrow())) {
       // Fork all members as subtasks
       List<StructuredTaskScope.Subtask<AgentResult>> subtasks = new ArrayList<>();
       for (Interactable member : members) {
@@ -300,7 +300,9 @@ public final class ParallelAgents implements Interactable {
   public @NonNull AgentResult runFirst(@NonNull AgenticContext context) {
     Objects.requireNonNull(context, "context cannot be null");
 
-    try (var scope = StructuredTaskScope.open(StructuredTaskScope.Joiner.<AgentResult>anySuccessfulResultOrThrow())) {
+    try (var scope =
+        StructuredTaskScope.open(
+            StructuredTaskScope.Joiner.<AgentResult>anySuccessfulResultOrThrow())) {
       // Fork all members as subtasks
       for (Interactable member : members) {
         AgenticContext ctx = context.copy();
@@ -323,11 +325,12 @@ public final class ParallelAgents implements Interactable {
    * <p>The synthesizer receives a formatted summary of all member outputs and produces a combined
    * result. This is the "fan-out, fan-in" pattern.
    *
-   * @param input       the input text for all members
+   * @param input the input text for all members
    * @param synthesizer the Interactable that combines results
    * @return the synthesized result
    */
-  public @NonNull AgentResult runAndSynthesize(@NonNull String input, @NonNull Interactable synthesizer) {
+  public @NonNull AgentResult runAndSynthesize(
+      @NonNull String input, @NonNull Interactable synthesizer) {
     Objects.requireNonNull(input, "input cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
     AgenticContext context = AgenticContext.create();
@@ -338,11 +341,12 @@ public final class ParallelAgents implements Interactable {
   /**
    * Runs all members concurrently with Text content, then synthesizes with a synthesizer.
    *
-   * @param text        the text content for all members
+   * @param text the text content for all members
    * @param synthesizer the Interactable that combines results
    * @return the synthesized result
    */
-  public @NonNull AgentResult runAndSynthesize(@NonNull Text text, @NonNull Interactable synthesizer) {
+  public @NonNull AgentResult runAndSynthesize(
+      @NonNull Text text, @NonNull Interactable synthesizer) {
     Objects.requireNonNull(text, "text cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
     AgenticContext context = AgenticContext.create();
@@ -353,12 +357,12 @@ public final class ParallelAgents implements Interactable {
   /**
    * Runs all members concurrently with a Message, then synthesizes with a synthesizer.
    *
-   * @param message     the message for all members
+   * @param message the message for all members
    * @param synthesizer the Interactable that combines results
    * @return the synthesized result
    */
   public @NonNull AgentResult runAndSynthesize(
-          @NonNull Message message, @NonNull Interactable synthesizer) {
+      @NonNull Message message, @NonNull Interactable synthesizer) {
     Objects.requireNonNull(message, "message cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
     AgenticContext context = AgenticContext.create();
@@ -371,12 +375,12 @@ public final class ParallelAgents implements Interactable {
    *
    * <p>The prompt's text content is extracted and used as the input.
    *
-   * @param prompt      the prompt for all members
+   * @param prompt the prompt for all members
    * @param synthesizer the Interactable that combines results
    * @return the synthesized result
    */
   public @NonNull AgentResult runAndSynthesize(
-          @NonNull Prompt prompt, @NonNull Interactable synthesizer) {
+      @NonNull Prompt prompt, @NonNull Interactable synthesizer) {
     Objects.requireNonNull(prompt, "prompt cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
     return runAndSynthesize(prompt.text(), synthesizer);
@@ -387,12 +391,12 @@ public final class ParallelAgents implements Interactable {
    *
    * <p>This is the core method. All other runAndSynthesize overloads delegate here.
    *
-   * @param context     the context to copy for each member
+   * @param context the context to copy for each member
    * @param synthesizer the Interactable that combines results
    * @return the synthesized result
    */
   public @NonNull AgentResult runAndSynthesize(
-          @NonNull AgenticContext context, @NonNull Interactable synthesizer) {
+      @NonNull AgenticContext context, @NonNull Interactable synthesizer) {
     Objects.requireNonNull(context, "context cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
 
@@ -415,8 +419,8 @@ public final class ParallelAgents implements Interactable {
         synthesisPrompt.append("[ERROR: ").append(result.error().getMessage()).append("]\n");
       } else {
         synthesisPrompt
-                .append(result.output() != null ? result.output() : "[No output]")
-                .append("\n");
+            .append(result.output() != null ? result.output() : "[No output]")
+            .append("\n");
       }
       synthesisPrompt.append("\n");
     }
@@ -508,12 +512,12 @@ public final class ParallelAgents implements Interactable {
   /**
    * Runs all agents concurrently with streaming, then synthesizes results.
    *
-   * @param input       the input text for all agents
+   * @param input the input text for all agents
    * @param synthesizer the agent that combines results
    * @return a ParallelStream for processing streaming events
    */
   public @NonNull ParallelStream runAndSynthesizeStream(
-          @NonNull String input, @NonNull Interactable synthesizer) {
+      @NonNull String input, @NonNull Interactable synthesizer) {
     Objects.requireNonNull(input, "input cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
     AgenticContext context = AgenticContext.create();
@@ -526,12 +530,12 @@ public final class ParallelAgents implements Interactable {
    *
    * <p>The prompt's text content is extracted and used as the input.
    *
-   * @param prompt      the prompt for all agents
+   * @param prompt the prompt for all agents
    * @param synthesizer the agent that combines results
    * @return a ParallelStream for processing streaming events
    */
   public @NonNull ParallelStream runAndSynthesizeStream(
-          @NonNull Prompt prompt, @NonNull Interactable synthesizer) {
+      @NonNull Prompt prompt, @NonNull Interactable synthesizer) {
     Objects.requireNonNull(prompt, "prompt cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
     return runAndSynthesizeStream(prompt.text(), synthesizer);
@@ -540,12 +544,12 @@ public final class ParallelAgents implements Interactable {
   /**
    * Runs all agents concurrently with streaming, then synthesizes results.
    *
-   * @param context     the context to copy for each agent
+   * @param context the context to copy for each agent
    * @param synthesizer the agent that combines results
    * @return a ParallelStream for processing streaming events
    */
   public @NonNull ParallelStream runAndSynthesizeStream(
-          @NonNull AgenticContext context, @NonNull Interactable synthesizer) {
+      @NonNull AgenticContext context, @NonNull Interactable synthesizer) {
     Objects.requireNonNull(context, "context cannot be null");
     Objects.requireNonNull(synthesizer, "synthesizer cannot be null");
     return new ParallelStream(this, context, ParallelStream.Mode.SYNTHESIZE, synthesizer);
@@ -555,20 +559,17 @@ public final class ParallelAgents implements Interactable {
   // Note: interact() runs all agents and returns a composite result.
   // The primary result is the first to complete; all others are in relatedResults().
 
-  /**
-   * {@inheritDoc} Runs all agents; first to complete is primary, others in relatedResults().
-   */
+  /** {@inheritDoc} Runs all agents; first to complete is primary, others in relatedResults(). */
   @Override
   public @NonNull AgentResult interact(@NonNull AgenticContext context) {
     List<AgentResult> allResults = runAll(context);
     return toCompositeResult(allResults);
   }
 
-  /**
-   * {@inheritDoc} Runs all agents; trace propagated through peer interactions.
-   */
+  /** {@inheritDoc} Runs all agents; trace propagated through peer interactions. */
   @Override
-  public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+  public @NonNull AgentResult interact(
+      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     // ParallelAgents doesn't directly use trace; it's passed through peer interactions
     List<AgentResult> allResults = runAll(context);
     return toCompositeResult(allResults);
@@ -580,9 +581,8 @@ public final class ParallelAgents implements Interactable {
       return AgentResult.error(new IllegalStateException("No agents configured"), ctx, 0);
     }
     AgentResult primary = allResults.get(0);
-    List<AgentResult> related = allResults.size() > 1
-            ? allResults.subList(1, allResults.size())
-            : List.of();
+    List<AgentResult> related =
+        allResults.size() > 1 ? allResults.subList(1, allResults.size()) : List.of();
     return AgentResult.composite(primary, related);
   }
 
@@ -599,20 +599,19 @@ public final class ParallelAgents implements Interactable {
       return members.get(0).interactStream(context.copy());
     }
     return AgentStream.failed(
-            AgentResult.error(new IllegalStateException("No members configured"), context, 0));
+        AgentResult.error(new IllegalStateException("No members configured"), context, 0));
   }
 
-  /**
-   * {@inheritDoc} Streams first member; trace propagated through peer interactions.
-   */
+  /** {@inheritDoc} Streams first member; trace propagated through peer interactions. */
   @Override
-  public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+  public @NonNull AgentStream interactStream(
+      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     // ParallelAgents doesn't directly use trace; it's passed through peer interactions
     Objects.requireNonNull(context, "context cannot be null");
     if (!members.isEmpty()) {
       return members.get(0).interactStream(context.copy());
     }
     return AgentStream.failed(
-            AgentResult.error(new IllegalStateException("No members configured"), context, 0));
+        AgentResult.error(new IllegalStateException("No members configured"), context, 0));
   }
 }

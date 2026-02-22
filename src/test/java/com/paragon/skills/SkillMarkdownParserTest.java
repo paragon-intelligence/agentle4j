@@ -7,9 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests for the SkillMarkdownParser class.
- */
+/** Tests for the SkillMarkdownParser class. */
 @DisplayName("SkillMarkdownParser")
 class SkillMarkdownParserTest {
 
@@ -27,7 +25,8 @@ class SkillMarkdownParserTest {
     @Test
     @DisplayName("parses valid SKILL.md with name and description")
     void parse_validSkillMd() {
-      String content = """
+      String content =
+          """
           ---
           name: pdf-processor
           description: Process PDF files, extract text, fill forms.
@@ -48,7 +47,8 @@ class SkillMarkdownParserTest {
     @Test
     @DisplayName("parses quoted name and description")
     void parse_quotedValues() {
-      String content = """
+      String content =
+          """
           ---
           name: "my-skill"
           description: "A skill with quoted values"
@@ -66,7 +66,8 @@ class SkillMarkdownParserTest {
     @Test
     @DisplayName("parses single-quoted values")
     void parse_singleQuotedValues() {
-      String content = """
+      String content =
+          """
           ---
           name: 'another-skill'
           description: 'Single quoted description'
@@ -84,7 +85,8 @@ class SkillMarkdownParserTest {
     @Test
     @DisplayName("preserves markdown formatting in instructions")
     void parse_preservesMarkdownFormatting() {
-      String content = """
+      String content =
+          """
           ---
           name: test-skill
           description: Test skill
@@ -116,37 +118,45 @@ class SkillMarkdownParserTest {
     @Test
     @DisplayName("throws when content is empty")
     void parse_throwsWhenEmpty() {
-      assertThrows(SkillProviderException.class, () -> {
-        parser.parse("");
-      });
+      assertThrows(
+          SkillProviderException.class,
+          () -> {
+            parser.parse("");
+          });
     }
 
     @Test
     @DisplayName("throws when content is blank")
     void parse_throwsWhenBlank() {
-      assertThrows(SkillProviderException.class, () -> {
-        parser.parse("   \n   ");
-      });
+      assertThrows(
+          SkillProviderException.class,
+          () -> {
+            parser.parse("   \n   ");
+          });
     }
 
     @Test
     @DisplayName("throws when missing frontmatter")
     void parse_throwsWhenMissingFrontmatter() {
-      String content = """
+      String content =
+          """
           # No Frontmatter
 
           Just markdown content.
           """;
 
-      assertThrows(SkillProviderException.class, () -> {
-        parser.parse(content);
-      });
+      assertThrows(
+          SkillProviderException.class,
+          () -> {
+            parser.parse(content);
+          });
     }
 
     @Test
     @DisplayName("throws when missing name")
     void parse_throwsWhenMissingName() {
-      String content = """
+      String content =
+          """
           ---
           description: A skill without name
           ---
@@ -154,15 +164,18 @@ class SkillMarkdownParserTest {
           Instructions.
           """;
 
-      assertThrows(SkillProviderException.class, () -> {
-        parser.parse(content);
-      });
+      assertThrows(
+          SkillProviderException.class,
+          () -> {
+            parser.parse(content);
+          });
     }
 
     @Test
     @DisplayName("throws when missing description")
     void parse_throwsWhenMissingDescription() {
-      String content = """
+      String content =
+          """
           ---
           name: no-description
           ---
@@ -170,24 +183,29 @@ class SkillMarkdownParserTest {
           Instructions.
           """;
 
-      assertThrows(SkillProviderException.class, () -> {
-        parser.parse(content);
-      });
+      assertThrows(
+          SkillProviderException.class,
+          () -> {
+            parser.parse(content);
+          });
     }
 
     @Test
     @DisplayName("throws when no content after frontmatter")
     void parse_throwsWhenNoContent() {
-      String content = """
+      String content =
+          """
           ---
           name: empty-skill
           description: A skill with no content
           ---
           """;
 
-      assertThrows(SkillProviderException.class, () -> {
-        parser.parse(content);
-      });
+      assertThrows(
+          SkillProviderException.class,
+          () -> {
+            parser.parse(content);
+          });
     }
   }
 
@@ -198,16 +216,20 @@ class SkillMarkdownParserTest {
     @Test
     @DisplayName("includes skillId in error message")
     void parse_includesSkillIdInError() {
-      String content = """
+      String content =
+          """
           ---
           description: Missing name
           ---
           Content.
           """;
 
-      SkillProviderException ex = assertThrows(SkillProviderException.class, () -> {
-        parser.parse(content, "my-skill-id");
-      });
+      SkillProviderException ex =
+          assertThrows(
+              SkillProviderException.class,
+              () -> {
+                parser.parse(content, "my-skill-id");
+              });
 
       assertTrue(ex.getMessage().contains("my-skill-id"));
     }
@@ -220,7 +242,8 @@ class SkillMarkdownParserTest {
     @Test
     @DisplayName("isValid returns true for valid content")
     void isValid_returnsTrueForValid() {
-      String content = """
+      String content =
+          """
           ---
           name: valid-skill
           description: A valid skill
@@ -243,14 +266,16 @@ class SkillMarkdownParserTest {
     @Test
     @DisplayName("isValid returns false when missing required fields")
     void isValid_returnsFalseWhenMissingFields() {
-      String noName = """
+      String noName =
+          """
           ---
           description: Missing name
           ---
           Content.
           """;
 
-      String noDescription = """
+      String noDescription =
+          """
           ---
           name: missing-description
           ---

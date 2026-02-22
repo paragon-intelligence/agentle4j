@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Comprehensive tests for tool call status enums.
- */
+/** Comprehensive tests for tool call status enums. */
 @DisplayName("Tool Call Statuses Tests")
 class ToolCallStatusesTest {
 
@@ -30,7 +28,8 @@ class ToolCallStatusesTest {
     @Test
     @DisplayName("should support valueOf")
     void shouldSupportValueOf() {
-      assertEquals(FunctionToolCallStatus.IN_PROGRESS, FunctionToolCallStatus.valueOf("IN_PROGRESS"));
+      assertEquals(
+          FunctionToolCallStatus.IN_PROGRESS, FunctionToolCallStatus.valueOf("IN_PROGRESS"));
       assertEquals(FunctionToolCallStatus.COMPLETED, FunctionToolCallStatus.valueOf("COMPLETED"));
       assertEquals(FunctionToolCallStatus.INCOMPLETE, FunctionToolCallStatus.valueOf("INCOMPLETE"));
     }
@@ -77,8 +76,10 @@ class ToolCallStatusesTest {
     @Test
     @DisplayName("should support valueOf")
     void shouldSupportValueOf() {
-      assertEquals(FileSearchToolCallStatus.IN_PROGRESS, FileSearchToolCallStatus.valueOf("IN_PROGRESS"));
-      assertEquals(FileSearchToolCallStatus.SEARCHING, FileSearchToolCallStatus.valueOf("SEARCHING"));
+      assertEquals(
+          FileSearchToolCallStatus.IN_PROGRESS, FileSearchToolCallStatus.valueOf("IN_PROGRESS"));
+      assertEquals(
+          FileSearchToolCallStatus.SEARCHING, FileSearchToolCallStatus.valueOf("SEARCHING"));
       assertEquals(FileSearchToolCallStatus.FAILED, FileSearchToolCallStatus.valueOf("FAILED"));
     }
 

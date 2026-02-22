@@ -2,10 +2,9 @@ package com.paragon.agents;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.responses.TraceMetadata;
+import java.util.*;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-
-import java.util.*;
 
 /**
  * Implements the Hierarchical pattern: multi-layered supervisor structure.
@@ -77,9 +76,7 @@ public final class HierarchicalAgents implements Interactable {
     this.rootSupervisor = buildHierarchy();
   }
 
-  /**
-   * Creates a new HierarchicalAgents builder.
-   */
+  /** Creates a new HierarchicalAgents builder. */
   public static @NonNull Builder builder() {
     return new Builder();
   }
@@ -93,9 +90,7 @@ public final class HierarchicalAgents implements Interactable {
     return executive;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public @NonNull String name() {
     return executive.name() + "_Hierarchy";
@@ -105,16 +100,17 @@ public final class HierarchicalAgents implements Interactable {
   public @NonNull InteractableBlueprint toBlueprint() {
     InteractableBlueprint.AgentBlueprint execBlueprint =
         (InteractableBlueprint.AgentBlueprint) executive.toBlueprint();
-    Map<String, InteractableBlueprint.DepartmentBlueprint> deptBlueprints = new java.util.LinkedHashMap<>();
+    Map<String, InteractableBlueprint.DepartmentBlueprint> deptBlueprints =
+        new java.util.LinkedHashMap<>();
     for (var entry : departments.entrySet()) {
       Department dept = entry.getValue();
       InteractableBlueprint.AgentBlueprint mgrBlueprint =
           (InteractableBlueprint.AgentBlueprint) dept.manager().toBlueprint();
-      List<InteractableBlueprint> workerBlueprints = dept.workers().stream()
-          .map(Interactable::toBlueprint)
-          .toList();
-      deptBlueprints.put(entry.getKey(), new InteractableBlueprint.DepartmentBlueprint(
-          mgrBlueprint, workerBlueprints));
+      List<InteractableBlueprint> workerBlueprints =
+          dept.workers().stream().map(Interactable::toBlueprint).toList();
+      deptBlueprints.put(
+          entry.getKey(),
+          new InteractableBlueprint.DepartmentBlueprint(mgrBlueprint, workerBlueprints));
     }
     return new InteractableBlueprint.HierarchicalAgentsBlueprint(
         execBlueprint, deptBlueprints, maxTurns, traceMetadata);
@@ -135,12 +131,12 @@ public final class HierarchicalAgents implements Interactable {
    * <p>Bypasses the executive and sends the task directly to the department manager.
    *
    * @param departmentName the department name
-   * @param task           the task description
+   * @param task the task description
    * @return the department result
    * @throws IllegalArgumentException if department doesn't exist
    */
   public @NonNull AgentResult sendToDepartment(
-          @NonNull String departmentName, @NonNull String task) {
+      @NonNull String departmentName, @NonNull String task) {
     Objects.requireNonNull(departmentName, "departmentName cannot be null");
     Objects.requireNonNull(task, "task cannot be null");
 
@@ -160,7 +156,8 @@ public final class HierarchicalAgents implements Interactable {
   }
 
   @Override
-  public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+  public @NonNull AgentResult interact(
+      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     Objects.requireNonNull(context, "context cannot be null");
     context.ensureTraceContext();
     return rootSupervisor.interact(context, trace);
@@ -172,12 +169,12 @@ public final class HierarchicalAgents implements Interactable {
   }
 
   @Override
-  public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+  public @NonNull AgentStream interactStream(
+      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     Objects.requireNonNull(context, "context cannot be null");
     context.ensureTraceContext();
     return rootSupervisor.interactStream(context, trace);
   }
-
 
   private SupervisorAgent buildHierarchy() {
     // Build department supervisors first
@@ -187,12 +184,12 @@ public final class HierarchicalAgents implements Interactable {
 
       // Create supervisor for this department
       SupervisorAgent.Builder deptSupervisorBuilder =
-              SupervisorAgent.builder()
-                      .name(dept.manager().name() + "_Supervisor")
-                      .model(dept.manager().model())
-                      .instructions(buildManagerInstructions(dept))
-                      .responder(dept.manager().responder())
-                      .maxTurns(maxTurns);
+          SupervisorAgent.builder()
+              .name(dept.manager().name() + "_Supervisor")
+              .model(dept.manager().model())
+              .instructions(buildManagerInstructions(dept))
+              .responder(dept.manager().responder())
+              .maxTurns(maxTurns);
 
       // Add workers to department supervisor
       for (Interactable worker : dept.workers()) {
@@ -204,19 +201,19 @@ public final class HierarchicalAgents implements Interactable {
 
     // Build root supervisor (executive) with department supervisors as workers
     SupervisorAgent.Builder rootBuilder =
-            SupervisorAgent.builder()
-                    .name(executive.name() + "_Executive")
-                    .model(executive.model())
-                    .instructions(buildExecutiveInstructions())
-                    .responder(executive.responder())
-                    .maxTurns(maxTurns);
+        SupervisorAgent.builder()
+            .name(executive.name() + "_Executive")
+            .model(executive.model())
+            .instructions(buildExecutiveInstructions())
+            .responder(executive.responder())
+            .maxTurns(maxTurns);
 
     for (Map.Entry<String, Department> entry : departments.entrySet()) {
       String deptName = entry.getKey();
       SupervisorAgent deptSupervisor = departmentSupervisors.get(deptName);
       rootBuilder.addWorker(
-              deptSupervisor.underlyingAgent(),
-              deptName + " department - " + entry.getValue().manager().instructions().text());
+          deptSupervisor.underlyingAgent(),
+          deptName + " department - " + entry.getValue().manager().instructions().text());
     }
 
     return rootBuilder.build();
@@ -252,11 +249,11 @@ public final class HierarchicalAgents implements Interactable {
     return sb.toString();
   }
 
-  /**
-   * Represents a department with a manager and workers.
-   */
+  /** Represents a department with a manager and workers. */
   public record Department(
-          @NonNull Agent manager, @NonNull List<Interactable> workers, @Nullable SupervisorAgent supervisor) {
+      @NonNull Agent manager,
+      @NonNull List<Interactable> workers,
+      @Nullable SupervisorAgent supervisor) {
     public Department {
       Objects.requireNonNull(manager, "manager cannot be null");
       Objects.requireNonNull(workers, "workers cannot be null");
@@ -265,25 +262,20 @@ public final class HierarchicalAgents implements Interactable {
       }
     }
 
-    /**
-     * Creates a department (supervisor is set internally).
-     */
+    /** Creates a department (supervisor is set internally). */
     public Department(@NonNull Agent manager, @NonNull List<Interactable> workers) {
       this(manager, List.copyOf(workers), null);
     }
   }
 
-  /**
-   * Builder for HierarchicalAgents.
-   */
+  /** Builder for HierarchicalAgents. */
   public static final class Builder {
     private final Map<String, Department> departments = new HashMap<>();
     private @Nullable Agent executive;
     private int maxTurns = 10;
     private @Nullable TraceMetadata traceMetadata;
 
-    private Builder() {
-    }
+    private Builder() {}
 
     /**
      * Sets the executive agent at the top of the hierarchy.
@@ -301,13 +293,13 @@ public final class HierarchicalAgents implements Interactable {
      *
      * <p>Workers can be any Interactable: Agent, RouterAgent, ParallelAgents, etc.
      *
-     * @param name    the department name
+     * @param name the department name
      * @param manager the department manager (must be an Agent for responder/model access)
      * @param workers the workers in this department
      * @return this builder
      */
     public @NonNull Builder addDepartment(
-            @NonNull String name, @NonNull Agent manager, @NonNull Interactable... workers) {
+        @NonNull String name, @NonNull Agent manager, @NonNull Interactable... workers) {
       Objects.requireNonNull(name, "name cannot be null");
       Objects.requireNonNull(manager, "manager cannot be null");
       Objects.requireNonNull(workers, "workers cannot be null");
@@ -329,13 +321,13 @@ public final class HierarchicalAgents implements Interactable {
     /**
      * Adds a department with a manager and worker list.
      *
-     * @param name    the department name
+     * @param name the department name
      * @param manager the department manager (must be an Agent for responder/model access)
      * @param workers the workers in this department
      * @return this builder
      */
     public @NonNull Builder addDepartment(
-            @NonNull String name, @NonNull Agent manager, @NonNull List<Interactable> workers) {
+        @NonNull String name, @NonNull Agent manager, @NonNull List<Interactable> workers) {
       Objects.requireNonNull(name, "name cannot be null");
       Objects.requireNonNull(manager, "manager cannot be null");
       Objects.requireNonNull(workers, "workers cannot be null");
@@ -394,7 +386,7 @@ public final class HierarchicalAgents implements Interactable {
      * ProjectPlan plan = result.output();
      * }</pre>
      *
-     * @param <T>        the output type
+     * @param <T> the output type
      * @param outputType the class of the structured output
      * @return a structured builder
      */
@@ -435,13 +427,13 @@ public final class HierarchicalAgents implements Interactable {
     }
 
     public @NonNull StructuredBuilder<T> addDepartment(
-            @NonNull String name, @NonNull Agent manager, @NonNull Interactable... workers) {
+        @NonNull String name, @NonNull Agent manager, @NonNull Interactable... workers) {
       parentBuilder.addDepartment(name, manager, workers);
       return this;
     }
 
     public @NonNull StructuredBuilder<T> addDepartment(
-            @NonNull String name, @NonNull Agent manager, @NonNull List<Interactable> workers) {
+        @NonNull String name, @NonNull Agent manager, @NonNull List<Interactable> workers) {
       parentBuilder.addDepartment(name, manager, workers);
       return this;
     }
@@ -476,8 +468,8 @@ public final class HierarchicalAgents implements Interactable {
   /**
    * Type-safe wrapper for hierarchical agents with structured output.
    *
-   * <p>Delegates all interaction to the wrapped HierarchicalAgents and parses the executive's
-   * final output as the specified type.
+   * <p>Delegates all interaction to the wrapped HierarchicalAgents and parses the executive's final
+   * output as the specified type.
    *
    * @param <T> the output type
    */
@@ -486,7 +478,10 @@ public final class HierarchicalAgents implements Interactable {
     private final Class<T> outputType;
     private final ObjectMapper objectMapper;
 
-    private Structured(@NonNull HierarchicalAgents hierarchy, @NonNull Class<T> outputType, @NonNull ObjectMapper objectMapper) {
+    private Structured(
+        @NonNull HierarchicalAgents hierarchy,
+        @NonNull Class<T> outputType,
+        @NonNull ObjectMapper objectMapper) {
       this.hierarchy = Objects.requireNonNull(hierarchy);
       this.outputType = Objects.requireNonNull(outputType);
       this.objectMapper = Objects.requireNonNull(objectMapper);
@@ -498,38 +493,35 @@ public final class HierarchicalAgents implements Interactable {
     }
 
     @Override
-    public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    public @NonNull AgentResult interact(
+        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       return hierarchy.interact(context, trace);
     }
 
     @Override
-    public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    public @NonNull AgentStream interactStream(
+        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       return hierarchy.interactStream(context, trace);
     }
 
     @Override
-    public @NonNull StructuredAgentResult<T> interactStructured(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    public @NonNull StructuredAgentResult<T> interactStructured(
+        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       AgentResult result = hierarchy.interact(context, trace);
       return result.toStructured(outputType, objectMapper);
     }
 
-    /**
-     * Returns the structured output type.
-     */
+    /** Returns the structured output type. */
     public @NonNull Class<T> outputType() {
       return outputType;
     }
 
-    /**
-     * Returns the executive agent at the top of the hierarchy.
-     */
+    /** Returns the executive agent at the top of the hierarchy. */
     public @NonNull Agent executive() {
       return hierarchy.executive();
     }
 
-    /**
-     * Returns all departments in this hierarchy.
-     */
+    /** Returns all departments in this hierarchy. */
     public @NonNull Map<String, Department> departments() {
       return hierarchy.departments();
     }

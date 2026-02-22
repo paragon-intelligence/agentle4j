@@ -30,7 +30,8 @@ public final class NamedOutputGuardrail implements OutputGuardrail {
   }
 
   @Override
-  public @NonNull GuardrailResult validate(@NonNull String output, @NonNull AgenticContext context) {
+  public @NonNull GuardrailResult validate(
+      @NonNull String output, @NonNull AgenticContext context) {
     return delegate.validate(output, context);
   }
 }

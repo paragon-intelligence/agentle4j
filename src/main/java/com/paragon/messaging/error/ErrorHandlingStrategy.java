@@ -1,11 +1,9 @@
 package com.paragon.messaging.error;
 
 import com.paragon.messaging.whatsapp.payload.InboundMessage;
-
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
-
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -14,10 +12,11 @@ import java.util.function.BiConsumer;
 /**
  * Configuração para tratamento de erros durante processamento.
  *
- * <p>Controla retry, backoff exponencial, dead letter queue e notificações
- * ao usuário quando processamento falha.</p>
+ * <p>Controla retry, backoff exponencial, dead letter queue e notificações ao usuário quando
+ * processamento falha.
  *
- * <p><b>Exemplo com Retry:</b></p>
+ * <p><b>Exemplo com Retry:</b>
+ *
  * <pre>{@code
  * ErrorHandlingStrategy strategy = ErrorHandlingStrategy.builder()
  *     .maxRetries(3)
@@ -27,7 +26,8 @@ import java.util.function.BiConsumer;
  *     .build();
  * }</pre>
  *
- * <p><b>Exemplo com DLQ:</b></p>
+ * <p><b>Exemplo com DLQ:</b>
+ *
  * <pre>{@code
  * ErrorHandlingStrategy strategy = ErrorHandlingStrategy.builder()
  *     .maxRetries(0)
@@ -38,29 +38,24 @@ import java.util.function.BiConsumer;
  *     .build();
  * }</pre>
  *
- * @param maxRetries              número máximo de tentativas de retry (0 = sem retry)
- * @param retryDelay              delay inicial entre retries
- * @param exponentialBackoff      se usa backoff exponencial (2^n * retryDelay)
- * @param notifyUserOnFailure     se envia mensagem de erro ao usuário
+ * @param maxRetries número máximo de tentativas de retry (0 = sem retry)
+ * @param retryDelay delay inicial entre retries
+ * @param exponentialBackoff se usa backoff exponencial (2^n * retryDelay)
+ * @param notifyUserOnFailure se envia mensagem de erro ao usuário
  * @param userNotificationMessage mensagem customizada de erro (opcional)
- * @param deadLetterHandler       handler para mensagens que falharam permanentemente
+ * @param deadLetterHandler handler para mensagens que falharam permanentemente
  * @author Agentle Team
  * @since 1.0
  */
 public record ErrorHandlingStrategy(
-        @PositiveOrZero(message = "Max retries must be zero or positive")
+    @PositiveOrZero(message = "Max retries must be zero or positive")
         @Max(value = 10, message = "Max retries cannot exceed 10")
         int maxRetries,
-
-        @NotNull(message = "Retry delay cannot be null")
-        Duration retryDelay,
-
-        boolean exponentialBackoff,
-        boolean notifyUserOnFailure,
-
-        Optional<String> userNotificationMessage,
-        Optional<BiConsumer<String, List<InboundMessage>>> deadLetterHandler
-) {
+    @NotNull(message = "Retry delay cannot be null") Duration retryDelay,
+    boolean exponentialBackoff,
+    boolean notifyUserOnFailure,
+    Optional<String> userNotificationMessage,
+    Optional<BiConsumer<String, List<InboundMessage>>> deadLetterHandler) {
 
   public ErrorHandlingStrategy {
     if (maxRetries < 0) {
@@ -81,20 +76,20 @@ public record ErrorHandlingStrategy(
    * Estratégia padrão.
    *
    * <ul>
-   *   <li>3 retries com exponential backoff</li>
-   *   <li>2 segundos de delay inicial</li>
-   *   <li>Notifica usuário em falha permanente</li>
+   *   <li>3 retries com exponential backoff
+   *   <li>2 segundos de delay inicial
+   *   <li>Notifica usuário em falha permanente
    * </ul>
    *
    * @return estratégia padrão
    */
   public static ErrorHandlingStrategy defaults() {
     return builder()
-            .maxRetries(3)
-            .retryDelay(Duration.ofSeconds(2))
-            .exponentialBackoff(true)
-            .notifyUserOnFailure(true)
-            .build();
+        .maxRetries(3)
+        .retryDelay(Duration.ofSeconds(2))
+        .exponentialBackoff(true)
+        .notifyUserOnFailure(true)
+        .build();
   }
 
   /**
@@ -103,10 +98,7 @@ public record ErrorHandlingStrategy(
    * @return estratégia sem retry
    */
   public static ErrorHandlingStrategy noRetry() {
-    return builder()
-            .maxRetries(0)
-            .notifyUserOnFailure(true)
-            .build();
+    return builder().maxRetries(0).notifyUserOnFailure(true).build();
   }
 
   public static Builder builder() {
@@ -143,8 +135,7 @@ public record ErrorHandlingStrategy(
    */
   public String getNotificationMessage() {
     return userNotificationMessage.orElse(
-            "Desculpe, estou com dificuldades técnicas. Por favor, tente novamente mais tarde."
-    );
+        "Desculpe, estou com dificuldades técnicas. Por favor, tente novamente mais tarde.");
   }
 
   /**
@@ -189,21 +180,19 @@ public record ErrorHandlingStrategy(
       return this;
     }
 
-    public Builder deadLetterHandler(
-            BiConsumer<String, List<InboundMessage>> handler) {
+    public Builder deadLetterHandler(BiConsumer<String, List<InboundMessage>> handler) {
       this.deadLetterHandler = handler;
       return this;
     }
 
     public ErrorHandlingStrategy build() {
       return new ErrorHandlingStrategy(
-              maxRetries,
-              retryDelay,
-              exponentialBackoff,
-              notifyUserOnFailure,
-              Optional.ofNullable(userNotificationMessage),
-              Optional.ofNullable(deadLetterHandler)
-      );
+          maxRetries,
+          retryDelay,
+          exponentialBackoff,
+          notifyUserOnFailure,
+          Optional.ofNullable(userNotificationMessage),
+          Optional.ofNullable(deadLetterHandler));
     }
   }
 }

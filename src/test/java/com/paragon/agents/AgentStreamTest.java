@@ -1,18 +1,15 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-
-/**
- * Tests for AgentStream builder and callback configuration.
- */
+/** Tests for AgentStream builder and callback configuration. */
 @DisplayName("AgentStream")
 class AgentStreamTest {
 
@@ -71,23 +68,15 @@ class AgentStreamTest {
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream =
-              AgentStream.failed(result)
-                      .onTurnStart(turn -> {
-                      })
-                      .onTextDelta(text -> {
-                      })
-                      .onTurnComplete(response -> {
-                      })
-                      .onToolExecuted(exec -> {
-                      })
-                      .onGuardrailFailed(failed -> {
-                      })
-                      .onHandoff(handoff -> {
-                      })
-                      .onComplete(r -> {
-                      })
-                      .onError(e -> {
-                      });
+          AgentStream.failed(result)
+              .onTurnStart(turn -> {})
+              .onTextDelta(text -> {})
+              .onTurnComplete(response -> {})
+              .onToolExecuted(exec -> {})
+              .onGuardrailFailed(failed -> {})
+              .onHandoff(handoff -> {})
+              .onComplete(r -> {})
+              .onError(e -> {});
 
       assertNotNull(stream);
     }
@@ -99,10 +88,8 @@ class AgentStreamTest {
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream = AgentStream.failed(result);
-      AgentStream chain1 = stream.onTextDelta(t -> {
-      });
-      AgentStream chain2 = chain1.onComplete(r -> {
-      });
+      AgentStream chain1 = stream.onTextDelta(t -> {});
+      AgentStream chain2 = chain1.onComplete(r -> {});
 
       assertSame(stream, chain1);
       assertSame(stream, chain2);
@@ -115,8 +102,7 @@ class AgentStreamTest {
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream = AgentStream.failed(result);
-      AgentStream chained = stream.onTurnStart(turn -> {
-      });
+      AgentStream chained = stream.onTurnStart(turn -> {});
 
       assertSame(stream, chained);
     }
@@ -128,8 +114,7 @@ class AgentStreamTest {
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream = AgentStream.failed(result);
-      AgentStream chained = stream.onToolExecuted(exec -> {
-      });
+      AgentStream chained = stream.onToolExecuted(exec -> {});
 
       assertSame(stream, chained);
     }
@@ -141,8 +126,7 @@ class AgentStreamTest {
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream = AgentStream.failed(result);
-      AgentStream chained = stream.onGuardrailFailed(failed -> {
-      });
+      AgentStream chained = stream.onGuardrailFailed(failed -> {});
 
       assertSame(stream, chained);
     }
@@ -154,8 +138,7 @@ class AgentStreamTest {
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream = AgentStream.failed(result);
-      AgentStream chained = stream.onHandoff(handoff -> {
-      });
+      AgentStream chained = stream.onHandoff(handoff -> {});
 
       assertSame(stream, chained);
     }
@@ -167,8 +150,7 @@ class AgentStreamTest {
       AgentResult result = AgentResult.error(new RuntimeException(), context, 0);
 
       AgentStream stream = AgentStream.failed(result);
-      AgentStream chained = stream.onError(e -> {
-      });
+      AgentStream chained = stream.onError(e -> {});
 
       assertSame(stream, chained);
     }

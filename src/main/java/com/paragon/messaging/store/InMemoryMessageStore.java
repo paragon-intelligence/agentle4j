@@ -1,17 +1,16 @@
 package com.paragon.messaging.store;
 
 import com.paragon.messaging.core.OutboundMessage;
-
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Implementação in-memory de MessageStore com LRU cache para deduplicação.
  *
- * <p>Não persiste após restart. Use para desenvolvimento ou quando
- * persistência não é crítica.</p>
+ * <p>Não persiste após restart. Use para desenvolvimento ou quando persistência não é crítica.
  *
- * <p><b>Exemplo:</b></p>
+ * <p><b>Exemplo:</b>
+ *
  * <pre>{@code
  * MessageStore store = InMemoryMessageStore.create();
  * // ou com capacidade customizada
@@ -53,8 +52,9 @@ public class InMemoryMessageStore implements MessageStore {
 
   @Override
   public void store(String userId, OutboundMessage message) {
-    buffers.computeIfAbsent(userId, k -> Collections.synchronizedList(new ArrayList<>()))
-            .add(message);
+    buffers
+        .computeIfAbsent(userId, k -> Collections.synchronizedList(new ArrayList<>()))
+        .add(message);
   }
 
   @Override
@@ -75,19 +75,17 @@ public class InMemoryMessageStore implements MessageStore {
 
   @Override
   public void markProcessed(String userId, String messageId) {
-    processedIds.computeIfAbsent(userId, k -> createLRUSet(maxProcessedIds))
-            .add(messageId);
+    processedIds.computeIfAbsent(userId, k -> createLRUSet(maxProcessedIds)).add(messageId);
   }
 
   @SuppressWarnings("serial")
   private Set<String> createLRUSet(int maxSize) {
     return Collections.newSetFromMap(
-            new LinkedHashMap<String, Boolean>(maxSize + 1, 0.75f, true) {
-              @Override
-              protected boolean removeEldestEntry(Map.Entry<String, Boolean> eldest) {
-                return size() > maxSize;
-              }
-            }
-    );
+        new LinkedHashMap<String, Boolean>(maxSize + 1, 0.75f, true) {
+          @Override
+          protected boolean removeEldestEntry(Map.Entry<String, Boolean> eldest) {
+            return size() > maxSize;
+          }
+        });
   }
 }

@@ -2,17 +2,15 @@ package com.paragon.prompts;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Coverage tests for prompt storage interfaces and implementations.
- */
+/** Coverage tests for prompt storage interfaces and implementations. */
 @DisplayName("Prompt Store Coverage Tests")
 class PromptStoreCoverageTest {
 
@@ -108,7 +106,8 @@ class PromptStoreCoverageTest {
     @Test
     @DisplayName("should handle multiline content")
     void shouldHandleMultilineContent() {
-      String multiline = """
+      String multiline =
+          """
           Line 1
           Line 2
           Line 3
@@ -226,9 +225,7 @@ class PromptStoreCoverageTest {
   // In-Memory Implementation for Testing
   // =========================================================================
 
-  /**
-   * Simple in-memory implementation of PromptStore and PromptProvider for testing.
-   */
+  /** Simple in-memory implementation of PromptStore and PromptProvider for testing. */
   private static class InMemoryPromptStore implements PromptStore, PromptProvider {
     private final ConcurrentHashMap<String, Prompt> prompts = new ConcurrentHashMap<>();
 

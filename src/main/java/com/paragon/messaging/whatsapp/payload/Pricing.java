@@ -10,10 +10,9 @@ public record Pricing(boolean billable, String pricingModel, String category) {
 
   @JsonCreator
   public Pricing(
-          @JsonProperty("billable") boolean billable,
-          @JsonProperty("pricing_model") String pricingModel,
-          @JsonProperty("category") String category
-  ) {
+      @JsonProperty("billable") boolean billable,
+      @JsonProperty("pricing_model") String pricingModel,
+      @JsonProperty("category") String category) {
     this.billable = billable;
     this.pricingModel = pricingModel;
     this.category = category;

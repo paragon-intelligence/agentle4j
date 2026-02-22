@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.Objects;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -335,8 +334,8 @@ public final class ResponseStream<T> {
   }
 
   /**
-   * Blocks until streaming completes and returns the final Response.
-   * Automatically starts streaming if not already started.
+   * Blocks until streaming completes and returns the final Response. Automatically starts streaming
+   * if not already started.
    *
    * <p>On virtual threads, blocking is efficient and does not consume platform threads.
    *
@@ -352,27 +351,29 @@ public final class ResponseStream<T> {
     Consumer<Response> originalComplete = this.onCompleteHandler;
     Consumer<Throwable> originalError = this.onErrorHandler;
 
-    this.onCompleteHandler = response -> {
-      if (originalComplete != null) {
-        originalComplete.accept(response);
-      }
-      resultRef.set(response);
-      synchronized (lock) {
-        done.set(true);
-        lock.notifyAll();
-      }
-    };
+    this.onCompleteHandler =
+        response -> {
+          if (originalComplete != null) {
+            originalComplete.accept(response);
+          }
+          resultRef.set(response);
+          synchronized (lock) {
+            done.set(true);
+            lock.notifyAll();
+          }
+        };
 
-    this.onErrorHandler = error -> {
-      if (originalError != null) {
-        originalError.accept(error);
-      }
-      errorRef.set(error);
-      synchronized (lock) {
-        done.set(true);
-        lock.notifyAll();
-      }
-    };
+    this.onErrorHandler =
+        error -> {
+          if (originalError != null) {
+            originalError.accept(error);
+          }
+          errorRef.set(error);
+          synchronized (lock) {
+            done.set(true);
+            lock.notifyAll();
+          }
+        };
 
     if (started.compareAndSet(false, true)) {
       Thread.startVirtualThread(this::executeStream);
@@ -397,8 +398,8 @@ public final class ResponseStream<T> {
   }
 
   /**
-   * Blocks until streaming completes and returns a parsed structured response.
-   * Only available for structured output streams.
+   * Blocks until streaming completes and returns a parsed structured response. Only available for
+   * structured output streams.
    *
    * @return the ParsedResponse with typed content
    * @throws IllegalStateException if this is not a structured output stream
@@ -428,12 +429,13 @@ public final class ResponseStream<T> {
     StringBuilder textBuilder = new StringBuilder();
 
     Consumer<String> originalDelta = this.onTextDeltaHandler;
-    this.onTextDeltaHandler = delta -> {
-      if (originalDelta != null) {
-        originalDelta.accept(delta);
-      }
-      textBuilder.append(delta);
-    };
+    this.onTextDeltaHandler =
+        delta -> {
+          if (originalDelta != null) {
+            originalDelta.accept(delta);
+          }
+          textBuilder.append(delta);
+        };
 
     get(); // Wait for completion
     return textBuilder.toString();

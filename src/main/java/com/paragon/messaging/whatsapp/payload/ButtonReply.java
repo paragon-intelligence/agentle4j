@@ -10,9 +10,7 @@ public final class ButtonReply implements InteractiveMessage.InteractiveContent 
 
   @JsonCreator
   public ButtonReply(
-          @JsonProperty("type") String type,
-          @JsonProperty("button_reply") ReplyData buttonReply
-  ) {
+      @JsonProperty("type") String type, @JsonProperty("button_reply") ReplyData buttonReply) {
     this.type = type;
     this.buttonReply = buttonReply;
   }

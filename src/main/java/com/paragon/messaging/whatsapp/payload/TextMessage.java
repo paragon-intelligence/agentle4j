@@ -9,13 +9,12 @@ public final class TextMessage extends AbstractInboundMessage {
 
   @JsonCreator
   public TextMessage(
-          @JsonProperty("from") String from,
-          @JsonProperty("id") String id,
-          @JsonProperty("timestamp") String timestamp,
-          @JsonProperty("type") String type,
-          @JsonProperty("context") MessageContext context,
-          @JsonProperty("text") TextBody text
-  ) {
+      @JsonProperty("from") String from,
+      @JsonProperty("id") String id,
+      @JsonProperty("timestamp") String timestamp,
+      @JsonProperty("type") String type,
+      @JsonProperty("context") MessageContext context,
+      @JsonProperty("text") TextBody text) {
     super(from, id, timestamp, type, context);
     this.text = text;
   }

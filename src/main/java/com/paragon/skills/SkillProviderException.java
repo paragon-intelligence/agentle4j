@@ -6,9 +6,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Exception thrown when a skill cannot be loaded or parsed.
  *
- * <p>This exception is thrown by {@link SkillProvider} implementations
- * when skill retrieval fails due to I/O errors, parsing errors, or
- * validation failures.
+ * <p>This exception is thrown by {@link SkillProvider} implementations when skill retrieval fails
+ * due to I/O errors, parsing errors, or validation failures.
  *
  * @see SkillProvider
  * @since 1.0

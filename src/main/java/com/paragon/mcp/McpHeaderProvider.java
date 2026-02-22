@@ -40,8 +40,7 @@ public interface McpHeaderProvider {
    *
    * @return a map of header names to values (never null, may be empty)
    */
-  @NonNull
-  Map<String, String> getHeaders();
+  @NonNull Map<String, String> getHeaders();
 
   /**
    * Creates a header provider with static headers.

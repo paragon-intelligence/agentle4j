@@ -8,16 +8,17 @@ import java.util.function.Consumer;
 /**
  * Hook executado antes ou depois do processamento de lote de mensagens.
  *
- * <p>Hooks recebem {@link HookContext} e podem realizar ações como:</p>
+ * <p>Hooks recebem {@link HookContext} e podem realizar ações como:
+ *
  * <ul>
- *   <li>Logging e métricas</li>
- *   <li>Validação e moderação de conteúdo</li>
- *   <li>Enriquecimento de dados</li>
- *   <li>Auditoria</li>
+ *   <li>Logging e métricas
+ *   <li>Validação e moderação de conteúdo
+ *   <li>Enriquecimento de dados
+ *   <li>Auditoria
  * </ul>
  *
- * <p><b>Pre-hooks</b> podem interromper processamento lançando
- * {@link HookInterruptedException}:</p>
+ * <p><b>Pre-hooks</b> podem interromper processamento lançando {@link HookInterruptedException}:
+ *
  * <pre>{@code
  * ProcessingHook moderationHook = context -> {
  *     if (hasInappropriateContent(context.messages())) {
@@ -29,7 +30,8 @@ import java.util.function.Consumer;
  * };
  * }</pre>
  *
- * <p><b>Compartilhamento de dados:</b></p>
+ * <p><b>Compartilhamento de dados:</b>
+ *
  * <pre>{@code
  * ProcessingHook preHook = context -> {
  *     context.putMetadata("startTime", Instant.now());
@@ -56,8 +58,7 @@ public interface ProcessingHook {
    * @return hook vazio
    */
   static ProcessingHook noOp() {
-    return context -> {
-    };
+    return context -> {};
   }
 
   /**
@@ -68,12 +69,10 @@ public interface ProcessingHook {
    */
   static ProcessingHook logging(Consumer<String> logger) {
     return context -> {
-      String msg = String.format(
+      String msg =
+          String.format(
               "Processing batch for user %s: %d messages (retry: %s)",
-              context.userId(),
-              context.batchSize(),
-              context.isRetry()
-      );
+              context.userId(), context.batchSize(), context.isRetry());
       logger.accept(msg);
     };
   }
@@ -81,22 +80,24 @@ public interface ProcessingHook {
   /**
    * Hook para medir tempo de processamento.
    *
-   * <p>Retorna par de hooks (pre, post) que medem duração.</p>
+   * <p>Retorna par de hooks (pre, post) que medem duração.
    *
    * @param recorder consumidor que recebe userId e duração
    * @return par de hooks (pre, post)
    */
   static HookPair timing(BiConsumer<String, Duration> recorder) {
-    ProcessingHook preHook = context -> {
-      context.putMetadata("_timing_start", Instant.now());
-    };
+    ProcessingHook preHook =
+        context -> {
+          context.putMetadata("_timing_start", Instant.now());
+        };
 
-    ProcessingHook postHook = context -> {
-      Instant start = context.getMetadata("_timing_start", Instant.class)
-              .orElse(context.batchStartTime());
-      Duration duration = Duration.between(start, Instant.now());
-      recorder.accept(context.userId(), duration);
-    };
+    ProcessingHook postHook =
+        context -> {
+          Instant start =
+              context.getMetadata("_timing_start", Instant.class).orElse(context.batchStartTime());
+          Duration duration = Duration.between(start, Instant.now());
+          recorder.accept(context.userId(), duration);
+        };
 
     return new HookPair(preHook, postHook);
   }
@@ -120,16 +121,15 @@ public interface ProcessingHook {
    *
    * @param context contexto com informações do lote
    * @throws HookInterruptedException para interromper processamento (pre-hooks)
-   * @throws Exception                para erros (será logado e pode triggerar retry)
+   * @throws Exception para erros (será logado e pode triggerar retry)
    */
   void execute(HookContext context) throws Exception;
 
   /**
    * Par de pre-hook e post-hook.
    *
-   * @param preHook  hook executado antes
+   * @param preHook hook executado antes
    * @param postHook hook executado depois
    */
-  record HookPair(ProcessingHook preHook, ProcessingHook postHook) {
-  }
+  record HookPair(ProcessingHook preHook, ProcessingHook postHook) {}
 }

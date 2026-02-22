@@ -6,12 +6,11 @@ import com.paragon.responses.TraceMetadata;
 import com.paragon.skills.Skill;
 import com.paragon.skills.SkillProvider;
 import com.paragon.skills.SkillStore;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Implements the Supervisor pattern: a central agent that coordinates multiple worker agents.
@@ -81,23 +80,23 @@ public final class SupervisorAgent implements Interactable {
 
     // Build internal supervisor agent with workers as tools
     Agent.Builder agentBuilder =
-            Agent.builder()
-                    .name(name)
-                    .model(model)
-                    .instructions(buildSupervisorInstructions())
-                    .responder(responder)
-                    .maxTurns(maxTurns);
+        Agent.builder()
+            .name(name)
+            .model(model)
+            .instructions(buildSupervisorInstructions())
+            .responder(responder)
+            .maxTurns(maxTurns);
 
     // Add workers as interactable tools
     for (Worker worker : workers) {
       agentBuilder.addTool(
-              new InteractableSubAgentTool(
-                      worker.worker(),
-                      InteractableSubAgentTool.Config.builder()
-                              .description(worker.description())
-                              .shareState(true)
-                              .shareHistory(false)
-                              .build()));
+          new InteractableSubAgentTool(
+              worker.worker(),
+              InteractableSubAgentTool.Config.builder()
+                  .description(worker.description())
+                  .shareState(true)
+                  .shareHistory(false)
+                  .build()));
     }
 
     // Add skills
@@ -108,9 +107,7 @@ public final class SupervisorAgent implements Interactable {
     this.supervisorAgent = agentBuilder.build();
   }
 
-  /**
-   * Creates a new SupervisorAgent builder.
-   */
+  /** Creates a new SupervisorAgent builder. */
   public static @NonNull Builder builder() {
     return new Builder();
   }
@@ -126,13 +123,21 @@ public final class SupervisorAgent implements Interactable {
 
   @Override
   public @NonNull InteractableBlueprint toBlueprint() {
-    List<InteractableBlueprint.WorkerBlueprint> workerBlueprints = workers.stream()
-        .map(w -> new InteractableBlueprint.WorkerBlueprint(
-            w.worker().toBlueprint(), w.description()))
-        .toList();
+    List<InteractableBlueprint.WorkerBlueprint> workerBlueprints =
+        workers.stream()
+            .map(
+                w ->
+                    new InteractableBlueprint.WorkerBlueprint(
+                        w.worker().toBlueprint(), w.description()))
+            .toList();
     return new InteractableBlueprint.SupervisorAgentBlueprint(
-        name, model, instructions, maxTurns, workerBlueprints,
-        InteractableBlueprint.ResponderBlueprint.from(responder), traceMetadata);
+        name,
+        model,
+        instructions,
+        maxTurns,
+        workerBlueprints,
+        InteractableBlueprint.ResponderBlueprint.from(responder),
+        traceMetadata);
   }
 
   /**
@@ -144,11 +149,8 @@ public final class SupervisorAgent implements Interactable {
     return workers;
   }
 
-  /**
-   * Returns the underlying supervisor agent for advanced usage.
-   */
-  @NonNull
-  Agent underlyingAgent() {
+  /** Returns the underlying supervisor agent for advanced usage. */
+  @NonNull Agent underlyingAgent() {
     return supervisorAgent;
   }
 
@@ -162,7 +164,8 @@ public final class SupervisorAgent implements Interactable {
   }
 
   @Override
-  public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+  public @NonNull AgentResult interact(
+      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     Objects.requireNonNull(context, "context cannot be null");
     context.ensureTraceContext();
     return supervisorAgent.interact(context, trace);
@@ -175,11 +178,11 @@ public final class SupervisorAgent implements Interactable {
   }
 
   @Override
-  public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+  public @NonNull AgentStream interactStream(
+      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     Objects.requireNonNull(context, "context cannot be null");
     return supervisorAgent.interactStream(context, trace);
   }
-
 
   private String buildSupervisorInstructions() {
     StringBuilder sb = new StringBuilder();
@@ -200,9 +203,7 @@ public final class SupervisorAgent implements Interactable {
     return sb.toString();
   }
 
-  /**
-   * Represents a worker with its description.
-   */
+  /** Represents a worker with its description. */
   public record Worker(@NonNull Interactable worker, @NonNull String description) {
     public Worker {
       Objects.requireNonNull(worker, "worker cannot be null");
@@ -210,9 +211,7 @@ public final class SupervisorAgent implements Interactable {
     }
   }
 
-  /**
-   * Builder for SupervisorAgent.
-   */
+  /** Builder for SupervisorAgent. */
   public static final class Builder {
     private final List<Worker> workers = new ArrayList<>();
     // Skills to pass to the internal Agent
@@ -224,8 +223,7 @@ public final class SupervisorAgent implements Interactable {
     private int maxTurns = 10;
     private @Nullable TraceMetadata traceMetadata;
 
-    private Builder() {
-    }
+    private Builder() {}
 
     /**
      * Sets the supervisor name.
@@ -276,7 +274,7 @@ public final class SupervisorAgent implements Interactable {
      *
      * <p>Workers can be any Interactable: Agent, RouterAgent, ParallelAgents, etc.
      *
-     * @param worker      the worker
+     * @param worker the worker
      * @param description when to use this worker
      * @return this builder
      */
@@ -318,7 +316,7 @@ public final class SupervisorAgent implements Interactable {
      * Loads and adds a skill from a provider.
      *
      * @param provider the skill provider
-     * @param skillId  the skill identifier
+     * @param skillId the skill identifier
      * @return this builder
      */
     public @NonNull Builder addSkillFrom(@NonNull SkillProvider provider, @NonNull String skillId) {
@@ -373,7 +371,7 @@ public final class SupervisorAgent implements Interactable {
      * Report report = result.output();
      * }</pre>
      *
-     * @param <T>        the output type
+     * @param <T> the output type
      * @param outputType the class of the structured output
      * @return a structured builder
      */
@@ -431,7 +429,8 @@ public final class SupervisorAgent implements Interactable {
       return this;
     }
 
-    public @NonNull StructuredBuilder<T> addWorker(@NonNull Interactable worker, @NonNull String description) {
+    public @NonNull StructuredBuilder<T> addWorker(
+        @NonNull Interactable worker, @NonNull String description) {
       parentBuilder.addWorker(worker, description);
       return this;
     }
@@ -471,8 +470,8 @@ public final class SupervisorAgent implements Interactable {
   /**
    * Type-safe wrapper for supervisor agents with structured output.
    *
-   * <p>Delegates all interaction to the wrapped SupervisorAgent and parses the final output
-   * as the specified type.
+   * <p>Delegates all interaction to the wrapped SupervisorAgent and parses the final output as the
+   * specified type.
    *
    * @param <T> the output type
    */
@@ -481,7 +480,10 @@ public final class SupervisorAgent implements Interactable {
     private final Class<T> outputType;
     private final ObjectMapper objectMapper;
 
-    private Structured(@NonNull SupervisorAgent supervisor, @NonNull Class<T> outputType, @NonNull ObjectMapper objectMapper) {
+    private Structured(
+        @NonNull SupervisorAgent supervisor,
+        @NonNull Class<T> outputType,
+        @NonNull ObjectMapper objectMapper) {
       this.supervisor = Objects.requireNonNull(supervisor);
       this.outputType = Objects.requireNonNull(outputType);
       this.objectMapper = Objects.requireNonNull(objectMapper);
@@ -493,24 +495,25 @@ public final class SupervisorAgent implements Interactable {
     }
 
     @Override
-    public @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    public @NonNull AgentResult interact(
+        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       return supervisor.interact(context, trace);
     }
 
     @Override
-    public @NonNull AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    public @NonNull AgentStream interactStream(
+        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       return supervisor.interactStream(context, trace);
     }
 
     @Override
-    public @NonNull StructuredAgentResult<T> interactStructured(@NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+    public @NonNull StructuredAgentResult<T> interactStructured(
+        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       AgentResult result = supervisor.interact(context, trace);
       return result.toStructured(outputType, objectMapper);
     }
 
-    /**
-     * Returns the structured output type.
-     */
+    /** Returns the structured output type. */
     public @NonNull Class<T> outputType() {
       return outputType;
     }

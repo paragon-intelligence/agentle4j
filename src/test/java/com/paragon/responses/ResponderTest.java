@@ -8,7 +8,6 @@ import com.paragon.responses.json.JsonSchemaProducer;
 import com.paragon.responses.spec.*;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import net.jqwik.api.*;
 import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
@@ -317,7 +316,8 @@ class ResponderTest {
     CreateResponsePayload.Structured<TestData> payload = createSamplePayloadForParsing();
 
     // Verify exception - API is synchronous, throws directly
-    RuntimeException exception = assertThrows(RuntimeException.class, () -> responder.respond(payload));
+    RuntimeException exception =
+        assertThrows(RuntimeException.class, () -> responder.respond(payload));
     assertTrue(exception.getMessage().contains("could not be parsed"));
   }
 

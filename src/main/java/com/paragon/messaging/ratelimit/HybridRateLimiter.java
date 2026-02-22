@@ -7,19 +7,19 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Rate limiter híbrido: Token Bucket + Sliding Window.
  *
- * <p>Combina duas estratégias:</p>
+ * <p>Combina duas estratégias:
+ *
  * <ul>
- *   <li><b>Token Bucket:</b> Rate limiting suave com bursts controlados</li>
- *   <li><b>Sliding Window:</b> Anti-flood rígido</li>
+ *   <li><b>Token Bucket:</b> Rate limiting suave com bursts controlados
+ *   <li><b>Sliding Window:</b> Anti-flood rígido
  * </ul>
  *
- * <p>Mensagem é aceita APENAS se AMBAS estratégias permitirem.</p>
+ * <p>Mensagem é aceita APENAS se AMBAS estratégias permitirem.
  *
- * <p><b>Token Bucket:</b> Tokens são reabastecidos continuamente.
- * Permite bursts até capacidade máxima.</p>
+ * <p><b>Token Bucket:</b> Tokens são reabastecidos continuamente. Permite bursts até capacidade
+ * máxima.
  *
- * <p><b>Sliding Window:</b> Conta mensagens em janela deslizante.
- * Bloqueia spam agressivo.</p>
+ * <p><b>Sliding Window:</b> Conta mensagens em janela deslizante. Bloqueia spam agressivo.
  *
  * @author Agentle Team
  * @since 1.0
@@ -30,14 +30,9 @@ public class HybridRateLimiter {
   private final SlidingWindow slidingWindow;
 
   public HybridRateLimiter(RateLimitConfig config) {
-    this.tokenBucket = new TokenBucket(
-            config.tokensPerMinute(),
-            config.bucketCapacity()
-    );
-    this.slidingWindow = new SlidingWindow(
-            config.maxMessagesInWindow(),
-            config.slidingWindow().toMillis()
-    );
+    this.tokenBucket = new TokenBucket(config.tokensPerMinute(), config.bucketCapacity());
+    this.slidingWindow =
+        new SlidingWindow(config.maxMessagesInWindow(), config.slidingWindow().toMillis());
   }
 
   /**
@@ -52,8 +47,8 @@ public class HybridRateLimiter {
   /**
    * Token Bucket para rate limiting suave.
    *
-   * <p>Tokens são reabastecidos a uma taxa constante (tokensPerMinute).
-   * Bucket tem capacidade máxima que permite bursts.</p>
+   * <p>Tokens são reabastecidos a uma taxa constante (tokensPerMinute). Bucket tem capacidade
+   * máxima que permite bursts.
    */
   private static class TokenBucket {
     private final int tokensPerMinute;
@@ -95,8 +90,8 @@ public class HybridRateLimiter {
   /**
    * Sliding Window para anti-flood rígido.
    *
-   * <p>Mantém timestamps de mensagens recentes. Remove timestamps
-   * fora da janela antes de verificar se pode aceitar nova mensagem.</p>
+   * <p>Mantém timestamps de mensagens recentes. Remove timestamps fora da janela antes de verificar
+   * se pode aceitar nova mensagem.
    */
   private static class SlidingWindow {
     private final int maxMessages;

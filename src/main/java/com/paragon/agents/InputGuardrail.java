@@ -40,18 +40,17 @@ public interface InputGuardrail {
   /**
    * Validates the user input.
    *
-   * @param input   the user's input string
+   * @param input the user's input string
    * @param context the current agent context (for state-based validation)
    * @return the validation result
    */
-  @NonNull
-  GuardrailResult validate(@NonNull String input, @NonNull AgenticContext context);
+  @NonNull GuardrailResult validate(@NonNull String input, @NonNull AgenticContext context);
 
   /**
    * Wraps a guardrail implementation with a named ID for blueprint serialization.
    *
-   * <p>Use this when defining guardrails as lambdas that need to be serializable. The guardrail
-   * is registered in the {@link GuardrailRegistry} and can be reconstructed during deserialization.
+   * <p>Use this when defining guardrails as lambdas that need to be serializable. The guardrail is
+   * registered in the {@link GuardrailRegistry} and can be reconstructed during deserialization.
    *
    * <pre>{@code
    * InputGuardrail guard = InputGuardrail.named("no_passwords", (input, ctx) -> {

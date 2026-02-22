@@ -211,7 +211,8 @@ class JsonRpcDtoTest {
 
   @Test
   void shouldDeserializeTextContent() throws Exception {
-    String json = """
+    String json =
+        """
         {"type": "text", "text": "Hello"}
         """;
 

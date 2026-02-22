@@ -1,5 +1,9 @@
 package com.paragon.messaging.processor;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import com.paragon.agents.AgentResult;
 import com.paragon.agents.AgenticContext;
 import com.paragon.agents.Interactable;
@@ -15,22 +19,15 @@ import com.paragon.messaging.whatsapp.payload.InboundMessage;
 import com.paragon.messaging.whatsapp.response.WhatsAppResponse;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.UserMessage;
+import java.time.Duration;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.time.Duration;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
-/**
- * Tests for {@link AIAgentProcessor}.
- */
+/** Tests for {@link AIAgentProcessor}. */
 @DisplayName("AIAgentProcessor")
 class AIAgentProcessorTest {
 
@@ -97,11 +94,10 @@ class AIAgentProcessorTest {
     @DisplayName("forStructuredAgent() creates structured builder")
     void forStructuredAgent_createsBuilder() {
       @SuppressWarnings("unchecked")
-      Interactable.Structured<TestResponse> structuredAgent =
-              mock(Interactable.Structured.class);
+      Interactable.Structured<TestResponse> structuredAgent = mock(Interactable.Structured.class);
 
       AIAgentProcessor.Builder<TestResponse> builder =
-              AIAgentProcessor.forStructuredAgent(structuredAgent);
+          AIAgentProcessor.forStructuredAgent(structuredAgent);
 
       assertNotNull(builder);
     }
@@ -117,9 +113,8 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("build() creates processor with required fields")
     void build_withRequiredFields_succeeds() {
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
-              .messagingProvider(mockProvider)
-              .build();
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent).messagingProvider(mockProvider).build();
 
       assertNotNull(processor);
     }
@@ -127,7 +122,8 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("builder with all optional fields")
     void builder_withAllOptionalFields() {
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .historyStore(mockHistoryStore)
@@ -141,7 +137,8 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("withInMemoryHistory() enables in-memory storage")
     void withInMemoryHistory_enablesStorage() {
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .withInMemoryHistory()
               .build();
@@ -152,7 +149,8 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("withInMemoryHistory(maxPerUser) sets limit")
     void withInMemoryHistory_setsLimit() {
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .withInMemoryHistory(50)
               .build();
@@ -168,23 +166,23 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("process() sends agent response as text")
     void process_sendsAgentResponse() throws Exception {
-      when(mockConverter.toUserMessage(anyList())).thenReturn(
-              UserMessage.text("Hello"));
-      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(
-              AgentResult.success("Hello! How can I help?"));
+      when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Hello"));
+      when(mockAgent.interact(any(AgenticContext.class)))
+          .thenReturn(AgentResult.success("Hello! How can I help?"));
 
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "msg1", "Hello"));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "msg1", "Hello"));
 
       processor.process("user123", messages);
 
       ArgumentCaptor<OutboundMessage> messageCaptor =
-              ArgumentCaptor.forClass(OutboundMessage.class);
+          ArgumentCaptor.forClass(OutboundMessage.class);
       verify(mockProvider).sendMessage(any(), messageCaptor.capture());
 
       OutboundMessage sent = messageCaptor.getValue();
@@ -195,34 +193,29 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("process() throws on null userId")
     void process_nullUserId_throws() {
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
-              .messagingProvider(mockProvider)
-              .build();
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent).messagingProvider(mockProvider).build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "Test"));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "Test"));
 
-      assertThrows(NullPointerException.class, () ->
-              processor.process(null, messages));
+      assertThrows(NullPointerException.class, () -> processor.process(null, messages));
     }
 
     @Test
     @DisplayName("process() throws on null messages")
     void process_nullMessages_throws() {
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
-              .messagingProvider(mockProvider)
-              .build();
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent).messagingProvider(mockProvider).build();
 
-      assertThrows(NullPointerException.class, () ->
-              processor.process("user123", null));
+      assertThrows(NullPointerException.class, () -> processor.process("user123", null));
     }
 
     @Test
     @DisplayName("process() handles empty message list")
     void process_emptyMessages_doesNothing() throws Exception {
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
-              .messagingProvider(mockProvider)
-              .build();
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent).messagingProvider(mockProvider).build();
 
       processor.process("user123", List.of());
 
@@ -233,38 +226,38 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("process() throws on agent error")
     void process_agentError_throws() {
-      when(mockConverter.toUserMessage(anyList())).thenReturn(
-              UserMessage.text("Hello"));
-      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(
-              AgentResult.error(new RuntimeException("Agent failed")));
+      when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Hello"));
+      when(mockAgent.interact(any(AgenticContext.class)))
+          .thenReturn(AgentResult.error(new RuntimeException("Agent failed")));
 
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "Test"));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "Test"));
 
-      assertThrows(AIAgentProcessor.AIProcessingException.class, () ->
-              processor.process("user123", messages));
+      assertThrows(
+          AIAgentProcessor.AIProcessingException.class,
+          () -> processor.process("user123", messages));
     }
 
     @Test
     @DisplayName("process() skips empty/blank responses")
     void process_emptyResponse_skips() throws Exception {
-      when(mockConverter.toUserMessage(anyList())).thenReturn(
-              UserMessage.text("Hello"));
-      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(
-              AgentResult.success("   "));
+      when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Hello"));
+      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(AgentResult.success("   "));
 
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "Test"));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "Test"));
 
       processor.process("user123", messages);
 
@@ -280,24 +273,22 @@ class AIAgentProcessorTest {
     @DisplayName("processes structured agent output")
     void processStructured_sendsResponse() throws Exception {
       @SuppressWarnings("unchecked")
-      Interactable.Structured<TestResponse> structuredAgent =
-              mock(Interactable.Structured.class);
+      Interactable.Structured<TestResponse> structuredAgent = mock(Interactable.Structured.class);
 
       TestResponse testResponse = new TestResponse("Structured response");
 
-      when(mockConverter.toUserMessage(anyList())).thenReturn(
-              UserMessage.text("Hello"));
+      when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Hello"));
       when(structuredAgent.interactStructured(any(AgenticContext.class)))
-              .thenReturn(StructuredAgentResult.success(testResponse, "raw output"));
+          .thenReturn(StructuredAgentResult.success(testResponse, "raw output"));
 
       AIAgentProcessor<TestResponse> processor =
-              AIAgentProcessor.forStructuredAgent(structuredAgent)
-                      .messagingProvider(mockProvider)
-                      .messageConverter(mockConverter)
-                      .build();
+          AIAgentProcessor.forStructuredAgent(structuredAgent)
+              .messagingProvider(mockProvider)
+              .messageConverter(mockConverter)
+              .build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "Test"));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "Test"));
 
       processor.process("user123", messages);
 
@@ -309,26 +300,24 @@ class AIAgentProcessorTest {
     @DisplayName("throws on structured agent error")
     void processStructured_agentError_throws() {
       @SuppressWarnings("unchecked")
-      Interactable.Structured<TestResponse> structuredAgent =
-              mock(Interactable.Structured.class);
+      Interactable.Structured<TestResponse> structuredAgent = mock(Interactable.Structured.class);
 
-      when(mockConverter.toUserMessage(anyList())).thenReturn(
-              UserMessage.text("Hello"));
+      when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Hello"));
       when(structuredAgent.interactStructured(any(AgenticContext.class)))
-              .thenReturn(StructuredAgentResult.error(
-                      new RuntimeException("Structured agent failed")));
+          .thenReturn(StructuredAgentResult.error(new RuntimeException("Structured agent failed")));
 
       AIAgentProcessor<TestResponse> processor =
-              AIAgentProcessor.forStructuredAgent(structuredAgent)
-                      .messagingProvider(mockProvider)
-                      .messageConverter(mockConverter)
-                      .build();
+          AIAgentProcessor.forStructuredAgent(structuredAgent)
+              .messagingProvider(mockProvider)
+              .messageConverter(mockConverter)
+              .build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "Test"));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "Test"));
 
-      assertThrows(AIAgentProcessor.AIProcessingException.class, () ->
-              processor.process("user123", messages));
+      assertThrows(
+          AIAgentProcessor.AIProcessingException.class,
+          () -> processor.process("user123", messages));
     }
   }
 
@@ -342,19 +331,19 @@ class AIAgentProcessorTest {
       UserMessage userMsg = UserMessage.text("Hello");
 
       when(mockConverter.toUserMessage(anyList())).thenReturn(userMsg);
-      when(mockHistoryStore.getHistory(anyString(), anyInt(), any()))
-              .thenReturn(List.of());
-      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(
-              AgentResult.success("Hi there!"));
+      when(mockHistoryStore.getHistory(anyString(), anyInt(), any())).thenReturn(List.of());
+      when(mockAgent.interact(any(AgenticContext.class)))
+          .thenReturn(AgentResult.success("Hi there!"));
 
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .historyStore(mockHistoryStore)
               .build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "Hello"));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "Hello"));
 
       processor.process("user123", messages);
 
@@ -364,28 +353,25 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("stores assistant response in history")
     void storesAssistantResponse_inHistory() throws Exception {
-      when(mockConverter.toUserMessage(anyList())).thenReturn(
-              UserMessage.text("Hello"));
-      when(mockHistoryStore.getHistory(anyString(), anyInt(), any()))
-              .thenReturn(List.of());
-      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(
-              AgentResult.success("Hi there!"));
+      when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Hello"));
+      when(mockHistoryStore.getHistory(anyString(), anyInt(), any())).thenReturn(List.of());
+      when(mockAgent.interact(any(AgenticContext.class)))
+          .thenReturn(AgentResult.success("Hi there!"));
 
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .historyStore(mockHistoryStore)
               .build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "Hello"));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "Hello"));
 
       processor.process("user123", messages);
 
-      ArgumentCaptor<Message> messageCaptor =
-              ArgumentCaptor.forClass(Message.class);
-      verify(mockHistoryStore, times(2)).addMessage(eq("user123"),
-              messageCaptor.capture());
+      ArgumentCaptor<Message> messageCaptor = ArgumentCaptor.forClass(Message.class);
+      verify(mockHistoryStore, times(2)).addMessage(eq("user123"), messageCaptor.capture());
 
       List<Message> storedMessages = messageCaptor.getAllValues();
       assertEquals(2, storedMessages.size());
@@ -395,22 +381,21 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("retrieves history with max messages limit")
     void retrievesHistory_withMaxMessages() throws Exception {
-      when(mockConverter.toUserMessage(anyList())).thenReturn(
-              UserMessage.text("Hello"));
-      when(mockHistoryStore.getHistory(eq("user123"), eq(15), any()))
-              .thenReturn(List.of());
-      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(
-              AgentResult.success("Response"));
+      when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Hello"));
+      when(mockHistoryStore.getHistory(eq("user123"), eq(15), any())).thenReturn(List.of());
+      when(mockAgent.interact(any(AgenticContext.class)))
+          .thenReturn(AgentResult.success("Response"));
 
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .historyStore(mockHistoryStore)
               .maxHistoryMessages(15)
               .build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "Hello"));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "Hello"));
 
       processor.process("user123", messages);
 
@@ -422,22 +407,21 @@ class AIAgentProcessorTest {
     void retrievesHistory_withMaxAge() throws Exception {
       Duration maxAge = Duration.ofHours(6);
 
-      when(mockConverter.toUserMessage(anyList())).thenReturn(
-              UserMessage.text("Hello"));
-      when(mockHistoryStore.getHistory(anyString(), anyInt(), eq(maxAge)))
-              .thenReturn(List.of());
-      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(
-              AgentResult.success("Response"));
+      when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Hello"));
+      when(mockHistoryStore.getHistory(anyString(), anyInt(), eq(maxAge))).thenReturn(List.of());
+      when(mockAgent.interact(any(AgenticContext.class)))
+          .thenReturn(AgentResult.success("Response"));
 
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .historyStore(mockHistoryStore)
               .maxHistoryAge(maxAge)
               .build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "Hello"));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "Hello"));
 
       processor.process("user123", messages);
 
@@ -447,18 +431,18 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("works without history store")
     void worksWithoutHistoryStore() throws Exception {
-      when(mockConverter.toUserMessage(anyList())).thenReturn(
-              UserMessage.text("Hello"));
-      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(
-              AgentResult.success("Response"));
+      when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Hello"));
+      when(mockAgent.interact(any(AgenticContext.class)))
+          .thenReturn(AgentResult.success("Response"));
 
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "Hello"));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "Hello"));
 
       assertDoesNotThrow(() -> processor.process("user123", messages));
     }
@@ -471,18 +455,19 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("combines multiple messages")
     void combinesMultiple() throws Exception {
-      List<InboundMessage> messages = List.of(
+      List<InboundMessage> messages =
+          List.of(
               MockMessageFactory.createTextMessage("user123", "msg1", "Hello"),
               MockMessageFactory.createTextMessage("user123", "msg2", "How are you?"),
-              MockMessageFactory.createTextMessage("user123", "msg3", "I need help")
-      );
+              MockMessageFactory.createTextMessage("user123", "msg3", "I need help"));
 
-      when(mockConverter.toUserMessage(messages)).thenReturn(
-              UserMessage.text("Hello\nHow are you?\nI need help"));
-      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(
-              AgentResult.success("I'm here to help!"));
+      when(mockConverter.toUserMessage(messages))
+          .thenReturn(UserMessage.text("Hello\nHow are you?\nI need help"));
+      when(mockAgent.interact(any(AgenticContext.class)))
+          .thenReturn(AgentResult.success("I'm here to help!"));
 
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .build();
@@ -496,18 +481,18 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("uses last message ID for reply context")
     void usesLastMessageId_forReply() throws Exception {
-      List<InboundMessage> messages = List.of(
+      List<InboundMessage> messages =
+          List.of(
               MockMessageFactory.createTextMessage("user123", "msg1", "First"),
               MockMessageFactory.createTextMessage("user123", "msg2", "Second"),
-              MockMessageFactory.createTextMessage("user123", "msg3", "Third")
-      );
+              MockMessageFactory.createTextMessage("user123", "msg3", "Third"));
 
-      when(mockConverter.toUserMessage(anyList())).thenReturn(
-              UserMessage.text("Combined"));
-      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(
-              AgentResult.success("Response"));
+      when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Combined"));
+      when(mockAgent.interact(any(AgenticContext.class)))
+          .thenReturn(AgentResult.success("Response"));
 
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .build();
@@ -515,7 +500,7 @@ class AIAgentProcessorTest {
       processor.process("user123", messages);
 
       ArgumentCaptor<OutboundMessage> messageCaptor =
-              ArgumentCaptor.forClass(OutboundMessage.class);
+          ArgumentCaptor.forClass(OutboundMessage.class);
       verify(mockProvider).sendMessage(any(), messageCaptor.capture());
 
       OutboundMessage sent = messageCaptor.getValue();
@@ -532,23 +517,22 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("process() accepts context parameter")
     void process_acceptsContext() throws Exception {
-      when(mockConverter.toUserMessage(anyList())).thenReturn(
-              UserMessage.text("Hello"));
-      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(
-              AgentResult.success("Response"));
+      when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Hello"));
+      when(mockAgent.interact(any(AgenticContext.class)))
+          .thenReturn(AgentResult.success("Response"));
 
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "msg1", "Hello"));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "msg1", "Hello"));
 
       MessageProcessor.ProcessingContext context =
-              MessageProcessor.ProcessingContext.create(
-                      "batch1", "msg1", "msg1",
-                      MessageProcessor.ProcessingReason.TIMEOUT);
+          MessageProcessor.ProcessingContext.create(
+              "batch1", "msg1", "msg1", MessageProcessor.ProcessingReason.TIMEOUT);
 
       assertDoesNotThrow(() -> processor.process("user123", messages, context));
     }
@@ -561,18 +545,17 @@ class AIAgentProcessorTest {
     @Test
     @DisplayName("handles null agent response gracefully")
     void handlesNullResponse() throws Exception {
-      when(mockConverter.toUserMessage(anyList())).thenReturn(
-              UserMessage.text("Hello"));
-      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(
-              AgentResult.success(null));
+      when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Hello"));
+      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(AgentResult.success(null));
 
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "Test"));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "Test"));
 
       processor.process("user123", messages);
 
@@ -584,18 +567,18 @@ class AIAgentProcessorTest {
     void handlesLongMessages() throws Exception {
       String longText = "A".repeat(10000);
 
-      when(mockConverter.toUserMessage(anyList())).thenReturn(
-              UserMessage.text(longText));
-      when(mockAgent.interact(any(AgenticContext.class))).thenReturn(
-              AgentResult.success("Processed long message"));
+      when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text(longText));
+      when(mockAgent.interact(any(AgenticContext.class)))
+          .thenReturn(AgentResult.success("Processed long message"));
 
-      AIAgentProcessor<Void> processor = AIAgentProcessor.forAgent(mockAgent)
+      AIAgentProcessor<Void> processor =
+          AIAgentProcessor.forAgent(mockAgent)
               .messagingProvider(mockProvider)
               .messageConverter(mockConverter)
               .build();
 
-      List<InboundMessage> messages = List.of(
-              MockMessageFactory.createTextMessage("user123", "msg1", longText));
+      List<InboundMessage> messages =
+          List.of(MockMessageFactory.createTextMessage("user123", "msg1", longText));
 
       assertDoesNotThrow(() -> processor.process("user123", messages));
     }

@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -215,9 +214,7 @@ public final class StdioMcpClient extends McpClient {
     }
   }
 
-  /**
-   * Builder for StdioMcpClient.
-   */
+  /** Builder for StdioMcpClient. */
   public static final class Builder {
     private final List<String> command = new ArrayList<>();
     private final Map<String, String> environment = new HashMap<>();

@@ -8,11 +8,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Coverage tests for streaming event types.
- * Tests record construction and polymorphic dispatch for events with simple constructors.
- * 
- * Note: Events requiring Response objects (ResponseCreatedEvent, ResponseQueuedEvent, etc.)
- * are tested via integration tests.
+ * Coverage tests for streaming event types. Tests record construction and polymorphic dispatch for
+ * events with simple constructors.
+ *
+ * <p>Note: Events requiring Response objects (ResponseCreatedEvent, ResponseQueuedEvent, etc.) are
+ * tested via integration tests.
  */
 @DisplayName("Streaming Events Coverage Tests")
 class StreamingEventsCoverageTest {
@@ -28,8 +28,7 @@ class StreamingEventsCoverageTest {
     @DisplayName("OutputTextDeltaEvent should have correct fields")
     void outputTextDeltaEventShouldHaveCorrectFields() {
       OutputTextDeltaEvent event =
-          new OutputTextDeltaEvent(
-              "response.output_text.delta", "item-1", 0, 0, "Hello", null, 5);
+          new OutputTextDeltaEvent("response.output_text.delta", "item-1", 0, 0, "Hello", null, 5);
       assertEquals("response.output_text.delta", event.type());
       assertEquals("item-1", event.itemId());
       assertEquals(0, event.outputIndex());

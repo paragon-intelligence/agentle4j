@@ -1,14 +1,13 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.paragon.responses.Responder;
+import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.*;
-
-import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for Agent.Structured<T> functionality.
@@ -28,7 +27,7 @@ class AgentStructuredOutputTest {
     mockWebServer.start();
 
     responder =
-            Responder.builder().openRouter().apiKey("test-key").baseUrl(mockWebServer.url("/")).build();
+        Responder.builder().openRouter().apiKey("test-key").baseUrl(mockWebServer.url("/")).build();
   }
 
   @AfterEach
@@ -42,12 +41,12 @@ class AgentStructuredOutputTest {
 
   private <T> Agent.Structured<T> createStructuredAgent(Class<T> outputType) {
     return Agent.builder()
-            .structured(outputType)
-            .name("TestExtractor")
-            .instructions("Extract information as JSON.")
-            .model("test-model")
-            .responder(responder)
-            .build();
+        .structured(outputType)
+        .name("TestExtractor")
+        .instructions("Extract information as JSON.")
+        .model("test-model")
+        .responder(responder)
+        .build();
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -56,49 +55,48 @@ class AgentStructuredOutputTest {
 
   private void enqueueStructuredResponse(String jsonContent) {
     String responseJson =
-            """
-                    {
-                      "id": "resp_%d",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "output": [
-                        {
-                          "type": "message",
-                          "id": "msg_1",
-                          "status": "completed",
-                          "role": "assistant",
-                          "content": [
-                            {
-                              "type": "output_text",
-                              "text": "%s"
-                            }
-                          ]
-                        }
-                      ],
-                      "model": "test-model",
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 50,
-                        "total_tokens": 60
-                      }
-                    }
-                    """
-                    .formatted(System.nanoTime(), jsonContent.replace("\"", "\\\"").replace("\n", ""));
+        """
+        {
+          "id": "resp_%d",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_1",
+              "status": "completed",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "model": "test-model",
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 50,
+            "total_tokens": 60
+          }
+        }
+        """
+            .formatted(System.nanoTime(), jsonContent.replace("\"", "\\\"").replace("\n", ""));
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setBody(responseJson)
-                    .setHeader("Content-Type", "application/json")
-                    .setResponseCode(200));
+        new MockResponse()
+            .setBody(responseJson)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RESULT ACCESSORS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  public record PersonInfo(@NonNull String name, int age) {
-  }
+  public record PersonInfo(@NonNull String name, int age) {}
 
   // ═══════════════════════════════════════════════════════════════════════════
   // HELPERS
@@ -112,13 +110,13 @@ class AgentStructuredOutputTest {
     @DisplayName("structured agent is created from builder")
     void structuredAgent_createdFromBuilder() {
       Agent.Structured<PersonInfo> structured =
-              Agent.builder()
-                      .structured(PersonInfo.class)
-                      .name("PersonExtractor")
-                      .instructions("Extract person information.")
-                      .model("test-model")
-                      .responder(responder)
-                      .build();
+          Agent.builder()
+              .structured(PersonInfo.class)
+              .name("PersonExtractor")
+              .instructions("Extract person information.")
+              .model("test-model")
+              .responder(responder)
+              .build();
 
       assertNotNull(structured);
     }
@@ -127,13 +125,13 @@ class AgentStructuredOutputTest {
     @DisplayName("structured agent returns output type")
     void structuredAgent_returnsOutputType() {
       Agent.Structured<PersonInfo> structured =
-              Agent.builder()
-                      .structured(PersonInfo.class)
-                      .name("PersonExtractor")
-                      .instructions("Extract person info.")
-                      .model("test-model")
-                      .responder(responder)
-                      .build();
+          Agent.builder()
+              .structured(PersonInfo.class)
+              .name("PersonExtractor")
+              .instructions("Extract person info.")
+              .model("test-model")
+              .responder(responder)
+              .build();
 
       assertEquals(PersonInfo.class, structured.outputType());
     }
@@ -142,13 +140,13 @@ class AgentStructuredOutputTest {
     @DisplayName("structured agent has name")
     void structuredAgent_hasName() {
       Agent.Structured<PersonInfo> structured =
-              Agent.builder()
-                      .structured(PersonInfo.class)
-                      .name("PersonExtractor")
-                      .instructions("Extract person info.")
-                      .model("test-model")
-                      .responder(responder)
-                      .build();
+          Agent.builder()
+              .structured(PersonInfo.class)
+              .name("PersonExtractor")
+              .instructions("Extract person info.")
+              .model("test-model")
+              .responder(responder)
+              .build();
 
       assertEquals("PersonExtractor", structured.name());
     }

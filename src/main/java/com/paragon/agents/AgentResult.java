@@ -4,10 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.responses.spec.Response;
 import com.paragon.responses.spec.ResponseInputItem;
+import java.util.List;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-
-import java.util.List;
 
 /**
  * The result of an agent interaction, containing the final output and execution metadata.
@@ -62,14 +61,14 @@ public final class AgentResult {
     this.finalResponse = builder.finalResponse;
     this.history = builder.history != null ? List.copyOf(builder.history) : List.of();
     this.toolExecutions =
-            builder.toolExecutions != null ? List.copyOf(builder.toolExecutions) : List.of();
+        builder.toolExecutions != null ? List.copyOf(builder.toolExecutions) : List.of();
     this.turnsUsed = builder.turnsUsed;
     this.handoffAgent = builder.handoffAgent;
     this.error = builder.error;
     this.parsed = builder.parsed;
     this.pausedState = builder.pausedState;
     this.relatedResults =
-            builder.relatedResults != null ? List.copyOf(builder.relatedResults) : List.of();
+        builder.relatedResults != null ? List.copyOf(builder.relatedResults) : List.of();
   }
 
   // ===== Factory Methods =====
@@ -77,26 +76,26 @@ public final class AgentResult {
   /**
    * Creates a successful result.
    *
-   * @param output         the final text output
-   * @param response       the final API response
-   * @param context        the agent context with history
+   * @param output the final text output
+   * @param response the final API response
+   * @param context the agent context with history
    * @param toolExecutions all tool executions
-   * @param turnsUsed      number of LLM turns
+   * @param turnsUsed number of LLM turns
    * @return a success result
    */
   public static @NonNull AgentResult success(
-          @NonNull String output,
-          @NonNull Response response,
-          @NonNull AgenticContext context,
-          @NonNull List<ToolExecution> toolExecutions,
-          int turnsUsed) {
+      @NonNull String output,
+      @NonNull Response response,
+      @NonNull AgenticContext context,
+      @NonNull List<ToolExecution> toolExecutions,
+      int turnsUsed) {
     return new Builder()
-            .output(output)
-            .finalResponse(response)
-            .history(context.getHistory())
-            .toolExecutions(toolExecutions)
-            .turnsUsed(turnsUsed)
-            .build();
+        .output(output)
+        .finalResponse(response)
+        .history(context.getHistory())
+        .toolExecutions(toolExecutions)
+        .turnsUsed(turnsUsed)
+        .build();
   }
 
   /**
@@ -106,73 +105,71 @@ public final class AgentResult {
    * @return a minimal success result
    */
   public static @NonNull AgentResult success(@NonNull String output) {
-    return new Builder()
-            .output(output)
-            .build();
+    return new Builder().output(output).build();
   }
 
   /**
    * Creates a successful result with parsed structured output.
    *
-   * @param output         the final text output (JSON)
-   * @param parsed         the parsed structured object
-   * @param response       the final API response
-   * @param context        the agent context with history
+   * @param output the final text output (JSON)
+   * @param parsed the parsed structured object
+   * @param response the final API response
+   * @param context the agent context with history
    * @param toolExecutions all tool executions
-   * @param turnsUsed      number of LLM turns
-   * @param <T>            the parsed type
+   * @param turnsUsed number of LLM turns
+   * @param <T> the parsed type
    * @return a success result with parsed output
    */
   public static <T> @NonNull AgentResult successWithParsed(
-          @NonNull String output,
-          @NonNull T parsed,
-          @NonNull Response response,
-          @NonNull AgenticContext context,
-          @NonNull List<ToolExecution> toolExecutions,
-          int turnsUsed) {
+      @NonNull String output,
+      @NonNull T parsed,
+      @NonNull Response response,
+      @NonNull AgenticContext context,
+      @NonNull List<ToolExecution> toolExecutions,
+      int turnsUsed) {
     return new Builder()
-            .output(output)
-            .parsed(parsed)
-            .finalResponse(response)
-            .history(context.getHistory())
-            .toolExecutions(toolExecutions)
-            .turnsUsed(turnsUsed)
-            .build();
+        .output(output)
+        .parsed(parsed)
+        .finalResponse(response)
+        .history(context.getHistory())
+        .toolExecutions(toolExecutions)
+        .turnsUsed(turnsUsed)
+        .build();
   }
 
   /**
    * Creates a handoff result (after auto-executing the target agent).
    *
    * @param handoffAgent the agent that was handed off to
-   * @param innerResult  the result from the handoff agent
-   * @param context      the original context with combined history
+   * @param innerResult the result from the handoff agent
+   * @param context the original context with combined history
    * @return a handoff result
    */
   public static @NonNull AgentResult handoff(
-          @NonNull Agent handoffAgent,
-          @NonNull AgentResult innerResult,
-          @NonNull AgenticContext context) {
+      @NonNull Agent handoffAgent,
+      @NonNull AgentResult innerResult,
+      @NonNull AgenticContext context) {
     return new Builder()
-            .output(innerResult.output)
-            .finalResponse(innerResult.finalResponse)
-            .history(context.getHistory())
-            .toolExecutions(innerResult.toolExecutions)
-            .turnsUsed(innerResult.turnsUsed)
-            .handoffAgent(handoffAgent)
-            .parsed(innerResult.parsed)
-            .build();
+        .output(innerResult.output)
+        .finalResponse(innerResult.finalResponse)
+        .history(context.getHistory())
+        .toolExecutions(innerResult.toolExecutions)
+        .turnsUsed(innerResult.turnsUsed)
+        .handoffAgent(handoffAgent)
+        .parsed(innerResult.parsed)
+        .build();
   }
 
   /**
    * Creates an error result.
    *
-   * @param error     the error that occurred
-   * @param context   the agent context at time of error
+   * @param error the error that occurred
+   * @param context the agent context at time of error
    * @param turnsUsed number of LLM turns before error
    * @return an error result
    */
   public static @NonNull AgentResult error(
-          @NonNull Throwable error, @NonNull AgenticContext context, int turnsUsed) {
+      @NonNull Throwable error, @NonNull AgenticContext context, int turnsUsed) {
     return new Builder().error(error).history(context.getHistory()).turnsUsed(turnsUsed).build();
   }
 
@@ -189,17 +186,17 @@ public final class AgentResult {
   /**
    * Creates an error result from a guardrail failure.
    *
-   * @param reason  the guardrail failure reason
+   * @param reason the guardrail failure reason
    * @param context the agent context
    * @return an error result
    */
   public static @NonNull AgentResult guardrailFailed(
-          @NonNull String reason, @NonNull AgenticContext context) {
+      @NonNull String reason, @NonNull AgenticContext context) {
     return new Builder()
-            .error(new GuardrailException(reason))
-            .history(context.getHistory())
-            .turnsUsed(0)
-            .build();
+        .error(new GuardrailException(reason))
+        .history(context.getHistory())
+        .turnsUsed(0)
+        .build();
   }
 
   /**
@@ -207,43 +204,43 @@ public final class AgentResult {
    *
    * <p>The run can be resumed later with {@code Agent.resume(state)}.
    *
-   * @param state   the serializable run state
+   * @param state the serializable run state
    * @param context the agent context
    * @return a paused result
    */
   public static @NonNull AgentResult paused(
-          @NonNull AgentRunState state, @NonNull AgenticContext context) {
+      @NonNull AgentRunState state, @NonNull AgenticContext context) {
     return new Builder()
-            .pausedState(state)
-            .history(context.getHistory())
-            .turnsUsed(context.getTurnCount())
-            .build();
+        .pausedState(state)
+        .history(context.getHistory())
+        .turnsUsed(context.getTurnCount())
+        .build();
   }
 
   /**
    * Creates a composite result containing a primary result and related results.
    *
-   * <p>This is useful for patterns like ParallelAgents where multiple agents run concurrently
-   * and one result is selected as primary while the others are preserved as related results.
+   * <p>This is useful for patterns like ParallelAgents where multiple agents run concurrently and
+   * one result is selected as primary while the others are preserved as related results.
    *
    * @param primary the primary result (e.g., first to complete)
    * @param related the other related results
    * @return a result containing both primary and related results
    */
   public static @NonNull AgentResult composite(
-          @NonNull AgentResult primary, @NonNull List<AgentResult> related) {
+      @NonNull AgentResult primary, @NonNull List<AgentResult> related) {
     return new Builder()
-            .output(primary.output)
-            .finalResponse(primary.finalResponse)
-            .history(primary.history)
-            .toolExecutions(primary.toolExecutions)
-            .turnsUsed(primary.turnsUsed)
-            .handoffAgent(primary.handoffAgent)
-            .error(primary.error)
-            .parsed(primary.parsed)
-            .pausedState(primary.pausedState)
-            .relatedResults(related)
-            .build();
+        .output(primary.output)
+        .finalResponse(primary.finalResponse)
+        .history(primary.history)
+        .toolExecutions(primary.toolExecutions)
+        .turnsUsed(primary.turnsUsed)
+        .handoffAgent(primary.handoffAgent)
+        .error(primary.error)
+        .parsed(primary.parsed)
+        .pausedState(primary.pausedState)
+        .relatedResults(related)
+        .build();
   }
 
   // ===== Accessors =====
@@ -381,8 +378,8 @@ public final class AgentResult {
   /**
    * Returns related results from parallel or composite execution.
    *
-   * <p>When using patterns like parallel execution, this contains the results
-   * from other agents that ran alongside the primary result.
+   * <p>When using patterns like parallel execution, this contains the results from other agents
+   * that ran alongside the primary result.
    *
    * @return an unmodifiable list of related results (empty if none)
    */
@@ -407,23 +404,29 @@ public final class AgentResult {
    * <p>If this result is an error, the error is propagated. Otherwise the output JSON is
    * deserialized to the given type.
    *
-   * @param outputType   the target class to deserialize into
+   * @param outputType the target class to deserialize into
    * @param objectMapper the Jackson mapper for JSON parsing
-   * @param <T>          the output type
+   * @param <T> the output type
    * @return a structured result with parsed output, or an error result if parsing fails
    */
   public <T> @NonNull StructuredAgentResult<T> toStructured(
-          @NonNull Class<T> outputType, @NonNull ObjectMapper objectMapper) {
+      @NonNull Class<T> outputType, @NonNull ObjectMapper objectMapper) {
     if (isError()) {
-      return StructuredAgentResult.error(error, output, finalResponse, history, toolExecutions, turnsUsed);
+      return StructuredAgentResult.error(
+          error, output, finalResponse, history, toolExecutions, turnsUsed);
     }
     try {
       T parsed = objectMapper.readValue(output, outputType);
-      return StructuredAgentResult.success(parsed, output, finalResponse, history, toolExecutions, turnsUsed);
+      return StructuredAgentResult.success(
+          parsed, output, finalResponse, history, toolExecutions, turnsUsed);
     } catch (JsonProcessingException e) {
       return StructuredAgentResult.error(
-              new RuntimeException("Failed to parse structured output: " + e.getMessage(), e),
-              output, finalResponse, history, toolExecutions, turnsUsed);
+          new RuntimeException("Failed to parse structured output: " + e.getMessage(), e),
+          output,
+          finalResponse,
+          history,
+          toolExecutions,
+          turnsUsed);
     }
   }
 
@@ -496,9 +499,7 @@ public final class AgentResult {
     }
   }
 
-  /**
-   * Exception thrown when a guardrail validation fails.
-   */
+  /** Exception thrown when a guardrail validation fails. */
   public static final class GuardrailException extends RuntimeException {
     public GuardrailException(String message) {
       super(message);

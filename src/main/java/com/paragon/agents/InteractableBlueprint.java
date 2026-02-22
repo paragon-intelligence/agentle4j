@@ -9,14 +9,12 @@ import com.paragon.agents.context.SlidingWindowStrategy;
 import com.paragon.agents.context.SummarizationStrategy;
 import com.paragon.agents.context.TokenCounter;
 import com.paragon.http.RetryPolicy;
-import com.paragon.prompts.Prompt;
 import com.paragon.responses.Responder;
 import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.FunctionTool;
 import com.paragon.responses.spec.ResponsesAPIProvider;
 import java.time.Duration;
 import java.util.*;
-import java.util.stream.Collectors;
 import okhttp3.HttpUrl;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -49,18 +47,14 @@ import org.slf4j.LoggerFactory;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = InteractableBlueprint.AgentBlueprint.class, name = "agent"),
-  @JsonSubTypes.Type(
-      value = InteractableBlueprint.AgentNetworkBlueprint.class,
-      name = "network"),
+  @JsonSubTypes.Type(value = InteractableBlueprint.AgentNetworkBlueprint.class, name = "network"),
   @JsonSubTypes.Type(
       value = InteractableBlueprint.SupervisorAgentBlueprint.class,
       name = "supervisor"),
   @JsonSubTypes.Type(
       value = InteractableBlueprint.ParallelAgentsBlueprint.class,
       name = "parallel"),
-  @JsonSubTypes.Type(
-      value = InteractableBlueprint.RouterAgentBlueprint.class,
-      name = "router"),
+  @JsonSubTypes.Type(value = InteractableBlueprint.RouterAgentBlueprint.class, name = "router"),
   @JsonSubTypes.Type(
       value = InteractableBlueprint.HierarchicalAgentsBlueprint.class,
       name = "hierarchical")
@@ -79,8 +73,8 @@ public sealed interface InteractableBlueprint
   /**
    * Reconstructs a fully functional {@link Interactable} from this blueprint.
    *
-   * <p>All runtime dependencies (Responder, ObjectMapper, etc.) are created automatically. API
-   * keys are resolved from environment variables based on the configured provider.
+   * <p>All runtime dependencies (Responder, ObjectMapper, etc.) are created automatically. API keys
+   * are resolved from environment variables based on the configured provider.
    *
    * @return a fully functional Interactable
    * @throws IllegalStateException if required environment variables are not set
@@ -117,8 +111,8 @@ public sealed interface InteractableBlueprint
   /**
    * Serializable descriptor for a {@link Responder} configuration.
    *
-   * <p>On reconstruction, the API key is resolved automatically from environment variables based
-   * on the provider (e.g., {@code OPENROUTER_API_KEY} for OpenRouter).
+   * <p>On reconstruction, the API key is resolved automatically from environment variables based on
+   * the provider (e.g., {@code OPENROUTER_API_KEY} for OpenRouter).
    */
   record ResponderBlueprint(
       @JsonProperty("provider") @Nullable String provider,
@@ -129,10 +123,8 @@ public sealed interface InteractableBlueprint
 
     /** Extracts a blueprint from an existing {@link Responder}. */
     public static ResponderBlueprint from(@NonNull Responder responder) {
-      String providerName =
-          responder.provider() != null ? responder.provider().name() : null;
-      String envVar =
-          responder.provider() != null ? responder.provider().getEnvKey() : null;
+      String providerName = responder.provider() != null ? responder.provider().name() : null;
+      String envVar = responder.provider() != null ? responder.provider().getEnvKey() : null;
       String url = responder.provider() == null ? responder.baseUrlString() : null;
       return new ResponderBlueprint(
           providerName,
@@ -148,7 +140,8 @@ public sealed interface InteractableBlueprint
       if (provider != null) {
         builder.provider(ResponsesAPIProvider.valueOf(provider));
       } else if (baseUrl != null) {
-        builder.baseUrl(Objects.requireNonNull(HttpUrl.parse(baseUrl), "Invalid baseUrl: " + baseUrl));
+        builder.baseUrl(
+            Objects.requireNonNull(HttpUrl.parse(baseUrl), "Invalid baseUrl: " + baseUrl));
       }
       if (apiKeyEnvVar != null) {
         String key = System.getenv(apiKeyEnvVar);
@@ -205,8 +198,12 @@ public sealed interface InteractableBlueprint
         InputGuardrail g = GuardrailRegistry.getInput(registryId);
         if (g != null) return g;
         throw new IllegalStateException(
-            "InputGuardrail with registry ID '" + registryId + "' not found. "
-                + "Register it with InputGuardrail.named(\"" + registryId + "\", impl) before deserialization.");
+            "InputGuardrail with registry ID '"
+                + registryId
+                + "' not found. "
+                + "Register it with InputGuardrail.named(\""
+                + registryId
+                + "\", impl) before deserialization.");
       }
       if (className != null) {
         try {
@@ -215,7 +212,8 @@ public sealed interface InteractableBlueprint
           throw new IllegalStateException("Cannot instantiate InputGuardrail: " + className, e);
         }
       }
-      throw new IllegalStateException("GuardrailReference must have either className or registryId");
+      throw new IllegalStateException(
+          "GuardrailReference must have either className or registryId");
     }
 
     @SuppressWarnings("unchecked")
@@ -224,8 +222,12 @@ public sealed interface InteractableBlueprint
         OutputGuardrail g = GuardrailRegistry.getOutput(registryId);
         if (g != null) return g;
         throw new IllegalStateException(
-            "OutputGuardrail with registry ID '" + registryId + "' not found. "
-                + "Register it with OutputGuardrail.named(\"" + registryId + "\", impl) before deserialization.");
+            "OutputGuardrail with registry ID '"
+                + registryId
+                + "' not found. "
+                + "Register it with OutputGuardrail.named(\""
+                + registryId
+                + "\", impl) before deserialization.");
       }
       if (className != null) {
         try {
@@ -234,7 +236,8 @@ public sealed interface InteractableBlueprint
           throw new IllegalStateException("Cannot instantiate OutputGuardrail: " + className, e);
         }
       }
-      throw new IllegalStateException("GuardrailReference must have either className or registryId");
+      throw new IllegalStateException(
+          "GuardrailReference must have either className or registryId");
     }
 
     /** Creates a reference from a live guardrail instance. */
@@ -310,7 +313,8 @@ public sealed interface InteractableBlueprint
       if (tokenCounterClassName != null) {
         try {
           builder.tokenCounter(
-              (TokenCounter) Class.forName(tokenCounterClassName).getDeclaredConstructor().newInstance());
+              (TokenCounter)
+                  Class.forName(tokenCounterClassName).getDeclaredConstructor().newInstance());
         } catch (Exception e) {
           // Fall back to default
         }
@@ -325,8 +329,7 @@ public sealed interface InteractableBlueprint
         if (summarizationPrompt != null) summBuilder.summarizationPrompt(summarizationPrompt);
         builder.strategy(summBuilder.build());
       } else {
-        boolean preserve =
-            preserveDeveloperMessages != null && preserveDeveloperMessages;
+        boolean preserve = preserveDeveloperMessages != null && preserveDeveloperMessages;
         builder.strategy(new SlidingWindowStrategy(preserve));
       }
 
@@ -395,7 +398,10 @@ public sealed interface InteractableBlueprint
         Interactable target = hd.target().toInteractable();
         if (target instanceof Agent targetAgent) {
           builder.addHandoff(
-              Handoff.to(targetAgent).withName(hd.name()).withDescription(hd.description()).build());
+              Handoff.to(targetAgent)
+                  .withName(hd.name())
+                  .withDescription(hd.description())
+                  .build());
         }
       }
 
@@ -494,9 +500,8 @@ public sealed interface InteractableBlueprint
 
     @Override
     public Interactable toInteractable() {
-      List<Interactable> restored = members.stream()
-          .map(InteractableBlueprint::toInteractable)
-          .toList();
+      List<Interactable> restored =
+          members.stream().map(InteractableBlueprint::toInteractable).toList();
       return ParallelAgents.named(name, restored.toArray(new Interactable[0]));
     }
   }
@@ -514,8 +519,7 @@ public sealed interface InteractableBlueprint
     @Override
     public Interactable toInteractable() {
       Responder resp = responder.toResponder();
-      RouterAgent.Builder builder =
-          RouterAgent.builder().name(name).model(model).responder(resp);
+      RouterAgent.Builder builder = RouterAgent.builder().name(name).model(model).responder(resp);
 
       for (RouteBlueprint rb : routes) {
         builder.addRoute(rb.target().toInteractable(), rb.description());
@@ -552,9 +556,8 @@ public sealed interface InteractableBlueprint
       for (var entry : departments.entrySet()) {
         DepartmentBlueprint db = entry.getValue();
         Agent manager = (Agent) db.manager().toInteractable();
-        List<Interactable> workers = db.workers().stream()
-            .map(InteractableBlueprint::toInteractable)
-            .toList();
+        List<Interactable> workers =
+            db.workers().stream().map(InteractableBlueprint::toInteractable).toList();
         builder.addDepartment(entry.getKey(), manager, workers);
       }
       if (traceMetadata != null) {

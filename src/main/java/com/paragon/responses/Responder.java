@@ -223,49 +223,51 @@ public class Responder {
 
     // Merge trace metadata: method parameter > instance field > payload
     TraceMetadata finalTrace = trace != null ? trace : this.traceMetadata;
-    
+
     // If we have trace metadata to add, rebuild the payload with it
     if (finalTrace != null) {
       OpenRouterCustomPayload existingCustom = payload.openRouterCustomPayload();
-      OpenRouterCustomPayload.Builder customBuilder = existingCustom != null 
-          ? OpenRouterCustomPayload.builder()
-              .plugins(existingCustom.plugins())
-              .providerConfig(existingCustom.providerConfig())
-              .route(existingCustom.route())
-              .user(existingCustom.user())
-              .sessionId(existingCustom.sessionId())
-              .trace(finalTrace)
-          : OpenRouterCustomPayload.builder().trace(finalTrace);
-      
+      OpenRouterCustomPayload.Builder customBuilder =
+          existingCustom != null
+              ? OpenRouterCustomPayload.builder()
+                  .plugins(existingCustom.plugins())
+                  .providerConfig(existingCustom.providerConfig())
+                  .route(existingCustom.route())
+                  .user(existingCustom.user())
+                  .sessionId(existingCustom.sessionId())
+                  .trace(finalTrace)
+              : OpenRouterCustomPayload.builder().trace(finalTrace);
+
       // Rebuild payload with merged trace
-      payload = new CreateResponsePayload(
-          payload.background(),
-          payload.conversation(),
-          payload.include(),
-          payload.input(),
-          payload.instructions(),
-          payload.maxOutputTokens(),
-          payload.maxToolCalls(),
-          payload.metadata(),
-          payload.model(),
-          payload.parallelToolCalls(),
-          payload.prompt(),
-          payload.promptCacheKey(),
-          payload.promptCacheRetention(),
-          payload.reasoning(),
-          payload.safetyIdentifier(),
-          payload.serviceTier(),
-          payload.store(),
-          payload.stream(),
-          payload.streamOptions(),
-          payload.temperature(),
-          payload.text(),
-          payload.toolChoice(),
-          payload.tools(),
-          payload.topLogprobs(),
-          payload.topP(),
-          payload.truncation(),
-          customBuilder.build());
+      payload =
+          new CreateResponsePayload(
+              payload.background(),
+              payload.conversation(),
+              payload.include(),
+              payload.input(),
+              payload.instructions(),
+              payload.maxOutputTokens(),
+              payload.maxToolCalls(),
+              payload.metadata(),
+              payload.model(),
+              payload.parallelToolCalls(),
+              payload.prompt(),
+              payload.promptCacheKey(),
+              payload.promptCacheRetention(),
+              payload.reasoning(),
+              payload.safetyIdentifier(),
+              payload.serviceTier(),
+              payload.store(),
+              payload.stream(),
+              payload.streamOptions(),
+              payload.temperature(),
+              payload.text(),
+              payload.toolChoice(),
+              payload.tools(),
+              payload.topLogprobs(),
+              payload.topP(),
+              payload.truncation(),
+              customBuilder.build());
     }
 
     // Use parent trace context if provided, otherwise generate new IDs
@@ -420,7 +422,8 @@ public class Responder {
           """);
     }
 
-    Response response = respond(((CreateResponsePayload) payload), sessionId, TelemetryContext.empty(), trace);
+    Response response =
+        respond(((CreateResponsePayload) payload), sessionId, TelemetryContext.empty(), trace);
 
     try {
       return response.parse(payload.responseType(), objectMapper);

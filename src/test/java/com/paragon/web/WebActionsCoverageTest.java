@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Comprehensive coverage tests for web action records, builders, and enums.
- */
+/** Comprehensive coverage tests for web action records, builders, and enums. */
 @DisplayName("Web Actions Coverage Tests")
 class WebActionsCoverageTest {
 
@@ -79,11 +77,7 @@ class WebActionsCoverageTest {
     @DisplayName("should create Screenshot with builder")
     void shouldCreateScreenshotWithBuilder() {
       Screenshot screenshot =
-          Screenshot.builder()
-              .fullPage(true)
-              .quality(85)
-              .viewport(1920, 1080)
-              .build();
+          Screenshot.builder().fullPage(true).quality(85).viewport(1920, 1080).build();
 
       assertTrue(screenshot.fullPage());
       assertEquals(85, screenshot.quality());
@@ -204,11 +198,7 @@ class WebActionsCoverageTest {
     @DisplayName("should create GeneratePdf with builder")
     void shouldCreateGeneratePdfWithBuilder() {
       GeneratePdf pdf =
-          GeneratePdf.builder()
-              .format(PdfFormat.LEGAL)
-              .landscape(true)
-              .scale(0.8)
-              .build();
+          GeneratePdf.builder().format(PdfFormat.LEGAL).landscape(true).scale(0.8).build();
 
       assertEquals(PdfFormat.LEGAL, pdf.format());
       assertTrue(pdf.landscape());

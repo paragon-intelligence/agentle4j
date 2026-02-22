@@ -1,6 +1,5 @@
 package com.paragon.tts;
 
-
 import com.paragon.messaging.whatsapp.config.TTSConfig;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -8,16 +7,18 @@ import org.jspecify.annotations.Nullable;
 /**
  * Provider genérico de Text-to-Speech.
  *
- * <p>Implementações suportam diferentes providers:</p>
+ * <p>Implementações suportam diferentes providers:
+ *
  * <ul>
- *   <li>ElevenLabs</li>
- *   <li>OpenAI TTS</li>
- *   <li>Google Cloud TTS</li>
- *   <li>Azure Speech</li>
- *   <li>Amazon Polly</li>
+ *   <li>ElevenLabs
+ *   <li>OpenAI TTS
+ *   <li>Google Cloud TTS
+ *   <li>Azure Speech
+ *   <li>Amazon Polly
  * </ul>
  *
- * <p><b>Exemplo:</b></p>
+ * <p><b>Exemplo:</b>
+ *
  * <pre>{@code
  * TTSProvider tts = ElevenLabsTTSProvider.create(apiKey);
  * TTSConfig config = TTSConfig.ptBR("voiceId");
@@ -41,13 +42,12 @@ public interface TTSProvider {
   /**
    * Sintetiza texto em áudio.
    *
-   * @param text   texto a converter
+   * @param text texto a converter
    * @param config configuração de voz, idioma, velocidade, pitch
    * @return bytes do áudio (formato depende do provider)
    * @throws TTSException se síntese falhar
    */
-  @NonNull
-  Byte[] synthesize(@NonNull String text, @Nullable TTSConfig config) throws TTSException;
+  @NonNull Byte[] synthesize(@NonNull String text, @Nullable TTSConfig config) throws TTSException;
 
   /**
    * Verifica se provider está disponível.

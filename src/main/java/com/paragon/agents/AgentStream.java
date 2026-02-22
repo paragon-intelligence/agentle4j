@@ -4,9 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.*;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -14,6 +11,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Streaming agent interaction with full agentic loop.
@@ -70,36 +69,32 @@ public final class AgentStream {
   private boolean autoExecuteTools = true;
 
   AgentStream(
-          @NonNull Agent agent,
-          @NonNull List<ResponseInputItem> input,
-          @NonNull AgenticContext context,
-          @NonNull Responder responder,
-          @NonNull ObjectMapper objectMapper) {
+      @NonNull Agent agent,
+      @NonNull List<ResponseInputItem> input,
+      @NonNull AgenticContext context,
+      @NonNull Responder responder,
+      @NonNull ObjectMapper objectMapper) {
     this(agent, input, context, responder, objectMapper, List.of(), 0);
   }
 
-  /**
-   * Constructor for context-only (no new input).
-   */
+  /** Constructor for context-only (no new input). */
   AgentStream(
-          @NonNull Agent agent,
-          @NonNull AgenticContext context,
-          @NonNull Responder responder,
-          @NonNull ObjectMapper objectMapper) {
+      @NonNull Agent agent,
+      @NonNull AgenticContext context,
+      @NonNull Responder responder,
+      @NonNull ObjectMapper objectMapper) {
     this(agent, List.of(), context, responder, objectMapper, List.of(), 0);
   }
 
-  /**
-   * Constructor for resuming from a saved state.
-   */
+  /** Constructor for resuming from a saved state. */
   AgentStream(
-          @NonNull Agent agent,
-          @NonNull List<ResponseInputItem> input,
-          @NonNull AgenticContext context,
-          @NonNull Responder responder,
-          @NonNull ObjectMapper objectMapper,
-          @NonNull List<ToolExecution> initialExecutions,
-          int startTurn) {
+      @NonNull Agent agent,
+      @NonNull List<ResponseInputItem> input,
+      @NonNull AgenticContext context,
+      @NonNull Responder responder,
+      @NonNull ObjectMapper objectMapper,
+      @NonNull List<ToolExecution> initialExecutions,
+      int startTurn) {
     this.agent = agent;
     this.context = context;
     this.responder = responder;
@@ -114,9 +109,7 @@ public final class AgentStream {
     }
   }
 
-  /**
-   * Creates a pre-failed AgentStream for immediate error return (e.g., guardrail failure).
-   */
+  /** Creates a pre-failed AgentStream for immediate error return (e.g., guardrail failure). */
   private AgentStream(@NonNull AgentResult failedResult) {
     this.agent = null;
     this.context = null; // Not needed for pre-failed streams
@@ -127,16 +120,12 @@ public final class AgentStream {
     this.preFailedResult = failedResult;
   }
 
-  /**
-   * Creates a pre-failed stream that immediately completes with the given result.
-   */
+  /** Creates a pre-failed stream that immediately completes with the given result. */
   static @NonNull AgentStream failed(@NonNull AgentResult failedResult) {
     return new AgentStream(failedResult);
   }
 
-  /**
-   * Creates a pre-completed stream that immediately returns the given result.
-   */
+  /** Creates a pre-completed stream that immediately returns the given result. */
   static @NonNull AgentStream completed(@NonNull AgentResult completedResult) {
     return new AgentStream(completedResult);
   }
@@ -335,7 +324,7 @@ public final class AgentStream {
         List<FunctionToolCall> allCalls = lastResponse.functionToolCalls();
         for (Handoff handoff : agent.handoffs()) {
           boolean hasHandoffCall =
-                  allCalls.stream().anyMatch(call -> handoff.name().equals(call.name()));
+              allCalls.stream().anyMatch(call -> handoff.name().equals(call.name()));
           if (hasHandoffCall) {
             emit(onHandoff, handoff);
             // TODO: Execute handoff agent
@@ -371,13 +360,13 @@ public final class AgentStream {
             // Handle async pause for long-running approvals
             if (onPause != null) {
               AgentRunState pauseState =
-                      AgentRunState.pendingApproval(
-                              agent.name(),
-                              context,
-                              call,
-                              lastResponse,
-                              allToolExecutions,
-                              context.getTurnCount());
+                  AgentRunState.pendingApproval(
+                      agent.name(),
+                      context,
+                      call,
+                      lastResponse,
+                      allToolExecutions,
+                      context.getTurnCount());
               onPause.onPause(pauseState);
               // Return paused result - caller must resume later
               return AgentResult.paused(pauseState, context);
@@ -392,7 +381,7 @@ public final class AgentStream {
           } else {
             // Tool rejected - add rejection message
             FunctionToolCallOutput rejectedOutput =
-                    FunctionToolCallOutput.error(call.callId(), "Tool execution was rejected by user");
+                FunctionToolCallOutput.error(call.callId(), "Tool execution was rejected by user");
             context.addToolResult(rejectedOutput);
           }
         }
@@ -406,7 +395,7 @@ public final class AgentStream {
           GuardrailResult.Failed failed = (GuardrailResult.Failed) result;
           emit(onGuardrailFailed, failed);
           AgentResult errorResult =
-                  AgentResult.guardrailFailed("Output guardrail: " + failed.reason(), context);
+              AgentResult.guardrailFailed("Output guardrail: " + failed.reason(), context);
           emit(onComplete, errorResult);
           return errorResult;
         }
@@ -414,8 +403,8 @@ public final class AgentStream {
 
       // 5. Success
       AgentResult successResult =
-              AgentResult.success(
-                      output, lastResponse, context, allToolExecutions, context.getTurnCount());
+          AgentResult.success(
+              output, lastResponse, context, allToolExecutions, context.getTurnCount());
       emit(onComplete, successResult);
       return successResult;
 
@@ -451,8 +440,8 @@ public final class AgentStream {
     } catch (JsonProcessingException e) {
       Duration duration = Duration.between(start, Instant.now());
       FunctionToolCallOutput errorOutput =
-              FunctionToolCallOutput.error(
-                      call.callId(), "Failed to parse arguments: " + e.getMessage());
+          FunctionToolCallOutput.error(
+              call.callId(), "Failed to parse arguments: " + e.getMessage());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
     }
   }
@@ -475,23 +464,19 @@ public final class AgentStream {
 
   // ===== Functional Interfaces =====
 
-  /**
-   * Handler for tool call confirmation (human-in-the-loop).
-   */
+  /** Handler for tool call confirmation (human-in-the-loop). */
   @FunctionalInterface
   public interface ToolConfirmationHandler {
     /**
      * Called when a tool call is pending.
      *
-     * @param call             the pending tool call
+     * @param call the pending tool call
      * @param approvalCallback call with true to execute, false to reject
      */
     void handle(@NonNull FunctionToolCall call, @NonNull Consumer<Boolean> approvalCallback);
   }
 
-  /**
-   * Handler for pausing agent runs (for long-running approvals).
-   */
+  /** Handler for pausing agent runs (for long-running approvals). */
   @FunctionalInterface
   public interface PauseHandler {
     /**

@@ -4,21 +4,22 @@ import jakarta.validation.Constraint;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.Payload;
-
 import java.lang.annotation.*;
 
 /**
  * Anotação de validação para números de telefone no formato E.164.
  *
- * <p>Formato E.164: [+][código do país][número]</p>
- * <p>Exemplo: +5511999999999, +14155552671</p>
+ * <p>Formato E.164: [+][código do país][número]
  *
- * <p>Regras:</p>
+ * <p>Exemplo: +5511999999999, +14155552671
+ *
+ * <p>Regras:
+ *
  * <ul>
- *   <li>Pode iniciar com +</li>
- *   <li>Primeiro dígito não pode ser 0</li>
- *   <li>Total de 1 a 15 dígitos (sem contar o +)</li>
- *   <li>Apenas números (sem espaços, parênteses, hífens)</li>
+ *   <li>Pode iniciar com +
+ *   <li>Primeiro dígito não pode ser 0
+ *   <li>Total de 1 a 15 dígitos (sem contar o +)
+ *   <li>Apenas números (sem espaços, parênteses, hífens)
  * </ul>
  *
  * @author Your Name
@@ -36,21 +37,20 @@ public @interface E164PhoneNumber {
 
   Class<? extends Payload>[] payload() default {};
 
-  /**
-   * Implementação do validador para formato E.164.
-   */
+  /** Implementação do validador para formato E.164. */
   class E164Validator implements ConstraintValidator<E164PhoneNumber, String> {
 
     /**
      * Regex para validação de número E.164.
      *
-     * <p>Padrão: ^\\+?[1-9]\\d{1,14}$</p>
+     * <p>Padrão: ^\\+?[1-9]\\d{1,14}$
+     *
      * <ul>
-     *   <li>^ - início da string</li>
-     *   <li>\\+? - + opcional</li>
-     *   <li>[1-9] - primeiro dígito de 1-9 (não pode ser 0)</li>
-     *   <li>\\d{1,14} - de 1 a 14 dígitos adicionais</li>
-     *   <li>$ - fim da string</li>
+     *   <li>^ - início da string
+     *   <li>\\+? - + opcional
+     *   <li>[1-9] - primeiro dígito de 1-9 (não pode ser 0)
+     *   <li>\\d{1,14} - de 1 a 14 dígitos adicionais
+     *   <li>$ - fim da string
      * </ul>
      */
     private static final String E164_PATTERN = "^\\+?[1-9]\\d{1,14}$";
@@ -71,9 +71,7 @@ public @interface E164PhoneNumber {
       }
 
       // Remove o + para contagem de dígitos
-      String digits = phoneNumber.startsWith("+")
-              ? phoneNumber.substring(1)
-              : phoneNumber;
+      String digits = phoneNumber.startsWith("+") ? phoneNumber.substring(1) : phoneNumber;
 
       // Valida contra o padrão E.164
       if (!phoneNumber.matches(E164_PATTERN)) {
@@ -81,22 +79,27 @@ public @interface E164PhoneNumber {
         context.disableDefaultConstraintViolation();
 
         if (!digits.matches("\\d+")) {
-          context.buildConstraintViolationWithTemplate(
-                  "Phone number must contain only digits (found non-digit characters)"
-          ).addConstraintViolation();
+          context
+              .buildConstraintViolationWithTemplate(
+                  "Phone number must contain only digits (found non-digit characters)")
+              .addConstraintViolation();
         } else if (digits.length() < 2 || digits.length() > 15) {
-          context.buildConstraintViolationWithTemplate(
-                  "Phone number must have between 2 and 15 digits (found " +
-                          digits.length() + " digits)"
-          ).addConstraintViolation();
+          context
+              .buildConstraintViolationWithTemplate(
+                  "Phone number must have between 2 and 15 digits (found "
+                      + digits.length()
+                      + " digits)")
+              .addConstraintViolation();
         } else if (digits.startsWith("0")) {
-          context.buildConstraintViolationWithTemplate(
-                  "Phone number cannot start with 0 in E.164 format"
-          ).addConstraintViolation();
+          context
+              .buildConstraintViolationWithTemplate(
+                  "Phone number cannot start with 0 in E.164 format")
+              .addConstraintViolation();
         } else {
-          context.buildConstraintViolationWithTemplate(
-                  "Phone number is not in valid E.164 format (e.g., +5511999999999)"
-          ).addConstraintViolation();
+          context
+              .buildConstraintViolationWithTemplate(
+                  "Phone number is not in valid E.164 format (e.g., +5511999999999)")
+              .addConstraintViolation();
         }
 
         return false;
@@ -106,15 +109,13 @@ public @interface E164PhoneNumber {
     }
   }
 
-  /**
-   * Métodos utilitários para trabalhar com números E.164.
-   */
+  /** Métodos utilitários para trabalhar com números E.164. */
   class Utils {
 
     /**
      * Normaliza um número de telefone para o formato E.164.
      *
-     * <p>Remove espaços, parênteses, hífens e adiciona + se necessário.</p>
+     * <p>Remove espaços, parênteses, hífens e adiciona + se necessário.
      *
      * @param phoneNumber número a ser normalizado
      * @return número normalizado ou null se inválido
@@ -150,9 +151,9 @@ public @interface E164PhoneNumber {
      * @return true se válido
      */
     public static boolean isValid(String phoneNumber) {
-      return phoneNumber != null &&
-              !phoneNumber.isBlank() &&
-              phoneNumber.matches("^\\+?[1-9]\\d{1,14}$");
+      return phoneNumber != null
+          && !phoneNumber.isBlank()
+          && phoneNumber.matches("^\\+?[1-9]\\d{1,14}$");
     }
 
     /**
@@ -166,9 +167,7 @@ public @interface E164PhoneNumber {
         return null;
       }
 
-      String digits = phoneNumber.startsWith("+")
-              ? phoneNumber.substring(1)
-              : phoneNumber;
+      String digits = phoneNumber.startsWith("+") ? phoneNumber.substring(1) : phoneNumber;
 
       // Códigos de país podem ter 1-3 dígitos
       // Tenta extrair baseado em padrões conhecidos

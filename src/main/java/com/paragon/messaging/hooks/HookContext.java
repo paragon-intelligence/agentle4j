@@ -1,7 +1,6 @@
 package com.paragon.messaging.hooks;
 
 import com.paragon.messaging.whatsapp.payload.InboundMessage;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -12,10 +11,11 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Contexto passado para hooks durante processamento de lote de mensagens.
  *
- * <p>Contém informações sobre o lote sendo processado e um mapa mutável
- * para hooks compartilharem dados entre si.</p>
+ * <p>Contém informações sobre o lote sendo processado e um mapa mutável para hooks compartilharem
+ * dados entre si.
  *
- * <p><b>Exemplo de uso entre hooks:</b></p>
+ * <p><b>Exemplo de uso entre hooks:</b>
+ *
  * <pre>{@code
  * // Pre-hook armazena timestamp
  * ProcessingHook preHook = context -> {
@@ -31,25 +31,24 @@ import java.util.concurrent.ConcurrentHashMap;
  * };
  * }</pre>
  *
- * @param userId         ID do usuário cujas mensagens estão sendo processadas
- * @param messages       lista de mensagens no lote (imutável)
+ * @param userId ID do usuário cujas mensagens estão sendo processadas
+ * @param messages lista de mensagens no lote (imutável)
  * @param batchStartTime quando o processamento do lote começou
- * @param batchSize      número de mensagens
- * @param isRetry        se é tentativa de retry
- * @param retryCount     número de tentativas (0 = primeira tentativa)
- * @param metadata       mapa mutável (thread-safe) para compartilhar dados
+ * @param batchSize número de mensagens
+ * @param isRetry se é tentativa de retry
+ * @param retryCount número de tentativas (0 = primeira tentativa)
+ * @param metadata mapa mutável (thread-safe) para compartilhar dados
  * @author Agentle Team
  * @since 1.0
  */
 public record HookContext(
-        String userId,
-        List<InboundMessage> messages,
-        Instant batchStartTime,
-        int batchSize,
-        boolean isRetry,
-        int retryCount,
-        Map<String, Object> metadata
-) {
+    String userId,
+    List<InboundMessage> messages,
+    Instant batchStartTime,
+    int batchSize,
+    boolean isRetry,
+    int retryCount,
+    Map<String, Object> metadata) {
 
   public HookContext {
     if (userId == null || userId.isBlank()) {
@@ -80,7 +79,7 @@ public record HookContext(
   /**
    * Cria contexto para primeira tentativa.
    *
-   * @param userId   ID do usuário
+   * @param userId ID do usuário
    * @param messages mensagens a processar
    * @return novo HookContext
    */
@@ -89,33 +88,26 @@ public record HookContext(
       throw new IllegalArgumentException("messages cannot be null");
     }
     return new HookContext(
-            userId,
-            messages,
-            Instant.now(),
-            messages.size(),
-            false,
-            0,
-            new ConcurrentHashMap<>()
-    );
+        userId, messages, Instant.now(), messages.size(), false, 0, new ConcurrentHashMap<>());
   }
 
   /**
    * Cria contexto para retry.
    *
-   * @param original   contexto original
+   * @param original contexto original
    * @param retryCount número da tentativa
    * @return novo HookContext para retry
    */
   public static HookContext forRetry(HookContext original, int retryCount) {
     return new HookContext(
-            original.userId,
-            original.messages,
-            Instant.now(),
-            original.batchSize,
-            true,
-            retryCount,
-            original.metadata  // Reutiliza metadata
-    );
+        original.userId,
+        original.messages,
+        Instant.now(),
+        original.batchSize,
+        true,
+        retryCount,
+        original.metadata // Reutiliza metadata
+        );
   }
 
   /**
@@ -156,7 +148,7 @@ public record HookContext(
   /**
    * Armazena valor em metadata (thread-safe).
    *
-   * @param key   chave
+   * @param key chave
    * @param value valor
    */
   public void putMetadata(String key, Object value) {
@@ -176,9 +168,9 @@ public record HookContext(
   /**
    * Recupera valor tipado de metadata.
    *
-   * @param key  chave
+   * @param key chave
    * @param type tipo esperado
-   * @param <T>  tipo genérico
+   * @param <T> tipo genérico
    * @return Optional com valor tipado ou empty
    */
   @SuppressWarnings("unchecked")

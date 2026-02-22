@@ -2,9 +2,7 @@ package com.paragon.messaging.whatsapp;
 
 import com.paragon.messaging.core.MessagingException;
 
-/**
- * Exceção lançada quando há problemas na autenticação.
- */
+/** Exceção lançada quando há problemas na autenticação. */
 public class AuthenticationException extends MessagingException {
 
   public AuthenticationException(String message) {
@@ -14,5 +12,4 @@ public class AuthenticationException extends MessagingException {
   public AuthenticationException(String message, Throwable cause) {
     super(message, cause);
   }
-
 }

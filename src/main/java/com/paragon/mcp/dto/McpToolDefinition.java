@@ -41,9 +41,7 @@ public record McpToolDefinition(
    * @return a new McpToolDefinition
    */
   public static McpToolDefinition of(
-      @NonNull String name,
-      @NonNull String description,
-      @NonNull Map<String, Object> inputSchema) {
+      @NonNull String name, @NonNull String description, @NonNull Map<String, Object> inputSchema) {
     return new McpToolDefinition(name, description, inputSchema, null);
   }
 }

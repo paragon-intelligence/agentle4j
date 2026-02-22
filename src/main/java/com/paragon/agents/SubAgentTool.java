@@ -3,13 +3,11 @@ package com.paragon.agents;
 import com.paragon.responses.annotations.FunctionMetadata;
 import com.paragon.responses.spec.FunctionTool;
 import com.paragon.responses.spec.FunctionToolCallOutput;
-import com.paragon.responses.spec.Message;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Wraps an Agent as a FunctionTool, enabling agent composition.
@@ -17,8 +15,8 @@ import java.util.Objects;
  * <p>Unlike handoffs which transfer control permanently, sub-agents are invoked like tools: the
  * parent agent calls the sub-agent, receives its output, and continues processing.
  *
- * <p>This is a thin wrapper around {@link InteractableSubAgentTool} that provides a typed
- * {@link #targetAgent()} accessor for backward compatibility.
+ * <p>This is a thin wrapper around {@link InteractableSubAgentTool} that provides a typed {@link
+ * #targetAgent()} accessor for backward compatibility.
  *
  * <h2>Usage Example</h2>
  *
@@ -68,28 +66,34 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
    * Creates a SubAgentTool with the specified configuration.
    *
    * @param targetAgent the agent to invoke as a tool
-   * @param config      configuration for context sharing and description
+   * @param config configuration for context sharing and description
    */
   public SubAgentTool(@NonNull Agent targetAgent, @NonNull Config config) {
     super(
+        Map.of(
+            "type",
+            "object",
+            "properties",
             Map.of(
-                    "type", "object",
-                    "properties", Map.of(
-                            "request", Map.of(
-                                    "type", "string",
-                                    "description", "The message/request to send to the sub-agent")),
-                    "required", List.of("request"),
-                    "additionalProperties", false),
-            true);
+                "request",
+                Map.of(
+                    "type", "string",
+                    "description", "The message/request to send to the sub-agent")),
+            "required",
+            List.of("request"),
+            "additionalProperties",
+            false),
+        true);
 
     this.targetAgent = Objects.requireNonNull(targetAgent, "targetAgent cannot be null");
-    this.delegate = new InteractableSubAgentTool(
+    this.delegate =
+        new InteractableSubAgentTool(
             targetAgent,
             InteractableSubAgentTool.Config.builder()
-                    .description(config.description())
-                    .shareState(config.shareState())
-                    .shareHistory(config.shareHistory())
-                    .build());
+                .description(config.description())
+                .shareState(config.shareState())
+                .shareHistory(config.shareHistory())
+                .build());
   }
 
   @Override
@@ -142,8 +146,7 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
    *
    * @param request The message/request to send to the sub-agent
    */
-  public record SubAgentParams(@NonNull String request) {
-  }
+  public record SubAgentParams(@NonNull String request) {}
 
   /**
    * Configuration for sub-agent behavior.
@@ -173,9 +176,17 @@ public final class SubAgentTool extends FunctionTool<SubAgentTool.SubAgentParams
       return new Builder();
     }
 
-    public @Nullable String description() { return description; }
-    public boolean shareState() { return shareState; }
-    public boolean shareHistory() { return shareHistory; }
+    public @Nullable String description() {
+      return description;
+    }
+
+    public boolean shareState() {
+      return shareState;
+    }
+
+    public boolean shareHistory() {
+      return shareHistory;
+    }
 
     public static final class Builder {
       private @Nullable String description;

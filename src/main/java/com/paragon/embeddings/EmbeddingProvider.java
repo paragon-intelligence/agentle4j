@@ -17,6 +17,5 @@ public interface EmbeddingProvider {
    * @param model the embedding model to use
    * @return the list of embeddings
    */
-  @NonNull
-  List<Embedding> createEmbeddings(@NonNull List<String> input, @NonNull String model);
+  @NonNull List<Embedding> createEmbeddings(@NonNull List<String> input, @NonNull String model);
 }

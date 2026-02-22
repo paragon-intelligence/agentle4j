@@ -99,9 +99,7 @@ public final class StreamableHttpMcpClient extends McpClient {
     throw new McpException("HTTP transport uses synchronous request-response");
   }
 
-  /**
-   * Performs initialization handshake.
-   */
+  /** Performs initialization handshake. */
   @Override
   public void connect() throws McpException {
     if (closed) {
@@ -196,8 +194,8 @@ public final class StreamableHttpMcpClient extends McpClient {
     return parseToolResultFromResponse(response.result());
   }
 
-  private @NonNull List<McpToolDefinition> parseToolsListResult(
-      @Nullable Object result) throws McpException {
+  private @NonNull List<McpToolDefinition> parseToolsListResult(@Nullable Object result)
+      throws McpException {
     if (result == null) {
       return List.of();
     }
@@ -217,8 +215,8 @@ public final class StreamableHttpMcpClient extends McpClient {
     }
   }
 
-  private @NonNull McpToolResult parseToolResultFromResponse(
-      @Nullable Object result) throws McpException {
+  private @NonNull McpToolResult parseToolResultFromResponse(@Nullable Object result)
+      throws McpException {
     if (result == null) {
       throw McpException.protocolError("Tool result is empty");
     }
@@ -323,12 +321,10 @@ public final class StreamableHttpMcpClient extends McpClient {
 
   /**
    * Parses SSE stream manually without external dependency.
-   * 
-   * SSE format:
-   * - Lines starting with "data:" contain the payload
-   * - Lines starting with "event:" contain the event type
-   * - Lines starting with "id:" contain the event ID
-   * - Empty lines separate events
+   *
+   * <p>SSE format: - Lines starting with "data:" contain the payload - Lines starting with "event:"
+   * contain the event type - Lines starting with "id:" contain the event ID - Empty lines separate
+   * events
    */
   private @NonNull JsonRpcResponse handleSseResponse(@NonNull Response httpResponse)
       throws McpException {
@@ -367,7 +363,9 @@ public final class StreamableHttpMcpClient extends McpClient {
             }
             dataBuilder.append(data);
           }
-        } else if (line.startsWith("id:") || line.startsWith("event:") || line.startsWith("retry:")) {
+        } else if (line.startsWith("id:")
+            || line.startsWith("event:")
+            || line.startsWith("retry:")) {
           // Ignore these for now - we only care about data
           log.trace("SSE metadata: {}", line);
         }
@@ -428,9 +426,7 @@ public final class StreamableHttpMcpClient extends McpClient {
     return sessionId;
   }
 
-  /**
-   * Builder for StreamableHttpMcpClient.
-   */
+  /** Builder for StreamableHttpMcpClient. */
   public static final class Builder {
     private @Nullable String serverUrl;
     private @Nullable OkHttpClient httpClient;

@@ -2,48 +2,30 @@ package com.paragon.messaging.core;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-
 import java.time.Instant;
 import java.util.Optional;
 
-/**
- * Resposta do envio de uma mensagem.
- */
+/** Resposta do envio de uma mensagem. */
 public record MessageResponse(
+    @NotBlank(message = "Message ID cannot be blank") String messageId,
+    @NotNull(message = "Status cannot be null") MessageStatus status,
+    @NotNull(message = "Timestamp cannot be null") Instant timestamp,
+    String error,
+    Optional<String> conversationId) {
 
-        @NotBlank(message = "Message ID cannot be blank")
-        String messageId,
-
-        @NotNull(message = "Status cannot be null")
-        MessageStatus status,
-
-        @NotNull(message = "Timestamp cannot be null")
-        Instant timestamp,
-
-        String error,
-
-        Optional<String> conversationId
-
-) {
-
-  /**
-   * Constructor without error or conversationId (successful response).
-   */
+  /** Constructor without error or conversationId (successful response). */
   public MessageResponse(String messageId, MessageStatus status, Instant timestamp) {
     this(messageId, status, timestamp, null, Optional.empty());
   }
 
-  /**
-   * Constructor without conversationId.
-   */
+  /** Constructor without conversationId. */
   public MessageResponse(String messageId, MessageStatus status, Instant timestamp, String error) {
     this(messageId, status, timestamp, error, Optional.empty());
   }
 
-  /**
-   * Constructor without error (successful response with conversationId).
-   */
-  public MessageResponse(String messageId, MessageStatus status, Instant timestamp, Optional<String> conversationId) {
+  /** Constructor without error (successful response with conversationId). */
+  public MessageResponse(
+      String messageId, MessageStatus status, Instant timestamp, Optional<String> conversationId) {
     this(messageId, status, timestamp, null, conversationId);
   }
 
@@ -76,9 +58,7 @@ public record MessageResponse(
     return new MessageResponse(null, MessageStatus.FAILED, Instant.now(), error);
   }
 
-  /**
-   * Status de envio de mensagem.
-   */
+  /** Status de envio de mensagem. */
   public enum MessageStatus {
     ACCEPTED,
     SENT,

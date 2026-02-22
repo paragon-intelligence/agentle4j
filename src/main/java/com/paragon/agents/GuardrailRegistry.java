@@ -83,9 +83,7 @@ public final class GuardrailRegistry {
     return OUTPUT_GUARDRAILS.get(id);
   }
 
-  /**
-   * Removes all registered guardrails. Useful for testing.
-   */
+  /** Removes all registered guardrails. Useful for testing. */
   public static void clear() {
     INPUT_GUARDRAILS.clear();
     OUTPUT_GUARDRAILS.clear();

@@ -5,12 +5,10 @@ import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.MessageRole;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
-import com.paragon.responses.spec.UserMessage;
 import com.paragon.telemetry.processors.TraceIdGenerator;
+import java.util.*;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-
-import java.util.*;
 
 /**
  * Holds conversation state for an agent interaction.
@@ -60,7 +58,8 @@ public final class AgenticContext {
   private @Nullable String parentSpanId;
   private @Nullable String requestId;
 
-  private AgenticContext(List<ResponseInputItem> history, Map<String, Object> state, int turnCount) {
+  private AgenticContext(
+      List<ResponseInputItem> history, Map<String, Object> state, int turnCount) {
     this.history = history;
     this.state = state;
     this.turnCount = turnCount;
@@ -80,12 +79,12 @@ public final class AgenticContext {
   }
 
   public static @NonNull AgenticContext create(
-          @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state) {
+      @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state) {
     return new AgenticContext(new ArrayList<>(history), state, 0);
   }
 
   public static @NonNull AgenticContext create(
-          @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state, int turnCount) {
+      @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state, int turnCount) {
     return new AgenticContext(new ArrayList<>(history), state, turnCount);
   }
 
@@ -97,7 +96,8 @@ public final class AgenticContext {
    * @param initialHistory the messages to pre-populate
    * @return a context with the given history
    */
-  public static @NonNull AgenticContext withHistory(@NonNull List<ResponseInputItem> initialHistory) {
+  public static @NonNull AgenticContext withHistory(
+      @NonNull List<ResponseInputItem> initialHistory) {
     Objects.requireNonNull(initialHistory, "initialHistory cannot be null");
     return AgenticContext.create(initialHistory);
   }
@@ -162,7 +162,7 @@ public final class AgenticContext {
   /**
    * Stores a custom value in the context's state.
    *
-   * @param key   the key to store under
+   * @param key the key to store under
    * @param value the value to store (can be null to remove)
    * @return this context for method chaining
    */
@@ -190,10 +190,11 @@ public final class AgenticContext {
   /**
    * Retrieves a typed value from the context's state.
    *
-   * @param key  the key to look up
+   * @param key the key to look up
    * @param type the expected type
-   * @param <T>  the type parameter
-   * @return an Optional containing the stored value cast to the expected type, or empty if not found
+   * @param <T> the type parameter
+   * @return an Optional containing the stored value cast to the expected type, or empty if not
+   *     found
    * @throws ClassCastException if the stored value is not of the expected type
    */
   @SuppressWarnings("unchecked")
@@ -268,7 +269,8 @@ public final class AgenticContext {
    */
   public @NonNull AgenticContext copy() {
     AgenticContext copy =
-            new AgenticContext(new ArrayList<>(this.history), new HashMap<>(this.state), this.turnCount);
+        new AgenticContext(
+            new ArrayList<>(this.history), new HashMap<>(this.state), this.turnCount);
     copy.parentTraceId = this.parentTraceId;
     copy.parentSpanId = this.parentSpanId;
     copy.requestId = this.requestId;
@@ -289,8 +291,8 @@ public final class AgenticContext {
   /**
    * Extracts the text of the last user message from the conversation history.
    *
-   * <p>Iterates backwards through history to find the most recent user message
-   * and returns its first text content.
+   * <p>Iterates backwards through history to find the most recent user message and returns its
+   * first text content.
    *
    * @return an Optional containing the last user message text, or empty if none found
    */
@@ -341,13 +343,13 @@ public final class AgenticContext {
    *   <li>Otherwise, creates a completely isolated context
    * </ul>
    *
-   * @param shareState   whether to copy custom state to the child
+   * @param shareState whether to copy custom state to the child
    * @param shareHistory whether to fork the full history to the child
-   * @param request      the user message to add to the child context
+   * @param request the user message to add to the child context
    * @return a new child context configured according to the sharing parameters
    */
   public @NonNull AgenticContext createChildContext(
-          boolean shareState, boolean shareHistory, @NonNull String request) {
+      boolean shareState, boolean shareHistory, @NonNull String request) {
     Objects.requireNonNull(request, "request cannot be null");
     AgenticContext childContext;
 
@@ -393,7 +395,7 @@ public final class AgenticContext {
    * <p>Uses {@link ScopedValue} for virtual-thread-safe context propagation.
    *
    * @param task the task to call within this context scope
-   * @param <T>  the return type
+   * @param <T> the return type
    * @return the result from the task
    * @throws Exception if the task throws
    */
@@ -409,9 +411,7 @@ public final class AgenticContext {
    * @return an Optional containing the current context, or empty if none is bound
    */
   static @NonNull Optional<AgenticContext> current() {
-    return CURRENT_CONTEXT.isBound()
-            ? Optional.of(CURRENT_CONTEXT.get())
-            : Optional.empty();
+    return CURRENT_CONTEXT.isBound() ? Optional.of(CURRENT_CONTEXT.get()) : Optional.empty();
   }
 
   // ===== Trace Context Methods =====
@@ -423,7 +423,7 @@ public final class AgenticContext {
    * across multi-agent runs.
    *
    * @param traceId the parent trace ID (32-char hex)
-   * @param spanId  the parent span ID (16-char hex)
+   * @param spanId the parent span ID (16-char hex)
    * @return this context for method chaining
    */
   public @NonNull AgenticContext withTraceContext(@NonNull String traceId, @NonNull String spanId) {

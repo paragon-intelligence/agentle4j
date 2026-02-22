@@ -2,14 +2,13 @@ package com.paragon.agents;
 
 import com.paragon.prompts.Prompt;
 import com.paragon.responses.TraceMetadata;
-import com.paragon.responses.spec.Message;
-import com.paragon.responses.spec.Text;
 import com.paragon.responses.spec.File;
 import com.paragon.responses.spec.Image;
+import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
+import com.paragon.responses.spec.Text;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-
 
 /**
  * Common interface for all agent patterns that can process input and produce output.
@@ -77,8 +76,7 @@ public interface Interactable {
    *
    * @return the name of this interactable
    */
-  @NonNull
-  String name();
+  @NonNull String name();
 
   /**
    * Creates a serializable blueprint of this interactable.
@@ -328,14 +326,14 @@ public interface Interactable {
    * @return the agent's result
    */
   @NonNull
-  default AgentResult interact(java.util.@NonNull List<ResponseInputItem> input, @Nullable TraceMetadata trace) {
+  default AgentResult interact(
+      java.util.@NonNull List<ResponseInputItem> input, @Nullable TraceMetadata trace) {
     AgenticContext context = AgenticContext.create();
     for (ResponseInputItem item : input) {
       context.addInput(item);
     }
     return interact(context, trace);
   }
-
 
   /**
    * Interacts with the agent using an existing context.
@@ -357,8 +355,7 @@ public interface Interactable {
    * @param trace optional trace metadata (overrides agent-level configuration)
    * @return the agent's result
    */
-  @NonNull
-  AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace);
+  @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace);
 
   /**
    * Interacts with the agent with streaming support.
@@ -436,8 +433,8 @@ public interface Interactable {
    * @param trace optional trace metadata (overrides agent-level configuration)
    * @return an AgentStream for processing streaming events
    */
-  @NonNull
-  AgentStream interactStream(@NonNull AgenticContext context, @Nullable TraceMetadata trace);
+  @NonNull AgentStream interactStream(
+      @NonNull AgenticContext context, @Nullable TraceMetadata trace);
 
   /**
    * Extended interface for agents that return structured (typed) output.
@@ -490,7 +487,8 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interactStructured(@NonNull String input, @Nullable TraceMetadata trace) {
+    default StructuredAgentResult<T> interactStructured(
+        @NonNull String input, @Nullable TraceMetadata trace) {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user(input));
       return interactStructured(context, trace);
@@ -510,7 +508,8 @@ public interface Interactable {
     }
 
     /**
-     * Interacts with the agent with Text content and returns a structured result with trace metadata.
+     * Interacts with the agent with Text content and returns a structured result with trace
+     * metadata.
      *
      * <p>Default implementation creates a fresh context with the text as a user message.
      *
@@ -519,7 +518,8 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interactStructured(@NonNull Text text, @Nullable TraceMetadata trace) {
+    default StructuredAgentResult<T> interactStructured(
+        @NonNull Text text, @Nullable TraceMetadata trace) {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user(text));
       return interactStructured(context, trace);
@@ -548,7 +548,8 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interactStructured(@NonNull Message message, @Nullable TraceMetadata trace) {
+    default StructuredAgentResult<T> interactStructured(
+        @NonNull Message message, @Nullable TraceMetadata trace) {
       AgenticContext context = AgenticContext.create();
       context.addInput(message);
       return interactStructured(context, trace);
@@ -577,7 +578,8 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interactStructured(@NonNull Prompt prompt, @Nullable TraceMetadata trace) {
+    default StructuredAgentResult<T> interactStructured(
+        @NonNull Prompt prompt, @Nullable TraceMetadata trace) {
       return interactStructured(prompt.text(), trace);
     }
 
@@ -593,7 +595,8 @@ public interface Interactable {
     }
 
     /**
-     * Interacts with the agent with an existing context and returns a structured result with trace metadata.
+     * Interacts with the agent with an existing context and returns a structured result with trace
+     * metadata.
      *
      * <p>This is the main structured method that all other structured overloads delegate to.
      *
@@ -601,7 +604,7 @@ public interface Interactable {
      * @param trace optional trace metadata (overrides agent-level configuration)
      * @return the structured result with parsed output
      */
-    @NonNull
-    StructuredAgentResult<T> interactStructured(@NonNull AgenticContext context, @Nullable TraceMetadata trace);
+    @NonNull StructuredAgentResult<T> interactStructured(
+        @NonNull AgenticContext context, @Nullable TraceMetadata trace);
   }
 }

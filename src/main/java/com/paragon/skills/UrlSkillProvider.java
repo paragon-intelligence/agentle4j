@@ -16,13 +16,13 @@ import org.jspecify.annotations.Nullable;
 /**
  * Loads skills from remote URLs.
  *
- * <p>This provider fetches SKILL.md files via HTTP/HTTPS. It supports both
- * direct URL loading and base URL + skill ID patterns.
+ * <p>This provider fetches SKILL.md files via HTTP/HTTPS. It supports both direct URL loading and
+ * base URL + skill ID patterns.
  *
  * <h2>Security Warning</h2>
  *
- * <p><b>Only load skills from trusted sources.</b> Remote skills can contain
- * instructions that may execute tools or access data in unexpected ways.
+ * <p><b>Only load skills from trusted sources.</b> Remote skills can contain instructions that may
+ * execute tools or access data in unexpected ways.
  *
  * <h2>Usage Examples</h2>
  *
@@ -56,12 +56,13 @@ public final class UrlSkillProvider implements SkillProvider {
   private final boolean cacheEnabled;
 
   private UrlSkillProvider(Builder builder) {
-    this.httpClient = builder.httpClient != null 
-        ? builder.httpClient 
-        : HttpClient.newBuilder()
-            .connectTimeout(builder.timeout)
-            .followRedirects(HttpClient.Redirect.NORMAL)
-            .build();
+    this.httpClient =
+        builder.httpClient != null
+            ? builder.httpClient
+            : HttpClient.newBuilder()
+                .connectTimeout(builder.timeout)
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build();
     this.parser = new SkillMarkdownParser();
     this.baseUrl = builder.baseUrl;
     this.timeout = builder.timeout;
@@ -95,14 +96,16 @@ public final class UrlSkillProvider implements SkillProvider {
     }
 
     try {
-      HttpRequest request = HttpRequest.newBuilder()
-          .uri(url)
-          .timeout(timeout)
-          .header("Accept", "text/markdown, text/plain, */*")
-          .GET()
-          .build();
+      HttpRequest request =
+          HttpRequest.newBuilder()
+              .uri(url)
+              .timeout(timeout)
+              .header("Accept", "text/markdown, text/plain, */*")
+              .GET()
+              .build();
 
-      HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+      HttpResponse<String> response =
+          httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
       if (response.statusCode() != 200) {
         throw new SkillProviderException(
@@ -174,12 +177,10 @@ public final class UrlSkillProvider implements SkillProvider {
     // URL providers cannot enumerate remote skills
     throw new UnsupportedOperationException(
         "UrlSkillProvider does not support listing skill IDs. "
-        + "Use exists() or provide() with known skill IDs.");
+            + "Use exists() or provide() with known skill IDs.");
   }
 
-  /**
-   * Clears the skill cache.
-   */
+  /** Clears the skill cache. */
   public void clearCache() {
     cache.clear();
   }

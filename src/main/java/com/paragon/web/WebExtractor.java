@@ -149,8 +149,7 @@ public final class WebExtractor {
    * @param <T> the output type
    * @return the structured extraction result
    */
-  public <T> ExtractionResult.Structured<T> extract(
-      ExtractPayload.Structured<T> payload) {
+  public <T> ExtractionResult.Structured<T> extract(ExtractPayload.Structured<T> payload) {
     Objects.requireNonNull(payload, "payload cannot be null");
     return extractStructuredSync(payload);
   }

@@ -1,15 +1,14 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
 import com.paragon.telemetry.processors.TraceIdGenerator;
+import java.util.List;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration tests for trace correlation across multi-agent runs.
@@ -30,7 +29,7 @@ class TraceCorrelationIntegrationTest {
     mockWebServer.start();
 
     responder =
-            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -40,49 +39,49 @@ class TraceCorrelationIntegrationTest {
 
   private Agent createTestAgent(String name) {
     return Agent.builder()
-            .name(name)
-            .model("test-model")
-            .instructions("Test instructions for " + name)
-            .responder(responder)
-            .build();
+        .name(name)
+        .model("test-model")
+        .instructions("Test instructions for " + name)
+        .responder(responder)
+        .build();
   }
 
   private void enqueueSuccessResponse(String text) {
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "message",
-                          "id": "msg_001",
-                          "role": "assistant",
-                          "content": [
-                            {
-                              "type": "output_text",
-                              "text": "%s"
-                            }
-                          ]
-                        }
-                      ],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(text);
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_001",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(text);
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   @Nested
@@ -106,8 +105,12 @@ class TraceCorrelationIntegrationTest {
       assertTrue(ctx.hasTraceContext(), "Context should have trace after interact");
       assertTrue(ctx.parentTraceId().isPresent(), "TraceId should be set");
       assertTrue(ctx.parentSpanId().isPresent(), "SpanId should be set");
-      assertTrue(TraceIdGenerator.isValidTraceId(ctx.parentTraceId().orElse(null)), "TraceId should be valid");
-      assertTrue(TraceIdGenerator.isValidSpanId(ctx.parentSpanId().orElse(null)), "SpanId should be valid");
+      assertTrue(
+          TraceIdGenerator.isValidTraceId(ctx.parentTraceId().orElse(null)),
+          "TraceId should be valid");
+      assertTrue(
+          TraceIdGenerator.isValidSpanId(ctx.parentSpanId().orElse(null)),
+          "SpanId should be valid");
     }
 
     @Test
@@ -117,7 +120,8 @@ class TraceCorrelationIntegrationTest {
       String existingTraceId = "aaaa1111bbbb2222cccc3333dddd4444";
       String existingSpanId = "1111222233334444";
 
-      AgenticContext ctx = AgenticContext.create().withTraceContext(existingTraceId, existingSpanId);
+      AgenticContext ctx =
+          AgenticContext.create().withTraceContext(existingTraceId, existingSpanId);
 
       enqueueSuccessResponse("Hello!");
 
@@ -125,7 +129,8 @@ class TraceCorrelationIntegrationTest {
       agent.interact(ctx);
 
       // Original trace should be preserved
-      assertEquals(existingTraceId, ctx.parentTraceId().orElse(null), "TraceId should be preserved");
+      assertEquals(
+          existingTraceId, ctx.parentTraceId().orElse(null), "TraceId should be preserved");
       assertEquals(existingSpanId, ctx.parentSpanId().orElse(null), "SpanId should be preserved");
     }
 
@@ -149,8 +154,12 @@ class TraceCorrelationIntegrationTest {
       agent.interact(ctx);
 
       // Trace should be preserved across interactions
-      assertEquals(firstTraceId, ctx.parentTraceId().orElse(null), "TraceId should be consistent across turns");
-      assertEquals(firstSpanId, ctx.parentSpanId().orElse(null), "SpanId should be consistent across turns");
+      assertEquals(
+          firstTraceId,
+          ctx.parentTraceId().orElse(null),
+          "TraceId should be consistent across turns");
+      assertEquals(
+          firstSpanId, ctx.parentSpanId().orElse(null), "SpanId should be consistent across turns");
     }
   }
 
@@ -188,7 +197,7 @@ class TraceCorrelationIntegrationTest {
       String existingSpanId = "5555666677778888";
 
       AgenticContext sharedContext =
-              AgenticContext.create().withTraceContext(existingTraceId, existingSpanId);
+          AgenticContext.create().withTraceContext(existingTraceId, existingSpanId);
       sharedContext.addInput(Message.user("Test input"));
 
       enqueueSuccessResponse("Response 1");
@@ -230,8 +239,7 @@ class TraceCorrelationIntegrationTest {
       enqueueSuccessResponse("Worker2 output");
       enqueueSuccessResponse("Synthesized result");
 
-      AgentResult result =
-              parallel.runAndSynthesize("Analyze this", synthesizer);
+      AgentResult result = parallel.runAndSynthesize("Analyze this", synthesizer);
 
       assertNotNull(result, "Should have synthesized result");
       assertFalse(result.isError(), "Synthesized result should not be error");
@@ -253,7 +261,8 @@ class TraceCorrelationIntegrationTest {
       ctx.addInput(Message.user("Hello"));
       agent.interact(ctx);
 
-      assertEquals("user-session-12345", ctx.requestId().orElse(null), "RequestId should be preserved");
+      assertEquals(
+          "user-session-12345", ctx.requestId().orElse(null), "RequestId should be preserved");
     }
 
     @Test
@@ -261,9 +270,9 @@ class TraceCorrelationIntegrationTest {
     void contextCopy_preservesAllTraceFields() throws Exception {
       Agent agent = createTestAgent("TestAgent");
       AgenticContext original =
-              AgenticContext.create()
-                      .withTraceContext("1111222233334444555566667777888", "aabbccddeeff0011")
-                      .withRequestId("session-abc");
+          AgenticContext.create()
+              .withTraceContext("1111222233334444555566667777888", "aabbccddeeff0011")
+              .withRequestId("session-abc");
 
       AgenticContext copy = original.copy();
 
@@ -273,7 +282,8 @@ class TraceCorrelationIntegrationTest {
 
       // Verify copy is independent
       copy.withRequestId("different-session");
-      assertEquals("session-abc", original.requestId().orElse(null), "Original should not be modified");
+      assertEquals(
+          "session-abc", original.requestId().orElse(null), "Original should not be modified");
     }
 
     @Test
@@ -283,14 +293,15 @@ class TraceCorrelationIntegrationTest {
       String originalSpan = "1234567890abcdef";
 
       AgenticContext parent =
-              AgenticContext.create()
-                      .withTraceContext(originalTrace, originalSpan)
-                      .withRequestId("request-123");
+          AgenticContext.create()
+              .withTraceContext(originalTrace, originalSpan)
+              .withRequestId("request-123");
 
       String newSpan = TraceIdGenerator.generateSpanId();
       AgenticContext child = parent.fork(newSpan);
 
-      assertEquals(originalTrace, child.parentTraceId().orElse(null), "TraceId should be inherited");
+      assertEquals(
+          originalTrace, child.parentTraceId().orElse(null), "TraceId should be inherited");
       assertEquals(newSpan, child.parentSpanId().orElse(null), "SpanId should be updated");
       assertEquals("request-123", child.requestId().orElse(null), "RequestId should be inherited");
 

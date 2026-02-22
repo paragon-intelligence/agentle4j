@@ -11,10 +11,9 @@ public class ReplyData {
 
   @JsonCreator
   public ReplyData(
-          @JsonProperty("id") String id,
-          @JsonProperty("title") String title,
-          @JsonProperty("description") String description
-  ) {
+      @JsonProperty("id") String id,
+      @JsonProperty("title") String title,
+      @JsonProperty("description") String description) {
     this.id = id;
     this.title = title;
     this.description = description;

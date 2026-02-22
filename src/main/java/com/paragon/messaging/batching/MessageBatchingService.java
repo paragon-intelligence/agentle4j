@@ -1,20 +1,13 @@
 package com.paragon.messaging.batching;
 
-import com.paragon.messaging.batching.Message;
 import com.paragon.messaging.core.MessageProcessor;
-import com.paragon.messaging.core.OutboundMessage;
-import com.paragon.messaging.whatsapp.payload.InboundMessage;
-import com.paragon.messaging.store.MessageStore;
-
 import com.paragon.messaging.error.ErrorHandlingStrategy;
 import com.paragon.messaging.hooks.HookContext;
 import com.paragon.messaging.hooks.HookInterruptedException;
 import com.paragon.messaging.hooks.ProcessingHook;
 import com.paragon.messaging.ratelimit.HybridRateLimiter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
+import com.paragon.messaging.store.MessageStore;
+import com.paragon.messaging.whatsapp.payload.InboundMessage;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -22,22 +15,26 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Serviço principal de batching e rate limiting de mensagens.
  *
- * <p>Funcionalidades:</p>
+ * <p>Funcionalidades:
+ *
  * <ul>
- *   <li>Batching adaptativo com timeout e silence threshold</li>
- *   <li>Rate limiting híbrido (Token Bucket + Sliding Window)</li>
- *   <li>Deduplicação via MessageStore</li>
- *   <li>Backpressure handling configurável</li>
- *   <li>Error handling com retry exponencial</li>
- *   <li>Pre/post hooks extensíveis</li>
- *   <li>Processamento assíncrono com virtual threads</li>
+ *   <li>Batching adaptativo com timeout e silence threshold
+ *   <li>Rate limiting híbrido (Token Bucket + Sliding Window)
+ *   <li>Deduplicação via MessageStore
+ *   <li>Backpressure handling configurável
+ *   <li>Error handling com retry exponencial
+ *   <li>Pre/post hooks extensíveis
+ *   <li>Processamento assíncrono com virtual threads
  * </ul>
  *
- * <p><b>Exemplo de uso:</b></p>
+ * <p><b>Exemplo de uso:</b>
+ *
  * <pre>{@code
  * MessageBatchingService service = MessageBatchingService.builder()
  *     .config(batchingConfig)
@@ -80,17 +77,14 @@ public class MessageBatchingService {
     this.rateLimiters = new ConcurrentHashMap<>();
 
     // Scheduler com virtual threads
-    this.scheduler = Executors.newScheduledThreadPool(
-            Runtime.getRuntime().availableProcessors(),
-            Thread.ofVirtual().factory()
-    );
+    this.scheduler =
+        Executors.newScheduledThreadPool(
+            Runtime.getRuntime().availableProcessors(), Thread.ofVirtual().factory());
 
     log.info("MessageBatchingService initialized with config: {}", config);
   }
 
-  /**
-   * Builder para MessageBatchingService.
-   */
+  /** Builder para MessageBatchingService. */
   public static Builder builder() {
     return new Builder();
   }
@@ -98,22 +92,21 @@ public class MessageBatchingService {
   /**
    * Recebe mensagem nova do usuário para batching.
    *
-   * <p><b>Thread Safety:</b> Este método é thread-safe.</p>
+   * <p><b>Thread Safety:</b> Este método é thread-safe.
    *
-   * <p>Fluxo:</p>
+   * <p>Fluxo:
+   *
    * <ol>
-   *   <li>Verifica deduplicação (se MessageStore configurado)</li>
-   *   <li>Aplica rate limiting</li>
-   *   <li>Adiciona ao buffer do usuário</li>
-   *   <li>Agenda processamento adaptativo</li>
+   *   <li>Verifica deduplicação (se MessageStore configurado)
+   *   <li>Aplica rate limiting
+   *   <li>Adiciona ao buffer do usuário
+   *   <li>Agenda processamento adaptativo
    * </ol>
    *
-   * @param userId  ID do usuário (ex: número WhatsApp)
+   * @param userId ID do usuário (ex: número WhatsApp)
    * @param message mensagem completa recebida
    */
-  public void receiveMessage(
-          String userId,
-          InboundMessage message) {
+  public void receiveMessage(String userId, InboundMessage message) {
 
     Objects.requireNonNull(userId, "userId cannot be null");
     Objects.requireNonNull(message, "message cannot be null");
@@ -150,17 +143,13 @@ public class MessageBatchingService {
     }
   }
 
-  /**
-   * Verifica se mensagem é duplicata.
-   */
+  /** Verifica se mensagem é duplicata. */
   private boolean isDuplicate(String userId, String messageId) {
     MessageStore store = config.messageStore();
     return store != null && store.hasProcessed(userId, messageId);
   }
 
-  /**
-   * Verifica se usuário excedeu rate limit.
-   */
+  /** Verifica se usuário excedeu rate limit. */
   private boolean isRateLimited(String userId) {
     HybridRateLimiter limiter = getRateLimiter(userId);
     return !limiter.tryAcquire();
@@ -169,42 +158,36 @@ public class MessageBatchingService {
   /**
    * Agenda processamento adaptativo do buffer.
    *
-   * <p>Usa silence threshold: se usuário para de enviar por X segundos,
-   * processa imediatamente (não espera timeout completo).</p>
+   * <p>Usa silence threshold: se usuário para de enviar por X segundos, processa imediatamente (não
+   * espera timeout completo).
    */
   private void scheduleAdaptiveProcessing(String userId, UserMessageBuffer buffer) {
     // Cancela agendamento anterior (se existir)
     buffer.cancelScheduledTask();
 
     // Agenda verificação após silence threshold
-    ScheduledFuture<?> task = scheduler.schedule(
+    ScheduledFuture<?> task =
+        scheduler.schedule(
             () -> checkAndProcessIfSilent(userId, buffer),
             config.silenceThreshold().toMillis(),
-            TimeUnit.MILLISECONDS
-    );
+            TimeUnit.MILLISECONDS);
 
     buffer.setScheduledTask(task);
 
     // Também agenda timeout máximo (em paralelo)
     scheduler.schedule(
-            () -> processIfPending(userId, buffer),
-            config.adaptiveTimeout().toMillis(),
-            TimeUnit.MILLISECONDS
-    );
+        () -> processIfPending(userId, buffer),
+        config.adaptiveTimeout().toMillis(),
+        TimeUnit.MILLISECONDS);
   }
 
-  /**
-   * Verifica se houve silêncio e processa se sim.
-   */
+  /** Verifica se houve silêncio e processa se sim. */
   private void checkAndProcessIfSilent(String userId, UserMessageBuffer buffer) {
     if (buffer.isEmpty()) {
-      return;  // Buffer já foi processado
+      return; // Buffer já foi processado
     }
 
-    Duration sinceLastMessage = Duration.between(
-            buffer.lastMessageTime(),
-            Instant.now()
-    );
+    Duration sinceLastMessage = Duration.between(buffer.lastMessageTime(), Instant.now());
 
     if (sinceLastMessage.compareTo(config.silenceThreshold()) >= 0) {
       // Silêncio detectado - processar
@@ -216,9 +199,7 @@ public class MessageBatchingService {
     }
   }
 
-  /**
-   * Processa buffer se ainda houver mensagens pendentes (timeout atingido).
-   */
+  /** Processa buffer se ainda houver mensagens pendentes (timeout atingido). */
   private void processIfPending(String userId, UserMessageBuffer buffer) {
     if (!buffer.isEmpty()) {
       log.debug("Adaptive timeout reached for user: {}", userId);
@@ -226,9 +207,7 @@ public class MessageBatchingService {
     }
   }
 
-  /**
-   * Processa batch de mensagens em virtual thread.
-   */
+  /** Processa batch de mensagens em virtual thread. */
   private void processBatch(String userId, UserMessageBuffer buffer) {
     List<InboundMessage> messages = buffer.drain();
 
@@ -239,15 +218,15 @@ public class MessageBatchingService {
     log.info("Processing batch for user {}: {} messages", userId, messages.size());
 
     // Processar em virtual thread (não bloqueia)
-    Thread.startVirtualThread(() -> {
-      processInVirtualThread(userId, messages, 0);
-    });
+    Thread.startVirtualThread(
+        () -> {
+          processInVirtualThread(userId, messages, 0);
+        });
   }
 
-  /**
-   * Processamento real em virtual thread (com retry).
-   */
-  private void processInVirtualThread(String userId, List<InboundMessage> messages, int retryCount) {
+  /** Processamento real em virtual thread (com retry). */
+  private void processInVirtualThread(
+      String userId, List<InboundMessage> messages, int retryCount) {
     HookContext context = createHookContext(userId, messages, retryCount);
 
     try {
@@ -266,8 +245,11 @@ public class MessageBatchingService {
       log.info("Batch processed successfully: userId={}, count={}", userId, messages.size());
 
     } catch (HookInterruptedException e) {
-      log.warn("Processing interrupted by hook: userId={}, reason={}, code={}",
-              userId, e.getReason(), e.getReasonCode());
+      log.warn(
+          "Processing interrupted by hook: userId={}, reason={}, code={}",
+          userId,
+          e.getReason(),
+          e.getReasonCode());
 
     } catch (Exception e) {
       log.error("Processing failed: userId={}, retryCount={}", userId, retryCount, e);
@@ -275,49 +257,38 @@ public class MessageBatchingService {
     }
   }
 
-  /**
-   * Cria HookContext para hooks.
-   */
-  private HookContext createHookContext(String userId, List<InboundMessage> messages, int retryCount) {
+  /** Cria HookContext para hooks. */
+  private HookContext createHookContext(
+      String userId, List<InboundMessage> messages, int retryCount) {
     if (retryCount == 0) {
       return HookContext.create(userId, messages);
     } else {
-      return HookContext.forRetry(
-              HookContext.create(userId, messages),
-              retryCount
-      );
+      return HookContext.forRetry(HookContext.create(userId, messages), retryCount);
     }
   }
 
-  /**
-   * Executa lista de hooks.
-   */
+  /** Executa lista de hooks. */
   private void executeHooks(List<ProcessingHook> hooks, HookContext context) throws Exception {
     for (ProcessingHook hook : hooks) {
       hook.execute(context);
     }
   }
 
-  /**
-   * Marca mensagens como processadas (deduplicação).
-   */
+  /** Marca mensagens como processadas (deduplicação). */
   private void markAsProcessed(String userId, List<InboundMessage> messages) {
     MessageStore store = config.messageStore();
     if (store != null) {
       messages.forEach(msg -> store.markProcessed(userId, msg.id()));
     }
-
   }
 
-  /**
-   * Trata erro de processamento (retry com exponential backoff).
-   */
+  /** Trata erro de processamento (retry com exponential backoff). */
   private void handleProcessingError(
-          String userId,
-          List<InboundMessage> messages,
-          int retryCount,
-          Exception error,
-          HookContext context) {
+      String userId,
+      List<InboundMessage> messages,
+      int retryCount,
+      Exception error,
+      HookContext context) {
 
     ErrorHandlingStrategy strategy = config.errorHandlingStrategy();
 
@@ -325,19 +296,22 @@ public class MessageBatchingService {
       // Retry com exponential backoff
       Duration delay = strategy.calculateDelay(retryCount + 1);
 
-      log.info("Retrying in {}: userId={}, attempt={}/{}",
-              delay, userId, retryCount + 1, strategy.maxRetries());
+      log.info(
+          "Retrying in {}: userId={}, attempt={}/{}",
+          delay,
+          userId,
+          retryCount + 1,
+          strategy.maxRetries());
 
       scheduler.schedule(
-              () -> processInVirtualThread(userId, messages, retryCount + 1),
-              delay.toMillis(),
-              TimeUnit.MILLISECONDS
-      );
+          () -> processInVirtualThread(userId, messages, retryCount + 1),
+          delay.toMillis(),
+          TimeUnit.MILLISECONDS);
 
     } else {
       // Falha permanente
-      log.error("Processing failed permanently after {} retries: userId={}",
-              retryCount, userId, error);
+      log.error(
+          "Processing failed permanently after {} retries: userId={}", retryCount, userId, error);
 
       // Dead Letter Queue
       if (strategy.hasDLQHandler()) {
@@ -356,10 +330,9 @@ public class MessageBatchingService {
     }
   }
 
-  /**
-   * Trata backpressure quando buffer cheio.
-   */
-  private void handleBackpressure(String userId, UserMessageBuffer buffer, InboundMessage newMessage) {
+  /** Trata backpressure quando buffer cheio. */
+  private void handleBackpressure(
+      String userId, UserMessageBuffer buffer, InboundMessage newMessage) {
     BackpressureStrategy strategy = config.backpressureStrategy();
 
     log.warn("Buffer full for user {}, applying strategy: {}", userId, strategy);
@@ -372,8 +345,10 @@ public class MessageBatchingService {
 
       case DROP_OLDEST -> {
         InboundMessage dropped = buffer.removeOldest();
-        log.debug("Dropped oldest message: userId={}, droppedId={}",
-                userId, dropped != null ? dropped.id() : "none");
+        log.debug(
+            "Dropped oldest message: userId={}, droppedId={}",
+            userId,
+            dropped != null ? dropped.id() : "none");
         buffer.add(newMessage);
       }
 
@@ -385,56 +360,44 @@ public class MessageBatchingService {
 
       case REJECT_WITH_NOTIFICATION -> {
         log.debug("Rejecting message with notification: userId={}", userId);
-        notifyUser(userId, "Você está enviando mensagens muito rápido. Por favor, aguarde um momento.");
+        notifyUser(
+            userId, "Você está enviando mensagens muito rápido. Por favor, aguarde um momento.");
       }
 
       case BLOCK_UNTIL_SPACE -> {
-        log.warn("BLOCK_UNTIL_SPACE not recommended - may cause webhook timeout: userId={}", userId);
+        log.warn(
+            "BLOCK_UNTIL_SPACE not recommended - may cause webhook timeout: userId={}", userId);
         // TODO: Implementar espera com timeout
       }
     }
   }
 
-  /**
-   * Trata rate limit excedido.
-   */
+  /** Trata rate limit excedido. */
   private void handleRateLimitExceeded(String userId) {
     // TODO: Implementar notificação ou ação customizada
     log.debug("Rate limit notification sent: userId={}", userId);
   }
 
-  /**
-   * Notifica usuário (deve ser implementado pelo consumidor da API).
-   */
+  /** Notifica usuário (deve ser implementado pelo consumidor da API). */
   private void notifyUser(String userId, String message) {
     // Esta é uma operação opcional - o consumidor da API
     // deve implementar notificação real se necessário
     log.info("User notification: userId={}, message={}", userId, message);
   }
 
-  /**
-   * Obtém ou cria buffer para usuário.
-   */
+  /** Obtém ou cria buffer para usuário. */
   private UserMessageBuffer getOrCreateBuffer(String userId) {
     return userBuffers.computeIfAbsent(
-            userId,
-            k -> new UserMessageBuffer(userId, config.maxBufferSize())
-    );
+        userId, k -> new UserMessageBuffer(userId, config.maxBufferSize()));
   }
 
-  /**
-   * Obtém ou cria rate limiter para usuário.
-   */
+  /** Obtém ou cria rate limiter para usuário. */
   private HybridRateLimiter getRateLimiter(String userId) {
     return rateLimiters.computeIfAbsent(
-            userId,
-            k -> new HybridRateLimiter(config.rateLimitConfig())
-    );
+        userId, k -> new HybridRateLimiter(config.rateLimitConfig()));
   }
 
-  /**
-   * Shutdown graceful do serviço.
-   */
+  /** Shutdown graceful do serviço. */
   public void shutdown() {
     log.info("Shutting down MessageBatchingService...");
 
@@ -451,23 +414,14 @@ public class MessageBatchingService {
     }
   }
 
-  /**
-   * Retorna estatísticas do serviço (útil para monitoramento).
-   */
+  /** Retorna estatísticas do serviço (útil para monitoramento). */
   public ServiceStats getStats() {
     return new ServiceStats(
-            userBuffers.size(),
-            userBuffers.values().stream()
-                    .mapToInt(UserMessageBuffer::size)
-                    .sum()
-    );
+        userBuffers.size(), userBuffers.values().stream().mapToInt(UserMessageBuffer::size).sum());
   }
 
-  /**
-   * Estatísticas do serviço.
-   */
-  public record ServiceStats(int activeUsers, int pendingMessages) {
-  }
+  /** Estatísticas do serviço. */
+  public record ServiceStats(int activeUsers, int pendingMessages) {}
 
   public static class Builder {
     private final List<ProcessingHook> preHooks = new ArrayList<>();

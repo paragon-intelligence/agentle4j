@@ -1,11 +1,11 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.paragon.telemetry.TelemetryContext;
 import com.paragon.telemetry.processors.TraceIdGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for trace correlation across multi-agent runs.
@@ -33,9 +33,9 @@ class TraceCorrelationTest {
   @DisplayName("AgentContext.fork should create child with same traceId but new parentSpanId")
   void agentContext_forkShouldPreserveTraceId() {
     AgenticContext parent =
-            AgenticContext.create()
-                    .withTraceContext("aaaa1111aaaa1111aaaa1111aaaa1111", "bbbb2222bbbb2222")
-                    .withRequestId("req-001");
+        AgenticContext.create()
+            .withTraceContext("aaaa1111aaaa1111aaaa1111aaaa1111", "bbbb2222bbbb2222")
+            .withRequestId("req-001");
     parent.setState("key", "value");
 
     AgenticContext child = parent.fork("cccc3333cccc3333");
@@ -56,9 +56,9 @@ class TraceCorrelationTest {
   @DisplayName("AgentContext.copy should preserve all trace context")
   void agentContext_copyShouldPreserveTraceContext() {
     AgenticContext original =
-            AgenticContext.create()
-                    .withTraceContext("aaaa1111aaaa1111aaaa1111aaaa1111", "bbbb2222bbbb2222")
-                    .withRequestId("req-001");
+        AgenticContext.create()
+            .withTraceContext("aaaa1111aaaa1111aaaa1111aaaa1111", "bbbb2222bbbb2222")
+            .withRequestId("req-001");
 
     AgenticContext copy = original.copy();
 
@@ -71,14 +71,14 @@ class TraceCorrelationTest {
   @DisplayName("TelemetryContext should support parent trace fields")
   void telemetryContext_shouldSupportParentTrace() {
     TelemetryContext ctx =
-            TelemetryContext.builder()
-                    .userId("user-123")
-                    .traceName("test-operation")
-                    .parentTraceId("aaaa1111aaaa1111aaaa1111aaaa1111")
-                    .parentSpanId("bbbb2222bbbb2222")
-                    .requestId("req-001")
-                    .addTag("test")
-                    .build();
+        TelemetryContext.builder()
+            .userId("user-123")
+            .traceName("test-operation")
+            .parentTraceId("aaaa1111aaaa1111aaaa1111aaaa1111")
+            .parentSpanId("bbbb2222bbbb2222")
+            .requestId("req-001")
+            .addTag("test")
+            .build();
 
     assertEquals("user-123", ctx.userId());
     assertEquals("test-operation", ctx.traceName());

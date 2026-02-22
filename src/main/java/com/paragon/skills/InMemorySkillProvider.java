@@ -10,9 +10,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Stores code-defined skills in memory.
  *
- * <p>This provider is useful for skills defined directly in code without
- * external files. It can be pre-populated with skills at construction time
- * or skills can be registered dynamically.
+ * <p>This provider is useful for skills defined directly in code without external files. It can be
+ * pre-populated with skills at construction time or skills can be registered dynamically.
  *
  * <h2>Usage Examples</h2>
  *

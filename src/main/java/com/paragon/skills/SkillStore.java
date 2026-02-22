@@ -1,21 +1,15 @@
 package com.paragon.skills;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import org.jspecify.annotations.NonNull;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Registry for managing available skills.
  *
- * <p>SkillStore provides a centralized place to register and retrieve skills.
- * It can generate a formatted prompt section listing all available skills
- * for inclusion in agent system prompts.
+ * <p>SkillStore provides a centralized place to register and retrieve skills. It can generate a
+ * formatted prompt section listing all available skills for inclusion in agent system prompts.
  *
  * <h2>Usage Example</h2>
  *
@@ -45,15 +39,17 @@ import org.jspecify.annotations.NonNull;
  * }</pre>
  *
  * @see Skill
- * @see SkillTool
  * @since 1.0
  */
 public final class SkillStore {
 
   private final Map<String, Skill> skills = new ConcurrentHashMap<>();
 
-  /** Creates an empty SkillStore. */
-  public SkillStore() {}
+  /**
+   * Creates an empty SkillStore.
+   */
+  public SkillStore() {
+  }
 
   /**
    * Creates a SkillStore with initial skills.
@@ -186,7 +182,9 @@ public final class SkillStore {
     return Optional.ofNullable(skills.remove(name));
   }
 
-  /** Clears all skills from the store. */
+  /**
+   * Clears all skills from the store.
+   */
   public void clear() {
     skills.clear();
   }
@@ -194,8 +192,7 @@ public final class SkillStore {
   /**
    * Generates a formatted prompt section listing all available skills.
    *
-   * <p>This can be appended to an agent's system prompt to inform the LLM
-   * about available skills.
+   * <p>This can be appended to an agent's system prompt to inform the LLM about available skills.
    *
    * @return formatted skills section
    */

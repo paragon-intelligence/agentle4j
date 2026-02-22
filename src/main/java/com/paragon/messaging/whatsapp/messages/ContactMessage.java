@@ -1,19 +1,12 @@
 package com.paragon.messaging.whatsapp.messages;
 
 import com.paragon.messaging.core.ContactMessageInterface;
-import com.paragon.messaging.core.OutboundMessage;
-
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Outbound contact message with builder API.
- */
-public record ContactMessage(
-        String formattedName,
-        List<PhoneEntry> phones,
-        List<EmailEntry> emails
-) implements ContactMessageInterface {
+/** Outbound contact message with builder API. */
+public record ContactMessage(String formattedName, List<PhoneEntry> phones, List<EmailEntry> emails)
+    implements ContactMessageInterface {
 
   public ContactMessage {
     phones = List.copyOf(phones);
@@ -26,6 +19,7 @@ public record ContactMessage(
   }
 
   public record PhoneEntry(String phone, String type) {}
+
   public record EmailEntry(String email, String type) {}
 
   public static Builder builder() {

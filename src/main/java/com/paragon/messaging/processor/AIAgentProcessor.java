@@ -23,31 +23,31 @@ import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.UserMessage;
 import com.paragon.tts.TTSProvider;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * AI-powered message processor using the Interactable interface.
  *
- * <p>Processes incoming WhatsApp messages through an AI agent and sends responses
- * back to the user. Supports both simple text responses and structured outputs
- * via {@link Interactable.Structured}.</p>
+ * <p>Processes incoming WhatsApp messages through an AI agent and sends responses back to the user.
+ * Supports both simple text responses and structured outputs via {@link Interactable.Structured}.
  *
  * <h2>Features</h2>
+ *
  * <ul>
- *   <li>Conversation history for multi-turn context</li>
- *   <li>Message batching (combines multiple messages into one user turn)</li>
- *   <li>Optional TTS (text-to-speech) responses</li>
- *   <li>Structured output support for interactive responses</li>
- *   <li>Reply context preservation</li>
+ *   <li>Conversation history for multi-turn context
+ *   <li>Message batching (combines multiple messages into one user turn)
+ *   <li>Optional TTS (text-to-speech) responses
+ *   <li>Structured output support for interactive responses
+ *   <li>Reply context preservation
  * </ul>
  *
  * <h2>Simple Usage</h2>
+ *
  * <pre>{@code
  * // Create a simple text-response processor
  * AIAgentProcessor processor = AIAgentProcessor.forAgent(myAgent)
@@ -61,6 +61,7 @@ import java.util.Random;
  * }</pre>
  *
  * <h2>Structured Output Usage</h2>
+ *
  * <pre>{@code
  * // Create agent with structured output
  * Interactable.Structured<MenuResponse> structuredAgent = Agent.builder()
@@ -80,6 +81,7 @@ import java.util.Random;
  * }</pre>
  *
  * <h2>With TTS</h2>
+ *
  * <pre>{@code
  * AIAgentProcessor processor = AIAgentProcessor.forAgent(myAgent)
  *     .messagingProvider(whatsappProvider)
@@ -114,9 +116,11 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
   private AIAgentProcessor(Builder<T> builder) {
     this.agent = Objects.requireNonNull(builder.agent, "agent cannot be null");
     this.structuredAgent = builder.structuredAgent;
-    this.messagingProvider = Objects.requireNonNull(builder.messagingProvider, "messagingProvider cannot be null");
+    this.messagingProvider =
+        Objects.requireNonNull(builder.messagingProvider, "messagingProvider cannot be null");
     this.mediaUploader = builder.mediaUploader;
-    this.messageConverter = builder.messageConverter != null
+    this.messageConverter =
+        builder.messageConverter != null
             ? builder.messageConverter
             : DefaultMessageConverter.create();
     this.historyStore = builder.historyStore;
@@ -141,7 +145,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
    * Creates a builder for a structured output agent processor.
    *
    * @param agent the structured agent to process messages
-   * @param <T>   the structured output type
+   * @param <T> the structured output type
    * @return a new builder
    */
   public static <T> Builder<T> forStructuredAgent(Interactable.@NonNull Structured<T> agent) {
@@ -150,10 +154,10 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
 
   @Override
   public void process(
-          @NonNull String userId,
-          @NonNull List<? extends InboundMessage> messages,
-          @NonNull ProcessingContext context
-  ) throws Exception {
+      @NonNull String userId,
+      @NonNull List<? extends InboundMessage> messages,
+      @NonNull ProcessingContext context)
+      throws Exception {
     Objects.requireNonNull(userId, "userId cannot be null");
     Objects.requireNonNull(messages, "messages cannot be null");
 
@@ -183,7 +187,8 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     }
   }
 
-  private void processSimple(String userId, AgenticContext context, String replyToMessageId) throws Exception {
+  private void processSimple(String userId, AgenticContext context, String replyToMessageId)
+      throws Exception {
     AgentResult result = agent.interact(context);
 
     if (result.isError()) {
@@ -205,7 +210,8 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     sendResponse(userId, response, replyToMessageId);
   }
 
-  private void processStructured(String userId, AgenticContext context, String replyToMessageId) throws Exception {
+  private void processStructured(String userId, AgenticContext context, String replyToMessageId)
+      throws Exception {
     assert structuredAgent != null;
     StructuredAgentResult<T> result = structuredAgent.interactStructured(context);
 
@@ -229,11 +235,13 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     }
   }
 
-  private void sendResponse(String userId, String response, @Nullable String replyToMessageId) throws Exception {
+  private void sendResponse(String userId, String response, @Nullable String replyToMessageId)
+      throws Exception {
     Recipient recipient = Recipient.ofPhoneNumber(userId);
 
     // Decide text vs audio based on TTS config
-    boolean shouldSendAudio = ttsConfig.isEnabled()
+    boolean shouldSendAudio =
+        ttsConfig.isEnabled()
             && ttsProvider != null
             && random.nextDouble() < ttsConfig.speechChance();
 
@@ -245,16 +253,10 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
   }
 
   private void sendTextResponse(
-          Recipient recipient,
-          String response,
-          @Nullable String replyToMessageId
-  ) {
+      Recipient recipient, String response, @Nullable String replyToMessageId) {
     OutboundMessage message;
     if (replyToMessageId != null && !replyToMessageId.isBlank()) {
-      message = TextMessage.builder()
-              .body(response)
-              .replyTo(replyToMessageId)
-              .build();
+      message = TextMessage.builder().body(response).replyTo(replyToMessageId).build();
     } else {
       message = new TextMessage(response);
     }
@@ -263,11 +265,13 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
 
   private void sendAudioResponse(Recipient recipient, String response) throws Exception {
     if (Objects.isNull(ttsProvider)) {
-      throw new AIProcessingException("TTSProvider has not been initialized.", new NullPointerException("Ttsprovider"));
+      throw new AIProcessingException(
+          "TTSProvider has not been initialized.", new NullPointerException("Ttsprovider"));
     }
 
     // Generate TTS audio
-    TTSConfig ttsProviderConfig = TTSConfig.builder()
+    TTSConfig ttsProviderConfig =
+        TTSConfig.builder()
             .defaultVoiceId(ttsConfig.defaultVoiceId())
             .languageCode(ttsConfig.languageCode())
             .build();
@@ -283,12 +287,11 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
       try {
         // Upload audio to WhatsApp Media API
         WhatsAppMediaUploader.MediaUploadResponse uploadResponse =
-                mediaUploader.uploadAudio(audioBytes, "audio/ogg; codecs=opus");
+            mediaUploader.uploadAudio(audioBytes, "audio/ogg; codecs=opus");
 
         // Send audio message using media ID
-        MediaMessage.Audio audioMessage = new MediaMessage.Audio(
-                new MediaMessage.MediaSource.MediaId(uploadResponse.mediaId())
-        );
+        MediaMessage.Audio audioMessage =
+            new MediaMessage.Audio(new MediaMessage.MediaSource.MediaId(uploadResponse.mediaId()));
         messagingProvider.sendMessage(recipient, audioMessage);
         return;
       } catch (Exception e) {
@@ -302,10 +305,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
   }
 
   private void sendStructuredResponse(
-          String userId,
-          WhatsAppResponse response,
-          @Nullable String defaultReplyToMessageId
-  ) {
+      String userId, WhatsAppResponse response, @Nullable String defaultReplyToMessageId) {
     Recipient recipient = Recipient.ofPhoneNumber(userId);
 
     // Get reply context from response or use default
@@ -341,11 +341,8 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     }
 
     // Get conversation history
-    List<ResponseInputItem> history = historyStore.getHistory(
-            userId,
-            maxHistoryMessages,
-            maxHistoryAge
-    );
+    List<ResponseInputItem> history =
+        historyStore.getHistory(userId, maxHistoryMessages, maxHistoryAge);
 
     // Create context with history and add current message
     AgenticContext context = AgenticContext.withHistory(history);
@@ -377,7 +374,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     /**
      * Sets the messaging provider for sending responses.
      *
-     * <p>This is required.</p>
+     * <p>This is required.
      *
      * @param provider the messaging provider
      * @return this builder
@@ -390,7 +387,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     /**
      * Sets a custom message converter.
      *
-     * <p>If not set, uses {@link DefaultMessageConverter}.</p>
+     * <p>If not set, uses {@link DefaultMessageConverter}.
      *
      * @param converter the message converter
      * @return this builder
@@ -403,8 +400,8 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     /**
      * Sets the conversation history store.
      *
-     * <p>If not set, no history is maintained between calls.
-     * For multi-turn conversations, use an in-memory or Redis store.</p>
+     * <p>If not set, no history is maintained between calls. For multi-turn conversations, use an
+     * in-memory or Redis store.
      *
      * @param store the history store
      * @return this builder
@@ -449,7 +446,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     /**
      * Sets the media uploader for sending audio messages.
      *
-     * <p>If not set, TTS audio will fall back to text messages.</p>
+     * <p>If not set, TTS audio will fall back to text messages.
      *
      * @param uploader the WhatsApp media uploader
      * @return this builder
@@ -462,7 +459,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     /**
      * Sets the maximum number of history messages to include in context.
      *
-     * <p>Default is 20.</p>
+     * <p>Default is 20.
      *
      * @param max maximum history messages
      * @return this builder
@@ -475,7 +472,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     /**
      * Sets the maximum age of history messages to include.
      *
-     * <p>Default is 24 hours.</p>
+     * <p>Default is 24 hours.
      *
      * @param maxAge maximum history age
      * @return this builder
@@ -499,9 +496,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     }
   }
 
-  /**
-   * Exception thrown when AI processing fails.
-   */
+  /** Exception thrown when AI processing fails. */
   public static class AIProcessingException extends RuntimeException {
     public AIProcessingException(String message, Throwable cause) {
       super(message, cause);

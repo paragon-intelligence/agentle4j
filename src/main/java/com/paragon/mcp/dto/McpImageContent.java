@@ -10,7 +10,8 @@ import org.jspecify.annotations.NonNull;
  * @param mimeType the MIME type of the image (e.g., "image/png")
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record McpImageContent(@NonNull String data, @NonNull String mimeType) implements McpContent {
+public record McpImageContent(@NonNull String data, @NonNull String mimeType)
+    implements McpContent {
 
   /**
    * Creates a new image content.

@@ -1,5 +1,7 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.Text;
@@ -7,12 +9,11 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
  * Comprehensive tests for SupervisorAgent.
  *
  * <p>Tests cover:
+ *
  * <ul>
  *   <li>Builder validation
  *   <li>Worker management
@@ -33,7 +34,7 @@ class SupervisorAgentTest {
     mockWebServer.start();
 
     responder =
-            Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
+        Responder.builder().baseUrl(mockWebServer.url("/v1/responses")).apiKey("test-key").build();
   }
 
   @AfterEach
@@ -43,59 +44,59 @@ class SupervisorAgentTest {
 
   private Agent createTestAgent(String name) {
     return Agent.builder()
-            .name(name)
-            .model("test-model")
-            .instructions("Test instructions for " + name)
-            .responder(responder)
-            .build();
+        .name(name)
+        .model("test-model")
+        .instructions("Test instructions for " + name)
+        .responder(responder)
+        .build();
   }
 
   private SupervisorAgent createTestSupervisor(Agent worker) {
     return SupervisorAgent.builder()
-            .name("TestSupervisor")
-            .model("test-model")
-            .instructions("Coordinate workers effectively")
-            .responder(responder)
-            .addWorker(worker, "general work")
-            .build();
+        .name("TestSupervisor")
+        .model("test-model")
+        .instructions("Coordinate workers effectively")
+        .responder(responder)
+        .addWorker(worker, "general work")
+        .build();
   }
 
   private void enqueueSuccessResponse(String text) {
     String json =
-            """
-                    {
-                      "id": "resp_001",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "model": "test-model",
-                      "output": [
-                        {
-                          "type": "message",
-                          "id": "msg_001",
-                          "role": "assistant",
-                          "content": [
-                            {
-                              "type": "output_text",
-                              "text": "%s"
-                            }
-                          ]
-                        }
-                      ],
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 5,
-                        "total_tokens": 15
-                      }
-                    }
-                    """
-                    .formatted(text);
+        """
+        {
+          "id": "resp_001",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "model": "test-model",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_001",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+        """
+            .formatted(text);
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setResponseCode(200)
-                    .setBody(json)
-                    .addHeader("Content-Type", "application/json"));
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(json)
+            .addHeader("Content-Type", "application/json"));
   }
 
   @Nested
@@ -115,13 +116,13 @@ class SupervisorAgentTest {
       Agent worker = createTestAgent("Worker");
 
       SupervisorAgent supervisor =
-              SupervisorAgent.builder()
-                      .name("TestSupervisor")
-                      .model("test-model")
-                      .instructions("Coordinate workers")
-                      .responder(responder)
-                      .addWorker(worker, "does work")
-                      .build();
+          SupervisorAgent.builder()
+              .name("TestSupervisor")
+              .model("test-model")
+              .instructions("Coordinate workers")
+              .responder(responder)
+              .addWorker(worker, "does work")
+              .build();
 
       assertNotNull(supervisor);
       assertEquals("TestSupervisor", supervisor.name());
@@ -132,14 +133,14 @@ class SupervisorAgentTest {
     @DisplayName("build() without workers throws exception")
     void build_withoutWorkers_throws() {
       assertThrows(
-              IllegalArgumentException.class,
-              () ->
-                      SupervisorAgent.builder()
-                              .name("TestSupervisor")
-                              .model("test-model")
-                              .instructions("Coordinate workers")
-                              .responder(responder)
-                              .build());
+          IllegalArgumentException.class,
+          () ->
+              SupervisorAgent.builder()
+                  .name("TestSupervisor")
+                  .model("test-model")
+                  .instructions("Coordinate workers")
+                  .responder(responder)
+                  .build());
     }
 
     @Test
@@ -148,12 +149,12 @@ class SupervisorAgentTest {
       Agent worker = createTestAgent("Worker");
 
       SupervisorAgent supervisor =
-              SupervisorAgent.builder()
-                      .model("test-model")
-                      .instructions("Coordinate workers")
-                      .responder(responder)
-                      .addWorker(worker, "does work")
-                      .build();
+          SupervisorAgent.builder()
+              .model("test-model")
+              .instructions("Coordinate workers")
+              .responder(responder)
+              .addWorker(worker, "does work")
+              .build();
 
       assertEquals("Supervisor", supervisor.name());
     }
@@ -162,8 +163,8 @@ class SupervisorAgentTest {
     @DisplayName("addWorker() validates null worker")
     void addWorker_nullWorker_throws() {
       assertThrows(
-              NullPointerException.class,
-              () -> SupervisorAgent.builder().addWorker(null, "description"));
+          NullPointerException.class,
+          () -> SupervisorAgent.builder().addWorker(null, "description"));
     }
 
     @Test
@@ -171,7 +172,7 @@ class SupervisorAgentTest {
     void addWorker_nullDescription_throws() {
       Agent worker = createTestAgent("Worker");
       assertThrows(
-              NullPointerException.class, () -> SupervisorAgent.builder().addWorker(worker, null));
+          NullPointerException.class, () -> SupervisorAgent.builder().addWorker(worker, null));
     }
 
     @Test
@@ -187,14 +188,14 @@ class SupervisorAgentTest {
       Agent worker = createTestAgent("Worker");
 
       SupervisorAgent supervisor =
-              SupervisorAgent.builder()
-                      .name("Test")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .addWorker(worker, "work")
-                      .maxTurns(5)
-                      .build();
+          SupervisorAgent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addWorker(worker, "work")
+              .maxTurns(5)
+              .build();
 
       assertNotNull(supervisor);
     }
@@ -212,13 +213,13 @@ class SupervisorAgentTest {
       Agent worker = createTestAgent("Worker");
 
       SupervisorAgent supervisor =
-              SupervisorAgent.builder()
-                      .name("Test")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .addWorker(worker, "work")
-                      .build();
+          SupervisorAgent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addWorker(worker, "work")
+              .build();
 
       assertThrows(UnsupportedOperationException.class, () -> supervisor.workers().clear());
     }
@@ -230,14 +231,14 @@ class SupervisorAgentTest {
       Agent worker2 = createTestAgent("Worker2");
 
       SupervisorAgent supervisor =
-              SupervisorAgent.builder()
-                      .name("Test")
-                      .model("test-model")
-                      .instructions("Test")
-                      .responder(responder)
-                      .addWorker(worker1, "research")
-                      .addWorker(worker2, "writing")
-                      .build();
+          SupervisorAgent.builder()
+              .name("Test")
+              .model("test-model")
+              .instructions("Test")
+              .responder(responder)
+              .addWorker(worker1, "research")
+              .addWorker(worker2, "writing")
+              .build();
 
       assertEquals(2, supervisor.workers().size());
     }
@@ -246,7 +247,7 @@ class SupervisorAgentTest {
     @DisplayName("Worker record validates null agent")
     void workerRecord_nullAgent_throws() {
       assertThrows(
-              NullPointerException.class, () -> new SupervisorAgent.Worker(null, "description"));
+          NullPointerException.class, () -> new SupervisorAgent.Worker(null, "description"));
     }
 
     @Test
@@ -273,7 +274,6 @@ class SupervisorAgentTest {
       assertNotNull(result);
       assertInstanceOf(AgentResult.class, result);
     }
-
 
     @Test
     @DisplayName("orchestrate(Text) returns AgentResult")
@@ -356,6 +356,5 @@ class SupervisorAgentTest {
 
       assertNotNull(stream);
     }
-
   }
 }

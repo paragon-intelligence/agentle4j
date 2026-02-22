@@ -159,8 +159,8 @@ public final class Skill {
   /**
    * Returns additional resources (context files) for this skill.
    *
-   * <p>Resources are named Prompts that provide supplementary context.
-   * For example, a PDF skill might have a "FORMS.md" resource with form-filling guidance.
+   * <p>Resources are named Prompts that provide supplementary context. For example, a PDF skill
+   * might have a "FORMS.md" resource with form-filling guidance.
    *
    * @return unmodifiable map of resource name to content
    */
@@ -180,8 +180,8 @@ public final class Skill {
   /**
    * Generates the prompt section for this skill.
    *
-   * <p>This produces a formatted text block that can be appended to an agent's system prompt.
-   * The format includes the skill name, description, instructions, and any resources.
+   * <p>This produces a formatted text block that can be appended to an agent's system prompt. The
+   * format includes the skill name, description, instructions, and any resources.
    *
    * @return the formatted skill prompt section
    */
@@ -240,8 +240,7 @@ public final class Skill {
     /**
      * Sets the skill's unique name.
      *
-     * <p>Must contain only lowercase letters, numbers, and hyphens.
-     * Maximum 64 characters.
+     * <p>Must contain only lowercase letters, numbers, and hyphens. Maximum 64 characters.
      *
      * @param name the skill name
      * @return this builder
@@ -254,8 +253,7 @@ public final class Skill {
     /**
      * Sets the skill's description.
      *
-     * <p>This should explain what the skill does and when to use it.
-     * Maximum 1024 characters.
+     * <p>This should explain what the skill does and when to use it. Maximum 1024 characters.
      *
      * @param description the skill description
      * @return this builder

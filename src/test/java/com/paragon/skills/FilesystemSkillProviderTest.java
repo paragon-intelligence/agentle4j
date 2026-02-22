@@ -7,21 +7,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * Tests for the FilesystemSkillProvider class.
- */
+/** Tests for the FilesystemSkillProvider class. */
 @DisplayName("FilesystemSkillProvider")
 class FilesystemSkillProviderTest {
 
-  @TempDir
-  Path tempDir;
+  @TempDir Path tempDir;
 
   private Path skillsDir;
 
@@ -49,9 +45,11 @@ class FilesystemSkillProviderTest {
     void create_throwsWhenDirectoryDoesNotExist() {
       Path nonexistent = tempDir.resolve("nonexistent");
 
-      assertThrows(SkillProviderException.class, () -> {
-        FilesystemSkillProvider.create(nonexistent);
-      });
+      assertThrows(
+          SkillProviderException.class,
+          () -> {
+            FilesystemSkillProvider.create(nonexistent);
+          });
     }
 
     @Test
@@ -60,9 +58,11 @@ class FilesystemSkillProviderTest {
       Path file = tempDir.resolve("file.txt");
       Files.createFile(file);
 
-      assertThrows(SkillProviderException.class, () -> {
-        FilesystemSkillProvider.create(file);
-      });
+      assertThrows(
+          SkillProviderException.class,
+          () -> {
+            FilesystemSkillProvider.create(file);
+          });
     }
   }
 
@@ -73,7 +73,9 @@ class FilesystemSkillProviderTest {
     @Test
     @DisplayName("provide loads skill from directory")
     void provide_loadsSkillFromDirectory() throws IOException {
-      createSkillDirectory("pdf-processor", """
+      createSkillDirectory(
+          "pdf-processor",
+          """
           ---
           name: pdf-processor
           description: Process PDF files
@@ -95,9 +97,11 @@ class FilesystemSkillProviderTest {
     void provide_throwsWhenSkillNotFound() {
       FilesystemSkillProvider provider = FilesystemSkillProvider.create(skillsDir);
 
-      assertThrows(SkillProviderException.class, () -> {
-        provider.provide("nonexistent");
-      });
+      assertThrows(
+          SkillProviderException.class,
+          () -> {
+            provider.provide("nonexistent");
+          });
     }
 
     @Test
@@ -108,15 +112,19 @@ class FilesystemSkillProviderTest {
 
       FilesystemSkillProvider provider = FilesystemSkillProvider.create(skillsDir);
 
-      assertThrows(SkillProviderException.class, () -> {
-        provider.provide("empty-skill");
-      });
+      assertThrows(
+          SkillProviderException.class,
+          () -> {
+            provider.provide("empty-skill");
+          });
     }
 
     @Test
     @DisplayName("provide loads additional resources")
     void provide_loadsAdditionalResources() throws IOException {
-      createSkillDirectory("pdf-processor", """
+      createSkillDirectory(
+          "pdf-processor",
+          """
           ---
           name: pdf-processor
           description: Process PDF files
@@ -145,14 +153,17 @@ class FilesystemSkillProviderTest {
     @DisplayName("loadFromFile loads skill from single file")
     void loadFromFile_loadsSkillFromSingleFile() throws IOException {
       Path skillFile = tempDir.resolve("single-skill.md");
-      Files.writeString(skillFile, """
+      Files.writeString(
+          skillFile,
+          """
           ---
           name: single-skill
           description: A single skill file
           ---
 
           Instructions here.
-          """, StandardCharsets.UTF_8);
+          """,
+          StandardCharsets.UTF_8);
 
       Skill skill = FilesystemSkillProvider.loadFromFile(skillFile);
 
@@ -164,9 +175,11 @@ class FilesystemSkillProviderTest {
     void loadFromFile_throwsWhenFileNotFound() {
       Path nonexistent = tempDir.resolve("nonexistent.md");
 
-      assertThrows(SkillProviderException.class, () -> {
-        FilesystemSkillProvider.loadFromFile(nonexistent);
-      });
+      assertThrows(
+          SkillProviderException.class,
+          () -> {
+            FilesystemSkillProvider.loadFromFile(nonexistent);
+          });
     }
   }
 
@@ -177,7 +190,9 @@ class FilesystemSkillProviderTest {
     @Test
     @DisplayName("exists returns true when skill exists")
     void exists_returnsTrueWhenSkillExists() throws IOException {
-      createSkillDirectory("test-skill", """
+      createSkillDirectory(
+          "test-skill",
+          """
           ---
           name: test-skill
           description: Test
@@ -216,14 +231,18 @@ class FilesystemSkillProviderTest {
     @Test
     @DisplayName("listSkillIds returns all skill directories")
     void listSkillIds_returnsAllSkillDirectories() throws IOException {
-      createSkillDirectory("skill-1", """
+      createSkillDirectory(
+          "skill-1",
+          """
           ---
           name: skill-1
           description: First skill
           ---
           Instructions.
           """);
-      createSkillDirectory("skill-2", """
+      createSkillDirectory(
+          "skill-2",
+          """
           ---
           name: skill-2
           description: Second skill
@@ -242,7 +261,9 @@ class FilesystemSkillProviderTest {
     @Test
     @DisplayName("listSkillIds excludes directories without SKILL.md")
     void listSkillIds_excludesDirectoriesWithoutSkillMd() throws IOException {
-      createSkillDirectory("valid-skill", """
+      createSkillDirectory(
+          "valid-skill",
+          """
           ---
           name: valid-skill
           description: Valid skill

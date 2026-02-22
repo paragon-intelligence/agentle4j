@@ -1,6 +1,5 @@
 package com.paragon.messaging.whatsapp.messages;
 
-import com.paragon.messaging.core.OutboundMessage;
 import com.paragon.messaging.core.TextMessageInterface;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -10,10 +9,11 @@ import org.jspecify.annotations.Nullable;
 /**
  * Represents a simple text message for outbound delivery.
  *
- * <p>Uses Bean Validation (Hibernate Validator) for declarative field validation,
- * ensuring the message meets API requirements before sending.</p>
+ * <p>Uses Bean Validation (Hibernate Validator) for declarative field validation, ensuring the
+ * message meets API requirements before sending.
  *
  * <h2>Usage Example</h2>
+ *
  * <pre>{@code
  * // Simple text message
  * TextMessage message = new TextMessage("Hello, World!");
@@ -28,27 +28,21 @@ import org.jspecify.annotations.Nullable;
  *     .build();
  * }</pre>
  *
- * @param body              message content (1-4096 characters)
- * @param previewUrl        if true, generates URL previews in the text
- * @param replyToMessageId  optional message ID to reply to
+ * @param body message content (1-4096 characters)
+ * @param previewUrl if true, generates URL previews in the text
+ * @param replyToMessageId optional message ID to reply to
  * @author Agentle Team
  * @since 2.0
  */
 public record TextMessage(
-
-        @NotBlank(message = "Message body cannot be blank")
+    @NotBlank(message = "Message body cannot be blank")
         @Size(min = 1, max = 4096, message = "Message body must be between 1 and 4096 characters")
         String body,
+    boolean previewUrl,
+    @Nullable String replyToMessageId)
+    implements TextMessageInterface {
 
-        boolean previewUrl,
-
-        @Nullable String replyToMessageId
-
-) implements TextMessageInterface {
-
-  /**
-   * Maximum allowed length for message body.
-   */
+  /** Maximum allowed length for message body. */
   public static final int MAX_BODY_LENGTH = 4096;
 
   /**
@@ -63,7 +57,7 @@ public record TextMessage(
   /**
    * Convenience constructor with URL preview but no reply context.
    *
-   * @param body       message content
+   * @param body message content
    * @param previewUrl whether to generate URL previews
    */
   public TextMessage(String body, boolean previewUrl) {
@@ -94,16 +88,13 @@ public record TextMessage(
     return new TextMessage(body, previewUrl, messageId);
   }
 
-  /**
-   * Builder for TextMessage with fluent API.
-   */
+  /** Builder for TextMessage with fluent API. */
   public static class Builder {
     private String body;
     private boolean previewUrl = false;
     private String replyToMessageId;
 
-    private Builder() {
-    }
+    private Builder() {}
 
     /**
      * Sets the message body text.
@@ -150,7 +141,7 @@ public record TextMessage(
     /**
      * Sets the message ID to reply to.
      *
-     * <p>When set, the message will appear as a reply/quote in WhatsApp.</p>
+     * <p>When set, the message will appear as a reply/quote in WhatsApp.
      *
      * @param messageId the WhatsApp message ID to reply to
      * @return this builder
@@ -163,8 +154,8 @@ public record TextMessage(
     /**
      * Builds the TextMessage.
      *
-     * <p>Note: Validation will be executed when the object is passed
-     * to MessagingProvider via the @Valid annotation.</p>
+     * <p>Note: Validation will be executed when the object is passed to MessagingProvider via
+     * the @Valid annotation.
      *
      * @return the built TextMessage
      */
@@ -173,4 +164,3 @@ public record TextMessage(
     }
   }
 }
-

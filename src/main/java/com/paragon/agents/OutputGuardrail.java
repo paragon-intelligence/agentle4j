@@ -40,18 +40,17 @@ public interface OutputGuardrail {
   /**
    * Validates the agent's output.
    *
-   * @param output  the agent's output string
+   * @param output the agent's output string
    * @param context the current agent context
    * @return the validation result
    */
-  @NonNull
-  GuardrailResult validate(@NonNull String output, @NonNull AgenticContext context);
+  @NonNull GuardrailResult validate(@NonNull String output, @NonNull AgenticContext context);
 
   /**
    * Wraps a guardrail implementation with a named ID for blueprint serialization.
    *
-   * <p>Use this when defining guardrails as lambdas that need to be serializable. The guardrail
-   * is registered in the {@link GuardrailRegistry} and can be reconstructed during deserialization.
+   * <p>Use this when defining guardrails as lambdas that need to be serializable. The guardrail is
+   * registered in the {@link GuardrailRegistry} and can be reconstructed during deserialization.
    *
    * <pre>{@code
    * OutputGuardrail guard = OutputGuardrail.named("max_length", (output, ctx) -> {

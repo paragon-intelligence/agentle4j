@@ -1,7 +1,6 @@
 package com.paragon.mcp;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.mcp.dto.McpToolDefinition;
 import com.paragon.mcp.dto.McpToolResult;
@@ -28,7 +27,7 @@ import org.slf4j.LoggerFactory;
  *     .command("npx", "-y", "@modelcontextprotocol/server-filesystem")
  *     .build();
  * mcp.connect();
- * 
+ *
  * List<McpRemoteTool> tools = mcp.asTools();
  *
  * // Add to agent
@@ -89,8 +88,7 @@ public final class McpRemoteTool extends FunctionTool<McpRemoteTool.McpParams> {
     // Return null to indicate we need special handling.
     // The actual execution happens via callWithRawArguments or through the agent's tool store.
     log.warn(
-        "call(McpParams) invoked on MCP tool '{}' - use callWithRawArguments() instead",
-        toolName);
+        "call(McpParams) invoked on MCP tool '{}' - use callWithRawArguments() instead", toolName);
     return FunctionToolCallOutput.error(
         "MCP tools require raw JSON arguments. Use callWithRawArguments().");
   }

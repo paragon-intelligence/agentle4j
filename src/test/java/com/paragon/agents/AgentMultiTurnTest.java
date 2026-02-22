@@ -1,14 +1,13 @@
 package com.paragon.agents;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
+import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
-
-import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for Agent multi-turn conversation behavior.
@@ -28,7 +27,7 @@ class AgentMultiTurnTest {
     mockWebServer.start();
 
     responder =
-            Responder.builder().openRouter().apiKey("test-key").baseUrl(mockWebServer.url("/")).build();
+        Responder.builder().openRouter().apiKey("test-key").baseUrl(mockWebServer.url("/")).build();
   }
 
   @AfterEach
@@ -42,11 +41,11 @@ class AgentMultiTurnTest {
 
   private Agent createTestAgent(String name) {
     return Agent.builder()
-            .name(name)
-            .instructions("You are a helpful assistant.")
-            .model("test-model")
-            .responder(responder)
-            .build();
+        .name(name)
+        .instructions("You are a helpful assistant.")
+        .model("test-model")
+        .responder(responder)
+        .build();
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -55,41 +54,41 @@ class AgentMultiTurnTest {
 
   private void enqueueSuccessResponse(String text) {
     String responseJson =
-            """
-                    {
-                      "id": "resp_%d",
-                      "object": "response",
-                      "created_at": 1234567890,
-                      "status": "completed",
-                      "output": [
-                        {
-                          "type": "message",
-                          "id": "msg_1",
-                          "status": "completed",
-                          "role": "assistant",
-                          "content": [
-                            {
-                              "type": "output_text",
-                              "text": "%s"
-                            }
-                          ]
-                        }
-                      ],
-                      "model": "test-model",
-                      "usage": {
-                        "input_tokens": 10,
-                        "output_tokens": 20,
-                        "total_tokens": 30
-                      }
-                    }
-                    """
-                    .formatted(System.nanoTime(), text);
+        """
+        {
+          "id": "resp_%d",
+          "object": "response",
+          "created_at": 1234567890,
+          "status": "completed",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_1",
+              "status": "completed",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "%s"
+                }
+              ]
+            }
+          ],
+          "model": "test-model",
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 20,
+            "total_tokens": 30
+          }
+        }
+        """
+            .formatted(System.nanoTime(), text);
 
     mockWebServer.enqueue(
-            new MockResponse()
-                    .setBody(responseJson)
-                    .setHeader("Content-Type", "application/json")
-                    .setResponseCode(200));
+        new MockResponse()
+            .setBody(responseJson)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

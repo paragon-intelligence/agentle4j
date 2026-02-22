@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -55,7 +54,8 @@ public final class FilesystemSkillProvider implements SkillProvider {
   private final @NonNull SkillMarkdownParser parser;
 
   private FilesystemSkillProvider(@NonNull Path skillsDirectory) {
-    this.skillsDirectory = Objects.requireNonNull(skillsDirectory, "skillsDirectory cannot be null");
+    this.skillsDirectory =
+        Objects.requireNonNull(skillsDirectory, "skillsDirectory cannot be null");
     this.parser = new SkillMarkdownParser();
 
     if (!Files.isDirectory(skillsDirectory)) {
@@ -127,9 +127,7 @@ public final class FilesystemSkillProvider implements SkillProvider {
     }
   }
 
-  /**
-   * Parses SKILL.md content into a Skill.Builder for further modification.
-   */
+  /** Parses SKILL.md content into a Skill.Builder for further modification. */
   private Skill.Builder parseToBuilder(String content, String skillId) {
     if (content.isBlank()) {
       throw new SkillProviderException(skillId, "SKILL.md is empty");
@@ -145,24 +143,23 @@ public final class FilesystemSkillProvider implements SkillProvider {
         .instructions(parsed.instructions());
   }
 
-  /**
-   * Loads additional .md files as resources.
-   */
+  /** Loads additional .md files as resources. */
   private void loadResources(Path skillDir, Skill.Builder builder) throws IOException {
     try (Stream<Path> files = Files.list(skillDir)) {
       files
           .filter(Files::isRegularFile)
           .filter(p -> p.toString().endsWith(".md"))
           .filter(p -> !p.getFileName().toString().equals(SKILL_FILE))
-          .forEach(resourceFile -> {
-            try {
-              String resourceName = resourceFile.getFileName().toString();
-              String resourceContent = Files.readString(resourceFile, StandardCharsets.UTF_8);
-              builder.addResource(resourceName, Prompt.of(resourceContent));
-            } catch (IOException e) {
-              // Log but don't fail - resources are optional
-            }
-          });
+          .forEach(
+              resourceFile -> {
+                try {
+                  String resourceName = resourceFile.getFileName().toString();
+                  String resourceContent = Files.readString(resourceFile, StandardCharsets.UTF_8);
+                  builder.addResource(resourceName, Prompt.of(resourceContent));
+                } catch (IOException e) {
+                  // Log but don't fail - resources are optional
+                }
+              });
     }
   }
 
@@ -179,8 +176,7 @@ public final class FilesystemSkillProvider implements SkillProvider {
   @Override
   public @NonNull Set<String> listSkillIds() {
     try (Stream<Path> dirs = Files.list(skillsDirectory)) {
-      return dirs
-          .filter(Files::isDirectory)
+      return dirs.filter(Files::isDirectory)
           .filter(dir -> Files.isRegularFile(dir.resolve(SKILL_FILE)))
           .map(dir -> dir.getFileName().toString())
           .collect(Collectors.toUnmodifiableSet());

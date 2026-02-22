@@ -11,23 +11,16 @@ import java.util.Optional;
  * @author Your Name
  * @since 1.0
  */
-public sealed interface WebhookEvent permits
-        WebhookEvent.MessageStatusEvent,
-        WebhookEvent.IncomingMessageEvent {
+public sealed interface WebhookEvent
+    permits WebhookEvent.MessageStatusEvent, WebhookEvent.IncomingMessageEvent {
 
-  /**
-   * Retorna o tipo do evento.
-   */
+  /** Retorna o tipo do evento. */
   WebhookEventType type();
 
-  /**
-   * Retorna o timestamp do evento.
-   */
+  /** Retorna o timestamp do evento. */
   Instant timestamp();
 
-  /**
-   * Enum de tipos de eventos webhook.
-   */
+  /** Enum de tipos de eventos webhook. */
   enum WebhookEventType {
     MESSAGE_STATUS,
     INCOMING_MESSAGE,
@@ -36,9 +29,7 @@ public sealed interface WebhookEvent permits
     INCOMING_LIST_REPLY
   }
 
-  /**
-   * Tipos de mensagens recebidas.
-   */
+  /** Tipos de mensagens recebidas. */
   enum IncomingMessageType {
     TEXT,
     IMAGE,
@@ -53,39 +44,36 @@ public sealed interface WebhookEvent permits
     LIST_REPLY
   }
 
-  /**
-   * Interface selada para conteúdo de mensagem recebida.
-   */
-  sealed interface IncomingMessageContent permits
-          WebhookEvent.TextContent,
+  /** Interface selada para conteúdo de mensagem recebida. */
+  sealed interface IncomingMessageContent
+      permits WebhookEvent.TextContent,
           WebhookEvent.MediaContent,
           WebhookEvent.LocationContent,
           WebhookEvent.ContactContent,
           WebhookEvent.ReactionContent,
           WebhookEvent.ButtonReplyContent,
-          WebhookEvent.ListReplyContent {
-  }
+          WebhookEvent.ListReplyContent {}
 
   /**
    * Evento de atualização de status de mensagem.
    *
-   * @param messageId      ID da mensagem
-   * @param recipientId    ID do destinatário
-   * @param status         status da mensagem
-   * @param timestamp      timestamp do evento
+   * @param messageId ID da mensagem
+   * @param recipientId ID do destinatário
+   * @param status status da mensagem
+   * @param timestamp timestamp do evento
    * @param conversationId ID da conversa (opcional)
-   * @param pricing        informações de cobrança (opcional)
-   * @param errors         erros ocorridos (opcional)
+   * @param pricing informações de cobrança (opcional)
+   * @param errors erros ocorridos (opcional)
    */
   record MessageStatusEvent(
-          String messageId,
-          String recipientId,
-          String status,
-          Instant timestamp,
-          Optional<String> conversationId,
-          Optional<Object> pricing,
-          Optional<List<Object>> errors
-  ) implements WebhookEvent {
+      String messageId,
+      String recipientId,
+      String status,
+      Instant timestamp,
+      Optional<String> conversationId,
+      Optional<Object> pricing,
+      Optional<List<Object>> errors)
+      implements WebhookEvent {
 
     public MessageStatusEvent {
       Objects.requireNonNull(messageId, "Message ID cannot be null");
@@ -104,23 +92,17 @@ public sealed interface WebhookEvent permits
       return WebhookEventType.MESSAGE_STATUS;
     }
 
-    /**
-     * Verifica se a mensagem foi entregue com sucesso.
-     */
+    /** Verifica se a mensagem foi entregue com sucesso. */
     public boolean isDelivered() {
       return status.equals("DELIVERED");
     }
 
-    /**
-     * Verifica se a mensagem foi lida.
-     */
+    /** Verifica se a mensagem foi lida. */
     public boolean isRead() {
       return status.equals("READ");
     }
 
-    /**
-     * Verifica se houve falha.
-     */
+    /** Verifica se houve falha. */
     public boolean isFailed() {
       return status.equals("FAILED");
     }
@@ -129,23 +111,23 @@ public sealed interface WebhookEvent permits
   /**
    * Evento de mensagem recebida.
    *
-   * @param messageId   ID da mensagem recebida
-   * @param senderId    ID do remetente
-   * @param senderName  nome do remetente (se disponível)
+   * @param messageId ID da mensagem recebida
+   * @param senderId ID do remetente
+   * @param senderName nome do remetente (se disponível)
    * @param messageType tipo da mensagem recebida
-   * @param content     conteúdo da mensagem
-   * @param timestamp   timestamp da mensagem
-   * @param context     contexto da mensagem (se for resposta, etc.)
+   * @param content conteúdo da mensagem
+   * @param timestamp timestamp da mensagem
+   * @param context contexto da mensagem (se for resposta, etc.)
    */
   record IncomingMessageEvent(
-          String messageId,
-          String senderId,
-          Optional<String> senderName,
-          IncomingMessageType messageType,
-          IncomingMessageContent content,
-          Instant timestamp,
-          Optional<MessageContext> context
-  ) implements WebhookEvent {
+      String messageId,
+      String senderId,
+      Optional<String> senderName,
+      IncomingMessageType messageType,
+      IncomingMessageContent content,
+      Instant timestamp,
+      Optional<MessageContext> context)
+      implements WebhookEvent {
 
     public IncomingMessageEvent {
       Objects.requireNonNull(messageId, "Message ID cannot be null");
@@ -169,24 +151,17 @@ public sealed interface WebhookEvent permits
     }
   }
 
-  /**
-   * Conteúdo de mensagem de texto.
-   */
+  /** Conteúdo de mensagem de texto. */
   record TextContent(String body) implements IncomingMessageContent {
     public TextContent {
       Objects.requireNonNull(body, "Text body cannot be null");
     }
   }
 
-  /**
-   * Conteúdo de mídia.
-   */
+  /** Conteúdo de mídia. */
   record MediaContent(
-          String mediaId,
-          String mimeType,
-          Optional<String> caption,
-          Optional<String> filename
-  ) implements IncomingMessageContent {
+      String mediaId, String mimeType, Optional<String> caption, Optional<String> filename)
+      implements IncomingMessageContent {
     public MediaContent {
       Objects.requireNonNull(mediaId, "Media ID cannot be null");
       Objects.requireNonNull(mimeType, "MIME type cannot be null");
@@ -195,24 +170,17 @@ public sealed interface WebhookEvent permits
     }
   }
 
-  /**
-   * Conteúdo de localização.
-   */
+  /** Conteúdo de localização. */
   record LocationContent(
-          double latitude,
-          double longitude,
-          Optional<String> name,
-          Optional<String> address
-  ) implements IncomingMessageContent {
+      double latitude, double longitude, Optional<String> name, Optional<String> address)
+      implements IncomingMessageContent {
     public LocationContent {
       Objects.requireNonNull(name, "Name cannot be null");
       Objects.requireNonNull(address, "Address cannot be null");
     }
   }
 
-  /**
-   * Conteúdo de contato.
-   */
+  /** Conteúdo de contato. */
   record ContactContent(List<String> contactsData) implements IncomingMessageContent {
     public ContactContent {
       Objects.requireNonNull(contactsData, "Contacts data cannot be null");
@@ -220,9 +188,7 @@ public sealed interface WebhookEvent permits
     }
   }
 
-  /**
-   * Conteúdo de reação.
-   */
+  /** Conteúdo de reação. */
   record ReactionContent(String messageId, String emoji) implements IncomingMessageContent {
     public ReactionContent {
       Objects.requireNonNull(messageId, "Message ID cannot be null");
@@ -230,9 +196,7 @@ public sealed interface WebhookEvent permits
     }
   }
 
-  /**
-   * Conteúdo de resposta a botão.
-   */
+  /** Conteúdo de resposta a botão. */
   record ButtonReplyContent(String buttonId, String buttonText) implements IncomingMessageContent {
     public ButtonReplyContent {
       Objects.requireNonNull(buttonId, "Button ID cannot be null");
@@ -240,14 +204,9 @@ public sealed interface WebhookEvent permits
     }
   }
 
-  /**
-   * Conteúdo de resposta a lista.
-   */
-  record ListReplyContent(
-          String listId,
-          String listTitle,
-          Optional<String> listDescription
-  ) implements IncomingMessageContent {
+  /** Conteúdo de resposta a lista. */
+  record ListReplyContent(String listId, String listTitle, Optional<String> listDescription)
+      implements IncomingMessageContent {
     public ListReplyContent {
       Objects.requireNonNull(listId, "List ID cannot be null");
       Objects.requireNonNull(listTitle, "List title cannot be null");
@@ -255,14 +214,9 @@ public sealed interface WebhookEvent permits
     }
   }
 
-  /**
-   * Contexto da mensagem (se for resposta, reenvio, etc.).
-   */
+  /** Contexto da mensagem (se for resposta, reenvio, etc.). */
   record MessageContext(
-          Optional<String> referencedMessageId,
-          Optional<String> forwardedFrom,
-          boolean isForwarded
-  ) {
+      Optional<String> referencedMessageId, Optional<String> forwardedFrom, boolean isForwarded) {
     public MessageContext {
       Objects.requireNonNull(referencedMessageId, "Referenced message ID cannot be null");
       Objects.requireNonNull(forwardedFrom, "Forwarded from cannot be null");

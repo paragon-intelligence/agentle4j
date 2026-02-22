@@ -9,8 +9,6 @@ import com.paragon.responses.Responder;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.*;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
@@ -234,8 +232,7 @@ class ResponseStreamExtendedTest {
               .streaming()
               .build();
 
-      ParsedResponse<TestPerson> parsed =
-          responder.respond(payload).getParsed();
+      ParsedResponse<TestPerson> parsed = responder.respond(payload).getParsed();
 
       assertNotNull(parsed);
       assertEquals("Alice", parsed.outputParsed().name());
@@ -346,10 +343,11 @@ class ResponseStreamExtendedTest {
               .streaming()
               .build();
 
-      java.util.concurrent.atomic.AtomicReference<Throwable> error = new java.util.concurrent.atomic.AtomicReference<>();
+      java.util.concurrent.atomic.AtomicReference<Throwable> error =
+          new java.util.concurrent.atomic.AtomicReference<>();
 
       ResponseStream<Void> stream = responder.respond(payload).onError(error::set);
-      
+
       // Start will throw or capture error via callback
       try {
         stream.get();

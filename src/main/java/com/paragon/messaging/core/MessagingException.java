@@ -2,9 +2,7 @@ package com.paragon.messaging.core;
 
 import java.util.Optional;
 
-/**
- * Exceção base para erros de mensageria.
- */
+/** Exceção base para erros de mensageria. */
 public class MessagingException extends RuntimeException {
 
   private final Optional<Integer> errorCode;

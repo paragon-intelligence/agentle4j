@@ -3,20 +3,13 @@ package com.paragon.messaging.whatsapp.messages;
 import com.paragon.messaging.core.ReactionMessageInterface;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
 import java.util.Optional;
 
-/**
- * Mensagem de reação (emoji) a uma mensagem existente.
- */
+/** Mensagem de reação (emoji) a uma mensagem existente. */
 public record ReactionMessage(
-
-        @NotBlank(message = "Message ID cannot be blank")
-        String messageId,
-
-        Optional<@Size(max = 10, message = "Emoji cannot exceed 10 characters") String> emoji
-
-) implements ReactionMessageInterface {
+    @NotBlank(message = "Message ID cannot be blank") String messageId,
+    Optional<@Size(max = 10, message = "Emoji cannot exceed 10 characters") String> emoji)
+    implements ReactionMessageInterface {
 
   public ReactionMessage(String messageId, String emoji) {
     this(messageId, Optional.ofNullable(emoji));

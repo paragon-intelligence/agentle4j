@@ -7,9 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Coverage tests for exception types that need additional test coverage.
- */
+/** Coverage tests for exception types that need additional test coverage. */
 @DisplayName("Exception Coverage Tests")
 class ExceptionCoverageTest {
 
@@ -104,8 +102,7 @@ class ExceptionCoverageTest {
     @Test
     @DisplayName("should extend ApiException")
     void shouldExtendApiException() {
-      InvalidRequestException exception =
-          new InvalidRequestException(400, "Invalid", null, null);
+      InvalidRequestException exception = new InvalidRequestException(400, "Invalid", null, null);
 
       assertInstanceOf(ApiException.class, exception);
     }
@@ -136,8 +133,7 @@ class ExceptionCoverageTest {
     @Test
     @DisplayName("should create rate limit exception without retry-after")
     void shouldCreateRateLimitExceptionWithoutRetryAfter() {
-      RateLimitException exception =
-          new RateLimitException("Too many requests", null, null, null);
+      RateLimitException exception = new RateLimitException("Too many requests", null, null, null);
 
       assertEquals(429, exception.statusCode());
       assertNull(exception.retryAfter());
@@ -160,8 +156,7 @@ class ExceptionCoverageTest {
     @Test
     @DisplayName("should extend ApiException")
     void shouldExtendApiException() {
-      RateLimitException exception =
-          new RateLimitException("Rate limited", null, null, null);
+      RateLimitException exception = new RateLimitException("Rate limited", null, null, null);
 
       assertInstanceOf(ApiException.class, exception);
     }
@@ -236,12 +231,9 @@ class ExceptionCoverageTest {
     @Test
     @DisplayName("should handle null request id and response body")
     void shouldHandleNullRequestIdAndResponseBody() {
-      AuthenticationException auth =
-          new AuthenticationException(401, "Auth failed", null, null);
-      InvalidRequestException invalid =
-          new InvalidRequestException(400, "Invalid", null, null);
-      RateLimitException rate =
-          new RateLimitException("Rate limit", null, null, null);
+      AuthenticationException auth = new AuthenticationException(401, "Auth failed", null, null);
+      InvalidRequestException invalid = new InvalidRequestException(400, "Invalid", null, null);
+      RateLimitException rate = new RateLimitException("Rate limit", null, null, null);
       ServerException server = new ServerException(500, "Server error", null, null);
 
       assertNull(auth.requestId());
