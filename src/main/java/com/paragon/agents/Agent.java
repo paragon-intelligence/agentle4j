@@ -3,6 +3,7 @@ package com.paragon.agents;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.agents.context.ContextManagementConfig;
+import com.paragon.agents.toolplan.ToolPlanTool;
 import com.paragon.agents.toolsearch.ToolRegistry;
 import com.paragon.prompts.Prompt;
 import com.paragon.responses.Responder;
@@ -162,47 +163,85 @@ public final class Agent implements Serializable, Interactable {
     // Tool search registry
     this.toolRegistry = builder.toolRegistry;
 
-    // Build augmented instructions with skills
+    // Build augmented instructions with skills and tool planning
     Prompt baseInstructions =
         Objects.requireNonNull(builder.instructions, "instructions are required");
+    StringBuilder instructionAugmentation = new StringBuilder(baseInstructions.text());
+    boolean augmented = false;
+
     if (!builder.pendingSkills.isEmpty()) {
-      StringBuilder augmented = new StringBuilder(baseInstructions.text());
-      augmented.append("\n\n# Skills\n");
-      augmented.append("You have the following skills available. Apply them when relevant:\n");
+      instructionAugmentation.append("\n\n# Skills\n");
+      instructionAugmentation.append(
+          "You have the following skills available. Apply them when relevant:\n");
       for (Skill skill : builder.pendingSkills) {
-        augmented.append(skill.toPromptSection());
+        instructionAugmentation.append(skill.toPromptSection());
       }
-      this.instructions = Prompt.of(augmented.toString());
-    } else {
-      this.instructions = baseInstructions;
+      augmented = true;
     }
 
+    if (builder.toolPlanningEnabled && !builder.tools.isEmpty()) {
+      instructionAugmentation.append(
+          """
+
+          \n# Tool Planning
+          You have access to an `execute_tool_plan` tool that lets you batch multiple tool \
+          calls into a single execution plan. Use it when:
+          - Multiple tools need to be called and some depend on others' results
+          - You want to run independent tool calls in parallel for efficiency
+          - You want to reduce context usage by processing intermediate results locally
+
+          Plan format:
+          - Each step has an `id` (unique identifier), `tool` (function name), and `arguments` \
+          (a JSON string of the tool's arguments)
+          - Use `"$ref:step_id"` in arguments to reference the full output of a previous step
+          - Use `"$ref:step_id.field_name"` to extract a specific JSON field from a step's output
+          - List which step IDs' results you need in `output_steps` (omit for all results)
+          - Steps with no `$ref` dependencies execute in parallel automatically
+          """);
+      augmented = true;
+    }
+
+    this.instructions = augmented ? Prompt.of(instructionAugmentation.toString()) : baseInstructions;
+
+    // Build tool store and tools list
+    this.objectMapper = builder.objectMapper != null ? builder.objectMapper : new ObjectMapper();
+    this.toolStore = FunctionToolStore.create(objectMapper);
+
     // Copy tools — if a tool registry is present, include all registry tools
+    List<FunctionTool<?>> allTools;
     if (toolRegistry != null) {
-      List<FunctionTool<?>> allTools = new ArrayList<>(builder.tools);
+      allTools = new ArrayList<>(builder.tools);
       for (FunctionTool<?> regTool : toolRegistry.allTools()) {
         if (!allTools.contains(regTool)) {
           allTools.add(regTool);
         }
       }
-      this.tools = List.copyOf(allTools);
     } else {
-      this.tools = List.copyOf(builder.tools);
+      allTools = new ArrayList<>(builder.tools);
     }
+
+    // Register all user tools in the store
+    for (FunctionTool<?> tool : allTools) {
+      toolStore.add(tool);
+    }
+
     this.handoffs = List.copyOf(builder.handoffs);
     this.inputGuardrails = List.copyOf(builder.inputGuardrails);
     this.outputGuardrails = List.copyOf(builder.outputGuardrails);
 
-    // Build tool store — ALL tools must be registered for execution
-    this.objectMapper = builder.objectMapper != null ? builder.objectMapper : new ObjectMapper();
-    this.toolStore = FunctionToolStore.create(objectMapper);
-    for (FunctionTool<?> tool : tools) {
-      toolStore.add(tool);
-    }
     // Add handoff tools
     for (Handoff handoff : handoffs) {
       toolStore.add(handoff.asTool());
     }
+
+    // Register tool plan meta-tool if enabled (must be after all tools are in the store)
+    if (builder.toolPlanningEnabled && !allTools.isEmpty()) {
+      ToolPlanTool planTool = new ToolPlanTool(this.toolStore);
+      this.toolStore.add(planTool);
+      allTools.add(planTool);
+    }
+
+    this.tools = List.copyOf(allTools);
   }
 
   // ===== Loop Callbacks Interface (for code reuse) =====
@@ -1093,6 +1132,8 @@ public final class Agent implements Serializable, Interactable {
     private @Nullable TraceMetadata traceMetadata;
     // Tool search registry
     private @Nullable ToolRegistry toolRegistry;
+    // Tool planning
+    private boolean toolPlanningEnabled = false;
 
     /**
      * Sets the agent's name (required).
@@ -1570,6 +1611,39 @@ public final class Agent implements Serializable, Interactable {
     }
 
     /**
+     * Enables programmatic tool planning for this agent.
+     *
+     * <p>When enabled, a special {@code execute_tool_plan} meta-tool is registered that allows the
+     * LLM to batch multiple tool calls into a single declarative execution plan. The framework
+     * executes the plan locally — topologically sorting steps, running independent steps in
+     * parallel, resolving {@code $ref} references — and returns only the designated output steps'
+     * results to the LLM context. Intermediate results never touch the context window, saving
+     * tokens and reducing latency.
+     *
+     * <p>Example usage:
+     *
+     * <pre>{@code
+     * Agent agent = Agent.builder()
+     *     .name("Researcher")
+     *     .instructions("You are a research assistant.")
+     *     .model("openai/gpt-4o")
+     *     .responder(responder)
+     *     .addTool(new GetWeatherTool())
+     *     .addTool(new CompareDataTool())
+     *     .enableToolPlanning()
+     *     .build();
+     * }</pre>
+     *
+     * @return this builder
+     * @see com.paragon.agents.toolplan.ToolPlanTool
+     * @see com.paragon.agents.toolplan.ToolPlan
+     */
+    public @NonNull Builder enableToolPlanning() {
+      this.toolPlanningEnabled = true;
+      return this;
+    }
+
+    /**
      * Configures the agent to produce structured output of the specified type.
      *
      * <p>Returns a {@link StructuredBuilder} that will build an {@link Agent.Structured} instead of
@@ -1759,6 +1833,11 @@ public final class Agent implements Serializable, Interactable {
 
     public @NonNull StructuredBuilder<T> skillStore(@NonNull SkillStore store) {
       parentBuilder.skillStore(store);
+      return this;
+    }
+
+    public @NonNull StructuredBuilder<T> enableToolPlanning() {
+      parentBuilder.enableToolPlanning();
       return this;
     }
 
