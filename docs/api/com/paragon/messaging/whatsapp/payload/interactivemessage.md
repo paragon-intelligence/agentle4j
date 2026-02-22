@@ -1,0 +1,27 @@
+# :material-code-braces: InteractiveMessage
+
+`com.paragon.messaging.whatsapp.payload.InteractiveMessage` &nbsp;·&nbsp; **Class**
+
+Extends `AbstractInboundMessage`
+
+---
+
+## Fields
+
+### `buttonReply`
+
+```java
+public final ReplyData buttonReply
+```
+
+Convenience field for button reply content (null if not a button reply).
+
+---
+
+### `listReply`
+
+```java
+public final ReplyData listReply
+```
+
+Convenience field for list reply content (null if not a list reply).

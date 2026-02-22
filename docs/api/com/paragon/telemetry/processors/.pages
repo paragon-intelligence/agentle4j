@@ -1,0 +1,5 @@
+nav:
+  - index.md
+  - processorregistry.md
+  - telemetryprocessor.md
+  - traceidgenerator.md

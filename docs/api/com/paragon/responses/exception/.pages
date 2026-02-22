@@ -1,0 +1,13 @@
+nav:
+  - index.md
+  - agentexecutionexception.md
+  - agentleexception.md
+  - apiexception.md
+  - authenticationexception.md
+  - configurationexception.md
+  - guardrailexception.md
+  - invalidrequestexception.md
+  - ratelimitexception.md
+  - serverexception.md
+  - streamingexception.md
+  - toolexecutionexception.md

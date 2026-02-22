@@ -1,0 +1,11 @@
+nav:
+  - index.md
+  - clickactiondeserializer.md
+  - concretemessagedeserializer.md
+  - createresponsepayloaddeserializer.md
+  - doubleclickactiondeserializer.md
+  - jacksonjsonschemaproducer.md
+  - messagedeserializer.md
+  - moveactiondeserializer.md
+  - responsesapimodule.md
+  - scrollactiondeserializer.md

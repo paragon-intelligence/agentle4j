@@ -1,0 +1,8 @@
+nav:
+  - index.md
+  - mcpclient.md
+  - mcpexception.md
+  - mcpheaderprovider.md
+  - mcpremotetool.md
+  - stdiomcpclient.md
+  - streamablehttpmcpclient.md

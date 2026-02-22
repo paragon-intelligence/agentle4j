@@ -1,0 +1,21 @@
+nav:
+  - index.md
+  - article.md
+  - click.md
+  - executejavascript.md
+  - extractpayload.md
+  - extractionpreferences.md
+  - extractionresult.md
+  - generatepdf.md
+  - location.md
+  - pdfformat.md
+  - pressakey.md
+  - proxymode.md
+  - scrape.md
+  - scraperesult.md
+  - screenshot.md
+  - scroll.md
+  - scrolldirection.md
+  - viewport.md
+  - wait.md
+  - writetext.md

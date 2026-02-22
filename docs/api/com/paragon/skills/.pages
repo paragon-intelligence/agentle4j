@@ -1,0 +1,10 @@
+nav:
+  - index.md
+  - filesystemskillprovider.md
+  - inmemoryskillprovider.md
+  - skill.md
+  - skillmarkdownparser.md
+  - skillprovider.md
+  - skillproviderexception.md
+  - skillstore.md
+  - urlskillprovider.md

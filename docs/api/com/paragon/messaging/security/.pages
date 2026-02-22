@@ -1,0 +1,6 @@
+nav:
+  - index.md
+  - contentsanitizer.md
+  - flooddetector.md
+  - securityconfig.md
+  - webhooksignaturevalidator.md

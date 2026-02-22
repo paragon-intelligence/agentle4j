@@ -219,6 +219,26 @@ version: ## Show Maven and Java versions
 	@echo "$(BLUE)Google Java Format:$(NC)"
 	@$(JAVA_FORMATTER) --version 2>&1 || echo "JAR not found"
 
+##@ Documentation
+
+docs-gen: ## Generate API reference docs from Javadoc (writes to docs/api/)
+	@echo "$(BLUE)📖 Generating API reference from Javadoc...$(NC)"
+	@python3 tools/javadoc2mkdocs.py --src src/main/java --out docs/api --base-pkg com.paragon --clean
+	@echo "$(GREEN)✅ API docs generated in docs/api/$(NC)"
+
+docs-gen-verbose: ## Generate API reference docs (with per-file progress)
+	@echo "$(BLUE)📖 Generating API reference from Javadoc (verbose)...$(NC)"
+	@python3 tools/javadoc2mkdocs.py --src src/main/java --out docs/api --base-pkg com.paragon --clean --verbose
+
+docs-serve: docs-gen ## Generate API docs and serve MkDocs locally
+	@echo "$(BLUE)🌐 Serving documentation at http://127.0.0.1:8000$(NC)"
+	@mkdocs serve
+
+docs-build: docs-gen ## Generate API docs and build the static MkDocs site
+	@echo "$(BLUE)🏗️  Building documentation site...$(NC)"
+	@mkdocs build
+	@echo "$(GREEN)✅ Documentation site built in site/$(NC)"
+
 ##@ CI/CD
 
 ci-build: clean ## CI build (clean + compile + test + package)

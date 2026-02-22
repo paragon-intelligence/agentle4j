@@ -1,0 +1,10 @@
+nav:
+  - index.md
+  - buttonmessage.md
+  - contactmessage.md
+  - locationmessage.md
+  - mediasource.md
+  - reactionmessage.md
+  - requestcontext.md
+  - templatemessage.md
+  - textmessage.md

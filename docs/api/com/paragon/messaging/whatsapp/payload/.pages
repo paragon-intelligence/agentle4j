@@ -1,0 +1,21 @@
+nav:
+  - index.md
+  - audiomessage.md
+  - contactmessage.md
+  - conversation.md
+  - documentmessage.md
+  - errordata.md
+  - imagemessage.md
+  - inboundmessage.md
+  - interactivemessage.md
+  - listreply.md
+  - locationmessage.md
+  - mediacontent.md
+  - messagecontext.md
+  - nfmreply.md
+  - ordermessage.md
+  - pricing.md
+  - reactionmessage.md
+  - stickermessage.md
+  - systemmessage.md
+  - videomessage.md

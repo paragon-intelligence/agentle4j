@@ -1,0 +1,20 @@
+nav:
+  - index.md
+  - otelattribute.md
+  - otelattributevalue.md
+  - oteldatapoint.md
+  - otelexportrequest.md
+  - otellogrecord.md
+  - otellogsexportrequest.md
+  - otelmetric.md
+  - otelmetricsexportrequest.md
+  - otelresource.md
+  - otelresourcelog.md
+  - otelresourcemetric.md
+  - otelresourcespan.md
+  - otelscope.md
+  - otelscopelog.md
+  - otelscopemetric.md
+  - otelscopespan.md
+  - otelspan.md
+  - otelstatus.md

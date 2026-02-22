@@ -1,0 +1,10 @@
+nav:
+  - index.md
+  - jsonrpcerror.md
+  - jsonrpcrequest.md
+  - jsonrpcresponse.md
+  - mcpcontent.md
+  - mcpimagecontent.md
+  - mcptextcontent.md
+  - mcptooldefinition.md
+  - mcptoolresult.md

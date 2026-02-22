@@ -1,0 +1,7 @@
+nav:
+  - index.md
+  - agentfailedevent.md
+  - responsecompletedevent.md
+  - responsefailedevent.md
+  - responsestartedevent.md
+  - telemetryevent.md
