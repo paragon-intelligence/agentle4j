@@ -81,6 +81,30 @@ public interface Interactable {
   String name();
 
   /**
+   * Creates a serializable blueprint of this interactable.
+   *
+   * <p>The blueprint captures all declarative configuration and can be serialized to JSON via
+   * Jackson. Use {@link InteractableBlueprint#toInteractable()} to reconstruct a fully functional
+   * interactable from the blueprint — no external dependencies needed.
+   *
+   * <pre>{@code
+   * InteractableBlueprint blueprint = agent.toBlueprint();
+   * String json = objectMapper.writeValueAsString(blueprint);
+   *
+   * InteractableBlueprint restored = objectMapper.readValue(json, InteractableBlueprint.class);
+   * Interactable agent = restored.toInteractable();
+   * }</pre>
+   *
+   * @return a serializable blueprint of this interactable
+   * @throws UnsupportedOperationException if the implementation does not support blueprints
+   */
+  @NonNull
+  default InteractableBlueprint toBlueprint() {
+    throw new UnsupportedOperationException(
+        getClass().getSimpleName() + " does not support blueprint serialization");
+  }
+
+  /**
    * Interacts with the agent using a text input.
    *
    * <p>Default implementation creates a fresh context with the input as a user message.

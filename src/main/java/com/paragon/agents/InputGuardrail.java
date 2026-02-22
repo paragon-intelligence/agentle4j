@@ -46,4 +46,26 @@ public interface InputGuardrail {
    */
   @NonNull
   GuardrailResult validate(@NonNull String input, @NonNull AgenticContext context);
+
+  /**
+   * Wraps a guardrail implementation with a named ID for blueprint serialization.
+   *
+   * <p>Use this when defining guardrails as lambdas that need to be serializable. The guardrail
+   * is registered in the {@link GuardrailRegistry} and can be reconstructed during deserialization.
+   *
+   * <pre>{@code
+   * InputGuardrail guard = InputGuardrail.named("no_passwords", (input, ctx) -> {
+   *     if (input.contains("password")) return GuardrailResult.failed("No passwords!");
+   *     return GuardrailResult.passed();
+   * });
+   * }</pre>
+   *
+   * @param id the unique identifier for this guardrail
+   * @param impl the guardrail implementation
+   * @return a named guardrail wrapping the implementation
+   */
+  static @NonNull InputGuardrail named(@NonNull String id, @NonNull InputGuardrail impl) {
+    GuardrailRegistry.registerInput(id, impl);
+    return new NamedInputGuardrail(id, impl);
+  }
 }

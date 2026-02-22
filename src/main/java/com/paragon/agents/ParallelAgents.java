@@ -114,6 +114,14 @@ public final class ParallelAgents implements Interactable {
     return name;
   }
 
+  @Override
+  public @NonNull InteractableBlueprint toBlueprint() {
+    List<InteractableBlueprint> memberBlueprints = members.stream()
+        .map(Interactable::toBlueprint)
+        .toList();
+    return new InteractableBlueprint.ParallelAgentsBlueprint(name, memberBlueprints, traceMetadata);
+  }
+
   /**
    * Returns the members in this orchestrator.
    *

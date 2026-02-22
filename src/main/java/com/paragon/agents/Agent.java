@@ -208,7 +208,70 @@ public final class Agent implements Serializable, Interactable {
     return name;
   }
 
-  // ===== Accessors =====
+  @Override
+  public @NonNull InteractableBlueprint toBlueprint() {
+    // Extract tool class names (skip internal tools like InteractableSubAgentTool)
+    List<String> toolClassNames = tools.stream()
+        .filter(t -> !t.getClass().isAnonymousClass() && !t.getClass().isSynthetic())
+        .filter(t -> {
+          try {
+            t.getClass().getDeclaredConstructor(); // must have no-arg constructor
+            return true;
+          } catch (NoSuchMethodException e) {
+            return false;
+          }
+        })
+        .map(t -> t.getClass().getName())
+        .toList();
+
+    // Extract guardrail references
+    List<InteractableBlueprint.GuardrailReference> inputRefs = inputGuardrails.stream()
+        .map(InteractableBlueprint.GuardrailReference::fromInput)
+        .toList();
+    List<InteractableBlueprint.GuardrailReference> outputRefs = outputGuardrails.stream()
+        .map(InteractableBlueprint.GuardrailReference::fromOutput)
+        .toList();
+
+    // Extract handoff descriptors
+    List<InteractableBlueprint.HandoffDescriptor> handoffDescs = handoffs.stream()
+        .map(InteractableBlueprint.HandoffDescriptor::from)
+        .toList();
+
+    // Extract context management
+    InteractableBlueprint.ContextBlueprint ctxBlueprint = null;
+    if (contextManagementConfig != null) {
+      var strategy = contextManagementConfig.strategy();
+      String strategyType = "sliding";
+      Boolean preserveDevMsgs = null;
+      String summModel = null;
+      Integer keepRecent = null;
+      String summPrompt = null;
+
+      if (strategy instanceof com.paragon.agents.context.SlidingWindowStrategy sliding) {
+        preserveDevMsgs = sliding.preservesDeveloperMessage();
+      } else if (strategy instanceof com.paragon.agents.context.SummarizationStrategy summarization) {
+        strategyType = "summarization";
+        summModel = summarization.model();
+        keepRecent = summarization.keepRecentMessages();
+      }
+
+      String tokenCounterClass = null;
+      if (contextManagementConfig.tokenCounter() != null) {
+        tokenCounterClass = contextManagementConfig.tokenCounter().getClass().getName();
+      }
+
+      ctxBlueprint = new InteractableBlueprint.ContextBlueprint(
+          strategyType, preserveDevMsgs, summModel, keepRecent, summPrompt,
+          contextManagementConfig.maxTokens(), tokenCounterClass);
+    }
+
+    return new InteractableBlueprint.AgentBlueprint(
+        name, model, instructions.text(), maxTurns, temperature,
+        outputType != null ? outputType.getName() : null,
+        traceMetadata,
+        InteractableBlueprint.ResponderBlueprint.from(responder),
+        toolClassNames, handoffDescs, inputRefs, outputRefs, ctxBlueprint);
+  }
 
   /**
    * Returns the agent's instructions (system prompt).

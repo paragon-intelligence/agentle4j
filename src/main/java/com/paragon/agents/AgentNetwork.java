@@ -91,6 +91,16 @@ public final class AgentNetwork implements Interactable {
     return name;
   }
 
+  @Override
+  public @NonNull InteractableBlueprint toBlueprint() {
+    List<InteractableBlueprint> peerBlueprints = peers.stream()
+        .map(Interactable::toBlueprint)
+        .toList();
+    InteractableBlueprint synthBlueprint = synthesizer != null ? synthesizer.toBlueprint() : null;
+    return new InteractableBlueprint.AgentNetworkBlueprint(
+        name, peerBlueprints, maxRounds, synthBlueprint, traceMetadata);
+  }
+
   /**
    * Returns the peers in this network.
    *

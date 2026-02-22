@@ -92,6 +92,18 @@ public final class RouterAgent implements Interactable {
     return name;
   }
 
+  @Override
+  public @NonNull InteractableBlueprint toBlueprint() {
+    List<InteractableBlueprint.RouteBlueprint> routeBlueprints = routes.stream()
+        .map(r -> new InteractableBlueprint.RouteBlueprint(
+            r.target().toBlueprint(), r.description()))
+        .toList();
+    InteractableBlueprint fallbackBlueprint = fallback != null ? fallback.toBlueprint() : null;
+    return new InteractableBlueprint.RouterAgentBlueprint(
+        name, model, routeBlueprints, fallbackBlueprint,
+        InteractableBlueprint.ResponderBlueprint.from(responder), traceMetadata);
+  }
+
   /**
    * Routes the input to the most appropriate agent and executes it.
    *

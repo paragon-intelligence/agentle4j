@@ -46,4 +46,26 @@ public interface OutputGuardrail {
    */
   @NonNull
   GuardrailResult validate(@NonNull String output, @NonNull AgenticContext context);
+
+  /**
+   * Wraps a guardrail implementation with a named ID for blueprint serialization.
+   *
+   * <p>Use this when defining guardrails as lambdas that need to be serializable. The guardrail
+   * is registered in the {@link GuardrailRegistry} and can be reconstructed during deserialization.
+   *
+   * <pre>{@code
+   * OutputGuardrail guard = OutputGuardrail.named("max_length", (output, ctx) -> {
+   *     if (output.length() > 1000) return GuardrailResult.failed("Too long");
+   *     return GuardrailResult.passed();
+   * });
+   * }</pre>
+   *
+   * @param id the unique identifier for this guardrail
+   * @param impl the guardrail implementation
+   * @return a named guardrail wrapping the implementation
+   */
+  static @NonNull OutputGuardrail named(@NonNull String id, @NonNull OutputGuardrail impl) {
+    GuardrailRegistry.registerOutput(id, impl);
+    return new NamedOutputGuardrail(id, impl);
+  }
 }

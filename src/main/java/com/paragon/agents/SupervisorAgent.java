@@ -124,6 +124,17 @@ public final class SupervisorAgent implements Interactable {
     return name;
   }
 
+  @Override
+  public @NonNull InteractableBlueprint toBlueprint() {
+    List<InteractableBlueprint.WorkerBlueprint> workerBlueprints = workers.stream()
+        .map(w -> new InteractableBlueprint.WorkerBlueprint(
+            w.worker().toBlueprint(), w.description()))
+        .toList();
+    return new InteractableBlueprint.SupervisorAgentBlueprint(
+        name, model, instructions, maxTurns, workerBlueprints,
+        InteractableBlueprint.ResponderBlueprint.from(responder), traceMetadata);
+  }
+
   /**
    * Returns the workers managed by this supervisor.
    *

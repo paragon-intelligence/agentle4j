@@ -461,6 +461,42 @@ public class Responder {
     telemetryProcessors.shutdown();
   }
 
+  /**
+   * Returns the API provider used by this responder.
+   *
+   * @return the provider, or null if a custom base URL was used
+   */
+  public @Nullable ResponsesAPIProvider provider() {
+    return provider;
+  }
+
+  /**
+   * Returns the retry policy configured for this responder.
+   *
+   * @return the retry policy
+   */
+  public @NonNull RetryPolicy retryPolicy() {
+    return retryPolicy;
+  }
+
+  /**
+   * Returns the default trace metadata for this responder.
+   *
+   * @return the trace metadata, or null if not set
+   */
+  public @Nullable TraceMetadata traceMetadata() {
+    return traceMetadata;
+  }
+
+  /**
+   * Returns the base URL string for API requests.
+   *
+   * @return the base URL as a string
+   */
+  public @NonNull String baseUrlString() {
+    return baseUrl.toString();
+  }
+
   // ===== Streaming Response Methods =====
 
   /**

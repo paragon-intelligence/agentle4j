@@ -101,6 +101,25 @@ public final class HierarchicalAgents implements Interactable {
     return executive.name() + "_Hierarchy";
   }
 
+  @Override
+  public @NonNull InteractableBlueprint toBlueprint() {
+    InteractableBlueprint.AgentBlueprint execBlueprint =
+        (InteractableBlueprint.AgentBlueprint) executive.toBlueprint();
+    Map<String, InteractableBlueprint.DepartmentBlueprint> deptBlueprints = new java.util.LinkedHashMap<>();
+    for (var entry : departments.entrySet()) {
+      Department dept = entry.getValue();
+      InteractableBlueprint.AgentBlueprint mgrBlueprint =
+          (InteractableBlueprint.AgentBlueprint) dept.manager().toBlueprint();
+      List<InteractableBlueprint> workerBlueprints = dept.workers().stream()
+          .map(Interactable::toBlueprint)
+          .toList();
+      deptBlueprints.put(entry.getKey(), new InteractableBlueprint.DepartmentBlueprint(
+          mgrBlueprint, workerBlueprints));
+    }
+    return new InteractableBlueprint.HierarchicalAgentsBlueprint(
+        execBlueprint, deptBlueprints, maxTurns, traceMetadata);
+  }
+
   /**
    * Returns all departments in this hierarchy.
    *
