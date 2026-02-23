@@ -1,12 +1,18 @@
 # Agentle
 
+The Java agent framework built on OpenAI's Responses API.
+
 ![Coverage](https://img.shields.io/badge/coverage-88%25-brightgreen)
+![Java](https://img.shields.io/badge/java-25%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-Building agents with the simplicity of Python, in Java!
+## The problem
 
-I created this library to make it easier to build AI calls with OpenAI's Responses API. It came up that I started to create the Agent classes and realised I could build a cool library with that. So I started to build it and it's been a lot of fun!
+Every Java AI framework — LangChain4j, Spring AI — is built on the Chat Completions API. That API was designed for chatbots. OpenAI replaced it with the [Responses API](https://platform.openai.com/docs/api-reference/responses): item-based conversation state, native tool calling, structured output as a first-class primitive, and a design built for agents, not chat.
 
-It Requires Java 25+ because the code uses preview features like StructuredTaskScope.Joiner.
+Agentle is the only Java framework built exclusively on the Responses API. No wrapping the old API. No compatibility layers. One clean abstraction over the API that was designed for what you're actually building.
+
+If LangChain4j or Spring AI work for your use case, keep using them. If you need tool planning, multi-agent orchestration, structured streaming, or human-in-the-loop workflows — read on.
 
 ## Installation
 
@@ -24,1351 +30,195 @@ Gradle:
 implementation 'io.github.paragon-intelligence:agentle4j:0.6.0'
 ```
 
-## Why Agentle?
+Requires Java 25+ (uses preview features like `StructuredTaskScope`).
 
-Most Java GenAI libraries (LangChain4J, Spring AI) are built around the Chat Completions API. Agentle focuses exclusively on OpenAI's newer [Responses API](https://platform.openai.com/docs/api-reference/responses), which has a cleaner item-based design and was designed for agentic systems.
+## See it in action
 
-## Quick examples
-
-### Basic request
-
-```java
-Responder responder = Responder.builder()
-    .openRouter()
-    .apiKey("your-api-key")
-    .build();
-
-var payload = CreateResponsePayload.builder()
-    .model("openai/gpt-4o-mini")
-    .addDeveloperMessage("You are a helpful assistant.")
-    .addUserMessage("Hello!")
-    .build();
-
-Response response = responder.respond(payload);
-System.out.println(response.outputText());
-```
-
-### Streaming
-
-```java
-var payload = CreateResponsePayload.builder()
-    .model("openai/gpt-4o")
-    .addUserMessage("Write a poem about Java")
-    .streaming()
-    .build();
-
-responder.respond(payload)
-    .onTextDelta(System.out::print)
-    .onComplete(response -> System.out.println("\nDone: " + response.id()))
-    .onError(Throwable::printStackTrace)
-    .start();
-```
-
-### Structured output
-
-```java
-public record Person(String name, int age, String occupation) {}
-
-var payload = CreateResponsePayload.builder()
-    .model("openai/gpt-4o")
-    .addUserMessage("Create a fictional software engineer")
-    .withStructuredOutput(Person.class)
-    .build();
-
-ParsedResponse<Person> response = responder.respond(payload);
-Person person = response.outputParsed();
-```
-
-You can also stream structured output and get partial updates as JSON is generated:
-
-```java
-responder.respond(structuredPayload)
-    .onPartialJson(fields -> {
-        // fields is a Map that updates as JSON streams in
-        if (fields.containsKey("name")) {
-            updateUI(fields.get("name").toString());
-        }
-    })
-    .onParsedComplete(parsed -> {
-        Person p = parsed.outputParsed();
-    })
-    .start();
-```
-
-This is useful for real-time UIs. The parser auto-completes incomplete JSON, so you see fields populate progressively.
-
-## Core concepts
-
-### Responder
-
-The low-level HTTP client. Handles API communication, streaming, retries, and telemetry. Use it directly for simple one-shot requests or when you need fine-grained control.
-
-### Agent
-
-A higher-level abstraction that wraps a Responder with:
-- Instructions (system prompt)
-- Tools (functions the AI can call)
-- Guardrails (input/output validation)
-- Memory (cross-conversation persistence)
-- Handoffs (routing to other agents)
-
-Agents are stateless and thread-safe. The same instance can handle concurrent conversations because state lives in `AgentContext`.
+### An agent with tools
 
 ```java
 Agent agent = Agent.builder()
     .name("Assistant")
     .model("openai/gpt-4o")
     .instructions("You are a helpful assistant.")
-    .responder(responder)
-    .addTool(weatherTool)
+    .responder(Responder.builder().openRouter().apiKey(key).build())
+    .addTool(new GetWeatherTool())
     .build();
 
 AgentResult result = agent.interact("What's the weather in Tokyo?");
+System.out.println(result.output());
+
+// Agents never throw. Errors live in the result.
+if (result.isError()) {
+    System.err.println(result.error().getMessage());
+}
 ```
 
-### AgentContext
+### Structured streaming with partial JSON
 
-`AgentContext` is the conversation state container—the agent's short-term memory:
+Stream structured output and watch fields populate in real-time. The parser auto-completes incomplete JSON as it arrives, so your UI updates progressively. No other Java framework does this.
 
 ```java
-AgentContext context = AgentContext.create();
+record Person(String name, int age, String occupation) {}
 
-// Store custom state
-context.setState("userId", "user-123");
-context.setState("orderId", 42);
-
-// Multi-turn conversation (reuse context)
-context.addInput(Message.user("My name is Alice"));
-agent.interact(context);
-
-context.addInput(Message.user("What's my name?"));
-agent.interact(context);  // -> "Your name is Alice"
-
-// Retrieve state (returns Optional)
-String userId = context.getState("userId", String.class).orElse(null);
-```
-
-**Key features:**
-- **Conversation History** – Tracks all messages exchanged
-- **Custom State** – Key-value store for user IDs, session data, etc.
-- **Turn Tracking** – Counts LLM calls for loop limits
-- **Trace Correlation** – Links spans for distributed tracing
-- **Copy/Fork** – Isolated copies for parallel execution
-
-```java
-// Resume previous conversation
-AgentContext resumed = AgentContext.withHistory(loadFromDatabase());
-
-// Trace correlation for observability
-context.withTraceContext(traceId, spanId);
-context.withRequestId("session-123");
-```
-
-See the [Agents Guide](docs/guides/agents.md#agentcontext) for full API reference.
-
-### Message - Anatomy and Usage
-
-The [`Message`](src/main/java/com/paragon/responses/spec/Message.java) class is the core building block for representing conversation history and input to AI models. Understanding its structure is essential when implementing endpoints or services that work with conversation data.
-
-#### Class Structure
-
-`Message` is a **sealed abstract class** with three concrete implementations based on role hierarchy:
-
-```
-Message (abstract)
-├── DeveloperMessage  (highest priority - system instructions)
-├── UserMessage       (standard priority - user input)
-└── AssistantMessage  (context only - AI responses)
-```
-
-#### Core Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `content` | `List<MessageContent>` | Non-empty list of message content (text, images, audio, etc.). Immutable and guaranteed non-null. |
-| `status` | `InputMessageStatus` | Processing status: `COMPLETED`, `IN_PROGRESS`, or `INCOMPLETE`. Can be `null` (treated as completed). |
-| `role` | `MessageRole` | Role identifier: `DEVELOPER`, `USER`, or `ASSISTANT` (abstract method implemented by subclasses). |
-
-#### Creating Messages
-
-**Factory Methods** (recommended for simple cases):
-
-```java
-// User messages - most common for user input
-UserMessage userMsg = Message.user("Hello, I need help");
-
-// Developer messages - system-level instructions
-DeveloperMessage sysMsg = Message.developer("You are a helpful assistant.");
-
-// Assistant messages - previous AI responses for context
-AssistantMessage aiMsg = Message.assistant("I'm here to help!");
-```
-
-**Multi-content Messages** (for multi-modal input):
-
-```java
-// Text + Image combination
-UserMessage multiModal = Message.user(List.of(
-    Text.valueOf("Analyze this chart:"),
-    Image.fromUrl("https://example.com/chart.jpg"),
-    Text.valueOf("Focus on Q4 trends.")
-));
-```
-
-**Builder Pattern** (for complex construction):
-
-```java
-UserMessage complexMsg = Message.builder()
-    .addText("Please review this data:")
-    .addContent(Image.fromBytes(imageData))
-    .addText("Provide recommendations.")
-    .status(InputMessageStatus.COMPLETED)
-    .asUser();
-
-// Conditional content building
-MessageBuilder builder = Message.builder()
-    .addText("Process this request");
-
-if (includeImage) {
-    builder.addContent(imageContent);
-}
-
-UserMessage msg = builder.asUser(); // or .asDeveloper() / .asAssistant()
-```
-
-#### MessageContent Types
-
-`MessageContent` is a **sealed interface** that represents the actual content within a message. It has three implementations:
-
-```
-MessageContent (sealed interface)
-├── Text        - Plain text content
-├── Image       - Image content (URL, file ID, or base64)
-└── File        - File attachments (documents, audio, etc.)
-```
-
-##### Text Content
-
-The simplest and most common content type. Use for all text-based input/output:
-
-```java
-// Factory method (recommended)
-Text text = Text.valueOf("Hello, world!");
-
-// Direct constructor
-Text text = new Text("Hello, world!");
-
-// Get the text value
-String value = text.text();  // "Hello, world!"
-String stringValue = text.toString();  // "Hello, world!"
-```
-
-**JSON representation:**
-
-```json
-{
-  "type": "input_text",
-  "text": "Hello, world!"
-}
-```
-
-**Note:** Output messages from the API use `"type": "output_text"` instead of `"input_text"`.
-
-##### Image Content
-
-Supports three ways to provide images: URL, file ID (from uploaded files), or base64-encoded data:
-
-```java
-// Image from URL (most common)
-Image image = Image.fromUrl("https://example.com/photo.jpg");
-
-// Image from URL with detail level
-Image highResImage = Image.fromUrl(ImageDetail.HIGH, "https://example.com/chart.jpg");
-
-// Image from previously uploaded file
-Image uploadedImage = Image.fromFileId("file-abc123");
-
-// Image from base64 data URL
-Image base64Image = Image.fromBase64("data:image/jpeg;base64,/9j/4AAQ...");
-```
-
-**Image Detail Levels:**
-
-| Level | Use Case | Token Cost |
-|-------|----------|------------|
-| `ImageDetail.AUTO` | Default - balanced quality and cost | Medium |
-| `ImageDetail.HIGH` | OCR, detailed analysis, fine details | High |
-| `ImageDetail.LOW` | Quick classification, general understanding | Low |
-
-**JSON representations:**
-
-```json
-// URL-based image (auto detail)
-{
-  "type": "input_image",
-  "detail": "auto",
-  "image_url": "https://example.com/photo.jpg"
-}
-
-// High-detail image from URL
-{
-  "type": "input_image",
-  "detail": "high",
-  "image_url": "https://example.com/analysis.png"
-}
-
-// Image from file ID
-{
-  "type": "input_image",
-  "detail": "auto",
-  "file_id": "file-abc123"
-}
-
-// Base64-encoded image
-{
-  "type": "input_image",
-  "detail": "auto",
-  "image_url": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA..."
-}
-```
-
-##### File Content
-
-For document attachments, audio files, PDFs, and other file types:
-
-```java
-// File from URL
-File document = File.fromUrl("https://example.com/report.pdf");
-
-// File from URL with filename
-File namedDoc = File.fromUrl("https://example.com/report.pdf", "Q4_Report.pdf");
-
-// File from previously uploaded file ID
-File uploadedFile = File.fromFileId("file-xyz789");
-
-// File from file ID with filename
-File namedUpload = File.fromFileId("file-xyz789", "audio.mp3");
-
-// File from base64-encoded data
-File base64File = File.fromBase64(base64Data, "document.pdf");
-
-// Access file properties
-String url = file.fileUrl();
-String id = file.fileID();
-String data = file.fileData();
-String name = file.filename();
-```
-
-**JSON representations:**
-
-```json
-// File from URL
-{
-  "type": "input_file",
-  "file_url": "https://example.com/document.pdf"
-}
-
-// File from URL with filename
-{
-  "type": "input_file",
-  "file_url": "https://example.com/document.pdf",
-  "filename": "Q4_Report.pdf"
-}
-
-// File from file ID
-{
-  "type": "input_file",
-  "file_id": "file-xyz789"
-}
-
-// File from base64 data
-{
-  "type": "input_file",
-  "file_data": "JVBERi0xLjQKJeLjz9M...",
-  "filename": "document.pdf"
-}
-```
-
-#### Complete JSON Request Examples
-
-**Simple text-only conversation:**
-
-```json
-{
-  "model": "openai/gpt-4o",
-  "input": [
-    {
-      "type": "message",
-      "role": "developer",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "You are a helpful customer support assistant."
-        }
-      ]
-    },
-    {
-      "type": "message",
-      "role": "user",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "I can't access my account"
-        }
-      ]
-    },
-    {
-      "type": "message",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "output_text",
-          "text": "I can help you with that. Have you tried resetting your password?"
-        }
-      ]
-    },
-    {
-      "type": "message",
-      "role": "user",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "Yes, but I didn't receive the reset email"
-        }
-      ]
-    }
-  ]
-}
-```
-
-**Multi-modal message with image analysis:**
-
-```json
-{
-  "model": "openai/gpt-4o",
-  "input": [
-    {
-      "type": "message",
-      "role": "user",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "Analyze this sales chart and provide insights:"
-        },
-        {
-          "type": "input_image",
-          "detail": "high",
-          "image_url": "https://example.com/charts/q4-sales.png"
-        },
-        {
-          "type": "input_text",
-          "text": "Focus on trends and anomalies."
-        }
-      ]
-    }
-  ]
-}
-```
-
-**Message with document attachment:**
-
-```json
-{
-  "model": "openai/gpt-4o",
-  "input": [
-    {
-      "type": "message",
-      "role": "user",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "Summarize the key points from this report:"
-        },
-        {
-          "type": "input_file",
-          "file_url": "https://example.com/reports/annual-report.pdf",
-          "filename": "Annual_Report_2024.pdf"
-        }
-      ]
-    }
-  ]
-}
-```
-
-**Complex multi-modal conversation:**
-
-```json
-{
-  "model": "openai/gpt-4o",
-  "input": [
-    {
-      "type": "message",
-      "role": "developer",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "You are an expert image analyst. Always provide detailed observations."
-        }
-      ]
-    },
-    {
-      "type": "message",
-      "role": "user",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "Compare these two images:"
-        },
-        {
-          "type": "input_image",
-          "detail": "high",
-          "image_url": "https://example.com/before.jpg"
-        },
-        {
-          "type": "input_text",
-          "text": "vs"
-        },
-        {
-          "type": "input_image",
-          "detail": "high",
-          "image_url": "https://example.com/after.jpg"
-        }
-      ]
-    }
-  ]
-}
-```
-
-**Using base64-encoded images:**
-
-```json
-{
-  "model": "openai/gpt-4o",
-  "input": [
-    {
-      "type": "message",
-      "role": "user",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "What's in this screenshot?"
-        },
-        {
-          "type": "input_image",
-          "detail": "auto",
-          "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-        }
-      ]
-    }
-  ]
-}
-```
-
-#### Working with Conversation History
-
-Messages are typically used in lists to represent conversation history:
-
-```java
-// Building conversation history for API calls
-List<Message> history = new ArrayList<>();
-history.add(Message.developer("You are a customer support agent."));
-history.add(Message.user("I can't log in to my account"));
-history.add(Message.assistant("I can help you with that. Have you tried resetting your password?"));
-history.add(Message.user("Yes, but I didn't receive the email"));
-
-// Use in payload
 var payload = CreateResponsePayload.builder()
     .model("openai/gpt-4o")
-    .addMessages(history)
-    .build();
-```
-
-#### Extracting Content
-
-```java
-// Get all text content concatenated
-String text = message.outputText();  // "HelloWorld" (no spaces)
-
-// Get text with spaces between items
-String readable = message.getTextContent();  // "Hello World"
-
-// Check if message contains only text (no images/audio)
-if (message.isTextOnly()) {
-    processAsText(message.getTextContent());
-}
-
-// Access raw content list
-List<MessageContent> contents = message.content();
-```
-
-#### Status Checking
-
-```java
-// Check processing status
-if (message.isCompleted()) {
-    processMessage(message);
-}
-
-if (message.isInProgress()) {
-    showLoadingIndicator();
-}
-
-// Get raw status (can be null)
-InputMessageStatus status = message.status();
-```
-
-#### Role Hierarchy and Precedence
-
-The role determines how the AI model interprets and prioritizes instructions:
-
-1. **Developer Role** (`DeveloperMessage`) - Highest priority
-   - Establishes system behavior, safety constraints, operational parameters
-   - Use for: System prompts, guardrails, output format instructions
-
-2. **User Role** (`UserMessage`) - Standard priority
-   - Contains user queries, instructions, and interaction content
-   - Use for: User input, questions, requests
-
-3. **Assistant Role** (`AssistantMessage`) - Context only
-   - Provides conversation history and previous model responses
-   - Use for: AI-generated responses from previous turns
-
-#### Key Characteristics
-
-- **Immutable** - All Message instances are thread-safe
-- **Validated** - Content cannot be null or empty; null content items throw `NullPointerException`
-- **Defensive Copying** - Content list is copied during construction and on access
-- **JSON Serializable** - Uses Jackson with polymorphic type handling via `MessageDeserializer`
-
-#### Common Patterns for Endpoint Implementation
-
-**Building message history from database:**
-
-```java
-public List<Message> loadConversationHistory(String conversationId) {
-    // Load from your storage
-    List<ConversationRecord> records = repository.findByConversationId(conversationId);
-    
-    return records.stream()
-        .map(record -> switch (record.getRole()) {
-            case "user" -> Message.user(record.getContent());
-            case "assistant" -> Message.assistant(record.getContent());
-            case "developer" -> Message.developer(record.getContent());
-            default -> throw new IllegalArgumentException("Unknown role: " + record.getRole());
-        })
-        .collect(Collectors.toList());
-}
-```
-
-**Persisting messages to database:**
-
-```java
-public void saveMessage(Message message, String conversationId) {
-    ConversationRecord record = new ConversationRecord();
-    record.setConversationId(conversationId);
-    record.setRole(message.role().name().toLowerCase());
-    record.setContent(message.getTextContent());
-    record.setStatus(message.status() != null ? message.status().name() : "COMPLETED");
-    record.setTimestamp(Instant.now());
-    
-    repository.save(record);
-}
-```
-
-**Example REST endpoint with message history:**
-
-```java
-@PostMapping("/chat")
-public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
-    // Load existing conversation history
-    List<Message> history = loadConversationHistory(request.getConversationId());
-    
-    // Add new user message
-    history.add(Message.user(request.getMessage()));
-    
-    // Create payload with full history
-    var payload = CreateResponsePayload.builder()
-        .model("openai/gpt-4o")
-        .addMessages(history)
-        .build();
-    
-    // Get AI response
-    Response response = responder.respond(payload);
-    
-    // Save assistant response to history
-    Message assistantMsg = Message.assistant(response.outputText());
-    saveMessage(assistantMsg, request.getConversationId());
-    
-    return ResponseEntity.ok(new ChatResponse(response.outputText()));
-}
-```
-
-## Function calling
-
-Define tools with a class that extends `FunctionTool`:
-
-```java
-public record WeatherParams(String location, String unit) {}
-
-@FunctionMetadata(
-    name = "get_weather",
-    description = "Gets current weather for a location")
-public class WeatherTool extends FunctionTool<WeatherParams> {
-    @Override
-    public FunctionToolCallOutput call(WeatherParams params) {
-        // Your implementation
-        return FunctionToolCallOutput.success("25°C and sunny");
-    }
-}
-```
-
-Register and use:
-
-```java
-FunctionToolStore store = FunctionToolStore.create(objectMapper);
-store.add(new WeatherTool());
-
-var payload = CreateResponsePayload.builder()
-    .model("gpt-4o")
-    .addUserMessage("What's the weather in Tokyo?")
-    .addTool(weatherTool)
+    .addUserMessage("Create a fictional software engineer")
+    .withStructuredOutput(Person.class)
+    .streaming()
     .build();
 
-Response response = responder.respond(payload);
-for (var toolCall : response.functionToolCalls(store)) {
-    System.out.println(toolCall.call());
-}
-```
-
-Tool calls also work during streaming:
-
-```java
-responder.respond(streamingPayload)
-    .onToolCall((toolName, argsJson) -> {
-        System.out.println("Tool called: " + toolName);
+responder.respond(payload)
+    .onPartialJson(fields -> {
+        // Fields arrive as they generate: first "name", then "age", then "occupation"
+        if (fields.containsKey("name"))
+            updateUI(fields.get("name").toString());
     })
-    .withToolStore(toolStore)
-    .onToolResult((toolName, result) -> {
-        System.out.println(toolName + " returned: " + result.output());
+    .onParsedComplete(parsed -> {
+        Person p = parsed.outputParsed();  // Fully typed
     })
     .start();
 ```
 
-## Prompt Builder
+### Tool planning with parallel execution
 
-Construct high-quality prompts with a comprehensive builder API:
-
-```java
-// Simple task-based prompt
-Prompt prompt = Prompt.forTask("Analyze the sentiment of the following review")
-    .input("This product exceeded my expectations!")
-    .outputAs(OutputFormat.JSON)
-    .outputSchema("{\"sentiment\": \"POSITIVE|NEUTRAL|NEGATIVE\", \"confidence\": \"0-1\"}")
-    .build();
-
-// Advanced prompt with reasoning
-Prompt complexPrompt = Prompt.builder()
-    .role("expert data analyst")
-    .task("Analyze sales data and provide recommendations")
-    .withChainOfThought()
-    .outputAs(OutputFormat.MARKDOWN)
-    .includeExamples(2)
-    .build();
-```
-
-### Multi-language Support
-
-```java
-// Portuguese (Brazil)
-Prompt promptPtBr = Prompt.builder(Language.PT_BR)
-    .role("analista de dados")
-    .task("Analise os dados de vendas")
-    .withChainOfThought()
-    .build();
-```
-
-### Pre-built Templates
-
-Use domain-specific templates:
-
-```java
-// Code review
-Prompt codeReview = Prompt.forCodeReview()
-    .input(sourceCode)
-    .build();
-
-// Data extraction
-Prompt extraction = Prompt.forExtraction("name, email, phone number")
-    .input(unstructuredText)
-    .build();
-
-// SWOT analysis
-Prompt swot = Prompt.forSWOTAnalysis()
-    .input("New product launch: AI-powered task manager")
-    .build();
-
-// Classification
-Prompt classifier = Prompt.forClassification("urgent", "normal", "low-priority")
-    .input("Customer complaint about billing error")
-    .build();
-```
-
-### Available Templates
-
-- **Analysis**: `forSWOTAnalysis()`, `forProsConsAnalysis()`, `forDataAnalysis()`
-- **Code**: `forCode(lang)`, `forCodeReview()`, `forCodeDebugging(error)`, `forCodeRefactoring()`
-- **Writing**: `forEmailDrafting(tone)`, `forTechnicalWriting()`, `forAcademicWriting(style)`, `forStorytelling()`
-- **Education**: `forELI5()`, `forExpertExplanation()`, `forLanguageLearning()`, `forQuizGeneration()`
-- **Decision Making**: `forDecisionMaking()`, `forRootCauseAnalysis()`, `forComparison()`
-- **Content**: `forSummarization()`, `forTranslation()`, `forBrainstorming()`
-
-### Reasoning Strategies
-
-```java
-Prompt withReasoning = Prompt.builder()
-    .task("Solve this math problem: ...")
-    .withChainOfThought()        // Step-by-step reasoning
-    .withSelfVerification()      // Verify answer
-    .withDecomposition()         // Break into sub-problems
-    .build();
-```
-
-Available strategies:
-- `withChainOfThought()` - Step-by-step reasoning
-- `withStepBack()` - Consider underlying principles first
-- `withSelfVerification()` - Verify the answer
-- `withDecomposition()` - Break into smaller parts
-- `withTreeOfThoughts()` - Explore multiple approaches
-- `withMultiplePerspectives()` - Consider different viewpoints
-
-### Output Control
-
-```java
-Prompt structuredOutput = Prompt.builder()
-    .task("Extract user information")
-    .outputAs(OutputFormat.JSON)
-    .outputSchema("{\"name\": \"string\", \"age\": \"number\"}")
-    .outputConstraints("Only extract explicitly stated information")
-    .build();
-
-// Concise responses
-Prompt brief = Prompt.builder()
-    .task("Summarize the document")
-    .concise()
-    .maxTokens(100)
-    .build();
-
-// Step-by-step format
-Prompt tutorial = Prompt.builder()
-    .task("Explain how to deploy a Spring Boot app")
-    .stepByStep()
-    .build();
-```
-
-### Few-Shot Examples
-
-```java
-Prompt fewShot = Prompt.builder()
-    .task("Classify customer sentiment")
-    .fewShot()
-        .example("Great service!", "POSITIVE")
-        .example("Terrible experience", "NEGATIVE")
-        .example("It's okay", "NEUTRAL")
-    .done()
-    .input("This product is amazing!")
-    .build();
-```
-
-### Custom Sections & Context
-
-```java
-Prompt withContext = Prompt.builder()
-    .role("customer support specialist")
-    .context()
-        .document("product_guide.md", productGuideContent)
-        .document("faq.md", faqContent)
-        .background("Customer tier: Premium, Account age: 3 years")
-    .done()
-    .task("Help the customer with their issue")
-    .input(customerMessage)
-    .build();
-```
-
-### Order Independence
-
-All builder methods are order-independent:
-
-```java
-// These produce identical prompts
-Prompt p1 = Prompt.builder()
-    .task("Analyze data")
-    .role("analyst")
-    .withChainOfThought()
-    .build();
-
-Prompt p2 = Prompt.builder()
-    .withChainOfThought()
-    .role("analyst")
-    .task("Analyze data")
-    .build();
-```
-
-See the [Prompt Management Guide](docs/guides/prompt-management.md) for template syntax and advanced usage.
-
-## Multi-agent patterns
-
-### Handoffs
-
-<img src="docs/media/multiagent.png" width="600" alt="Multi-Agent">
-
-Route conversations between specialized agents:
-
-```java
-Agent billingAgent = Agent.builder()
-    .name("BillingSpecialist")
-    .instructions("You handle billing inquiries.")
-    // ...
-    .build();
-
-Agent frontDesk = Agent.builder()
-    .name("FrontDesk")
-    .instructions("Route to specialists as needed.")
-    .addHandoff(Handoff.to(billingAgent).description("billing issues").build())
-    .build();
-
-AgentResult result = frontDesk.interact("I have a question about my invoice");
-if (result.isHandoff()) {
-    System.out.println("Handled by: " + result.handoffAgent().name());
-}
-```
-
-### RouterAgent
-
-<img src="docs/media/routing.png" width="600" alt="Routing">
-
-For pure classification without conversational noise:
-
-```java
-RouterAgent router = RouterAgent.builder()
-    .model("openai/gpt-4o-mini")
-    .responder(responder)
-    .addRoute(billingAgent, "billing, invoices, payments")
-    .addRoute(techSupport, "technical issues, bugs, errors")
-    .addRoute(salesAgent, "pricing, demos, upgrades")
-    .fallback(techSupport)
-    .build();
-
-// Classify only (doesn't execute) - returns Optional
-agent selected = router.classify("My app keeps crashing")
-    .orElse(techSupport);  // Use fallback if classification fails
-
-// Route and execute
-AgentResult result = router.route("I need help with billing");
-
-// Streaming
-router.routeStream("Help with my invoice")
-    .onRouteSelected(agent -> System.out.println("Routed to: " + agent.name()))
-    .onTextDelta(System.out::print)
-    .onComplete(r -> System.out.println("\nDone!"))
-    .start();
-```
-
-### Parallel execution
-
-<img src="docs/media/parallel_agents.png" width="600" alt="Parallel Agents">
-
-Run multiple agents concurrently:
-
-```java
-ParallelAgents team = ParallelAgents.of(researcher, analyst);
-
-// Run all agents
-List<AgentResult> results = team.runAll("Analyze market trends");
-
-// Or get just the first to complete
-AgentResult fastest = team.runFirst("Quick analysis needed");
-
-// Or combine outputs with a synthesizer agent
-AgentResult combined = team.runAndSynthesize("What's the outlook?", writerAgent);
-
-// Streaming
-team.runAllStream("Analyze trends")
-    .onAgentTextDelta((agent, delta) -> System.out.print("[" + agent.name() + "] " + delta))
-    .onComplete(r -> System.out.println("Done!"))
-    .start();
-```
-
-### Sub-agents (Agent-as-Tool)
-
-<img src="docs/media/subagent.png" width="600" alt="Sub-agents">
-
-Invoke specialized agents as tools within a parent agent's loop:
-
-```java
-Agent dataAnalyst = Agent.builder()
-    .name("DataAnalyst")
-    .instructions("You analyze data and return statistical insights.")
-    .responder(responder)
-    .build();
-
-Agent orchestrator = Agent.builder()
-    .name("Orchestrator")
-    .instructions("Use the data analyst when you need deep analysis.")
-    .addSubAgent(dataAnalyst, "For data analysis and statistical insights")
-    .responder(responder)
-    .build();
-
-// Orchestrator can call dataAnalyst like a tool, receive output, and continue
-AgentResult result = orchestrator.interact("Analyze these sales figures...");
-```
-
-**Context Sharing Options**:
-
-```java
-// Default: Share state (userId, etc.) but fresh conversation
-.addSubAgent(analyst, "For analysis")
-
-// Full context fork: Include entire conversation history
-.addSubAgent(analyst, SubAgentTool.Config.builder()
-    .description("For analysis with full context")
-    .shareHistory(true)
-    .build())
-
-// Isolated: Completely independent sub-agent
-.addSubAgent(analyst, SubAgentTool.Config.builder()
-    .description("Independent analysis")
-    .shareState(false)
-    .build())
-```
-
-| Pattern | Control Flow | Use Case |
-|---------|--------------|----------|
-| **Sub-agent** | Delegate → Return → Continue | Need output to continue processing |
-| **Handoff** | Transfer → End | Permanently route to specialist |
-| **Parallel** | Run concurrently | Get multiple perspectives |
-
-### Interactable Interface
-
-All agent patterns implement the `Interactable` interface, enabling polymorphic usage:
-
-```java
-// Service that works with any agent pattern
-public class AgentService {
-    private final Interactable agent;
-
-    public AgentService(Interactable agent) {
-        this.agent = agent;
-    }
-
-    public String process(String input) {
-        AgentResult result = agent.interact(input);
-        return result.output();
-    }
-}
-
-// Works with any agent type
-new AgentService(singleAgent);
-new AgentService(supervisorAgent);
-new AgentService(router);
-new AgentService(network);
-new AgentService(parallel);
-new AgentService(hierarchy);
-
-// For parallel execution, access all results:
-AgentResult result = parallel.interact("Analyze trends");
-System.out.println("Primary: " + result.output());
-for (AgentResult related : result.relatedResults()) {
-    System.out.println("Also: " + related.output());
-}
-```
-
-## Guardrails
-
-<img src="docs/media/guardrails.png" width="600" alt="Guardrails">
-
-Validate inputs and outputs:
+One line enables tool planning. The LLM batches tool calls into a dependency graph, the framework topologically sorts and executes them in parallel waves, and `$ref` references resolve between steps. One LLM round-trip instead of five.
 
 ```java
 Agent agent = Agent.builder()
-    .name("SafeAssistant")
-    .addInputGuardrail((input, ctx) -> {
-        if (input.contains("password")) {
-            return GuardrailResult.failed("Cannot discuss passwords");
-        }
-        return GuardrailResult.passed();
-    })
-    .addOutputGuardrail((output, ctx) -> {
-        if (output.length() > 5000) {
-            return GuardrailResult.failed("Response too long");
-        }
-        return GuardrailResult.passed();
-    })
+    .name("Researcher")
+    .model("openai/gpt-4o")
+    .instructions("You gather and compare data from multiple sources.")
+    .responder(responder)
+    .addTool(new GetWeatherTool())
+    .addTool(new GetNewsTool())
+    .addTool(new CompareDataTool())
+    .enableToolPlanning()
     .build();
+
+// LLM plans: getWeather("Tokyo") || getWeather("London") -> compareData(results)
+// Framework executes in parallel, resolves references, returns final output
+AgentResult result = agent.interact("Compare weather in Tokyo vs London");
 ```
 
-## Human-in-the-loop
+### Human-in-the-loop
 
-<img src="docs/media/hitl.png" width="600" alt="Human-in-the-Loop">
-
-Mark sensitive tools that require approval:
+Agents pause at sensitive tools. State is serializable — save it to any database, resume hours or days later.
 
 ```java
-@FunctionMetadata(
-    name = "send_email",
-    description = "Sends an email",
+@FunctionMetadata(name = "send_email", description = "Sends an email",
     requiresConfirmation = true)
 public class SendEmailTool extends FunctionTool<EmailParams> { ... }
-```
 
-When the agent hits this tool, it pauses:
-
-```java
-AgentResult result = agent.interact("Send an email to John");
+AgentResult result = agent.interact("Send the quarterly report to the team");
 
 if (result.isPaused()) {
     AgentRunState state = result.pausedState();
-    FunctionToolCall pending = state.pendingToolCall();
-    
-    System.out.println("Approval needed: " + pending.name());
-    
-    if (userApproves()) {
-        state.approveToolCall("User approved");
-    } else {
-        state.rejectToolCall("User denied");
+    saveToDatabase(state);  // Serializable — persist anywhere
+}
+
+// Hours later, after approval in your web UI...
+AgentRunState state = loadFromDatabase(runId);
+state.approveToolCall("User approved via dashboard");
+AgentResult resumed = agent.resume(state);
+```
+
+## Multi-agent patterns
+
+Six patterns, all implementing `Interactable`. Swap any pattern without changing your service code.
+
+![Multi-agent patterns overview](docs/media/multiagent_interaction.png)
+
+| Pattern | Example | Use case |
+|---------|---------|----------|
+| **Router** | `RouterAgent.builder().addRoute(billing, "invoices, payments")...` | Classify and route to specialists |
+| **Supervisor** | `SupervisorAgent.builder().addWorker(writer, "writes content")...` | Central coordinator with workers |
+| **Parallel** | `ParallelAgents.of(researcher, analyst).runAll("analyze")` | Concurrent independent work |
+| **Network** | `AgentNetwork.builder().addPeer(optimist).addPeer(pessimist)...` | Peer-to-peer multi-round debate |
+| **Hierarchical** | `HierarchicalAgents.builder().executive(ceo).addDepartment(...)` | Org-chart workflows |
+| **Sub-agent** | `.addSubAgent(analyst, "for deep analysis")` | Delegate, get result, continue |
+
+```java
+// Your service works with any pattern — same interface
+public class AgentService {
+    private final Interactable agent;
+
+    public String process(String input) {
+        return agent.interact(input).output();
     }
-    
-    result = agent.resume(state);
-}
-```
-
-`AgentRunState` is serializable, so you can persist it to a database for async approval workflows that take hours or days.
-
-## Context management
-
-Control conversation length with pluggable strategies:
-
-```java
-Agent agent = Agent.builder()
-    .contextManagement(ContextManagementConfig.builder()
-        .strategy(new SlidingWindowStrategy())
-        .maxTokens(4000)
-        .build())
-    .build();
-
-// Or use summarization
-Agent agent = Agent.builder()
-    .contextManagement(ContextManagementConfig.builder()
-        .strategy(SummarizationStrategy.withResponder(responder, "gpt-4o-mini"))
-        .maxTokens(4000)
-        .build())
-    .build();
-```
-
-## Memory
-
-<img src="docs/media/memory.png" width="600" alt="Memory">
-
-Persistent memory across conversations:
-
-```java
-Memory memory = InMemoryMemory.create();
-
-Agent agent = Agent.builder()
-    .addMemoryTools(memory)  // Adds store/retrieve tools
-    .build();
-
-agent.interact("My favorite color is blue");
-// Later...
-agent.interact("What's my favorite color?");
-// -> "Your favorite color is blue"
-```
-
-## MCP Client
-
-Connect to external MCP (Model Context Protocol) servers:
-
-```java
-// Stdio transport (subprocess)
-try (var mcp = StdioMcpClient.builder()
-        .command("npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp")
-        .build()) {
-    mcp.connect();
-    
-    // List available tools
-    List<McpRemoteTool> tools = mcp.asTools();
-    
-    // Call a tool
-    McpToolResult result = mcp.callTool("read_file", Map.of("path", "/tmp/file.txt"));
 }
 
-// HTTP transport with authentication
-var mcp = StreamableHttpMcpClient.builder()
-    .serverUrl("https://mcp.example.com/api")
-    .headerProvider(McpHeaderProvider.bearer(() -> authService.getToken()))
-    .build();
+new AgentService(singleAgent);
+new AgentService(router);
+new AgentService(supervisor);
+new AgentService(parallelTeam);
 ```
 
-Filter tools by name:
+All patterns support streaming. See the [Agents Guide](docs/guides/agents.md) for full documentation.
+
+## Dynamic tool selection
+
+50 tools? 500? `ToolRegistry` sends only the relevant ones per request. No context window explosion.
 
 ```java
-// Only expose specific tools
-var tools = mcp.asTools(Set.of("read_file", "list_directory"));
-```
-
-See the [MCP Client Guide](docs/guides/mcp-client.md) for full documentation.
-
-## Embeddings
-
-Text embedding with built-in retry and fallback support:
-
-```java
-EmbeddingProvider embeddings = OpenRouterEmbeddingProvider.builder()
-    .apiKey(System.getenv("OPENROUTER_API_KEY"))
-    .retryPolicy(RetryPolicy.defaults())  // Retry on 429, 529, 5xx
-    .allowFallbacks(true)                 // Use backup providers on overload
+ToolRegistry registry = ToolRegistry.builder()
+    .strategy(new BM25ToolSearchStrategy(5))     // Top 5 most relevant
+    .eagerTool(helpTool)                          // Always available
+    .deferredTools(List.of(tool1, tool2, ...))    // Only when relevant
     .build();
 
-List<Embedding> results = embeddings.createEmbeddings(
-    List.of("Hello world", "AI is amazing"),
-    "openai/text-embedding-3-small"
-);
-```
-
-**Automatic retry on:**
-- **429** - Rate limit exceeded (exponential backoff)
-- **529** - Provider overloaded (uses fallback providers when enabled)
-- **5xx** - Server errors
-
-## Vision
-
-Analyze images with vision-capable models:
-
-```java
-Image image = Image.fromUrl("https://example.com/photo.jpg");
-
-UserMessage message = Message.builder()
-    .addText("What's in this image?")
-    .addContent(image)
-    .asUser();
-
-var payload = CreateResponsePayload.builder()
-    .model("openai/gpt-4o")
-    .addMessage(message)
-    .build();
-
-Response response = responder.respond(payload);
-System.out.println(response.outputText());
-```
-
-Use `ImageDetail.HIGH` for OCR and detailed analysis, `ImageDetail.LOW` for faster processing. See the [Vision Guide](docs/guides/vision.md) for more.
-
-## Web extraction
-
-Extract structured data from web pages using Playwright and LLM:
-
-```java
-record Article(String title, String author, String summary) {}
-
-try (Playwright playwright = Playwright.create();
-     Browser browser = playwright.chromium().launch()) {
-    
-    WebExtractor extractor = WebExtractor.create(responder, "openai/gpt-4o");
-    
-    ExtractionResult.Structured<Article> result = extractor.extract(
-        ExtractPayload.structuredBuilder(Article.class)
-            .browser(browser)
-            .url("https://example.com/article")
-            .prompt("Extract the article title, author, and summary")
-            .withPreferences(p -> p.onlyMainContent(true))
-            .build()
-    );
-    
-    Article article = result.requireOutput();
-}
-```
-
-See the [Web Extraction Guide](docs/guides/web-extraction.md) for configuration options.
-
-## Messaging Integration
-
-Build AI-powered messaging bots for WhatsApp, Telegram, and other platforms with intelligent batching, rate limiting, and conversation history.
-
-### WhatsApp Bot with AI Agent
-
-```java
-// 1. Create AI agent
 Agent agent = Agent.builder()
-    .name("CustomerSupport")
-    .model("openai/gpt-4o")
-    .instructions("You are a helpful customer support assistant.")
+    .name("Assistant")
+    .toolRegistry(registry)
     .responder(responder)
     .build();
-
-// 2. Create WhatsApp provider
-WhatsAppMessagingProvider whatsapp = WhatsAppMessagingProvider.builder()
-    .phoneNumberId(System.getenv("WHATSAPP_PHONE_NUMBER_ID"))
-    .accessToken(System.getenv("WHATSAPP_ACCESS_TOKEN"))
-    .build();
-
-// 3. Create AI processor with conversation history
-AIAgentProcessor<?> processor = AIAgentProcessor.forAgent(agent)
-    .messagingProvider(whatsapp)
-    .historyStore(RedisConversationHistoryStore.create(redisClient))
-    .maxHistoryMessages(20)
-    .build();
-
-// 4. Create batching service with rate limiting
-MessageBatchingService batchingService = MessageBatchingService.builder()
-    .config(BatchingConfig.builder()
-        .adaptiveTimeout(Duration.ofSeconds(3))
-        .silenceThreshold(Duration.ofMillis(800))
-        .rateLimitConfig(RateLimitConfig.builder()
-            .maxMessagesPerMinute(20)
-            .build())
-        .build())
-    .processor(processor)
-    .build();
-
-// 5. Process incoming webhook
-@PostMapping("/whatsapp/webhook")
-public void handleWebhook(@RequestBody WebhookEvent event) {
-    for (var message : event.messages()) {
-        batchingService.receiveMessage(message.from(), message);
-    }
-}
 ```
 
-### Key Features
+Pluggable strategies: BM25, semantic similarity, regex, or write your own. See the [Tool Search Guide](docs/guides/tool-search.md).
 
-- **Adaptive Message Batching** – Groups rapid messages with silence detection (e.g., user typing "Hello" → "I need help" → "with my order" becomes one AI call)
-- **Hybrid Rate Limiting** – Token bucket + sliding window prevents API overload
-- **Conversation History** – Redis or in-memory persistence for multi-turn context
-- **Security** – Webhook signature validation, flood detection, content sanitization
-- **Virtual Threads** – High-performance async processing with Java virtual threads
-- **Multi-Platform** – Provider abstraction for WhatsApp, Telegram, and more
+## Everything else
 
-See the [Messaging Guide](docs/guides/messaging.md) for complete documentation, security features, and production setup.
+Agentle ships with more than agents. Each feature has a dedicated guide.
 
-## Observability
+- **[MCP Client](docs/guides/mcp-client.md)** — Connect to Model Context Protocol servers via stdio or HTTP. Tools appear as native `FunctionTool`s.
+- **[Skills](docs/guides/agents.md)** — Modular expertise (SKILL.md files) injected into agent prompts. Reusable knowledge, not isolated sub-agents.
+- **[Web Extraction](docs/guides/web-extraction.md)** — Playwright renders the page, LLM extracts structured data. `WebExtractor.create(responder, model)`.
+- **[Guardrails](docs/guides/agents.md#guardrails)** — Input/output validation. Block dangerous prompts, enforce constraints, fail before the LLM runs.
+- **[Context Management](docs/guides/context-management.md)** — Sliding window or LLM-powered summarization for long conversations. Pluggable strategies.
+- **[Memory](docs/guides/agents.md)** — Persistent cross-conversation memory. `agent.addMemoryTools(memory)` — the agent stores and retrieves on its own.
+- **[Prompt Builder](docs/guides/prompt-management.md)** — Fluent API with chain-of-thought, few-shot examples, templates, and multi-language support.
+- **[Observability](docs/guides/observability.md)** — Built-in OpenTelemetry. Traces span across agent handoffs and parallel execution. One line: `.addTelemetryProcessor(LangfuseProcessor.fromEnv())`.
+- **[Vision](docs/guides/vision.md)** — Multi-modal input with `Image.fromUrl()`, base64, or file ID. Control detail level per image.
+- **[Messaging](docs/guides/messaging.md)** — WhatsApp/Telegram bots with adaptive batching, rate limiting, and conversation history.
+- **[Embeddings](docs/guides/embeddings.md)** — Text embeddings with automatic retry on 429/5xx and provider fallbacks.
+- **[Streaming](docs/guides/streaming.md)** — Text deltas, tool call events, structured output — all via virtual-thread callbacks.
+- **[Tools](docs/guides/tools.md)** — Type-safe function tools using Java records. Auto-generated JSON schemas from generics.
+- **[Tool Planning](docs/guides/tool-planning.md)** — DAG-based parallel tool execution with reference resolution between steps.
 
-Built-in OpenTelemetry support:
+## How it compares
 
-```java
-Responder responder = Responder.builder()
-    .openRouter()
-    .apiKey(apiKey)
-    .addTelemetryProcessor(LangfuseProcessor.fromEnv())
-    .build();
-```
+| | **Agentle** | **LangChain4j** | **Spring AI** |
+|---|---|---|---|
+| API | Responses API | Chat Completions | Chat Completions |
+| Java version | 25+ (virtual threads, records, sealed classes) | 17+ | 17+ |
+| Multi-agent patterns | 6 built-in | Limited | Limited |
+| Structured streaming | Partial JSON as it generates | No | No |
+| Tool planning | DAG with parallel execution | No | No |
+| Human-in-the-loop | Serializable pause/resume | No | Manual |
+| Dynamic tool selection | BM25 / semantic / custom | No | No |
+| Streaming model | Virtual thread callbacks | Callbacks | Reactor Flux |
+| Error model | `AgentResult` (never throws) | Exceptions | Exceptions |
+| MCP support | stdio + HTTP | No | Limited |
+| Observability | Built-in OpenTelemetry | Plugin | Plugin |
 
-Traces automatically span across agent handoffs and parallel executions.
+LangChain4j and Spring AI have broader provider support through native integrations and offer Spring Boot / Quarkus starters. Agentle requires a Responses API-compatible provider (OpenAI, OpenRouter, or any compatible endpoint). Pick based on what your project needs.
 
 ## Provider support
 
-Agentle works with any provider that implements the Responses API:
+Works with any provider that implements the Responses API:
 
 ```java
-// OpenRouter (300+ models)
+// OpenRouter — 300+ models
 Responder.builder().openRouter().apiKey(key).build();
 
 // OpenAI direct
@@ -1377,8 +227,7 @@ Responder.builder().openAi().apiKey(key).build();
 // Groq
 Responder.builder()
     .baseUrl(HttpUrl.parse("https://api.groq.com/openai/v1"))
-    .apiKey(key)
-    .build();
+    .apiKey(key).build();
 
 // Local Ollama
 Responder.builder()
@@ -1386,328 +235,29 @@ Responder.builder()
     .build();
 ```
 
-The tradeoff vs. LangChain4J/Spring AI: they have native integrations per provider (more work to maintain, but works with any API). Agentle relies on Responses API compatibility (less maintenance, but limited to providers that support it).
+## Get started
 
-## Error handling
-
-### Responder Errors
-
-Typed exceptions for Responder failures:
-
-```java
-try {
-    Response response = responder.respond(payload);
-} catch (RuntimeException e) {
-    switch (e) {
-        case RateLimitException ex -> System.err.println("Retry after: " + ex.retryAfter());
-        case AuthenticationException ex -> System.err.println("Auth: " + ex.suggestion());
-        case ServerException ex -> System.err.println("Server: " + ex.statusCode());
-        default -> throw e;
-    }
-}
+```xml
+<dependency>
+    <groupId>io.github.paragon-intelligence</groupId>
+    <artifactId>agentle4j</artifactId>
+    <version>0.6.0</version>
+</dependency>
 ```
 
-Built-in retry with exponential backoff for 429s and 5xx:
+Then explore:
 
-```java
-Responder.builder().maxRetries(5).retryPolicy(RetryPolicy.builder()...build()).build();
-```
+- [Getting Started Guide](docs/getting-started.md) — First agent in 5 minutes
+- [Full Documentation](docs/index.md) — Guides, API reference, examples
+- [Code Examples](docs/examples/code-samples.md) — Copy-paste ready snippets
 
-### Agent Errors
-
-Agents **never throw exceptions**. Errors are returned in `AgentResult`:
-
-```java
-AgentResult result = agent.interact("Hello");
-
-if (result.isError()) {
-    Throwable error = result.error();
-    
-    if (error instanceof AgentExecutionException e) {
-        System.err.println("Agent '" + e.agentName() + "' failed in: " + e.phase());
-        System.err.println("Suggestion: " + e.suggestion());
-        if (e.isRetryable()) { /* retry */ }
-    } else if (error instanceof GuardrailException e) {
-        System.err.println("Guardrail: " + e.reason() + " (" + e.violationType() + ")");
-    } else if (error instanceof ToolExecutionException e) {
-        System.err.println("Tool '" + e.toolName() + "' failed: " + e.getMessage());
-    }
-}
-```
-
-| Phase | When | Retryable |
-|-------|------|-----------|
-| `INPUT_GUARDRAIL` | Input validation failed | No |
-| `LLM_CALL` | API call failed | Yes |
-| `TOOL_EXECUTION` | Tool threw exception | No |
-| `OUTPUT_GUARDRAIL` | Output validation failed | No |
-| `MAX_TURNS_EXCEEDED` | Turn limit hit | No |
-
-For `LLM_CALL` errors, access the underlying API exception via `getCause()`:
-
-```java
-if (e.phase() == AgentExecutionException.Phase.LLM_CALL) {
-    Throwable cause = e.getCause();
-    
-    if (cause instanceof RateLimitException rate) {
-        System.out.println("Retry after: " + rate.retryAfter());
-    } else if (cause instanceof ServerException server) {
-        System.out.println("Status: " + server.statusCode());
-    }
-}
-```
-
-See the [Agents Guide](docs/guides/agents.md#error-handling) for comprehensive error handling patterns.
-
-## Configuration
-
-```java
-CreateResponsePayload.builder()
-    .model("openai/gpt-4o")
-    .temperature(0.7)
-    .maxOutputTokens(1000)
-    .toolChoice(ToolChoiceMode.REQUIRED)
-    .reasoning(new ReasoningConfig(...))
-    .build();
-```
-
-## Comparison with alternatives
-
-| | Agentle | LangChain4J | Spring AI |
-|---|---|---|---|
-| API | Responses API only | Chat Completions | Custom abstraction |
-| Java version | 21+ | 17+ | 17+ |
-| Streaming | Virtual thread callbacks | Callbacks | Reactor Flux |
-| Structured streaming | Yes (`onPartialJson`) | No | No |
-| Multi-provider | Via OpenRouter or Responses API compat | Native integrations | Native integrations |
-| RAG | Via tool calling | Built-in | Built-in |
-| Spring/Quarkus starters | No | Yes | Yes |
-
-LangChain4J and Spring AI are more mature and have broader provider support. Agentle's advantages are:
-
-1. **Responses API focus** — cleaner API design, built-in conversation state
-2. **Structured streaming** — partial JSON parsing during generation
-3. **Streaming tool calls** — `onToolCall` callbacks during streaming
-4. **Simpler sync model** — virtual thread blocking instead of Reactor
-
-Pick based on what matters for your use case.
-
-## Not yet supported
-
-- Spring Boot / Quarkus starters
-- Built-in vector store integrations (use tool calling instead)
-- Document loaders
-- Chat Completions API fallback
-
-## Multiagent Interaction Patterns - A wide overview
-
-![Multi-agent patterns overview](docs/media/multiagent_interaction.png)
-
-Agentle supports a comprehensive set of multi-agent collaboration patterns for building sophisticated AI systems:
-
-| Pattern | Implementation | Description |
-|---------|---------------|-------------|
-| **Single Agent** | `Agent` | Autonomous agent operating independently with tools |
-| **Network** | `AgentNetwork` | Decentralized peer-to-peer communication between agents |
-| **Supervisor** | `SupervisorAgent` | Central coordinator delegating to worker agents |
-| **Supervisor (as Tools)** | `SubAgentTool` | Sub-agents invoked as tools within a parent's loop |
-| **Hierarchical** | `HierarchicalAgents` | Multi-layered structure with managers and workers |
-| **Custom** | Composition | Combine patterns for domain-specific workflows |
-
-### Single Agent
-
-The foundational pattern - an autonomous agent with tools:
-
-```java
-Agent agent = Agent.builder()
-    .name("Assistant")
-    .model("openai/gpt-4o")
-    .instructions("You are a helpful assistant.")
-    .addTool(weatherTool)
-    .responder(responder)
-    .build();
-
-AgentResult result = agent.interact("What's the weather?");
-```
-
-### Network Pattern
-
-Peer-to-peer agents discussing and building on each other's ideas:
-
-```java
-AgentNetwork network = AgentNetwork.builder()
-    .addPeer(optimist)    // Argues positive aspects
-    .addPeer(pessimist)   // Argues negative aspects  
-    .addPeer(moderate)    // Finds middle ground
-    .maxRounds(3)
-    .synthesizer(summarizer)  // Optional: combines viewpoints
-    .build();
-
-NetworkResult result = network.discuss("Should we adopt AI widely?");
-result.contributions().forEach(c -> 
-    System.out.println(c.agent().name() + ": " + c.output()));
-
-// Streaming
-network.discussStream("Should we adopt AI widely?")
-    .onPeerTextDelta((peer, delta) -> System.out.print("[" + peer.name() + "] " + delta))
-    .onRoundStart(round -> System.out.println("=== Round " + round + " ==="))
-    .onComplete(r -> System.out.println("Discussion finished!"))
-    .start();
-```
-
-### Supervisor Pattern
-
-Central coordinator with explicit task delegation to workers:
-
-```java
-SupervisorAgent supervisor = SupervisorAgent.builder()
-    .name("ProjectManager")
-    .model("openai/gpt-4o")
-    .instructions("Coordinate workers to complete projects")
-    .addWorker(researcher, "research and gather facts")
-    .addWorker(writer, "write and format content")
-    .addWorker(reviewer, "review and suggest improvements")
-    .responder(responder)
-    .build();
-
-AgentResult result = supervisor.orchestrate("Create a market analysis report");
-```
-
-### Hierarchical Pattern
-
-Multi-level organizational structure with executives, managers, and workers:
-
-```java
-HierarchicalAgents hierarchy = HierarchicalAgents.builder()
-    .executive(ceoAgent)
-    .addDepartment("Engineering", techManager, developer, qaEngineer)
-    .addDepartment("Sales", salesManager, salesRep)
-    .build();
-
-// Task flows: Executive → Managers → Workers
-AgentResult result = hierarchy.execute("Launch new product");
-
-// Or bypass executive and send directly to a department
-hierarchy.sendToDepartment("Engineering", "Fix the bug");
-```
-
-### Pattern Selection Guide
-
-| Use Case | Recommended Pattern |
-|----------|-------------------|
-| Single task with tools | Single Agent |
-| Need multiple perspectives | Network |
-| Complex task decomposition | Supervisor |
-| Organizational workflows | Hierarchical |
-| Dynamic delegation during execution | Sub-agent (as Tool) |
-| Quick routing to specialists | RouterAgent + Handoffs |
-| Concurrent independent work | ParallelAgents |
-
-All patterns support **streaming**, **trace correlation**, and **context sharing** for production use.
-
-## Skills
-
-<img src="docs/media/skills.png" width="600" alt="Skills">
-
-Skills are modular expertise that augment an agent's capabilities. When added to an agent, skill instructions are merged into the system prompt, enabling the LLM to automatically apply the skill's knowledge when relevant.
-
-> **Skills vs Sub-agents**: Skills enrich the main agent's context (shared knowledge). Sub-agents delegate to isolated specialists (separate context). Use skills for reusable expertise, sub-agents for complex isolated work.
-
-### Structure
-
-A skill is defined by a `SKILL.md` file:
-
-```markdown
----
-name: pdf-processor
-description: Extract text and answer questions about PDF files.
----
-
-# PDF Processing Guide
-
-You are an expert at processing PDF documents.
-When asked to summarize, extract the full text and generate a concise summary.
-
-## Capabilities
-
-- Text extraction
-- Table parsing
-- Form filling
-```
-
-### Loading Skills
-
-Load skills from the filesystem or create them programmatically:
-
-```java
-// 1. Programmatic
-Skill skill = Skill.builder()
-    .name("data-analysis")
-    .description("Analyze CSV files")
-    .instructions("You are an expert data analyst...")
-    .addResource("EXAMPLES.md", "Example analyses...")
-    .build();
-
-// 2. From filesystem
-SkillProvider provider = FilesystemSkillProvider.create(Path.of("./skills"));
-Skill pdfSkill = provider.provide("pdf-processor");
-
-// 3. Add to Agent (instructions merged into system prompt)
-Agent agent = Agent.builder()
-    .name("Assistant")
-    .instructions("You are a helpful assistant.")
-    .addSkill(skill)
-    .addSkillFrom(provider, "pdf-processor")
-    .build();
-```
-
-### How It Works
-
-When skills are added, the agent's system prompt becomes:
-
-```
-You are a helpful assistant.
-
-# Skills
-You have the following skills available. Apply them when relevant:
-
-## Skill: data-analysis
-**When to use**: Analyze CSV files
-
-You are an expert data analyst...
-```
-
-The LLM automatically applies skill knowledge when the user's request is relevant.
-
-## Development
+## Contributing
 
 ```bash
 make build      # Build
 make test       # Run tests
 make format     # Format code
-make benchmark  # Performance benchmarks
 ```
-
-## Test Coverage
-
-**Current Coverage: 88%** | [View Full Report](target/site/jacoco/index.html)
-
-Run tests and generate coverage report:
-
-```bash
-mvn test jacoco:report
-```
-
-Coverage report is generated at `target/site/jacoco/index.html`.
-
-| Module | Coverage |
-|--------|----------|
-| `responses` | 91% |
-| `prompts` | 88% |
-| `http` | 89% |
-| `streaming` | 80% |
-| `telemetry` | 85% |
-| `agents` | 75% |
 
 ## License
 
