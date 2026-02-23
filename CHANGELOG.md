@@ -5,6 +5,40 @@ All notable changes to Agentle4j will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-02-23
+
+### Added
+
+- **Tool Search & Planning Capabilities** 🔍
+    - **Tool Search Integration**: Dynamically select and load relevant tools on the fly, dramatically reducing context window overhead for agents with huge tool sets.
+    - **Parallel & Batched Tools Execution**: Agents can now plan and execute multiple tool calls simultaneously in batched and parallel fashion.
+
+- **WhatsApp & Messaging Engine** 💬
+    - Robust, fully-tested out-of-the-box WhatsApp integration natively connected to agent workflows.
+    - **Smart Messaging Flow**: Introduced adaptive batching, robust rate-limiting, and deep conversation history management.
+    - **Rich Interactive Content**: Send interactive payloads and even audio files directly natively via standard payload models.
+    - Fail-fast configuration mechanism integrated via Jakarta Validations and comprehensive error tracking capabilities.
+
+- **Agent Blueprints & Structured Outputs** 🏗️
+    - `InteractableBlueprint` introduced as a standard to elegantly serialize implementations across agents.
+    - Completely redesigned `AgentDefinition` to be strictly behavioral—stripping away heavy infrastructure variables like `Responder`s, establishing a flawless standard for receiving meta-agent definitions via LLM Structured Outputs.
+    - Structured outputs natively deployed across **ALL** organizational and architectural agent patterns (Supervisor, Parallel, etc.).
+
+- **Tracing & Framework Core Enhancements** 📡
+    - Added deep trace support through `TraceMetadata` bridging OpenRouter specs to underlying responders for optimal ecosystem observability.
+    - Consolidating inputs into the `AgenticContext`, avoiding huge boilerplate and standardizing context consumption on defaults.
+
+### Improved & Fixed
+
+- Assorted code format optimizations and removal of redundant code chunks across release processes.
+
+### Documentation
+
+- **Brand New MkDocs API Reference** 📖: Fully rewritten and structured API documentation setup for high readability.
+- Authored sweeping new architecture guides explaining `Tool Planning`, `Tool Search`, `Blueprints`, and WhatsApp `Messaging` layers.
+
+---
+
 ## [0.6.0] - 2026-01-20
 
 ### Added
