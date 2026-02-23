@@ -1,5 +1,7 @@
 # :material-code-braces: ApplyPatchToolCall
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.spec.ApplyPatchToolCall` &nbsp;·&nbsp; **Class**
 
 Extends `ToolCall` &nbsp;·&nbsp; Implements `Item`, `ResponseOutput`

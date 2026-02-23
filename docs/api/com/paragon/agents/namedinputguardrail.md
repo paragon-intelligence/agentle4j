@@ -1,5 +1,7 @@
 # :material-code-braces: NamedInputGuardrail
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.agents.NamedInputGuardrail` &nbsp;·&nbsp; **Class**
 
 Implements `InputGuardrail`

@@ -1,5 +1,7 @@
 # :material-code-braces: FilesystemPromptProvider
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.prompts.FilesystemPromptProvider` &nbsp;·&nbsp; **Class**
 
 Implements `PromptProvider`

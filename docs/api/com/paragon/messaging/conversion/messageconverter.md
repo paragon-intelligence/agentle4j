@@ -1,5 +1,7 @@
 # :material-approximately-equal: MessageConverter
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.messaging.conversion.MessageConverter` &nbsp;·&nbsp; **Interface**
 
 ---

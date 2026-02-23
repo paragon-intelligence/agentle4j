@@ -1,5 +1,7 @@
 # :material-approximately-equal: TokenCounter
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.agents.context.TokenCounter` &nbsp;·&nbsp; **Interface**
 
 ---

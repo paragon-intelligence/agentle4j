@@ -1,5 +1,7 @@
 # :material-database: OpenRouterModelPricing
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.openrouter.OpenRouterModelPricing` &nbsp;·&nbsp; **Record**
 
 ---

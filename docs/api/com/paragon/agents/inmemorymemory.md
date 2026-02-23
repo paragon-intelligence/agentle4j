@@ -1,5 +1,7 @@
 # :material-code-braces: InMemoryMemory
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.agents.InMemoryMemory` &nbsp;·&nbsp; **Class**
 
 Implements `Memory`

@@ -1,5 +1,7 @@
 # Code Examples
 
+> This docs was updated at: 2026-02-23
+
 Practical, copy-paste ready examples for common Agentle4j use cases.
 
 ---

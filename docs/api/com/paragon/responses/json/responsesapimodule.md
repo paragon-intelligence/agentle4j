@@ -1,5 +1,7 @@
 # :material-code-braces: ResponsesApiModule
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.json.ResponsesApiModule` &nbsp;·&nbsp; **Class**
 
 Extends `SimpleModule`

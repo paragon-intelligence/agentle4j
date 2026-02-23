@@ -1,5 +1,7 @@
 # :material-code-braces: HookInterruptedException
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.messaging.hooks.HookInterruptedException` &nbsp;·&nbsp; **Class**
 
 Extends `Exception`

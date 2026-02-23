@@ -1,5 +1,7 @@
 # :material-approximately-equal: TelemetryEvent
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.telemetry.events.TelemetryEvent` &nbsp;·&nbsp; **Interface**
 
 ---

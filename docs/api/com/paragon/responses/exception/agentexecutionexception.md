@@ -1,5 +1,7 @@
 # :material-code-braces: AgentExecutionException
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.exception.AgentExecutionException` &nbsp;·&nbsp; **Class**
 
 Extends `AgentleException`

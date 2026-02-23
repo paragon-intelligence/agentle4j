@@ -1,5 +1,7 @@
 # Streaming Guide
 
+> This docs was updated at: 2026-02-23
+
 Agentle4j provides real-time streaming using virtual threads for efficient, non-blocking I/O. This guide covers all streaming patterns.
 
 ---

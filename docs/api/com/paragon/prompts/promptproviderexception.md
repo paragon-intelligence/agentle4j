@@ -1,5 +1,7 @@
 # :material-code-braces: PromptProviderException
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.prompts.PromptProviderException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`

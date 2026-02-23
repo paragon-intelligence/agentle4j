@@ -1,5 +1,7 @@
 # Function Tools Guide
 
+> This docs was updated at: 2026-02-23
+
 Function tools let the AI call your Java functions to interact with external systems, databases, APIs, and more.
 
 ---

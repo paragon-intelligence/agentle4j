@@ -1,5 +1,7 @@
 # :material-format-list-bulleted-type: MultimodalContentType
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.broadcasting.MultimodalContentType` &nbsp;·&nbsp; **Enum**
 
 ---

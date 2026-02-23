@@ -1,5 +1,7 @@
 # Messaging Integration
 
+> This docs was updated at: 2026-02-23
+
 Agentle4j provides a comprehensive messaging module designed for building AI-powered messaging integrations with platforms like WhatsApp Business API. The module combines intelligent message batching, rate limiting, security features, and seamless AI agent integration.
 
 ---

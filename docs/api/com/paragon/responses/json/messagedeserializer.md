@@ -1,5 +1,7 @@
 # :material-code-braces: MessageDeserializer
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.json.MessageDeserializer` &nbsp;·&nbsp; **Class**
 
 Extends `JsonDeserializer<Message>`

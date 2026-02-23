@@ -1,5 +1,7 @@
 # :material-format-list-bulleted-type: CodeInterpreterToolCallStatus
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.spec.CodeInterpreterToolCallStatus` &nbsp;·&nbsp; **Enum**
 
 ---

@@ -1,5 +1,7 @@
 # Package `com.paragon.telemetry`
 
+> This docs was updated at: 2026-02-23
+
 ---
 
 ## :material-database: Records

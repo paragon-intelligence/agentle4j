@@ -1,5 +1,7 @@
 # :material-code-braces: ClickActionDeserializer
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.json.ClickActionDeserializer` &nbsp;·&nbsp; **Class**
 
 Extends `JsonDeserializer<ClickAction>`

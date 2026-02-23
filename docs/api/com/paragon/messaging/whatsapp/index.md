@@ -1,5 +1,7 @@
 # Package `com.paragon.messaging.whatsapp`
 
+> This docs was updated at: 2026-02-23
+
 ---
 
 ## :material-code-braces: Classs

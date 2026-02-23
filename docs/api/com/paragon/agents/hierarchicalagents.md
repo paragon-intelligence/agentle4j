@@ -1,5 +1,7 @@
 # :material-code-braces: HierarchicalAgents
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.agents.HierarchicalAgents` &nbsp;·&nbsp; **Class**
 
 Implements `Interactable`

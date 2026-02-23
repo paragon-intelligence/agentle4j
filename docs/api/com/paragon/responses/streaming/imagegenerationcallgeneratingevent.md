@@ -1,5 +1,7 @@
 # :material-database: ImageGenerationCallGeneratingEvent
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.streaming.ImageGenerationCallGeneratingEvent` &nbsp;·&nbsp; **Record**
 
 ---

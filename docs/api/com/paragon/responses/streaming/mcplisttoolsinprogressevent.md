@@ -1,5 +1,7 @@
 # :material-database: McpListToolsInProgressEvent
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.streaming.McpListToolsInProgressEvent` &nbsp;·&nbsp; **Record**
 
 ---

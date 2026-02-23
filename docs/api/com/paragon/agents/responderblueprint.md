@@ -1,5 +1,7 @@
 # :material-database: ResponderBlueprint
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.agents.ResponderBlueprint` &nbsp;·&nbsp; **Record**
 
 ---

@@ -1,5 +1,7 @@
 # :material-approximately-equal: LocationMessageInterface
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.messaging.core.LocationMessageInterface` &nbsp;·&nbsp; **Interface**
 
 Extends `OutboundMessage`

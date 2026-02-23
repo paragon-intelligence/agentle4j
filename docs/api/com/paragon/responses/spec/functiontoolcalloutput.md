@@ -1,5 +1,7 @@
 # :material-database: FunctionToolCallOutput
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.spec.FunctionToolCallOutput` &nbsp;·&nbsp; **Record**
 
 ---

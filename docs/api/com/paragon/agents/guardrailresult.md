@@ -1,5 +1,7 @@
 # :material-approximately-equal: GuardrailResult
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.agents.GuardrailResult` &nbsp;·&nbsp; **Interface**
 
 ---

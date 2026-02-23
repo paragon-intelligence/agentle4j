@@ -1,5 +1,7 @@
 # Prompt Management
 
+> This docs was updated at: 2026-02-23
+
 Agentle provides a flexible system for managing and retrieving prompts from various sources, including local files and external services like Langfuse. It also includes a comprehensive Prompt Builder API for constructing high-quality prompts following best practices.
 
 ## Prompt Builder Pattern

@@ -1,5 +1,7 @@
 # :material-approximately-equal: EmbeddingProvider
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.embeddings.EmbeddingProvider` &nbsp;·&nbsp; **Interface**
 
 ---

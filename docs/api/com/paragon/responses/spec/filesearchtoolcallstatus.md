@@ -1,5 +1,7 @@
 # :material-format-list-bulleted-type: FileSearchToolCallStatus
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.spec.FileSearchToolCallStatus` &nbsp;·&nbsp; **Enum**
 
 ---

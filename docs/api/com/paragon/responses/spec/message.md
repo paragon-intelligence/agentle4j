@@ -1,5 +1,7 @@
 # :material-code-braces: Message
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.spec.Message` &nbsp;·&nbsp; **Class**
 
 Implements `ResponseInputItem`, `Item`

@@ -1,5 +1,7 @@
 # :material-code-braces: OpenRouterModelRegistry
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.openrouter.OpenRouterModelRegistry` &nbsp;·&nbsp; **Class**
 
 ---

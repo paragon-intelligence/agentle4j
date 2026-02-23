@@ -1,5 +1,7 @@
 # :material-code-braces: PartialJsonParser
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.streaming.PartialJsonParser` &nbsp;·&nbsp; **Class**
 
 ---

@@ -1,5 +1,7 @@
 # :material-code-braces: AgentleException
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.exception.AgentleException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`

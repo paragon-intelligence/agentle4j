@@ -1,5 +1,7 @@
 # :material-database: Article
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.web.Article` &nbsp;·&nbsp; **Record**
 
 ---

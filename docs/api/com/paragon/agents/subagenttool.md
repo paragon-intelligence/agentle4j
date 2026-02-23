@@ -1,5 +1,7 @@
 # :material-code-braces: SubAgentTool
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.agents.SubAgentTool` &nbsp;·&nbsp; **Class**
 
 Extends `FunctionTool<SubAgentTool.SubAgentParams>`

@@ -1,5 +1,7 @@
 # :material-code-braces: ParallelStream
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.agents.ParallelStream` &nbsp;·&nbsp; **Class**
 
 ---

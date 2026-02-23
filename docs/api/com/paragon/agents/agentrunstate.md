@@ -1,5 +1,7 @@
 # :material-code-braces: AgentRunState
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.agents.AgentRunState` &nbsp;·&nbsp; **Class**
 
 Implements `Serializable`

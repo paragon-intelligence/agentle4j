@@ -1,5 +1,7 @@
 # :material-code-braces: ContentSanitizer
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.messaging.security.ContentSanitizer` &nbsp;·&nbsp; **Class**
 
 ---

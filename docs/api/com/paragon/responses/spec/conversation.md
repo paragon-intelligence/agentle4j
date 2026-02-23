@@ -1,5 +1,7 @@
 # :material-database: Conversation
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.spec.Conversation` &nbsp;·&nbsp; **Record**
 
 ---

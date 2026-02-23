@@ -1,5 +1,7 @@
 # :material-code-braces: TraceIdGenerator
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.telemetry.processors.TraceIdGenerator` &nbsp;·&nbsp; **Class**
 
 ---

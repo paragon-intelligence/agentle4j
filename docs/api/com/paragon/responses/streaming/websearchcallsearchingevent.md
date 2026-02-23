@@ -1,5 +1,7 @@
 # :material-database: WebSearchCallSearchingEvent
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.streaming.WebSearchCallSearchingEvent` &nbsp;·&nbsp; **Record**
 
 ---

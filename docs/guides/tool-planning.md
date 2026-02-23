@@ -1,5 +1,7 @@
 # Tool Planning Guide
 
+> This docs was updated at: 2026-02-23
+
 Batch multiple tool calls into a single execution plan, saving tokens and reducing latency by eliminating unnecessary LLM round-trips.
 
 ---

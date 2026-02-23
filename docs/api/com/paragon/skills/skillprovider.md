@@ -1,5 +1,7 @@
 # :material-approximately-equal: SkillProvider
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.skills.SkillProvider` &nbsp;·&nbsp; **Interface**
 
 ---

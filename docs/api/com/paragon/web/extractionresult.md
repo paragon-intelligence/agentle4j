@@ -1,5 +1,7 @@
 # :material-code-braces: ExtractionResult
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.web.ExtractionResult` &nbsp;·&nbsp; **Class**
 
 ---

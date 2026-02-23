@@ -1,5 +1,7 @@
 # :material-code-braces: InvalidRequestException
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.exception.InvalidRequestException` &nbsp;·&nbsp; **Class**
 
 Extends `ApiException`

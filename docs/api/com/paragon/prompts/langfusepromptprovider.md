@@ -1,5 +1,7 @@
 # :material-code-braces: LangfusePromptProvider
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.prompts.LangfusePromptProvider` &nbsp;·&nbsp; **Class**
 
 Implements `PromptProvider`

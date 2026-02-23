@@ -1,5 +1,7 @@
 # Changelog
 
+> This docs was updated at: 2026-02-23
+
 All notable changes to Agentle4j will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

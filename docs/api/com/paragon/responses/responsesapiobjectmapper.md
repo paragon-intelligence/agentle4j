@@ -1,5 +1,7 @@
 # :material-code-braces: ResponsesApiObjectMapper
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.ResponsesApiObjectMapper` &nbsp;·&nbsp; **Class**
 
 Extends `ObjectMapper`

@@ -1,5 +1,7 @@
 # :material-database: Viewport
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.web.Viewport` &nbsp;·&nbsp; **Record**
 
 ---

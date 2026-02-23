@@ -1,5 +1,7 @@
 # :material-approximately-equal: CodeInterpreterOutput
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.spec.CodeInterpreterOutput` &nbsp;·&nbsp; **Interface**
 
 ---

@@ -1,5 +1,7 @@
 # :material-code-braces: Agent
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.agents.Agent` &nbsp;·&nbsp; **Class**
 
 Implements `Serializable`, `Interactable`

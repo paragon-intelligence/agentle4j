@@ -1,5 +1,7 @@
 # :material-code-braces: AgenticContext
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.agents.AgenticContext` &nbsp;·&nbsp; **Class**
 
 ---

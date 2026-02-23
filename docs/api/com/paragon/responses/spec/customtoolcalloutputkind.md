@@ -1,5 +1,7 @@
 # :material-approximately-equal: CustomToolCallOutputKind
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.spec.CustomToolCallOutputKind` &nbsp;·&nbsp; **Interface**
 
 ---

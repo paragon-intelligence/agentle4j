@@ -1,5 +1,7 @@
 # :material-code-braces: LangfusePromptListResponse
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.prompts.LangfusePromptListResponse` &nbsp;·&nbsp; **Class**
 
 ---

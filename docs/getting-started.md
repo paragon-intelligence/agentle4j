@@ -1,5 +1,7 @@
 # Getting Started
 
+> This docs was updated at: 2026-02-23
+
 This comprehensive guide will help you master Agentle4j step by step.
 
 ## Prerequisites

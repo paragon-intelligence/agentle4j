@@ -1,5 +1,7 @@
 # :material-code-braces: OpenRouterEmbeddingProvider
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.embeddings.OpenRouterEmbeddingProvider` &nbsp;·&nbsp; **Class**
 
 Implements `EmbeddingProvider`

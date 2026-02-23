@@ -1,5 +1,7 @@
 # :material-code-braces: StreamableHttpMcpClient
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.mcp.StreamableHttpMcpClient` &nbsp;·&nbsp; **Class**
 
 Extends `McpClient`

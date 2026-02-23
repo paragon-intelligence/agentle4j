@@ -1,5 +1,7 @@
 # :material-format-list-bulleted-type: FunctionToolCallStatus
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.spec.FunctionToolCallStatus` &nbsp;·&nbsp; **Enum**
 
 ---

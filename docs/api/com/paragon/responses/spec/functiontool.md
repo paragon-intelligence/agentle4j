@@ -1,5 +1,7 @@
 # :material-code-braces: FunctionTool
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.spec.FunctionTool` &nbsp;·&nbsp; **Class**
 
 Extends `Record>` &nbsp;·&nbsp; Implements `Tool`

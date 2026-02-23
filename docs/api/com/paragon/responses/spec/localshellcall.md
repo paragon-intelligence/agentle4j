@@ -1,5 +1,7 @@
 # :material-code-braces: LocalShellCall
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.responses.spec.LocalShellCall` &nbsp;·&nbsp; **Class**
 
 Extends `ToolCall` &nbsp;·&nbsp; Implements `Item`, `ResponseOutput`

@@ -1,5 +1,7 @@
 # API Reference
 
+> This docs was updated at: 2026-02-23
+
 The complete API documentation is generated from Javadoc.
 
 !!! info "API Documentation Location"

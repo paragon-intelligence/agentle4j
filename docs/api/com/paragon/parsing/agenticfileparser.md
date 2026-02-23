@@ -1,5 +1,7 @@
 # :material-code-braces: AgenticFileParser
 
+> This docs was updated at: 2026-02-23
+
 `com.paragon.parsing.AgenticFileParser` &nbsp;·&nbsp; **Class**
 
 ---
