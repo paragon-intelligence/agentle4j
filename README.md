@@ -178,6 +178,77 @@ Agent agent = Agent.builder()
 
 Pluggable strategies: BM25, semantic similarity, regex, or write your own. See the [Tool Search Guide](docs/guides/tool-search.md).
 
+## Blueprints — agents as JSON
+
+Serialize any agent (or entire multi-agent constellation) to JSON. Store in a database, version in git, share across services, load at runtime. No recompilation.
+
+```java
+// Agent → JSON
+String json = agent.toBlueprint().toJson();
+
+// JSON → Agent (API keys auto-resolved from environment variables)
+Interactable agent = new ObjectMapper()
+    .readValue(json, InteractableBlueprint.class)
+    .toInteractable();
+
+agent.interact("Hello!");
+```
+
+Works with every pattern — `Agent`, `RouterAgent`, `SupervisorAgent`, `AgentNetwork`, `ParallelAgents`, `HierarchicalAgents`. Nested constellations serialize recursively: a Router containing a Supervisor containing three Agents becomes one JSON file.
+
+### JSON-first agent definitions
+
+Skip Java builders entirely. Write a JSON file, deserialize, run.
+
+```json
+{
+  "type": "agent",
+  "name": "CustomerSupport",
+  "model": "openai/gpt-4o",
+  "instructions": "You are a professional support agent for Acme Corp.",
+  "maxTurns": 15,
+  "responder": {
+    "provider": "OPEN_ROUTER",
+    "apiKeyEnvVar": "OPENROUTER_API_KEY"
+  },
+  "toolClassNames": ["com.acme.tools.SearchKnowledgeBase", "com.acme.tools.CreateTicket"],
+  "handoffs": [],
+  "inputGuardrails": [{ "registryId": "profanity_filter" }],
+  "outputGuardrails": []
+}
+```
+
+```java
+String json = Files.readString(Path.of("agents/support.json"));
+Interactable agent = new ObjectMapper()
+    .readValue(json, InteractableBlueprint.class)
+    .toInteractable();
+```
+
+### LLM-generated agents
+
+`AgentDefinition` is designed for structured output — an LLM creates agents at runtime.
+
+```java
+Interactable.Structured<AgentDefinition> metaAgent = Agent.builder()
+    .name("AgentFactory")
+    .model("openai/gpt-4o")
+    .instructions("You create agent definitions. Available tools: search_kb, create_ticket.")
+    .structured(AgentDefinition.class)
+    .responder(responder)
+    .build();
+
+AgentDefinition def = metaAgent.interactStructured(
+    "Create a Spanish-speaking support agent"
+).output();
+
+// LLM decides behavior — you provide infrastructure
+Interactable agent = def.toInteractable(responder, "openai/gpt-4o", availableTools);
+agent.interact("¿Cómo puedo recuperar mi contraseña?");
+```
+
+See the [Blueprints Guide](docs/guides/blueprints.md) for the full JSON schema reference, multi-agent serialization examples, and Spring Boot integration.
+
 ## Everything else
 
 Agentle ships with more than agents. Each feature has a dedicated guide.
