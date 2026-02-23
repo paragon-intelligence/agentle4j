@@ -99,6 +99,8 @@ nav:
     - Prompt Management: guides/prompt-management.md
     - Streaming: guides/streaming.md
     - Function Tools: guides/tools.md
+    - Tool Search: guides/tool-search.md
+    - Tool Planning: guides/tool-planning.md
     - Context Management: guides/context-management.md
     - Vision: guides/vision.md
     - Messaging: guides/messaging.md

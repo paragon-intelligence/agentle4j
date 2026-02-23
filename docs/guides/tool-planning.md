@@ -259,6 +259,19 @@ The key benefit of tool planning is **reduced token consumption**:
 
 ---
 
+## Combining with Tool Search
+
+**Yes, Tool Planning and Tool Search work seamlessly together!**
+
+While they solve different problems, combining them creates highly efficient agents:
+
+- **Tool Search** solves the *prompt size* problem by filtering which tools are available to the LLM.
+- **Tool Planning** solves the *round-trip latency* problem by allowing the LLM to batch calls to those available tools.
+
+When both are enabled, the `execute_tool_plan` meta-tool is automatically injected as an **eager** tool. The LLM will receive the `execute_tool_plan` tool alongside the tools discovered by the search strategy, and can seamlessly output a batched plan utilizing them.
+
+---
+
 ## Best Practices
 
 ### Do
