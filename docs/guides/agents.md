@@ -427,25 +427,30 @@ RouterAgent router = RouterAgent.builder()
     .build();
 
 // Option 1: Route and execute
-AgentResult result = router.route("I have a question about my invoice");
-System.out.println("Handled by: " + result.handoffAgent().name());
+AgenticContext ctx = AgenticContext.create();
+ctx.addInput(Message.user("I have a question about my invoice"));
+AgentResult result = router.interact(ctx);
+System.out.println(result.output());
 
-// Option 2: Just classify (don't execute) - returns Optional<Agent>
-Agent selected = router.classify("My app keeps crashing")
+// Option 2: Just classify (don't execute) - returns Optional<Interactable>
+Interactable selected = router.classify("My app keeps crashing")
     .orElse(techSupport);  // Use fallback if classification fails
 System.out.println("Would route to: " + selected.name());
 
 // Option 3: Route with existing context
 AgenticContext context = AgenticContext.create();
 context.addInput(Message.user("Help with billing"));
-AgentResult contextResult = router.route(context);
+AgentResult contextResult = router.interact(context);
 ```
 
 ### Streaming Router
 
 ```java
-router.routeStream("Help me with my invoice")
-    .onRouteSelected(agent -> System.out.println("→ Routed to: " + agent.name()))
+AgenticContext streamCtx = AgenticContext.create();
+streamCtx.addInput(Message.user("Help me with my invoice"));
+
+router.routeStream(streamCtx)
+    .onRouteSelected(target -> System.out.println("→ Routed to: " + target.name()))
     .onTextDelta(System.out::print)
     .onToolExecuted(exec -> System.out.println("Tool: " + exec.toolName()))
     .onComplete(result -> System.out.println("\nDone!"))

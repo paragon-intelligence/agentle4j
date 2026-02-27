@@ -523,8 +523,8 @@ public class CustomerInquiryUseCase {
     }
 
     public InquiryResponse handle(String customerMessage) {
-        // Classify the message (returns Optional<Agent>)
-        Agent selectedAgent = router.classify(customerMessage)
+        // Classify the message (returns Optional<Interactable>)
+        Interactable selectedAgent = router.classify(customerMessage)
             .orElseThrow(() -> new IllegalStateException("No agent found for message"));
         
         // Process with the appropriate agent
