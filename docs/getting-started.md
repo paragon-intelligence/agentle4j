@@ -74,7 +74,14 @@ System.out.println(response.outputText());
 
 ```java
 // Stream tokens as they arrive
-responder.respond(payload.toBuilder().streaming().build())
+var streamingPayload = CreateResponsePayload.builder()
+    .model("openai/gpt-4o-mini")
+    .addDeveloperMessage("You are a helpful assistant.")
+    .addUserMessage("What is the capital of France?")
+    .streaming()
+    .build();
+
+responder.respond(streamingPayload)
     .onTextDelta(delta -> {
         System.out.print(delta);
         System.out.flush();
@@ -106,7 +113,6 @@ responder.respond(payload)
     })
     .onComplete(response -> {
         System.out.println("\n\n✅ Generation complete!");
-        System.out.println("Total tokens: " + response.usage().totalTokens());
     })
     .onError(error -> {
         System.err.println("Error: " + error.getMessage());
@@ -228,11 +234,11 @@ List<ResponseInputItem> conversation = new ArrayList<>();
 
 // Helper to add messages
 void addUserMessage(String text) {
-    conversation.add(new UserMessage(text));
+    conversation.add(Message.user(text));
 }
 
 void addAssistantMessage(String text) {
-    conversation.add(new AssistantMessage(text));
+    conversation.add(Message.assistant(text));
 }
 
 // First turn
@@ -240,7 +246,7 @@ addUserMessage("My name is Alice and I'm a Java developer.");
 Response response1 = responder.respond(
     CreateResponsePayload.builder()
         .model("openai/gpt-4o-mini")
-        .inputItems(conversation)
+        .input(conversation)
         .build()
 );
 addAssistantMessage(response1.outputText());
@@ -251,7 +257,7 @@ addUserMessage("What's my name and what do I do?");
 Response response2 = responder.respond(
     CreateResponsePayload.builder()
         .model("openai/gpt-4o-mini")
-        .inputItems(conversation)
+        .input(conversation)
         .build()
 );
 System.out.println("Assistant: " + response2.outputText());

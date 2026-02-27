@@ -108,7 +108,7 @@ Responder responder = Responder.builder()
 ### Advanced Configuration
 
 ```java
-import com.paragon.responses.RetryPolicy;
+import com.paragon.http.RetryPolicy;
 
 RetryPolicy policy = RetryPolicy.builder()
     .maxRetries(5)
@@ -230,12 +230,10 @@ var payload = CreateResponsePayload.builder()
     // Generation parameters
     .temperature(0.7)          // Creativity (0.0-2.0)
     .topP(0.9)                 // Nucleus sampling
-    .maxTokens(1000)           // Response length limit
-    .presencePenalty(0.0)      // Reduce repetition
-    .frequencyPenalty(0.0)     // Reduce common tokens
-    
+    .maxOutputTokens(1000)     // Response length limit
+
     // Advanced
-    .user("user-123")          // User identifier for abuse detection
+    .safetyIdentifier("user-123")  // Stable user identifier for abuse detection
     
     .build();
 ```
@@ -246,9 +244,7 @@ var payload = CreateResponsePayload.builder()
 |-----------|-------|-------------|
 | `temperature` | 0.0-2.0 | Higher = more creative, lower = more focused |
 | `topP` | 0.0-1.0 | Nucleus sampling threshold |
-| `maxTokens` | 1+ | Maximum response tokens |
-| `presencePenalty` | -2.0 to 2.0 | Penalize tokens already in context |
-| `frequencyPenalty` | -2.0 to 2.0 | Penalize tokens by frequency |
+| `maxOutputTokens` | 1+ | Maximum response tokens |
 
 ### Temperature Examples
 
@@ -313,7 +309,7 @@ responder.respond(payload)
         System.out.flush();
     })
     .onComplete(response -> {
-        System.out.println("\n\nTokens: " + response.usage().totalTokens());
+        System.out.println("\n\nDone!");
     })
     .onError(Throwable::printStackTrace)
     .start();
@@ -358,19 +354,13 @@ Response response = responder.respond(payload);
 // Text output
 String text = response.outputText();
 
-// Token usage
-Usage usage = response.usage();
-int inputTokens = usage.inputTokens();
-int outputTokens = usage.outputTokens();
-int totalTokens = usage.totalTokens();
-
 // Metadata
 String id = response.id();
 String model = response.model();
-long createdAt = response.createdAt();
+Number createdAt = response.createdAt();
 
 // Output items (for complex responses)
-List<ResponseOutputItem> items = response.output();
+List<ResponseOutput> items = response.output();
 ```
 
 ---

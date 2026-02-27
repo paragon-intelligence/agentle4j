@@ -84,21 +84,24 @@ Response response = responder.respond(payload);
 Implement your own processor:
 
 ```java
-public class CustomTelemetryProcessor implements TelemetryProcessor {
-    
-    @Override
-    public void onRequestStart(RequestContext ctx) {
-        // Log request start
+import com.paragon.telemetry.processors.TelemetryProcessor;
+import com.paragon.telemetry.events.TelemetryEvent;
+import com.paragon.telemetry.events.ResponseCompletedEvent;
+import com.paragon.telemetry.events.ResponseFailedEvent;
+
+public class CustomTelemetryProcessor extends TelemetryProcessor {
+
+    public CustomTelemetryProcessor() {
+        super("CustomProcessor");
     }
-    
+
     @Override
-    public void onRequestComplete(RequestContext ctx, Response response) {
-        // Log completion with metrics
-    }
-    
-    @Override
-    public void onRequestError(RequestContext ctx, Throwable error) {
-        // Log errors
+    protected void doProcess(@NonNull TelemetryEvent event) {
+        if (event instanceof ResponseCompletedEvent completed) {
+            // Log completion with metrics
+        } else if (event instanceof ResponseFailedEvent failed) {
+            // Log errors
+        }
     }
 }
 ```
@@ -173,7 +176,7 @@ Trace context is propagated automatically through:
 
 | Component | Behavior |
 |-----------|----------|
-| **AgentContext** | Stores `parentTraceId`, `parentSpanId`, `requestId` |
+| **AgenticContext** | Stores `parentTraceId`, `parentSpanId`, `requestId` |
 | **Agent.interact()** | Auto-initializes trace if not set |
 | **Handoffs** | Forks context with new parent span for child agent |
 | **ParallelAgents** | All parallel agents share the same parent trace |
@@ -185,7 +188,7 @@ For advanced use cases, you can manually set trace context:
 
 ```java
 // Create context with explicit trace
-AgentContext ctx = AgentContext.create()
+AgenticContext ctx = AgenticContext.create()
     .withTraceContext("8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d", "1a2b3c4d5e6f7a8b")
     .withRequestId("user-session-12345");  // Optional high-level correlation
 

@@ -326,7 +326,7 @@ public class SummarizeDocumentUseCase {
 ```
 
 !!! tip "Thread Safety"
-    Agents are **stateless and thread-safe**. The same agent instance can handle concurrent requests because conversation state lives in `AgentContext`, not the agent itself.
+    Agents are **stateless and thread-safe**. The same agent instance can handle concurrent requests because conversation state lives in `AgenticContext`, not the agent itself.
 
 ---
 
@@ -678,7 +678,7 @@ public class AgentConfigProperties {
 #### Key Reminders
 
 !!! important "Thread Safety"
-    Agents are **stateless and thread-safe**. Create them once and reuse. State belongs in `AgentContext`.
+    Agents are **stateless and thread-safe**. Create them once and reuse. State belongs in `AgenticContext`.
 
 !!! tip "Prompt Versioning"
     Use Langfuse labels (`production`, `staging`) or git-versioned prompt files for safe deployments.
@@ -802,7 +802,7 @@ public class StreamingController {
                 try {
                     emitter.send(SseEmitter.event()
                         .name("complete")
-                        .data(Map.of("tokens", response.usage().totalTokens())));
+                        .data("done"));
                     emitter.complete();
                 } catch (Exception e) {
                     emitter.completeWithError(e);
@@ -1086,8 +1086,7 @@ public class ToolStreamingController {
                     emitter.send(SseEmitter.event()
                         .name("complete")
                         .data(Map.of(
-                            "finalText", response.outputText(),
-                            "tokens", response.usage().totalTokens()
+                            "finalText", response.outputText()
                         )));
                     emitter.complete();
                 } catch (Exception e) {
@@ -1176,7 +1175,7 @@ public class AgentStreamingController {
                 try {
                     emitter.send(SseEmitter.event()
                         .name("turn_complete")
-                        .data(Map.of("tokens", response.usage().totalTokens())));
+                        .data("turn_done"));
                 } catch (Exception e) {
                     emitter.completeWithError(e);
                 }
@@ -1192,15 +1191,6 @@ public class AgentStreamingController {
                 }
             })
             // Tool execution events
-            .onToolCall((name, args) -> {
-                try {
-                    emitter.send(SseEmitter.event()
-                        .name("tool_call")
-                        .data(Map.of("tool", name, "args", args)));
-                } catch (Exception e) {
-                    emitter.completeWithError(e);
-                }
-            })
             .onToolExecuted(exec -> {
                 try {
                     emitter.send(SseEmitter.event()
@@ -1312,13 +1302,6 @@ public class OrderAssistantService {
     public void streamOrderAssistance(String userId, String message, SseEmitter emitter) {
         orderAgent.interactStream(message)
             .onTextDelta(delta -> sendSafe(emitter, "text", delta))
-            .onToolCall((name, args) -> {
-                sendSafe(emitter, "action", Map.of(
-                    "type", "tool_started",
-                    "tool", name,
-                    "message", getToolMessage(name)
-                ));
-            })
             .onToolExecuted(exec -> {
                 sendSafe(emitter, "action", Map.of(
                     "type", "tool_completed",
@@ -1677,7 +1660,7 @@ public class AIHealthIndicator implements HealthIndicator {
             var payload = CreateResponsePayload.builder()
                 .model(props.getModel())
                 .addUserMessage("ping")
-                .maxTokens(1)
+                .maxOutputTokens(1)
                 .build();
             
             responder.respond(payload);

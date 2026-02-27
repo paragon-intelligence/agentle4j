@@ -68,13 +68,13 @@ var mcp = StdioMcpClient.builder()
     .build();
 mcp.connect();
 
-Agent agent = Agent.builder()
+var agentBuilder = Agent.builder()
     .name("FileAgent")
     .model("openai/gpt-4o")
     .instructions("You can read and write files.")
-    .responder(responder)
-    .addTools(mcp.asTools())  // Add all MCP tools to agent
-    .build();
+    .responder(responder);
+mcp.asTools().forEach(agentBuilder::addTool);  // Add all MCP tools to agent
+Agent agent = agentBuilder.build();
 
 AgentResult result = agent.interact("What files are in /tmp?");
 ```

@@ -313,7 +313,6 @@ public class EmailTool extends FunctionTool<EmailParams> {
 |--------|----------|---------|
 | `success(String)` | Simple text result | `"25°C and sunny"` |
 | `error(String)` | Operation failed | `"Location not found"` |
-| `json(Object)` | Structured data | Complex objects, lists |
 
 ```java
 // Success with simple text
@@ -407,7 +406,10 @@ var payload = CreateResponsePayload.builder()
         Use these tools when the user's request requires them.
         """)
     .addUserMessage("Calculate 25% tip on $85.50 and email me the result")
-    .addTools(store.getTools())  // Add all tools
+    .addTool(weatherTool)
+    .addTool(calculatorTool)
+    .addTool(dbTool)
+    .addTool(emailTool)
     .build();
 ```
 
@@ -434,7 +436,7 @@ while (!response.functionToolCalls(store).isEmpty()) {
     var continuePayload = CreateResponsePayload.builder()
         .model("openai/gpt-4o")
         .input(conversationHistory)
-        .addTools(store.getTools())
+        .tools(List.of(weatherTool, calculatorTool, dbTool, emailTool))
         .build();
     
     response = responder.respond(continuePayload);

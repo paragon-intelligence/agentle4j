@@ -37,7 +37,6 @@ responder.respond(payload)
     })
     .onComplete(response -> {
         System.out.println("\n\n✅ Complete!");
-        System.out.println("Total tokens: " + response.usage().totalTokens());
     })
     .onError(error -> {
         System.err.println("Error: " + error.getMessage());
@@ -80,7 +79,6 @@ responder.respond(payload)
         
         System.out.println("\n\n--- Stats ---");
         System.out.println("Characters: " + charCount.get());
-        System.out.println("Tokens: " + response.usage().totalTokens());
         System.out.println("Time: " + elapsed + " ms");
         System.out.println("Speed: " + (charCount.get() * 1000 / elapsed) + " chars/sec");
     })
@@ -281,9 +279,6 @@ agent.interactStream("Research and summarize AI trends, then email me the report
     })
     
     // Tool execution events
-    .onToolCall((name, args) -> {
-        System.out.println("\n🔧 Calling: " + name);
-    })
     .onToolExecuted(exec -> {
         System.out.println("✅ " + exec.toolName() + " done");
     })
@@ -315,10 +310,9 @@ agent.interactStream("Research and summarize AI trends, then email me the report
 | `.onTurnStart(int)` | Each LLM call |
 | `.onTurnComplete(Response)` | Each LLM response |
 | `.onTextDelta(String)` | Text chunks |
-| `.onToolCall(name, args)` | Tool identified |
 | `.onToolExecuted(ToolExecution)` | Tool completed |
 | `.onHandoff(Handoff)` | Agent routing |
-| `.onGuardrailFailed(GuardrailFailure)` | Blocked by guardrail |
+| `.onGuardrailFailed(GuardrailResult.Failed)` | Blocked by guardrail |
 | `.onComplete(AgentResult)` | All done |
 | `.onError(Throwable)` | Error occurred |
 

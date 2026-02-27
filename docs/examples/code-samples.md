@@ -58,7 +58,7 @@ var factualPayload = CreateResponsePayload.builder()
 var payload = CreateResponsePayload.builder()
     .model("openai/gpt-4o")
     .addUserMessage("Explain quantum computing")
-    .maxTokens(150)  // Limit response to ~150 tokens
+    .maxOutputTokens(150)  // Limit response to ~150 tokens
     .build();
 ```
 
@@ -90,7 +90,6 @@ responder.respond(payload)
         long elapsed = System.currentTimeMillis() - startTime;
         System.out.println("\n\n--- Stats ---");
         System.out.println("Characters: " + charCount.get());
-        System.out.println("Tokens: " + response.usage().totalTokens());
         System.out.println("Time: " + elapsed + "ms");
         System.out.println("Speed: " + (charCount.get() * 1000 / elapsed) + " chars/sec");
     })
@@ -325,21 +324,21 @@ public class ConversationManager {
     
     public String chat(String userMessage) {
         // Add user message to history
-        history.add(new UserMessage(userMessage));
-        
+        history.add(Message.user(userMessage));
+
         // Build payload with full history
         var payload = CreateResponsePayload.builder()
             .model(model)
             .addDeveloperMessage(systemPrompt)
-            .inputItems(history)
+            .input(history)
             .build();
-        
+
         // Get response
         Response response = responder.respond(payload);
         String assistantMessage = response.outputText();
-        
+
         // Add assistant response to history
-        history.add(new AssistantMessage(assistantMessage));
+        history.add(Message.assistant(assistantMessage));
         
         return assistantMessage;
     }
@@ -374,20 +373,20 @@ public class SmartConversation {
     private static final int MAX_HISTORY = 20;  // Keep last 20 messages
     
     public String chat(String userMessage) {
-        history.add(new UserMessage(userMessage));
-        
+        history.add(Message.user(userMessage));
+
         // Trim history if too long (keep most recent)
         if (history.size() > MAX_HISTORY) {
             history.subList(0, history.size() - MAX_HISTORY).clear();
         }
-        
+
         var payload = CreateResponsePayload.builder()
             .model("openai/gpt-4o-mini")
-            .inputItems(history)
+            .input(history)
             .build();
-        
+
         Response response = responder.respond(payload);
-        history.add(new AssistantMessage(response.outputText()));
+        history.add(Message.assistant(response.outputText()));
         
         return response.outputText();
     }
@@ -552,8 +551,7 @@ public class AIController {
         
         Response response = responder.respond(payload);
         return Map.of(
-            "response", response.outputText(),
-            "tokens", String.valueOf(response.usage().totalTokens())
+            "response", response.outputText()
         );
     }
     

@@ -20,7 +20,7 @@ The complete API documentation is generated from Javadoc.
 |-------|-------------|
 | `Responder` | Core HTTP client for OpenAI Responses API |
 | `Agent` | High-level agent abstraction with tools and guardrails |
-| `AgentContext` | Per-conversation state container |
+| `AgenticContext` | Per-conversation state container |
 | `CreateResponsePayload` | Fluent builder for request construction |
 | `Response` | API response with output, usage, and metadata |
 | `FunctionTool` | Base class for implementing tools |

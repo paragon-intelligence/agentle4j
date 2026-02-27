@@ -81,7 +81,9 @@ ToolSearchStrategy advancedStrategy = new BM25ToolSearchStrategy(10, 1.5, 0.75);
 Uses embedding vectors for semantic similarity matching. This allows for matching concepts rather than exact words (e.g., matching "temperature outside" to a tool named "get_weather").
 
 ```java
-EmbeddingProvider provider = new OpenRouterEmbeddingProvider(apiKey);
+EmbeddingProvider provider = OpenRouterEmbeddingProvider.builder()
+    .apiKey(apiKey)
+    .build();
 
 // Returns top 5 tools based on cosine similarity
 ToolSearchStrategy strategy = new EmbeddingToolSearchStrategy(

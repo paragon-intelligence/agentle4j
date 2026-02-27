@@ -108,11 +108,11 @@ The loop continues until the LLM responds without tool calls (final answer) or m
 
 ---
 
-## AgentContext
+## AgenticContext
 
-`AgentContext` is the **conversation state container** for agent interactions. It acts as the agent's short-term memory, tracking everything that happens during a conversation.
+`AgenticContext` is the **conversation state container** for agent interactions. It acts as the agent's short-term memory, tracking everything that happens during a conversation.
 
-### Why AgentContext?
+### Why AgenticContext?
 
 | Feature | Purpose |
 |---------|---------|
@@ -126,11 +126,11 @@ The loop continues until the LLM responds without tool calls (final answer) or m
 
 ```java
 // Fresh context for new conversations
-AgentContext context = AgentContext.create();
+AgenticContext context = AgenticContext.create();
 
 // Pre-populated context for resuming conversations
 List<ResponseInputItem> previousMessages = loadFromDatabase();
-AgentContext resumed = AgentContext.withHistory(previousMessages);
+AgenticContext resumed = AgenticContext.withHistory(previousMessages);
 ```
 
 ### Adding Input
@@ -174,7 +174,7 @@ Map<String, Object> allState = context.getAllState();
 The key to multi-turn conversations is **reusing the same context**:
 
 ```java
-AgentContext context = AgentContext.create();
+AgenticContext context = AgenticContext.create();
 
 // Turn 1
 context.addInput(Message.user("My name is Alice"));
@@ -194,17 +194,17 @@ System.out.println("Turns used: " + context.getTurnCount());
 For parallel agent execution, each agent needs its own isolated context:
 
 ```java
-AgentContext original = AgentContext.create();
+AgenticContext original = AgenticContext.create();
 original.setState("userId", "user-123");
 
 // Copy creates an independent clone
-AgentContext copy = original.copy();
+AgenticContext copy = original.copy();
 copy.setState("task", "different-task");
 // original is unaffected
 
 // Fork creates a child context for handoffs (resets turn count)
 String childSpanId = TraceIdGenerator.generateSpanId();
-AgentContext child = original.fork(childSpanId);
+AgenticContext child = original.fork(childSpanId);
 ```
 
 ### Trace Correlation
@@ -212,7 +212,7 @@ AgentContext child = original.fork(childSpanId);
 Link traces across multi-agent systems for observability:
 
 ```java
-AgentContext context = AgentContext.create()
+AgenticContext context = AgenticContext.create()
     .withTraceContext(
         "8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d",  // 32-char trace ID
         "1a2b3c4d5e6f7a8b"                    // 16-char span ID
@@ -436,7 +436,7 @@ Agent selected = router.classify("My app keeps crashing")
 System.out.println("Would route to: " + selected.name());
 
 // Option 3: Route with existing context
-AgentContext context = AgentContext.create();
+AgenticContext context = AgenticContext.create();
 context.addInput(Message.user("Help with billing"));
 AgentResult contextResult = router.route(context);
 ```
@@ -486,7 +486,7 @@ Agent agent = Agent.builder()
     .build();
 
 // Create context with user ID
-AgentContext context = AgentContext.create();
+AgenticContext context = AgenticContext.create();
 context.setState("userId", "user-123");
 
 // First conversation - store preference
@@ -544,13 +544,13 @@ mcp.connect();
 List<McpRemoteTool> tools = mcp.asTools();
 
 // Add to agent
-Agent agent = Agent.builder()
+var agentBuilder = Agent.builder()
     .name("FileAgent")
     .model("openai/gpt-4o")
     .instructions("You can read and write files using the available tools.")
-    .responder(responder)
-    .addTools(tools)  // McpRemoteTool extends FunctionTool
-    .build();
+    .responder(responder);
+tools.forEach(agentBuilder::addTool);  // McpRemoteTool extends FunctionTool
+Agent agent = agentBuilder.build();
 
 AgentResult result = agent.interact("List all files in /tmp");
 ```
@@ -564,11 +564,11 @@ var mcp = StreamableHttpMcpClient.builder()
     .build();
 mcp.connect();
 
-Agent agent = Agent.builder()
+var agentBuilder = Agent.builder()
     .name("ApiAgent")
-    .addTools(mcp.asTools())
-    .responder(responder)
-    .build();
+    .responder(responder);
+mcp.asTools().forEach(agentBuilder::addTool);
+Agent agent = agentBuilder.build();
 ```
 
 ### Filtering Tools
@@ -577,11 +577,11 @@ Agent agent = Agent.builder()
 // Only expose specific tools
 List<McpRemoteTool> filteredTools = mcp.asTools(Set.of("read_file", "list_directory"));
 
-Agent agent = Agent.builder()
+var agentBuilder = Agent.builder()
     .name("ReadOnlyAgent")
-    .addTools(filteredTools)
-    .responder(responder)
-    .build();
+    .responder(responder);
+filteredTools.forEach(agentBuilder::addTool);
+Agent agent = agentBuilder.build();
 ```
 
 ### Lifecycle Management
@@ -593,10 +593,10 @@ try (var mcp = StdioMcpClient.builder()
         .build()) {
     mcp.connect();
     
-    Agent agent = Agent.builder()
-        .addTools(mcp.asTools())
-        .build();
-    
+    var agentBuilder = Agent.builder();
+    mcp.asTools().forEach(agentBuilder::addTool);
+    Agent agent = agentBuilder.build();
+
     agent.interact("Do something");
 }  // MCP client automatically closed
 ```
@@ -915,7 +915,7 @@ for (AgentResult result : results) {
 }
 
 // With existing context
-AgentContext context = AgentContext.create();
+AgenticContext context = AgenticContext.create();
 context.addInput(Message.user("Analyze trends"));
 List<AgentResult> contextResults = team.run(context);
 ```
@@ -1136,7 +1136,7 @@ agent.interactStream("Research and summarize AI trends")
         System.out.println("=== Turn " + turn + " ===");
     })
     .onTurnComplete(response -> {
-        System.out.println("Turn complete, tokens: " + response.usage().totalTokens());
+        System.out.println("Turn complete");
     })
     
     // Text streaming
@@ -1146,9 +1146,6 @@ agent.interactStream("Research and summarize AI trends")
     })
     
     // Tool execution
-    .onToolCall((name, args) -> {
-        System.out.println("\n🔧 Calling tool: " + name);
-    })
     .onToolExecuted(exec -> {
         System.out.println("✅ " + exec.toolName() + " returned: " + exec.result());
     })
@@ -1594,10 +1591,10 @@ new AgentService(hierarchy);
 | `interact(Text)` | `AgentResult` | Interact with Text content |
 | `interact(Message)` | `AgentResult` | Interact with Message |
 | `interact(Prompt)` | `AgentResult` | Interact with Prompt |
-| `interact(AgentContext)` | `AgentResult` | Interact with existing context |
+| `interact(AgenticContext)` | `AgentResult` | Interact with existing context |
 | `interactStream(String)` | `AgentStream` | Streaming with text input |
 | `interactStream(Prompt)` | `AgentStream` | Streaming with Prompt |
-| `interactStream(AgentContext)` | `AgentStream` | Streaming with context |
+| `interactStream(AgenticContext)` | `AgentStream` | Streaming with context |
 
 > [!NOTE]
 > For `ParallelAgents`, the `interact()` method runs all agents in parallel. The first result is the primary output; use `result.relatedResults()` to access results from other agents.
