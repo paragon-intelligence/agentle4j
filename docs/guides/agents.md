@@ -389,8 +389,8 @@ Agent frontDesk = Agent.builder()
         - Technical issues → TechSupport
         """)
     .responder(responder)
-    .addHandoff(Handoff.to(billingAgent).description("billing, invoices, payments, subscriptions").build())
-    .addHandoff(Handoff.to(techSupportAgent).description("bugs, errors, crashes, technical problems").build())
+    .addHandoff(Handoff.to(billingAgent).withDescription("billing, invoices, payments, subscriptions").build())
+    .addHandoff(Handoff.to(techSupportAgent).withDescription("bugs, errors, crashes, technical problems").build())
     .build();
 
 // User interaction
@@ -511,21 +511,51 @@ System.out.println(result.output());
 // Implement your own memory store (e.g., Redis, PostgreSQL)
 public class RedisMemory implements Memory {
     private final RedisClient redis;
-    
+
     @Override
-    public void store(String userId, String key, String value) {
-        redis.hset("memory:" + userId, key, value);
+    public void add(String userId, MemoryEntry entry) {
+        redis.hset("memory:" + userId, entry.id(), entry.content());
     }
-    
+
     @Override
-    public String retrieve(String userId, String key) {
-        return redis.hget("memory:" + userId, key);
+    public List<MemoryEntry> retrieve(String userId, String query, int limit) {
+        // Keyword match — replace with semantic search for production
+        return all(userId).stream()
+            .filter(e -> e.content().contains(query))
+            .limit(limit)
+            .toList();
     }
-    
+
     @Override
-    public List<String> search(String userId, String query) {
-        // Implement semantic search
-        return redis.search("memory:" + userId, query);
+    public void update(String userId, String id, MemoryEntry entry) {
+        redis.hset("memory:" + userId, id, entry.content());
+    }
+
+    @Override
+    public boolean delete(String userId, String id) {
+        return redis.hdel("memory:" + userId, id) > 0;
+    }
+
+    @Override
+    public List<MemoryEntry> all(String userId) {
+        return redis.hgetall("memory:" + userId).entrySet().stream()
+            .map(e -> MemoryEntry.withId(e.getKey(), e.getValue()))
+            .toList();
+    }
+
+    @Override
+    public int size(String userId) {
+        return (int) redis.hlen("memory:" + userId);
+    }
+
+    @Override
+    public void clear(String userId) {
+        redis.del("memory:" + userId);
+    }
+
+    @Override
+    public void clearAll() {
+        redis.keys("memory:*").forEach(redis::del);
     }
 }
 ```

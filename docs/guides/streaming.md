@@ -310,6 +310,8 @@ agent.interactStream("Research and summarize AI trends, then email me the report
 | `.onTurnStart(int)` | Each LLM call |
 | `.onTurnComplete(Response)` | Each LLM response |
 | `.onTextDelta(String)` | Text chunks |
+| `.onToolCallPending(ToolConfirmationHandler)` | Tool call pending approval (human-in-the-loop) |
+| `.onPause(PauseHandler)` | Run paused for async approval (resumes with `Agent.resume()`) |
 | `.onToolExecuted(ToolExecution)` | Tool completed |
 | `.onHandoff(Handoff)` | Agent routing |
 | `.onGuardrailFailed(GuardrailResult.Failed)` | Blocked by guardrail |
