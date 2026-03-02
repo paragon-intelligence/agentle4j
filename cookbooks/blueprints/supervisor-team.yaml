@@ -1,0 +1,70 @@
+# Supervisor Team
+# A supervisor agent that delegates work to specialized worker agents.
+
+type: supervisor
+name: ProjectManager
+model: gpt-4o
+instructions: >
+  You are a project manager overseeing a team of specialists. Break down
+  the user's request into subtasks and delegate to the appropriate worker.
+  Synthesize their outputs into a cohesive final response.
+maxTurns: 15
+responder:
+  provider: OPEN_ROUTER
+  apiKeyEnvVar: OPENROUTER_API_KEY
+workers:
+  - description: "Research specialist — finds and summarizes relevant information"
+    worker:
+      type: agent
+      name: Researcher
+      model: gpt-4o
+      instructions: >
+        You are a research specialist. When given a topic, find relevant
+        information, cite sources, and provide a well-structured summary.
+        Focus on accuracy and completeness.
+      maxTurns: 8
+      temperature: 0.3
+      responder:
+        provider: OPEN_ROUTER
+        apiKeyEnvVar: OPENROUTER_API_KEY
+      toolClassNames:
+        - com.acme.tools.WebSearchTool
+      handoffs: []
+      inputGuardrails: []
+      outputGuardrails: []
+  - description: "Writer — drafts polished content based on research"
+    worker:
+      type: agent
+      name: Writer
+      model: gpt-4o
+      instructions: >
+        You are a content writer. Take research notes and draft polished,
+        engaging content. Match the requested tone and format. Ensure
+        clarity and proper grammar.
+      maxTurns: 5
+      temperature: 0.7
+      responder:
+        provider: OPEN_ROUTER
+        apiKeyEnvVar: OPENROUTER_API_KEY
+      toolClassNames: []
+      handoffs: []
+      inputGuardrails: []
+      outputGuardrails: []
+  - description: "Reviewer — checks content for quality and accuracy"
+    worker:
+      type: agent
+      name: Reviewer
+      model: gpt-4o-mini
+      instructions: >
+        You are a quality reviewer. Check content for factual accuracy,
+        grammar, tone consistency, and completeness. Provide specific
+        feedback with suggested improvements.
+      maxTurns: 3
+      temperature: 0.1
+      responder:
+        provider: OPEN_ROUTER
+        apiKeyEnvVar: OPENROUTER_API_KEY
+      toolClassNames: []
+      handoffs: []
+      inputGuardrails: []
+      outputGuardrails: []

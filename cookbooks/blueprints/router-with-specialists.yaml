@@ -1,0 +1,66 @@
+# Router with Specialists
+# Routes user messages to the best specialist agent via LLM classification.
+
+type: router
+name: CustomerServiceRouter
+model: gpt-4o
+responder:
+  provider: OPEN_ROUTER
+  apiKeyEnvVar: OPENROUTER_API_KEY
+routes:
+  - description: "Billing inquiries, payment issues, refunds, and subscription management"
+    target:
+      type: agent
+      name: BillingAgent
+      model: gpt-4o
+      instructions: >
+        You are a billing specialist. Help customers with payment issues,
+        refund requests, subscription changes, and invoice questions.
+        Always verify the customer's identity before making changes.
+      maxTurns: 10
+      temperature: 0.3
+      responder:
+        provider: OPEN_ROUTER
+        apiKeyEnvVar: OPENROUTER_API_KEY
+      toolClassNames:
+        - com.acme.tools.LookupInvoiceTool
+        - com.acme.tools.ProcessRefundTool
+      handoffs: []
+      inputGuardrails: []
+      outputGuardrails: []
+  - description: "Technical support, bug reports, and product troubleshooting"
+    target:
+      type: agent
+      name: TechSupportAgent
+      model: gpt-4o
+      instructions: >
+        You are a technical support specialist. Help customers debug issues,
+        walk them through troubleshooting steps, and escalate to engineering
+        when needed. Always ask for error messages and steps to reproduce.
+      maxTurns: 15
+      temperature: 0.2
+      responder:
+        provider: OPEN_ROUTER
+        apiKeyEnvVar: OPENROUTER_API_KEY
+      toolClassNames:
+        - com.acme.tools.SearchKnowledgeBaseTool
+        - com.acme.tools.CreateTicketTool
+      handoffs: []
+      inputGuardrails: []
+      outputGuardrails: []
+fallback:
+  type: agent
+  name: GeneralAgent
+  model: gpt-4o
+  instructions: >
+    You are a general customer service agent. Help with general inquiries
+    that don't fall into billing or technical categories.
+  maxTurns: 10
+  temperature: 0.5
+  responder:
+    provider: OPEN_ROUTER
+    apiKeyEnvVar: OPENROUTER_API_KEY
+  toolClassNames: []
+  handoffs: []
+  inputGuardrails: []
+  outputGuardrails: []

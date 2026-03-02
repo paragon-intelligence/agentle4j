@@ -1,0 +1,22 @@
+# Structured Output Agent
+# Agent that parses LLM responses into a typed Java record.
+# The outputType must be a fully qualified class name on the classpath.
+
+type: agent
+name: PersonExtractor
+model: gpt-4o
+instructions: >
+  Extract person information from the user's message.
+  Return a JSON object with fields: name (string), age (integer),
+  email (string, nullable), and occupation (string).
+  Only extract what is explicitly stated — do not infer missing fields.
+maxTurns: 3
+temperature: 0.0
+outputType: com.acme.models.Person
+responder:
+  provider: OPEN_ROUTER
+  apiKeyEnvVar: OPENROUTER_API_KEY
+toolClassNames: []
+handoffs: []
+inputGuardrails: []
+outputGuardrails: []

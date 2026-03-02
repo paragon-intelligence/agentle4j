@@ -1,0 +1,38 @@
+# Agent with Provider-Referenced Instructions (e.g., Langfuse)
+# Instructions are fetched from a registered PromptProvider at toInteractable() time.
+# The provider must be registered in PromptProviderRegistry before reconstruction.
+#
+# Setup in Java:
+#   PromptProviderRegistry.register("langfuse",
+#       LangfusePromptProvider.builder()
+#           .httpClient(httpClient)
+#           .publicKey("pk-xxx")
+#           .secretKey("sk-xxx")
+#           .build());
+
+type: agent
+name: SupportAgentV2
+model: gpt-4o
+instructions:
+  source: provider
+  providerId: langfuse
+  promptId: support-agent-v2
+  filters:
+    label: production
+maxTurns: 15
+temperature: 0.3
+responder:
+  provider: OPEN_ROUTER
+  apiKeyEnvVar: OPENROUTER_API_KEY
+toolClassNames:
+  - com.acme.tools.SearchKnowledgeBaseTool
+  - com.acme.tools.CreateTicketTool
+handoffs: []
+inputGuardrails:
+  - registryId: profanity_filter
+outputGuardrails: []
+contextManagement:
+  strategyType: summarization
+  summarizationModel: gpt-4o-mini
+  keepRecentMessages: 5
+  maxTokens: 8000

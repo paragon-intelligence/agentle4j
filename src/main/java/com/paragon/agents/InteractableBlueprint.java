@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.paragon.agents.context.ContextManagementConfig;
 import com.paragon.agents.context.SlidingWindowStrategy;
 import com.paragon.agents.context.SummarizationStrategy;
@@ -104,6 +105,69 @@ public sealed interface InteractableBlueprint
    */
   default @NonNull String toJson() {
     return toJson(new ObjectMapper());
+  }
+
+  /**
+   * Serializes this blueprint to a YAML string using the provided {@link YAMLMapper}.
+   *
+   * @param mapper the YAMLMapper to use for serialization
+   * @return a YAML string representation of this blueprint
+   * @throws java.io.UncheckedIOException if serialization fails
+   */
+  default @NonNull String toYaml(@NonNull YAMLMapper mapper) {
+    try {
+      return mapper.writeValueAsString(this);
+    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+      throw new java.io.UncheckedIOException(e);
+    }
+  }
+
+  /**
+   * Serializes this blueprint to a YAML string using a default {@link YAMLMapper}.
+   *
+   * @return a YAML string representation of this blueprint
+   * @throws java.io.UncheckedIOException if serialization fails
+   */
+  default @NonNull String toYaml() {
+    return toYaml(new YAMLMapper());
+  }
+
+  /**
+   * Deserializes an {@link InteractableBlueprint} from a YAML string.
+   *
+   * @param yaml the YAML string
+   * @return the deserialized blueprint
+   * @throws java.io.UncheckedIOException if deserialization fails
+   */
+  static @NonNull InteractableBlueprint fromYaml(@NonNull String yaml) {
+    try {
+      return new YAMLMapper()
+          .configure(
+              com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+              false)
+          .readValue(yaml, InteractableBlueprint.class);
+    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+      throw new java.io.UncheckedIOException(e);
+    }
+  }
+
+  /**
+   * Deserializes an {@link InteractableBlueprint} from a JSON string.
+   *
+   * @param json the JSON string
+   * @return the deserialized blueprint
+   * @throws java.io.UncheckedIOException if deserialization fails
+   */
+  static @NonNull InteractableBlueprint fromJson(@NonNull String json) {
+    try {
+      return new ObjectMapper()
+          .configure(
+              com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+              false)
+          .readValue(json, InteractableBlueprint.class);
+    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+      throw new java.io.UncheckedIOException(e);
+    }
   }
 
   // ===== Helper Records (not part of sealed hierarchy) =====
@@ -343,7 +407,7 @@ public sealed interface InteractableBlueprint
   record AgentBlueprint(
       @JsonProperty("name") @NonNull String name,
       @JsonProperty("model") @NonNull String model,
-      @JsonProperty("instructions") @NonNull String instructions,
+      @JsonProperty("instructions") @NonNull InstructionSource instructions,
       @JsonProperty("maxTurns") int maxTurns,
       @JsonProperty("temperature") @Nullable Double temperature,
       @JsonProperty("outputType") @Nullable String outputType,
@@ -365,7 +429,7 @@ public sealed interface InteractableBlueprint
           Agent.builder()
               .name(name)
               .model(model)
-              .instructions(instructions)
+              .instructions(instructions.resolve())
               .responder(resp)
               .maxTurns(maxTurns);
 

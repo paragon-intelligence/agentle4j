@@ -128,6 +128,16 @@ public record AgentDefinition(
                 + " the agent operates standalone.")
         @Nullable
         List<HandoffAgentDef> handoffs,
+    @JsonProperty("outputType")
+        @JsonPropertyDescription(
+            "Fully qualified class name (FQCN) of a Java record or class to use for structured"
+                + " output. When set, the agent's responses are parsed as JSON and deserialized"
+                + " into this type, producing an Interactable.Structured<T> agent. The class"
+                + " must be on the classpath and have Jackson-compatible fields. Examples:"
+                + " 'com.acme.models.Person', 'com.acme.models.AnalysisReport'. Omit for"
+                + " plain text responses.")
+        @Nullable
+        String outputType,
     @JsonProperty("contextManagement")
         @JsonPropertyDescription(
             "Strategy for managing the conversation context window. When conversation history"
@@ -258,6 +268,15 @@ public record AgentDefinition(
             .maxTurns(maxTurns);
 
     if (temperature != null) builder.temperature(temperature);
+
+    // Structured output type
+    if (outputType != null && !outputType.isEmpty()) {
+      try {
+        builder.outputType(Class.forName(outputType));
+      } catch (ClassNotFoundException e) {
+        log.warn("Could not load output type class: {}", outputType, e);
+      }
+    }
 
     // Resolve tools by name
     if (toolNames != null && !toolNames.isEmpty()) {
@@ -391,10 +410,10 @@ public record AgentDefinition(
     return new AgentBlueprint(
         name,
         model,
-        instructions,
+        new InstructionSource.Inline(instructions),
         maxTurns,
         temperature,
-        null, // outputType
+        outputType, // outputType FQCN
         null, // traceMetadata
         responderBlueprint,
         toolClassNames,
@@ -471,13 +490,14 @@ public record AgentDefinition(
 
     return new AgentDefinition(
         blueprint.name(),
-        blueprint.instructions(),
+        blueprint.instructions().resolve(),
         blueprint.maxTurns(),
         blueprint.temperature(),
         toolNamesList.isEmpty() ? null : toolNamesList,
         inputIds.isEmpty() ? null : inputIds,
         outputIds.isEmpty() ? null : outputIds,
         handoffDefs.isEmpty() ? null : handoffDefs,
+        blueprint.outputType(),
         contextDef);
   }
 

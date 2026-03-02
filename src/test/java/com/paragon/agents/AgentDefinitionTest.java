@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.paragon.agents.InstructionSource;
 import com.paragon.agents.InteractableBlueprint.AgentBlueprint;
 import com.paragon.agents.InteractableBlueprint.GuardrailReference;
 import com.paragon.agents.InteractableBlueprint.ResponderBlueprint;
@@ -42,6 +43,7 @@ class AgentDefinitionTest {
             null, // inputGuardrails
             null, // outputGuardrails
             null, // handoffs
+            null, // outputType
             null); // contextManagement
 
     String json = mapper.writeValueAsString(original);
@@ -82,7 +84,9 @@ class AgentDefinitionTest {
                         null,
                         null,
                         null,
+                        null,
                         null))),
+            null, // outputType
             new AgentDefinition.ContextDef("sliding", 4000, true, null, null, null));
 
     String json = mapper.writeValueAsString(original);
@@ -106,7 +110,7 @@ class AgentDefinitionTest {
   @Test
   void jsonContainsFieldWithoutModel() throws Exception {
     AgentDefinition def =
-        new AgentDefinition("TestAgent", "Instructions.", 5, null, null, null, null, null, null);
+        new AgentDefinition("TestAgent", "Instructions.", 5, null, null, null, null, null, null, null);
 
     String json = mapper.writeValueAsString(def);
 
@@ -147,6 +151,7 @@ class AgentDefinitionTest {
             List.of("max_length"),
             null,
             null,
+            null, // outputType
             new AgentDefinition.ContextDef("sliding", 4000, true, null, null, null));
 
     ResponderBlueprint responderBp =
@@ -157,7 +162,7 @@ class AgentDefinitionTest {
 
     assertEquals("TestAgent", blueprint.name());
     assertEquals("openai/gpt-4o", blueprint.model()); // model injected externally
-    assertEquals("Test instructions.", blueprint.instructions());
+    assertEquals(new InstructionSource.Inline("Test instructions."), blueprint.instructions());
     assertEquals(10, blueprint.maxTurns());
     assertEquals(0.7, blueprint.temperature());
     // Guardrails preserved as registry ID references
@@ -178,7 +183,7 @@ class AgentDefinitionTest {
         new AgentBlueprint(
             "OriginalAgent",
             "openai/gpt-4o",
-            "Original instructions.",
+            new InstructionSource.Inline("Original instructions."),
             8,
             0.5,
             null, // outputType

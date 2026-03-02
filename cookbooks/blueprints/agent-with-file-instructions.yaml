@@ -1,0 +1,34 @@
+# Agent with File-Referenced Instructions
+# Instructions are loaded from a file on disk at toInteractable() time.
+# The path is resolved relative to the current working directory.
+# This is useful for long, complex prompts that you want to manage separately.
+
+type: agent
+name: LegalReviewAgent
+model: gpt-4o
+instructions:
+  source: file
+  path: ./prompts/legal-review-agent.txt
+maxTurns: 10
+temperature: 0.1
+responder:
+  provider: OPEN_ROUTER
+  apiKeyEnvVar: OPENROUTER_API_KEY
+toolClassNames:
+  - com.acme.tools.SearchLegalDatabaseTool
+  - com.acme.tools.CitationLookupTool
+handoffs: []
+inputGuardrails: []
+outputGuardrails: []
+
+# Note: Create the prompt file at ./prompts/legal-review-agent.txt with content like:
+#
+# You are a legal review specialist. Your role is to:
+#
+# 1. Analyze contracts and legal documents for potential issues
+# 2. Identify ambiguous clauses and suggest improvements
+# 3. Check for compliance with relevant regulations
+# 4. Provide clear, actionable recommendations
+#
+# Always cite specific clauses when referencing document content.
+# Never provide definitive legal advice — recommend consulting an attorney.

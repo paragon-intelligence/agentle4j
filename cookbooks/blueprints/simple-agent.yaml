@@ -1,0 +1,20 @@
+# Simple Agent
+# Minimal agent definition with inline instructions.
+# Load with: InteractableBlueprint.fromYaml(yamlString)
+
+type: agent
+name: GreetingAgent
+model: gpt-4o
+instructions: >
+  You are a friendly greeting assistant. When a user says hello,
+  respond warmly and ask how you can help them today. Keep your
+  responses concise and professional.
+maxTurns: 5
+temperature: 0.7
+responder:
+  provider: OPEN_ROUTER
+  apiKeyEnvVar: OPENROUTER_API_KEY
+toolClassNames: []
+handoffs: []
+inputGuardrails: []
+outputGuardrails: []

@@ -1486,3 +1486,139 @@ public class GuardrailConfig {
 | `GuardrailRegistry` must be pre-populated | Register at app startup before deserialization |
 | Custom base URL requires explicit env var | Set `apiKeyEnvVar` in the blueprint JSON |
 | `TraceMetadata` requires `FAIL_ON_UNKNOWN_PROPERTIES=false` | Configure your ObjectMapper accordingly |
+
+---
+
+## YAML Support
+
+Blueprints can be serialized to/from YAML in addition to JSON. YAML is often more readable for human-authored blueprints.
+
+### Serialize to YAML
+
+```java
+String yaml = agent.toBlueprint().toYaml();
+```
+
+### Deserialize from YAML
+
+```java
+InteractableBlueprint blueprint = InteractableBlueprint.fromYaml(yamlString);
+Interactable agent = blueprint.toInteractable();
+```
+
+### Hand-Written YAML
+
+```yaml
+type: agent
+name: SupportAgent
+model: gpt-4o
+instructions: You are a helpful support agent.
+maxTurns: 10
+temperature: 0.3
+responder:
+  provider: OPEN_ROUTER
+  apiKeyEnvVar: OPENROUTER_API_KEY
+toolClassNames: []
+handoffs: []
+inputGuardrails: []
+outputGuardrails: []
+```
+
+> **Tip:** See `cookbooks/blueprints/` for many more YAML examples covering routers, supervisors, parallel agents, guardrails, and more.
+
+---
+
+## Instruction Sources
+
+Instructions can come from three sources using a discriminated union pattern:
+
+### Inline (Default)
+
+Plain strings are automatically wrapped — fully backward-compatible:
+
+```yaml
+instructions: You are a helpful assistant.
+```
+
+Or explicitly:
+
+```yaml
+instructions:
+  source: inline
+  text: You are a helpful assistant.
+```
+
+### File Reference
+
+Load instructions from a text file at runtime:
+
+```yaml
+instructions:
+  source: file
+  path: ./prompts/support-agent.txt
+```
+
+The file is read when `toInteractable()` is called.
+
+### Provider Reference
+
+Fetch instructions from a registered `PromptProvider` (e.g., Langfuse):
+
+```yaml
+instructions:
+  source: provider
+  providerId: langfuse
+  promptId: support-agent-v2
+  filters:
+    label: production
+```
+
+Requires registering the provider at startup:
+
+```java
+PromptProviderRegistry.register("langfuse",
+    LangfusePromptProvider.builder()
+        .httpClient(httpClient)
+        .publicKey("pk-xxx")
+        .secretKey("sk-xxx")
+        .build());
+```
+
+### `PromptProviderRegistry`
+
+| Method | Description |
+|--------|-------------|
+| `register(id, provider)` | Register a named prompt provider |
+| `get(id)` | Retrieve by ID (or `null`) |
+| `contains(id)` | Check if a provider is registered |
+| `registeredIds()` | List all registered provider IDs |
+| `unregister(id)` | Remove a specific registration |
+| `clear()` | Remove all registrations |
+
+---
+
+## Structured Output
+
+Blueprints support structured output via the `outputType` field — a fully qualified Java class name:
+
+```yaml
+type: agent
+name: PersonExtractor
+model: gpt-4o
+instructions: Extract person info from the message.
+outputType: com.acme.models.Person
+maxTurns: 3
+temperature: 0.0
+responder:
+  provider: OPEN_ROUTER
+  apiKeyEnvVar: OPENROUTER_API_KEY
+toolClassNames: []
+handoffs: []
+inputGuardrails: []
+outputGuardrails: []
+```
+
+When `toInteractable()` is called, the `outputType` is resolved via `Class.forName()` and the resulting agent returns `Interactable.Structured<T>` responses.
+
+> **Note:** The class must be on the classpath and have fields matching the LLM's response structure.
+

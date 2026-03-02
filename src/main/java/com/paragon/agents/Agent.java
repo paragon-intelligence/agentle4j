@@ -332,7 +332,7 @@ public final class Agent implements Serializable, Interactable {
     return new InteractableBlueprint.AgentBlueprint(
         name,
         model,
-        instructions.text(),
+        new InstructionSource.Inline(instructions.text()),
         maxTurns,
         temperature,
         outputType != null ? outputType.getName() : null,

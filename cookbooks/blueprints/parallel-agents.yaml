@@ -1,0 +1,71 @@
+# Parallel Agents
+# Fan-out to multiple agents that run concurrently, then synthesize results.
+
+type: parallel
+name: MarketAnalysis
+members:
+  - type: agent
+    name: CompetitorAnalyst
+    model: gpt-4o
+    instructions: >
+      Analyze the competitive landscape for the given product/market.
+      Identify key competitors, their strengths, weaknesses, market share,
+      and recent strategic moves. Present findings in a structured format.
+    maxTurns: 5
+    temperature: 0.3
+    responder:
+      provider: OPEN_ROUTER
+      apiKeyEnvVar: OPENROUTER_API_KEY
+    toolClassNames: []
+    handoffs: []
+    inputGuardrails: []
+    outputGuardrails: []
+  - type: agent
+    name: TrendAnalyst
+    model: gpt-4o
+    instructions: >
+      Analyze market trends and emerging opportunities for the given
+      product/market. Focus on technology shifts, consumer behavior
+      changes, regulatory developments, and growth projections.
+    maxTurns: 5
+    temperature: 0.3
+    responder:
+      provider: OPEN_ROUTER
+      apiKeyEnvVar: OPENROUTER_API_KEY
+    toolClassNames: []
+    handoffs: []
+    inputGuardrails: []
+    outputGuardrails: []
+  - type: agent
+    name: RiskAnalyst
+    model: gpt-4o
+    instructions: >
+      Identify potential risks and challenges in the given market.
+      Cover regulatory risks, market saturation, technology disruption,
+      and economic factors. Rate each risk by likelihood and impact.
+    maxTurns: 5
+    temperature: 0.2
+    responder:
+      provider: OPEN_ROUTER
+      apiKeyEnvVar: OPENROUTER_API_KEY
+    toolClassNames: []
+    handoffs: []
+    inputGuardrails: []
+    outputGuardrails: []
+synthesizer:
+  type: agent
+  name: ReportSynthesizer
+  model: gpt-4o
+  instructions: >
+    Synthesize the analyses from the competitor, trend, and risk analysts
+    into a unified executive market report. Include an executive summary,
+    key findings, strategic recommendations, and a risk matrix.
+  maxTurns: 5
+  temperature: 0.5
+  responder:
+    provider: OPEN_ROUTER
+    apiKeyEnvVar: OPENROUTER_API_KEY
+  toolClassNames: []
+  handoffs: []
+  inputGuardrails: []
+  outputGuardrails: []

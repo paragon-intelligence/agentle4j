@@ -1,0 +1,58 @@
+# Agent with Guardrails and Context Management
+# Demonstrates input/output guardrails + sliding window context management.
+# Guardrails must be registered in GuardrailRegistry before calling toInteractable().
+
+type: agent
+name: ComplianceAgent
+model: gpt-4o
+instructions: >
+  You are a compliance-aware customer service agent. Help customers
+  with their requests while adhering to company policies. Never share
+  internal information, PII, or make unauthorized commitments.
+maxTurns: 20
+temperature: 0.3
+responder:
+  provider: OPEN_ROUTER
+  apiKeyEnvVar: OPENROUTER_API_KEY
+  retryPolicy:
+    maxRetries: 3
+    initialDelayMs: 1000
+    maxDelayMs: 30000
+    multiplier: 2.0
+    retryableStatusCodes:
+      - 429
+      - 500
+      - 503
+toolClassNames:
+  - com.acme.tools.SearchKnowledgeBaseTool
+  - com.acme.tools.CreateTicketTool
+handoffs:
+  - name: escalate_to_human
+    description: "Escalate to a human agent when the issue cannot be resolved"
+    target:
+      type: agent
+      name: HumanEscalation
+      model: gpt-4o
+      instructions: >
+        Prepare a summary of the conversation for the human agent.
+        Include the customer's issue, steps already taken, and
+        relevant context.
+      maxTurns: 3
+      temperature: 0.1
+      responder:
+        provider: OPEN_ROUTER
+        apiKeyEnvVar: OPENROUTER_API_KEY
+      toolClassNames: []
+      handoffs: []
+      inputGuardrails: []
+      outputGuardrails: []
+inputGuardrails:
+  - registryId: profanity_filter
+  - registryId: max_input_length
+outputGuardrails:
+  - registryId: no_pii_leak
+  - registryId: response_quality
+contextManagement:
+  strategyType: sliding
+  preserveDeveloperMessages: true
+  maxTokens: 8000

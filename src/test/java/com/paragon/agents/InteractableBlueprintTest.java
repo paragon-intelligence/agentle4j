@@ -3,6 +3,7 @@ package com.paragon.agents;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paragon.agents.InstructionSource;
 import com.paragon.agents.InteractableBlueprint.*;
 import com.paragon.http.RetryPolicy;
 import com.paragon.responses.TraceMetadata;
@@ -85,7 +86,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "SupportAgent",
             "gpt-4o",
-            "You are a helpful support agent.",
+            new InstructionSource.Inline("You are a helpful support agent."),
             10,
             0.7,
             null,
@@ -111,7 +112,7 @@ class InteractableBlueprintTest {
 
     assertEquals("SupportAgent", agentBp.name());
     assertEquals("gpt-4o", agentBp.model());
-    assertEquals("You are a helpful support agent.", agentBp.instructions());
+    assertEquals(new InstructionSource.Inline("You are a helpful support agent."), agentBp.instructions());
     assertEquals(10, agentBp.maxTurns());
     assertEquals(0.7, agentBp.temperature());
     assertNotNull(agentBp.responder());
@@ -128,7 +129,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "TracedAgent",
             "gpt-4",
-            "Instructions",
+            new InstructionSource.Inline("Instructions"),
             5,
             null,
             null,
@@ -156,7 +157,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "ToolAgent",
             "gpt-4o",
-            "Help the user",
+            new InstructionSource.Inline("Help the user"),
             10,
             null,
             null,
@@ -184,7 +185,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "StructuredAgent",
             "gpt-4o",
-            "Extract data",
+            new InstructionSource.Inline("Extract data"),
             10,
             null,
             "java.lang.String",
@@ -210,7 +211,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "Peer1",
             "gpt-4o",
-            "Peer 1 instructions",
+            new InstructionSource.Inline("Peer 1 instructions"),
             5,
             null,
             null,
@@ -225,7 +226,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "Peer2",
             "gpt-4o",
-            "Peer 2 instructions",
+            new InstructionSource.Inline("Peer 2 instructions"),
             5,
             null,
             null,
@@ -257,13 +258,13 @@ class InteractableBlueprintTest {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
     var peer =
         new AgentBlueprint(
-            "Peer", "gpt-4o", "Inst", 5, null, null, null, responder, List.of(), List.of(),
+            "Peer", "gpt-4o", new InstructionSource.Inline("Inst"), 5, null, null, null, responder, List.of(), List.of(),
             List.of(), List.of(), null);
     var synth =
         new AgentBlueprint(
             "Synth",
             "gpt-4o",
-            "Synthesize",
+            new InstructionSource.Inline("Synthesize"),
             5,
             null,
             null,
@@ -295,7 +296,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "Worker1",
             "gpt-4o",
-            "Do research",
+            new InstructionSource.Inline("Do research"),
             5,
             null,
             null,
@@ -334,7 +335,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "Fast",
             "gpt-4o-mini",
-            "Quick answers",
+            new InstructionSource.Inline("Quick answers"),
             3,
             null,
             null,
@@ -349,7 +350,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "Deep",
             "gpt-4o",
-            "Detailed answers",
+            new InstructionSource.Inline("Detailed answers"),
             5,
             null,
             null,
@@ -383,7 +384,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "Sales",
             "gpt-4o",
-            "Sales agent",
+            new InstructionSource.Inline("Sales agent"),
             5,
             null,
             null,
@@ -398,7 +399,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "Support",
             "gpt-4o",
-            "Support agent",
+            new InstructionSource.Inline("Support agent"),
             5,
             null,
             null,
@@ -413,7 +414,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "General",
             "gpt-4o",
-            "General agent",
+            new InstructionSource.Inline("General agent"),
             5,
             null,
             null,
@@ -459,7 +460,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "CEO",
             "gpt-4o",
-            "Lead the company",
+            new InstructionSource.Inline("Lead the company"),
             10,
             null,
             null,
@@ -474,7 +475,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "EngineeringMgr",
             "gpt-4o",
-            "Manage engineering",
+            new InstructionSource.Inline("Manage engineering"),
             5,
             null,
             null,
@@ -489,7 +490,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "Developer",
             "gpt-4o-mini",
-            "Write code",
+            new InstructionSource.Inline("Write code"),
             3,
             null,
             null,
@@ -595,7 +596,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "GuardedAgent",
             "gpt-4o",
-            "Be safe",
+            new InstructionSource.Inline("Be safe"),
             10,
             null,
             null,
@@ -625,7 +626,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "EscalationAgent",
             "gpt-4o",
-            "Handle escalation",
+            new InstructionSource.Inline("Handle escalation"),
             5,
             null,
             null,
@@ -655,7 +656,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "Target",
             "gpt-4o",
-            "Target agent",
+            new InstructionSource.Inline("Target agent"),
             5,
             null,
             null,
@@ -671,7 +672,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "SourceAgent",
             "gpt-4o",
-            "Source agent",
+            new InstructionSource.Inline("Source agent"),
             10,
             null,
             null,
@@ -728,7 +729,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "CtxAgent",
             "gpt-4o",
-            "Managed context",
+            new InstructionSource.Inline("Managed context"),
             10,
             null,
             null,
@@ -755,7 +756,7 @@ class InteractableBlueprintTest {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
     var agent =
         new AgentBlueprint(
-            "A", "m", "i", 5, null, null, null, responder, List.of(), List.of(), List.of(),
+            "A", "m", new InstructionSource.Inline("i"), 5, null, null, null, responder, List.of(), List.of(), List.of(),
             List.of(), null);
 
     // Each type serializes with the correct "type" discriminator
@@ -797,7 +798,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "CodeAgent",
             "gpt-4o",
-            "Write code",
+            new InstructionSource.Inline("Write code"),
             10,
             0.2,
             null,
@@ -812,7 +813,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "ReviewAgent",
             "gpt-4o",
-            "Review code",
+            new InstructionSource.Inline("Review code"),
             5,
             null,
             null,
@@ -840,7 +841,7 @@ class InteractableBlueprintTest {
         new AgentBlueprint(
             "Sales",
             "gpt-4o",
-            "Handle sales",
+            new InstructionSource.Inline("Handle sales"),
             5,
             null,
             null,
