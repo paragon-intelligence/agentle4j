@@ -1,6 +1,7 @@
 # :material-code-braces: Main
 
-> This docs was updated at: 2026-02-23
+> This docs was updated at: 2026-03-03
+
 
 `com.paragon.Main` &nbsp;·&nbsp; **Class**
 

@@ -1,6 +1,7 @@
 # :material-code-braces: AuthenticationException
 
-> This docs was updated at: 2026-02-23
+> This docs was updated at: 2026-03-03
+
 
 `com.paragon.responses.exception.AuthenticationException` &nbsp;·&nbsp; **Class**
 

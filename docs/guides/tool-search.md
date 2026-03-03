@@ -1,6 +1,7 @@
 # Tool Search Guide
 
-> This docs was updated at: 2026-02-23
+> This docs was updated at: 2026-03-03
+
 
 When building agents with many tools, sending all of them in every API call wastes context window tokens and can degrade tool selection accuracy. **Tool Search** solves this by searching the available tools based on the user's input and only sending the most relevant subset to the LLM.
 

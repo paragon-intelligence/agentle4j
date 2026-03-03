@@ -1,6 +1,7 @@
 # Package `com.paragon.agents`
 
-> This docs was updated at: 2026-02-23
+> This docs was updated at: 2026-03-03
+
 
 ---
 

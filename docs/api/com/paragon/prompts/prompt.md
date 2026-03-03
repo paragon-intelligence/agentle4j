@@ -1,6 +1,7 @@
 # :material-code-braces: Prompt
 
-> This docs was updated at: 2026-02-23
+> This docs was updated at: 2026-03-03
+
 
 `com.paragon.prompts.Prompt` &nbsp;·&nbsp; **Class**
 

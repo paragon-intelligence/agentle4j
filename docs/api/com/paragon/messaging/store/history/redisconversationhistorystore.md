@@ -1,6 +1,7 @@
 # :material-code-braces: RedisConversationHistoryStore
 
-> This docs was updated at: 2026-02-23
+> This docs was updated at: 2026-03-03
+
 
 `com.paragon.messaging.store.history.RedisConversationHistoryStore` &nbsp;·&nbsp; **Class**
 

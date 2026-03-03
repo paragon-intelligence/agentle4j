@@ -1,6 +1,7 @@
 # Agentle
 
-> This docs was updated at: 2026-02-23
+> This docs was updated at: 2026-03-03
+
 
 The Java agent framework built on OpenAI's Responses API.
 
@@ -23,13 +24,13 @@ Maven:
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.7.0</version>
+    <version>0.8.0</version>
 </dependency>
 ```
 
 Gradle:
 ```groovy
-implementation 'io.github.paragon-intelligence:agentle4j:0.7.0'
+implementation 'io.github.paragon-intelligence:agentle4j:0.8.0'
 ```
 
 Requires Java 25+ (uses preview features like `StructuredTaskScope`).
@@ -314,7 +315,7 @@ Responder.builder()
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.7.0</version>
+    <version>0.8.0</version>
 </dependency>
 ```
 

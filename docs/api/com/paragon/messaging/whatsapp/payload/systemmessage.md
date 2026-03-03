@@ -1,6 +1,7 @@
 # :material-code-braces: SystemMessage
 
-> This docs was updated at: 2026-02-23
+> This docs was updated at: 2026-03-03
+
 
 `com.paragon.messaging.whatsapp.payload.SystemMessage` &nbsp;·&nbsp; **Class**
 

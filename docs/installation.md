@@ -1,6 +1,7 @@
 # Installation
 
-> This docs was updated at: 2026-02-23
+> This docs was updated at: 2026-03-03
+
 
 This guide covers how to add Agentle4j to your Java project.
 
@@ -17,7 +18,7 @@ Add the following dependency to your `pom.xml`:
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.7.0</version>
+    <version>0.8.0</version>
 </dependency>
 ```
 
@@ -26,13 +27,13 @@ Add the following dependency to your `pom.xml`:
 === "Groovy DSL"
 
     ```groovy
-    implementation 'io.github.paragon-intelligence:agentle4j:0.7.0'
+    implementation 'io.github.paragon-intelligence:agentle4j:0.8.0'
     ```
 
 === "Kotlin DSL"
 
     ```kotlin
-    implementation("io.github.paragon-intelligence:agentle4j:0.7.0")
+    implementation("io.github.paragon-intelligence:agentle4j:0.8.0")
     ```
 
 ## Verifying Installation

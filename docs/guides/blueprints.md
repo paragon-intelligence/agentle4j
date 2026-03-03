@@ -1,6 +1,7 @@
 # Blueprints — Serializable Agent Snapshots
 
-> This docs was updated at: 2026-02-23
+> This docs was updated at: 2026-03-03
+
 
 Blueprints let you **serialize any agent** (or agent constellation) to JSON and reconstruct it later — with zero external dependencies. API keys are automatically resolved from environment variables.
 

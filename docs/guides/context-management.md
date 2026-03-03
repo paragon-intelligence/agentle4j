@@ -1,6 +1,7 @@
 # Context Window Management
 
-> This docs was updated at: 2026-02-23
+> This docs was updated at: 2026-03-03
+
 
 Long-running conversations can exceed your model's context window limit. Agentle4j provides pluggable strategies to manage context length automatically.
 

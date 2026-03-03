@@ -1,6 +1,7 @@
 # :material-database: ProcessorRegistry
 
-> This docs was updated at: 2026-02-23
+> This docs was updated at: 2026-03-03
+
 
 `com.paragon.telemetry.processors.ProcessorRegistry` &nbsp;·&nbsp; **Record**
 

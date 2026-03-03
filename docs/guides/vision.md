@@ -1,6 +1,7 @@
 # Vision Guide
 
-> This docs was updated at: 2026-02-23
+> This docs was updated at: 2026-03-03
+
 
 Agentle4j supports vision capabilities for analyzing images with GPT-4o, Claude, and other vision-capable models.
 
