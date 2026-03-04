@@ -10,12 +10,13 @@ import org.jspecify.annotations.Nullable;
 /**
  * Represents a modular expertise that augments an agent's capabilities.
  *
- * <p>A Skill packages instructions and resources that are injected into the agent's system prompt.
- * When a skill is added to an agent, its instructions become part of the agent's knowledge,
- * allowing the LLM to automatically apply the skill's expertise when relevant.
+ * <p>A Skill packages instructions and resources that the agent can access on demand via the {@link
+ * SkillReaderTool}. When skills are added to an agent, a concise catalog (name + description)
+ * appears in the system prompt, and a {@code read_skill} tool is registered so the agent can load
+ * full instructions when it decides a skill is relevant.</p>
  *
  * <p>Unlike sub-agents, skills share the main agent's context window. They extend the agent's
- * capabilities without creating separate execution contexts.
+ * capabilities without creating separate execution contexts.</p>
  *
  * <h2>Usage Examples</h2>
  *
@@ -199,6 +200,18 @@ public final class Skill {
     }
 
     return sb.toString();
+  }
+
+  /**
+   * Generates a concise catalog entry for this skill.
+   *
+   * <p>This produces a single-line summary suitable for listing in the agent's system prompt. The
+   * agent can then call the {@code read_skill} tool to load full instructions when needed.
+   *
+   * @return a concise catalog line (e.g., {@code "- **pdf-processor**: Process PDF files\n"})
+   */
+  public @NonNull String toCatalogEntry() {
+    return "- **" + name + "**: " + description + "\n";
   }
 
   @Override

@@ -14,6 +14,7 @@ import com.paragon.responses.exception.ToolExecutionException;
 import com.paragon.responses.spec.*;
 import com.paragon.skills.Skill;
 import com.paragon.skills.SkillProvider;
+import com.paragon.skills.SkillReaderTool;
 import com.paragon.skills.SkillStore;
 import com.paragon.telemetry.TelemetryContext;
 import com.paragon.telemetry.events.AgentFailedEvent;
@@ -169,14 +170,20 @@ public final class Agent implements Serializable, Interactable {
     StringBuilder instructionAugmentation = new StringBuilder(baseInstructions.text());
     boolean augmented = false;
 
+    // Skills: inject concise catalog, register SkillReaderTool for on-demand loading
+    SkillReaderTool pendingSkillReaderTool = null;
     if (!builder.pendingSkills.isEmpty()) {
       instructionAugmentation.append("\n\n# Skills\n");
       instructionAugmentation.append(
-          "You have the following skills available. Apply them when relevant:\n");
+          "You have the following skills available. "
+              + "Use the `read_skill` tool to load a skill's full instructions when needed:\n");
       for (Skill skill : builder.pendingSkills) {
-        instructionAugmentation.append(skill.toPromptSection());
+        instructionAugmentation.append(skill.toCatalogEntry());
       }
       augmented = true;
+
+      SkillStore skillStore = new SkillStore(builder.pendingSkills);
+      pendingSkillReaderTool = new SkillReaderTool(skillStore);
     }
 
     if (builder.toolPlanningEnabled && !builder.tools.isEmpty()) {
@@ -223,6 +230,12 @@ public final class Agent implements Serializable, Interactable {
     // Register all user tools in the store
     for (FunctionTool<?> tool : allTools) {
       toolStore.add(tool);
+    }
+
+    // Register skill reader tool if skills are present
+    if (pendingSkillReaderTool != null) {
+      this.toolStore.add(pendingSkillReaderTool);
+      allTools.add(pendingSkillReaderTool);
     }
 
     this.handoffs = List.copyOf(builder.handoffs);
@@ -1420,8 +1433,9 @@ public final class Agent implements Serializable, Interactable {
     /**
      * Adds a skill that augments this agent's capabilities.
      *
-     * <p>Skills extend the agent's knowledge by adding their instructions to the agent's system
-     * prompt. When the skill's expertise is relevant, the LLM can automatically apply it.
+     * <p>Skills are exposed to the agent as tools, following progressive disclosure. The agent's
+     * system prompt includes a concise catalog (name + description) of available skills, and a
+     * {@code read_skill} tool is registered so the agent can load full instructions on demand.
      *
      * <p>Example:
      *
@@ -1436,6 +1450,7 @@ public final class Agent implements Serializable, Interactable {
      * @param skill the skill to add
      * @return this builder
      * @see Skill
+     * @see SkillReaderTool
      */
     public @NonNull Builder addSkill(@NonNull Skill skill) {
       Objects.requireNonNull(skill, "skill cannot be null");
@@ -1472,7 +1487,8 @@ public final class Agent implements Serializable, Interactable {
     /**
      * Registers all skills from a SkillStore.
      *
-     * <p>Each skill's instructions are merged into the agent's system prompt.
+     * <p>Each skill is added to the agent's catalog and exposed via the {@code read_skill} tool
+     * for on-demand loading.
      *
      * <p>Example:
      *
@@ -1490,6 +1506,7 @@ public final class Agent implements Serializable, Interactable {
      * @param store the skill store containing skills to add
      * @return this builder
      * @see SkillStore
+     * @see SkillReaderTool
      */
     public @NonNull Builder skillStore(@NonNull SkillStore store) {
       Objects.requireNonNull(store, "store cannot be null");

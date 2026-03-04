@@ -1,0 +1,351 @@
+# ============================================================================
+# COMPLETE AGENT BLUEPRINT — Enterprise Customer Support System
+# ============================================================================
+#
+# This file demonstrates EVERY available AgentBlueprint field in Agentle's
+# blueprint system. It defines a production-grade customer support agent with:
+#
+#   • Inline instructions with detailed behavioral directives
+#   • Structured output (outputType) for typed responses
+#   • Tools for knowledge base search and ticket management
+#   • Input + output guardrails for safety and compliance
+#   • Handoff agents for escalation workflows
+#   • Summarization-based context management for long conversations
+#   • Full retry policy with exponential backoff
+#   • Trace metadata for observability
+#
+# Usage in Java:
+#
+#   String yaml = Files.readString(Path.of("cookbooks/blueprints/complete-agent.yaml"));
+#   InteractableBlueprint blueprint = InteractableBlueprint.fromYaml(yaml);
+#
+#   // Register guardrails before reconstruction
+#   GuardrailRegistry.registerInput("profanity_filter", myProfanityFilter);
+#   GuardrailRegistry.registerInput("max_input_length", myMaxLenGuard);
+#   GuardrailRegistry.registerOutput("no_pii_leak", myPiiGuard);
+#   GuardrailRegistry.registerOutput("response_quality", myQualityGuard);
+#   GuardrailRegistry.registerOutput("tone_check", myToneGuard);
+#
+#   Interactable agent = blueprint.toInteractable();
+#   AgentResult result = Runner.run(agent, "I need help with my order.");
+#
+# ============================================================================
+
+# --- Blueprint Type ---
+# Must be one of: agent, router, supervisor, parallel, network, hierarchical
+type: agent
+
+# --- Identity ---
+# The display name used in logs, traces, and multi-agent orchestration.
+name: EnterpriseSupportAgent
+
+# --- Model ---
+# The LLM model identifier. Use provider-prefixed format for OpenRouter
+# (e.g., "openai/gpt-4o", "anthropic/claude-3.5-sonnet").
+model: openai/gpt-4o
+
+# --- Instructions ---
+# Defines the system prompt. Supports three source types:
+#
+#   1. Inline string (plain text or YAML block scalar)
+#   2. File reference: { source: file, path: ./prompts/agent.txt }
+#   3. Provider reference: { source: provider, providerId: langfuse, promptId: my-prompt }
+#
+# Here we use a YAML block scalar for a detailed multi-section system prompt.
+instructions: |
+  # Role & Identity
+  You are **SupportBot**, the primary customer service agent for Acme Corp.
+  You handle Tier-1 support across all product lines: Cloud Platform, Developer
+  Tools, and Enterprise Suite. You report to the Customer Success team.
+
+  # Core Responsibilities
+  1. **Triage**: Classify every incoming request by category (billing, technical,
+     account, general) and urgency (critical, high, medium, low).
+  2. **Resolution**: Resolve issues independently using the knowledge base and
+     available tools. Aim for first-contact resolution on at least 80% of tickets.
+  3. **Escalation**: If you cannot resolve within 3 exchanges, or if the issue
+     involves security, legal compliance, or account termination — escalate
+     immediately to the appropriate specialist via handoff.
+  4. **Documentation**: After every resolution, create a ticket summarizing the
+     issue, steps taken, and outcome.
+
+  # Communication Guidelines
+  - Always greet the customer by name if available.
+  - Use professional but warm language. Mirror the customer's formality level.
+  - Never use jargon unless the customer demonstrates technical familiarity.
+  - Keep responses under 200 words unless providing step-by-step instructions.
+  - Use markdown formatting (bold, lists, code blocks) for clarity.
+  - If you don't know the answer, say so honestly — never fabricate information.
+
+  # Data Handling & Compliance
+  - NEVER share internal system details, API keys, or infrastructure information.
+  - NEVER log, display, or repeat PII (emails, phone numbers, SSNs, payment info)
+    back to the user unless they provided it in the current message.
+  - All interactions must comply with GDPR, CCPA, and SOC 2 Type II requirements.
+  - If asked about data deletion or export, escalate to the compliance specialist.
+
+  # Tool Usage
+  - Always search the knowledge base before answering technical questions.
+  - Create a ticket for every issue that requires follow-up.
+  - Use the order lookup tool to verify order details before processing refunds.
+  - Log every tool invocation with a brief rationale.
+
+  # Edge Cases
+  - If the customer is abusive: acknowledge their frustration, offer to help,
+    but if abuse continues for 2+ messages, politely end the conversation and
+    create an incident report.
+  - If the system is experiencing an outage (check status page tool): proactively
+    inform the customer and provide the latest ETA.
+  - If the customer asks to speak to a human: immediately hand off to the human
+    escalation agent. Do not try to retain them.
+
+  # Response Format
+  When resolving an issue, structure your response as:
+  1. **Acknowledgment** — confirm you understand the issue
+  2. **Diagnosis** — explain what you found (cite the KB article if applicable)
+  3. **Solution** — provide clear, actionable steps
+  4. **Follow-up** — mention the ticket number and any next steps
+
+# --- Max Turns ---
+# Maximum number of LLM invocations (including tool calls) per run.
+# Set higher for agents that use tools iteratively.
+maxTurns: 25
+
+# --- Temperature ---
+# Controls response randomness. Lower = more deterministic, higher = more creative.
+# 0.0–0.3 for factual/support tasks, 0.5–0.9 for creative tasks.
+temperature: 0.2
+
+# --- Structured Output ---
+# Fully qualified Java class name for typed responses.
+# When set, the LLM output is parsed into this type via the Responses API
+# structured output feature. The class must be on the classpath and should
+# be a Java record or class with Jackson-compatible fields.
+#
+# Example record:
+#   public record SupportResponse(
+#       String category,        // billing, technical, account, general
+#       String urgency,         // critical, high, medium, low
+#       String summary,         // one-line issue summary
+#       String resolution,      // detailed resolution text
+#       boolean escalated,      // true if handed off
+#       String ticketId         // created ticket ID, nullable
+#   ) {}
+outputType: com.acme.models.SupportResponse
+
+# --- Trace Metadata ---
+# Observability metadata attached to every LLM call made by this agent.
+# Useful for tracking agent performance in monitoring systems.
+traceMetadata:
+  agentName: EnterpriseSupportAgent
+  workflowName: customer-support-v2
+  groupId: acme-support-team
+
+# --- Responder ---
+# Configuration for the LLM API client. Handles authentication, base URL,
+# retry policies, and provider-specific configuration.
+responder:
+  # Provider name (enum): OPEN_AI, OPEN_ROUTER, or null for custom base URL.
+  provider: OPEN_ROUTER
+
+  # Environment variable containing the API key.
+  # The key is resolved at toInteractable() time via System.getenv().
+  apiKeyEnvVar: OPENROUTER_API_KEY
+
+  # Retry policy with exponential backoff for transient failures.
+  retryPolicy:
+    maxRetries: 5
+    initialDelayMs: 500      # 500ms initial delay
+    maxDelayMs: 60000         # Cap at 60 seconds
+    multiplier: 2.0           # Double delay each retry
+    retryableStatusCodes:
+      - 429    # Rate limit
+      - 500    # Internal server error
+      - 502    # Bad gateway
+      - 503    # Service unavailable
+      - 504    # Gateway timeout
+
+# --- Tools ---
+# Fully qualified class names of FunctionTool implementations.
+# Each tool must have a no-arg constructor. Tools are instantiated via
+# reflection at toInteractable() time.
+toolClassNames:
+  - com.acme.tools.SearchKnowledgeBaseTool
+  - com.acme.tools.CreateSupportTicketTool
+  - com.acme.tools.LookupOrderTool
+  - com.acme.tools.CheckSystemStatusTool
+  - com.acme.tools.ProcessRefundTool
+
+# --- Handoffs ---
+# Define escalation targets. Each handoff has a name (used as the tool name
+# the LLM calls), a description (shown to the LLM), and a target agent
+# blueprint that is recursively reconstructed.
+handoffs:
+
+  # Handoff 1: Billing Specialist
+  - name: escalate_to_billing
+    description: >
+      Transfer to the billing specialist when the issue involves payment
+      failures, subscription changes, invoice disputes, refunds over $500,
+      or enterprise contract modifications.
+    target:
+      type: agent
+      name: BillingSpecialist
+      model: openai/gpt-4o
+      instructions: |
+        You are the Senior Billing Specialist at Acme Corp. You handle
+        complex billing issues that the Tier-1 agent cannot resolve.
+
+        Your capabilities:
+        - Process refunds of any amount (with manager approval for >$1000)
+        - Modify enterprise contracts and subscriptions
+        - Resolve payment gateway failures
+        - Generate custom invoices
+        - Apply promotional credits
+
+        Always verify the customer's identity before making billing changes.
+        Log all financial transactions with exact amounts and timestamps.
+      maxTurns: 15
+      temperature: 0.1
+      responder:
+        provider: OPEN_ROUTER
+        apiKeyEnvVar: OPENROUTER_API_KEY
+        retryPolicy:
+          maxRetries: 3
+          initialDelayMs: 1000
+          maxDelayMs: 30000
+          multiplier: 2.0
+          retryableStatusCodes: [429, 500, 503]
+      toolClassNames:
+        - com.acme.tools.ProcessRefundTool
+        - com.acme.tools.ModifySubscriptionTool
+        - com.acme.tools.GenerateInvoiceTool
+      handoffs: []
+      inputGuardrails: []
+      outputGuardrails: []
+      contextManagement:
+        strategyType: sliding
+        preserveDeveloperMessages: true
+        maxTokens: 6000
+
+  # Handoff 2: Security & Compliance
+  - name: escalate_to_security
+    description: >
+      Transfer to the security and compliance team for issues involving
+      data breaches, unauthorized access, GDPR/CCPA data subject requests,
+      account compromise, or any potential security incident.
+    target:
+      type: agent
+      name: SecurityComplianceAgent
+      model: openai/gpt-4o
+      instructions: |
+        You are the Security & Compliance specialist at Acme Corp.
+        You handle sensitive security incidents and regulatory compliance requests.
+
+        CRITICAL: All interactions in this context are classified as CONFIDENTIAL.
+
+        Your responsibilities:
+        - Investigate and respond to security incidents
+        - Process GDPR Article 15/17 requests (data access/deletion)
+        - Handle CCPA consumer rights requests
+        - Coordinate with the engineering security team
+        - Document all incidents per SOC 2 requirements
+
+        Escalation protocol:
+        - P1 (active breach): Immediately notify security-oncall@acme.com
+        - P2 (suspicious activity): Create incident ticket within 1 hour
+        - P3 (compliance request): Acknowledge within 24 hours, resolve in 30 days
+      maxTurns: 20
+      temperature: 0.0
+      responder:
+        provider: OPEN_ROUTER
+        apiKeyEnvVar: OPENROUTER_API_KEY
+      toolClassNames:
+        - com.acme.tools.CreateSecurityIncidentTool
+        - com.acme.tools.LookupUserAccessLogsTool
+        - com.acme.tools.InitiateDataExportTool
+      handoffs: []
+      inputGuardrails: []
+      outputGuardrails:
+        - registryId: no_pii_leak
+      contextManagement:
+        strategyType: sliding
+        preserveDeveloperMessages: true
+        maxTokens: 10000
+
+  # Handoff 3: Human Escalation (final fallback)
+  - name: escalate_to_human
+    description: >
+      Transfer to a live human agent. Use this when the customer explicitly
+      requests a human, when all automated resolution paths have been
+      exhausted, or when the situation requires human judgment (e.g.,
+      legal threats, PR-sensitive complaints, VIP customers).
+    target:
+      type: agent
+      name: HumanHandoffPreparation
+      model: openai/gpt-4o-mini
+      instructions: |
+        Your ONLY job is to prepare a handoff summary for the incoming
+        human agent. Generate a structured brief containing:
+
+        1. **Customer**: Name, account tier, tenure
+        2. **Issue Summary**: One-paragraph description
+        3. **Category**: billing / technical / account / compliance / other
+        4. **Urgency**: critical / high / medium / low
+        5. **Actions Taken**: Bullet list of what was tried
+        6. **Escalation Reason**: Why automated resolution failed
+        7. **Suggested Next Steps**: Your recommendation for the human agent
+
+        Do NOT attempt to resolve the issue yourself.
+      maxTurns: 3
+      temperature: 0.1
+      responder:
+        provider: OPEN_ROUTER
+        apiKeyEnvVar: OPENROUTER_API_KEY
+      toolClassNames: []
+      handoffs: []
+      inputGuardrails: []
+      outputGuardrails: []
+
+# --- Input Guardrails ---
+# Checked BEFORE the LLM is invoked. If a guardrail trips, the agent
+# returns an error without calling the model (saving cost and latency).
+# Guardrails are looked up by registryId in GuardrailRegistry.
+inputGuardrails:
+  - registryId: profanity_filter        # Blocks abusive/profane input
+  - registryId: max_input_length        # Rejects messages > 10,000 chars
+
+# --- Output Guardrails ---
+# Checked AFTER the LLM responds. If a guardrail trips, the response
+# is blocked and potentially retried with a corrective prompt.
+outputGuardrails:
+  - registryId: no_pii_leak             # Ensures no PII in response
+  - registryId: response_quality        # Min quality score threshold
+  - registryId: tone_check              # Validates professional tone
+
+# --- Context Management ---
+# Handles long conversations that exceed the model's context window.
+# Two strategies available:
+#
+#   1. "sliding" — drops oldest messages, keeps recent + developer messages
+#   2. "summarization" — summarizes old messages using a secondary LLM call
+#
+# Summarization is preferred for customer support (preserves issue context).
+contextManagement:
+  strategyType: summarization
+
+  # Model used to generate conversation summaries.
+  # Use a cheaper/faster model than the main agent.
+  summarizationModel: openai/gpt-4o-mini
+
+  # Number of most recent messages to always keep verbatim.
+  # These are NOT summarized — ensures the agent has full recent context.
+  keepRecentMessages: 8
+
+  # Maximum tokens for the entire context (messages + summary).
+  # Should be well below the model's actual limit to leave room for output.
+  maxTokens: 12000
+
+  # Whether to always preserve system/developer messages during truncation.
+  # Critical for agents with complex instructions — keeps the system prompt intact.
+  preserveDeveloperMessages: true
