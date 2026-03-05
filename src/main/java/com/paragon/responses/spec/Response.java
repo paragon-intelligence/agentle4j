@@ -24,7 +24,7 @@ public class Response {
   protected final @Nullable ResponseError error;
   protected final @Nullable String id;
   protected final @Nullable IncompleteDetails incompleteDetails;
-  protected final @Nullable ResponseInputItem instructions;
+  protected final @Nullable String instructions;
   protected final @Nullable Integer maxOutputTokens;
   protected final @Nullable Integer maxToolCalls;
   protected final @Nullable Map<String, String> metadata;
@@ -163,7 +163,7 @@ public class Response {
       @JsonProperty("error") @Nullable ResponseError error,
       @JsonProperty("id") @Nullable String id,
       @JsonProperty("incomplete_details") @Nullable IncompleteDetails incompleteDetails,
-      @JsonProperty("instructions") @Nullable ResponseInputItem instructions,
+      @JsonProperty("instructions") @Nullable String instructions,
       @JsonProperty("max_output_tokens") @Nullable Integer maxOutputTokens,
       @JsonProperty("max_tool_calls") @Nullable Integer maxToolCalls,
       @JsonProperty("metadata") @Nullable Map<String, String> metadata,
@@ -249,7 +249,7 @@ public class Response {
     return incompleteDetails;
   }
 
-  public @Nullable ResponseInputItem instructions() {
+  public @Nullable String instructions() {
     return instructions;
   }
 
