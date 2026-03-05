@@ -12,6 +12,7 @@ import com.paragon.responses.spec.InputMessageStatus;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.MessageContent;
 import com.paragon.responses.spec.OutputMessage;
+import com.paragon.responses.spec.Text;
 import com.paragon.responses.spec.UserMessage;
 import java.io.IOException;
 import java.util.List;
@@ -35,13 +36,26 @@ public class MessageDeserializer extends JsonDeserializer<Message> {
       throw new IOException("Missing 'role' field in Message JSON");
     }
 
-    // Parse content
-    List<MessageContent> content = null;
-    if (node.has("content")) {
-      content = mapper.convertValue(node.get("content"), CONTENT_TYPE);
-    }
-    if (content == null) {
+    // Parse content - support both string (single text) and array/object formats.
+    // Use explicit per-element deserialization so that the custom
+    // MessageContentDeserializer is always applied.
+    List<MessageContent> content;
+    JsonNode contentNode = node.get("content");
+    if (contentNode == null || contentNode.isNull()) {
       throw new IOException("Missing 'content' field in Message JSON");
+    }
+    if (contentNode.isTextual()) {
+      // Backwards/forwards compatible: accept plain string and wrap as single Text item
+      content = List.of(new Text(contentNode.asText()));
+    } else if (contentNode.isArray()) {
+      List<MessageContent> tmp = new java.util.ArrayList<>();
+      for (JsonNode item : contentNode) {
+        tmp.add(mapper.treeToValue(item, MessageContent.class));
+      }
+      content = java.util.List.copyOf(tmp);
+    } else {
+      // Single object treated as one content item
+      content = List.of(mapper.treeToValue(contentNode, MessageContent.class));
     }
 
     // Parse status

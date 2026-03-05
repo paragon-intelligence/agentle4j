@@ -49,6 +49,10 @@ public class MessageSerializer extends StdSerializer<Message> {
     gen.writeStartObject();
     gen.writeStringField("type", "message");
     gen.writeStringField("role", value.role().name().toLowerCase());
+    // OutputMessage carries an 'id' field required by the Responses API schema.
+    if (value instanceof com.paragon.responses.spec.OutputMessage<?> om && om.id() != null) {
+      gen.writeStringField("id", om.id());
+    }
     writeContent(value.content(), gen, provider);
     if (value.status() != null) {
       gen.writeStringField("status", value.status().name().toLowerCase());

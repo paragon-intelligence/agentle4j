@@ -45,10 +45,17 @@ class WhatsAppMessagingProviderTest {
   }
 
   @AfterEach
-  void tearDown() throws IOException {
+  void tearDown() {
     if (mockServer != null) {
-      // Shutdown immediately without waiting for delayed responses
-      mockServer.shutdown();
+      try {
+        // Shutdown immediately without waiting for delayed responses.
+        // Some tests intentionally use long body delays to simulate timeouts,
+        // which can cause MockWebServer to throw during shutdown; we can safely
+        // ignore those errors here.
+        mockServer.shutdown();
+      } catch (IOException ignored) {
+        // Best-effort shutdown; ignore queue shutdown warnings in tests.
+      }
     }
   }
 

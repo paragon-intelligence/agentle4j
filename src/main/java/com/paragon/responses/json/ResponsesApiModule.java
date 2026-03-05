@@ -25,9 +25,11 @@ import com.paragon.responses.spec.ImageGenerationCall;
 import com.paragon.responses.spec.LocalShellCall;
 import com.paragon.responses.spec.McpToolCall;
 import com.paragon.responses.spec.Message;
+import com.paragon.responses.spec.MessageContent;
 import com.paragon.responses.spec.MoveAction;
 import com.paragon.responses.spec.ScrollAction;
 import com.paragon.responses.spec.UserMessage;
+import com.paragon.responses.spec.OutputMessage;
 import com.paragon.responses.spec.WebSearchToolCall;
 
 /**
@@ -82,6 +84,7 @@ public class ResponsesApiModule extends SimpleModule {
     addSerializer(UserMessage.class, messageSerializer);
     addSerializer(DeveloperMessage.class, messageSerializer);
     addSerializer(AssistantMessage.class, messageSerializer);
+    addSerializer(OutputMessage.class, messageSerializer);
 
     // Register MessageDeserializer for Message and all its subclasses
     MessageDeserializer messageDeserializer = new MessageDeserializer();
@@ -91,6 +94,11 @@ public class ResponsesApiModule extends SimpleModule {
     addDeserializer(UserMessage.class, new ConcreteMessageDeserializer<>(UserMessage.class));
     addDeserializer(
         AssistantMessage.class, new ConcreteMessageDeserializer<>(AssistantMessage.class));
+    addDeserializer(
+        OutputMessage.class, new ConcreteMessageDeserializer<>(OutputMessage.class));
+
+    // Register tolerant deserializer for MessageContent (accepts both string and object forms)
+    addDeserializer(MessageContent.class, new MessageContentDeserializer());
   }
 
   @Override
