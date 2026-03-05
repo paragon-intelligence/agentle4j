@@ -20,7 +20,7 @@ public final class CodeInterpreterToolCall extends ToolCall implements Item, Res
    * @param status The status of the code interpreter tool call. Valid values are {@code
    *     in_progress}, {@code completed}, {@code incomplete}, interpreting, and failed.
    */
-  CodeInterpreterToolCall(
+  public CodeInterpreterToolCall(
       @NonNull String id,
       @NonNull String code,
       @NonNull String containerId,
@@ -31,5 +31,26 @@ public final class CodeInterpreterToolCall extends ToolCall implements Item, Res
     this.containerId = containerId;
     this.outputs = outputs;
     this.status = status;
+  }
+
+  public @NonNull String code() {
+    return code;
+  }
+
+  public @NonNull String containerId() {
+    return containerId;
+  }
+
+  public @NonNull List<CodeInterpreterOutput> outputs() {
+    return outputs;
+  }
+
+  public @NonNull CodeInterpreterToolCallStatus status() {
+    return status;
+  }
+
+  @Override
+  public @NonNull String id() {
+    return id;
   }
 }

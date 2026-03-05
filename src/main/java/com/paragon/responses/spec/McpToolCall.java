@@ -55,6 +55,18 @@ public final class McpToolCall extends ToolCall implements Item, ResponseOutput 
     return name;
   }
 
+  public @NonNull String arguments() {
+    return arguments;
+  }
+
+  public @NonNull String serverLabel() {
+    return serverLabel;
+  }
+
+  public @Nullable String approvalRequestId() {
+    return approvalRequestId;
+  }
+
   public @Nullable String error() {
     return error;
   }

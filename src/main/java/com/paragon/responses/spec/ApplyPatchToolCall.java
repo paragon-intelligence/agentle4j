@@ -28,4 +28,21 @@ public final class ApplyPatchToolCall extends ToolCall implements Item, Response
     this.operation = operation;
     this.status = status;
   }
+
+  public @NonNull String callId() {
+    return callId;
+  }
+
+  public @NonNull ApplyPatchOperation operation() {
+    return operation;
+  }
+
+  public @NonNull String status() {
+    return status;
+  }
+
+  @Override
+  public @NonNull String id() {
+    return id;
+  }
 }
