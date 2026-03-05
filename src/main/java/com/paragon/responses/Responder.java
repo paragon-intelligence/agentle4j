@@ -284,6 +284,13 @@ public class Responder {
 
     Request request = payload.toRequest(responsesApiObjectMapper, JSON, baseUrl, headers);
 
+    // // TEMP DEBUG: log request body
+    // try {
+    //   okio.Buffer buffer = new okio.Buffer();
+    //   if (request.body() != null) request.body().writeTo(buffer);
+    //   logger.info("REQUEST BODY: {}", buffer.readUtf8());
+    // } catch (Exception _ignored) {}
+
     return executeWithRetry(request, startedEvent, 0);
   }
 

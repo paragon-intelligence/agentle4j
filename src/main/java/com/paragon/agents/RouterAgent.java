@@ -540,6 +540,24 @@ public final class RouterAgent implements Interactable {
     public @NonNull StructuredAgentResult<T> interactStructured(
         @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       AgentResult result = router.interact(context, trace);
+
+      // Reuse already parsed structured output when available to avoid
+      // reparsing JSON strings and to respect agents that used structured output.
+      if (result.hasParsed()) {
+        Object parsed = result.parsed();
+        if (parsed != null && outputType.isInstance(parsed)) {
+          @SuppressWarnings("unchecked")
+          T cast = (T) parsed;
+          return StructuredAgentResult.success(
+              cast,
+              result.output() != null ? result.output() : "",
+              result.finalResponse(),
+              result.history(),
+              result.toolExecutions(),
+              result.turnsUsed());
+        }
+      }
+
       return result.toStructured(outputType, objectMapper);
     }
 

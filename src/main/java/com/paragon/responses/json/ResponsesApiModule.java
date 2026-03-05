@@ -13,6 +13,7 @@ import com.paragon.responses.spec.ClickAction;
 import com.paragon.responses.spec.CreateResponsePayload;
 import com.paragon.responses.spec.DeveloperMessage;
 import com.paragon.responses.spec.DoubleClickAction;
+import com.paragon.responses.spec.FunctionToolCall;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.MoveAction;
@@ -30,6 +31,7 @@ import com.paragon.responses.spec.UserMessage;
  *   <li>Custom deserializers for action classes with @JsonUnwrapped Coordinate fields
  *   <li>CreateResponsePayloadDeserializer for @JsonUnwrapped OpenRouterCustomPayload
  *   <li>MessageDeserializer for role-based Message subclass selection
+ *   <li>MessageSerializer for writing content as a plain string (required by OpenRouter)
  * </ul>
  */
 public class ResponsesApiModule extends SimpleModule {
@@ -48,6 +50,16 @@ public class ResponsesApiModule extends SimpleModule {
 
     // Register custom serializer for FunctionToolCallOutput (output must be a plain string)
     addSerializer(FunctionToolCallOutput.class, new FunctionToolCallOutputSerializer());
+
+    // Register custom serializer for FunctionToolCall (must include "type": "function_call")
+    addSerializer(FunctionToolCall.class, new FunctionToolCallSerializer());
+
+    // Register custom serializer for Message (content must be a plain string, not an array)
+    MessageSerializer messageSerializer = new MessageSerializer();
+    addSerializer(Message.class, messageSerializer);
+    addSerializer(UserMessage.class, messageSerializer);
+    addSerializer(DeveloperMessage.class, messageSerializer);
+    addSerializer(AssistantMessage.class, messageSerializer);
 
     // Register MessageDeserializer for Message and all its subclasses
     MessageDeserializer messageDeserializer = new MessageDeserializer();

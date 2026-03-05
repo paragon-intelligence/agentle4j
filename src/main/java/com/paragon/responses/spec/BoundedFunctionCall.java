@@ -70,8 +70,13 @@ public class BoundedFunctionCall extends FunctionToolCall {
     }
     Record params = objectMapper.readValue(arguments(), paramClass);
     FunctionToolCallOutput result = function.call(params);
-    return Objects.requireNonNullElseGet(
-        result, () -> FunctionToolCallOutput.success(callId(), "Function executed successfully"));
+    // Always use the tool call's callId — tool implementations often omit it
+    String correctCallId = callId();
+    if (result == null) {
+      return FunctionToolCallOutput.success(correctCallId, "Function executed successfully");
+    }
+    // Replace whatever callId the tool returned with the correct one from the API call
+    return new FunctionToolCallOutput(correctCallId, result.output(), result.id(), result.status());
   }
 
   /**

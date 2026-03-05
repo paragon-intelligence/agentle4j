@@ -722,10 +722,11 @@ public class CreateResponsePayload {
 
     public <T> StructuredTextFormatBuilder<T> withStructuredOutput(
         @NonNull Class<T> structuredOutput) {
+      String schemaName = sanitizeSchemaName(structuredOutput);
       this.text =
           new TextConfigurationOptions(
               new TextConfigurationOptionsJsonSchemaFormat(
-                  structuredOutput.getName(), jsonSchemaProducer.produce(structuredOutput)),
+                  schemaName, jsonSchemaProducer.produce(structuredOutput), true),
               ModelVerbosityConfig.MEDIUM);
 
       return new StructuredTextFormatBuilder<>(this, structuredOutput);
@@ -733,13 +734,22 @@ public class CreateResponsePayload {
 
     public Builder withStructuredOutput(
         @NonNull Class<?> structuredOutput, @Nullable ModelVerbosityConfig verbosityConfig) {
+      String schemaName = sanitizeSchemaName(structuredOutput);
       this.text =
           new TextConfigurationOptions(
               new TextConfigurationOptionsJsonSchemaFormat(
-                  structuredOutput.getName(), jsonSchemaProducer.produce(structuredOutput)),
+                  schemaName, jsonSchemaProducer.produce(structuredOutput), true),
               verbosityConfig);
 
       return this;
+    }
+
+    /** Ensures the JSON schema name matches ^[a-zA-Z0-9_-]+$ as required by the API. */
+    private static String sanitizeSchemaName(@NonNull Class<?> structuredOutput) {
+      String simple = structuredOutput.getSimpleName();
+      // Replace any disallowed characters just in case (defensive)
+      String sanitized = simple.replaceAll("[^A-Za-z0-9_-]", "_");
+      return sanitized.isEmpty() ? "Schema" : sanitized;
     }
 
     public Builder addDeveloperMessage(

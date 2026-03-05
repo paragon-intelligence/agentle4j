@@ -8,7 +8,7 @@ import com.paragon.agents.StructuredAgentResult;
 import cookbooks.clinicamedica.models.ResultadoConsulta;
 import cookbooks.clinicamedica.usecase.AtenderPacienteInput;
 import cookbooks.clinicamedica.usecase.AtenderPacienteUseCase;
-import io.github.cdimascio.dotenv.Dotenv;
+// import io.github.cdimascio.dotenv.Dotenv;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,8 +41,9 @@ public class Main {
     // =========================================================================
     // 1. Credenciais
     // =========================================================================
-    Dotenv dotenv = Dotenv.load();
-    String apiKey = dotenv.get("OPENROUTER_API_KEY");
+    // Dotenv removido devido a erro nativo no JDK 25 neste ambiente local
+    // O script de execução já faz `export OPENROUTER_API_KEY=...`
+    String apiKey = System.getenv("OPENROUTER_API_KEY");
 
     if (apiKey == null || apiKey.isBlank()) {
       System.out.println("Erro: OPENROUTER_API_KEY nao encontrada no arquivo .env");
@@ -219,8 +220,14 @@ public class Main {
   private static void exibirResultado(StructuredAgentResult<ResultadoConsulta> resultado) {
     ResultadoConsulta consulta = resultado.output();
     if (consulta == null) {
-      System.out.println("  [Sem resultado estruturado — resposta bruta:]");
-      System.out.println("  " + resultado.rawOutput());
+      System.out.println("  [Sem resultado estruturado]");
+      if (resultado.error() != null) {
+        System.out.println("  Erro: " + resultado.error().getMessage());
+        if (resultado.error().getCause() != null) {
+          System.out.println("  Causa: " + resultado.error().getCause().getMessage());
+        }
+      }
+      System.out.println("  Resposta bruta: [" + resultado.rawOutput() + "]");
       return;
     }
 

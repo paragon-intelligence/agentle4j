@@ -24,15 +24,12 @@ routes:
         Você trata: gripes, resfriados, infecções, hipertensão, diabetes tipo 2,
         queixas gastrointestinais leves, e faz triagem para encaminhamento a especialistas.
 
-        Sempre retorne um JSON com os campos de ResultadoConsulta:
-        - diagnostico: seu diagnóstico
-        - tratamentoRecomendado: o tratamento prescrito
-        - examesSolicitados: lista de exames (ou lista vazia)
-        - medicoResponsavel: "Dr. Carlos Mendes - Clínico Geral"
-        - precisaRetorno: true ou false
-        - observacoes: observações adicionais (ou null)
+        Sempre retorne um resultado compatível com o modelo ResultadoConsulta,
+        contendo diagnóstico, tratamento recomendado, exames solicitados (lista),
+        médico responsável, indicação de necessidade de retorno e observações.
       maxTurns: 10
       temperature: 0.4
+      outputType: "cookbooks.clinicamedica.models.ResultadoConsulta"
       responder:
         provider: OPEN_ROUTER
         apiKeyEnvVar: OPENROUTER_API_KEY
@@ -64,15 +61,13 @@ routes:
 
         Seja rigoroso e conservador — em cardiologia é melhor solicitar exames a mais do que a menos.
 
-        Sempre retorne um JSON com os campos de ResultadoConsulta:
-        - diagnostico: diagnóstico cardíaco preciso
-        - tratamentoRecomendado: tratamento prescrito com doses quando aplicável
-        - examesSolicitados: exames cardiológicos necessários
-        - medicoResponsavel: "Dra. Ana Rodrigues - Cardiologista CRM/SP 54321"
-        - precisaRetorno: true (cardiologistas sempre solicitam retorno)
-        - observacoes: alertas importantes ou sinais de alarme
+        Sempre retorne um resultado compatível com o modelo ResultadoConsulta,
+        contendo diagnóstico cardíaco preciso, tratamento recomendado, exames
+        cardiológicos necessários, médico responsável, indicação de retorno e
+        observações com sinais de alarme.
       maxTurns: 8
       temperature: 0.2
+      outputType: "cookbooks.clinicamedica.models.ResultadoConsulta"
       responder:
         provider: OPEN_ROUTER
         apiKeyEnvVar: OPENROUTER_API_KEY
@@ -103,15 +98,13 @@ routes:
 
         Para fraturas suspeitas, sempre solicite imagem antes de imobilizar.
 
-        Sempre retorne um JSON com os campos de ResultadoConsulta:
-        - diagnostico: diagnóstico ortopédico com localização anatômica
-        - tratamentoRecomendado: protocolo de tratamento (imobilização, fisioterapia, cirurgia, etc.)
-        - examesSolicitados: exames de imagem necessários
-        - medicoResponsavel: "Dr. Roberto Lima - Ortopedista CRM/SP 67890"
-        - precisaRetorno: true ou false dependendo da gravidade
-        - observacoes: cuidados imediatos, restrições de movimento, sinais de alerta
+        Sempre retorne um resultado compatível com o modelo ResultadoConsulta,
+        contendo diagnóstico ortopédico com localização anatômica, tratamento
+        recomendado, exames de imagem, médico responsável, indicação de retorno
+        e observações com cuidados imediatos e sinais de alerta.
       maxTurns: 8
       temperature: 0.2
+      outputType: "cookbooks.clinicamedica.models.ResultadoConsulta"
       responder:
         provider: OPEN_ROUTER
         apiKeyEnvVar: OPENROUTER_API_KEY
@@ -134,9 +127,10 @@ fallback:
     2. Use a ferramenta contratar_medico para criar o novo especialista
     3. Retorne um ResultadoConsulta indicando encaminhamento e nome do novo especialista
 
-    Retorne JSON com os campos: diagnostico, tratamentoRecomendado,
-    examesSolicitados (lista vazia), medicoResponsavel ("Administracao - Clinica Medica Paragon"),
-    precisaRetorno (true), observacoes (nome do especialista contratado).
+    Retorne sempre um resultado compatível com o modelo ResultadoConsulta,
+    indicando diagnóstico, tratamento recomendado, exames solicitados
+    (normalmente lista vazia), médico responsável e observações com o nome
+    do especialista contratado.
   maxTurns: 5
   temperature: 0.3
   responder:

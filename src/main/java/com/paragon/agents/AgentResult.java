@@ -416,9 +416,22 @@ public final class AgentResult {
           error, output, finalResponse, history, toolExecutions, turnsUsed);
     }
     try {
-      T parsed = objectMapper.readValue(output, outputType);
+      String cleanOutput = output != null ? output : "";
+      
+      // Some LLMs return markdown wrapper for json even when configured with schema
+      if (cleanOutput.startsWith("```json")) {
+        cleanOutput = cleanOutput.substring(7);
+      } else if (cleanOutput.startsWith("```")) {
+        cleanOutput = cleanOutput.substring(3);
+      }
+      if (cleanOutput.endsWith("```")) {
+        cleanOutput = cleanOutput.substring(0, cleanOutput.length() - 3);
+      }
+      cleanOutput = cleanOutput.trim();
+      
+      T parsed = objectMapper.readValue(cleanOutput, outputType);
       return StructuredAgentResult.success(
-          parsed, output, finalResponse, history, toolExecutions, turnsUsed);
+          parsed, cleanOutput, finalResponse, history, toolExecutions, turnsUsed);
     } catch (JsonProcessingException e) {
       return StructuredAgentResult.error(
           new RuntimeException("Failed to parse structured output: " + e.getMessage(), e),

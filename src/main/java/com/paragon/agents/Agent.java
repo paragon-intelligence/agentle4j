@@ -924,6 +924,12 @@ public final class Agent implements Serializable, Interactable {
       builder.temperature(temperature);
     }
 
+    // When an output type is configured, always request native structured output
+    // from the Responses API instead of relying solely em instruções de prompt.
+    if (outputType != null) {
+      builder.withStructuredOutput(outputType, null);
+    }
+
     return builder.build();
   }
 
