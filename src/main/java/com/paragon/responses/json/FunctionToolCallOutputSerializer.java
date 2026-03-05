@@ -1,8 +1,9 @@
 package com.paragon.responses.json;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import java.io.IOException;
 
@@ -21,7 +22,26 @@ import java.io.IOException;
  * information. That causes OpenRouter (and OpenAI) to reject the payload with
  * {@code "expected string, received object"}.
  */
-public class FunctionToolCallOutputSerializer extends JsonSerializer<FunctionToolCallOutput> {
+public class FunctionToolCallOutputSerializer extends StdSerializer<FunctionToolCallOutput> {
+
+  public FunctionToolCallOutputSerializer() {
+    super(FunctionToolCallOutput.class);
+  }
+
+  /**
+   * Called when serializing within a polymorphic context (e.g., {@code List<ResponseInputItem>}
+   * with {@code @JsonTypeInfo}). Since we embed {@code "type"} directly in the JSON object,
+   * we skip the external type wrapper and delegate to {@link #serialize}.
+   */
+  @Override
+  public void serializeWithType(
+      FunctionToolCallOutput value,
+      JsonGenerator gen,
+      SerializerProvider provider,
+      TypeSerializer typeSer)
+      throws IOException {
+    serialize(value, gen, provider);
+  }
 
   @Override
   public void serialize(
