@@ -123,7 +123,7 @@ public class ParsedResponse<T> extends Response {
       @Nullable ResponseError error,
       @Nullable String id,
       @Nullable IncompleteDetails incompleteDetails,
-      @Nullable ResponseInputItem instructions,
+      @Nullable String instructions,
       @Nullable Integer maxOutputTokens,
       @Nullable Integer maxToolCalls,
       @Nullable Map<String, String> metadata,

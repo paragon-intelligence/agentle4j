@@ -13,6 +13,7 @@ import com.paragon.responses.spec.ClickAction;
 import com.paragon.responses.spec.CreateResponsePayload;
 import com.paragon.responses.spec.DeveloperMessage;
 import com.paragon.responses.spec.DoubleClickAction;
+import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.MoveAction;
 import com.paragon.responses.spec.ScrollAction;
@@ -44,6 +45,9 @@ public class ResponsesApiModule extends SimpleModule {
     addDeserializer(DoubleClickAction.class, new DoubleClickActionDeserializer());
     addDeserializer(ScrollAction.class, new ScrollActionDeserializer());
     addDeserializer(CreateResponsePayload.class, new CreateResponsePayloadDeserializer());
+
+    // Register custom serializer for FunctionToolCallOutput (output must be a plain string)
+    addSerializer(FunctionToolCallOutput.class, new FunctionToolCallOutputSerializer());
 
     // Register MessageDeserializer for Message and all its subclasses
     MessageDeserializer messageDeserializer = new MessageDeserializer();

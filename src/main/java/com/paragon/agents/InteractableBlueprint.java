@@ -3,7 +3,13 @@ package com.paragon.agents;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.paragon.agents.context.ContextManagementConfig;
 import com.paragon.agents.context.SlidingWindowStrategy;
@@ -14,6 +20,10 @@ import com.paragon.responses.Responder;
 import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.FunctionTool;
 import com.paragon.responses.spec.ResponsesAPIProvider;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.*;
 import okhttp3.HttpUrl;
@@ -628,6 +638,97 @@ public sealed interface InteractableBlueprint
         builder.traceMetadata(traceMetadata);
       }
       return builder.build();
+    }
+  }
+
+  // ===== Custom Deserializer for $ref support =====
+
+  /**
+   * Custom deserializer that handles {@code $ref} file references.
+   *
+   * <p>When a JSON/YAML node contains a {@code "$ref"} field, the deserializer reads the
+   * referenced file and parses it as an {@link InteractableBlueprint}. The path is resolved
+   * relative to the current working directory. Both absolute and relative paths are supported.
+   *
+   * <p>For nodes without {@code $ref}, deserialization delegates to Jackson's standard
+   * polymorphic type resolution using the {@code "type"} discriminator field.
+   *
+   * <h2>Usage in YAML</h2>
+   *
+   * <pre>{@code
+   * # Instead of inlining the full agent definition:
+   * target:
+   *   $ref: ./agents/cardiologista.yaml
+   *
+   * # Which is equivalent to copying the contents of cardiologista.yaml here
+   * }</pre>
+   *
+   * @since 1.0
+   */
+  final class BlueprintDeserializer extends JsonDeserializer<InteractableBlueprint> {
+
+    /**
+     * Internal interface that mirrors the polymorphic type annotations of
+     * {@link InteractableBlueprint}. Used to delegate non-{@code $ref} deserialization
+     * back to Jackson's standard type resolution without infinite recursion.
+     */
+    @JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type")
+    @JsonSubTypes({
+      @JsonSubTypes.Type(value = AgentBlueprint.class, name = "agent"),
+      @JsonSubTypes.Type(value = AgentNetworkBlueprint.class, name = "network"),
+      @JsonSubTypes.Type(value = SupervisorAgentBlueprint.class, name = "supervisor"),
+      @JsonSubTypes.Type(value = ParallelAgentsBlueprint.class, name = "parallel"),
+      @JsonSubTypes.Type(value = RouterAgentBlueprint.class, name = "router"),
+      @JsonSubTypes.Type(value = HierarchicalAgentsBlueprint.class, name = "hierarchical")
+    })
+    interface Delegate {}
+
+    @Override
+    public InteractableBlueprint deserialize(JsonParser p, DeserializationContext ctxt)
+        throws IOException {
+      ObjectMapper mapper = (ObjectMapper) p.getCodec();
+      JsonNode node = mapper.readTree(p);
+
+      // Check for $ref file reference
+      if (node.has("$ref")) {
+        String refPath = node.get("$ref").asText();
+        return resolveRef(refPath);
+      }
+
+      // Delegate to standard polymorphic deserialization via the Delegate interface.
+      // All registered @JsonSubTypes are InteractableBlueprint implementations; the
+      // double-cast via Object bypasses the compiler's incompatible-type check.
+      return (InteractableBlueprint) (Object) mapper.treeToValue(node, Delegate.class);
+    }
+
+    /**
+     * Resolves a {@code $ref} path by reading the file and parsing it as an
+     * {@link InteractableBlueprint}.
+     *
+     * @param refPath the file path (relative to CWD or absolute)
+     * @return the deserialized blueprint
+     * @throws IOException if the file cannot be read or parsed
+     */
+    private InteractableBlueprint resolveRef(String refPath) throws IOException {
+      Path path = Path.of(refPath);
+      if (!Files.exists(path)) {
+        throw new IOException(
+            "Blueprint $ref file not found: "
+                + path.toAbsolutePath()
+                + ". Ensure the path is correct relative to the working directory.");
+      }
+      String content = Files.readString(path, StandardCharsets.UTF_8);
+
+      // Detect format by file extension
+      String fileName = path.getFileName().toString().toLowerCase();
+      if (fileName.endsWith(".yaml") || fileName.endsWith(".yml")) {
+        return InteractableBlueprint.fromYaml(content);
+      } else {
+        return InteractableBlueprint.fromJson(content);
+      }
     }
   }
 }

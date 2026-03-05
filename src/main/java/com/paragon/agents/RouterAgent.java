@@ -496,6 +496,29 @@ public final class RouterAgent implements Interactable {
       this.objectMapper = Objects.requireNonNull(objectMapper);
     }
 
+    /**
+     * Creates a {@code Structured<T>} wrapper around an existing {@link RouterAgent}.
+     *
+     * <p>Use this when loading a router from YAML and wrapping it for typed output:
+     * <pre>{@code
+     * RouterAgent router = (RouterAgent) InteractableBlueprint.fromYaml(yaml).toInteractable();
+     * RouterAgent.Structured<MyType> structured =
+     *     RouterAgent.Structured.of(router, MyType.class, new ObjectMapper());
+     * }</pre>
+     *
+     * @param <T> the output type
+     * @param router the router to wrap
+     * @param outputType the class to parse the output into
+     * @param objectMapper the ObjectMapper to use for JSON parsing
+     * @return a new {@code Structured<T>} instance
+     */
+    public static <T> RouterAgent.Structured<T> of(
+        @NonNull RouterAgent router,
+        @NonNull Class<T> outputType,
+        @NonNull ObjectMapper objectMapper) {
+      return new RouterAgent.Structured<>(router, outputType, objectMapper);
+    }
+
     @Override
     public @NonNull String name() {
       return router.name();

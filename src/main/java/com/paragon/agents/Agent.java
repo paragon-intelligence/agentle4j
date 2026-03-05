@@ -709,8 +709,18 @@ public final class Agent implements Serializable, Interactable {
         // Add assistant response to context
         if (lastResponse.output() != null) {
           for (ResponseOutput outputItem : lastResponse.output()) {
-            if (outputItem instanceof Message msg) {
+            if (outputItem instanceof OutputMessage outMsg) {
+              // Convert to simple string-content AssistantMessage for API compatibility
+              // (avoids array content which some providers like OpenRouter reject)
+              String text = outMsg.toString();
+              if (!text.isBlank()) {
+                context.addMessage(Message.assistant(text));
+              }
+            } else if (outputItem instanceof Message msg) {
               context.addMessage(msg);
+            } else if (outputItem instanceof FunctionToolCall ftc) {
+              // FunctionToolCall must be in history before the tool output (required by API)
+              context.addInput(ftc);
             }
           }
         }

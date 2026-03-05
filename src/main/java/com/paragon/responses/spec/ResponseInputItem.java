@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     visible = true)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = Message.class, name = "message"),
-  @JsonSubTypes.Type(value = ItemReference.class, name = "item_reference")
+  @JsonSubTypes.Type(value = ItemReference.class, name = "item_reference"),
+  @JsonSubTypes.Type(value = Item.class, name = "item")
 })
 public sealed interface ResponseInputItem permits Message, Item, ItemReference {}
