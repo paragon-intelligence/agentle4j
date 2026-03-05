@@ -1,6 +1,7 @@
 # :material-database: Click
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.web.Click` &nbsp;·&nbsp; **Record**

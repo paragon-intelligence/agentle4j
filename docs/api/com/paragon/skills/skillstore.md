@@ -1,6 +1,7 @@
 # :material-code-braces: SkillStore
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.skills.SkillStore` &nbsp;·&nbsp; **Class**

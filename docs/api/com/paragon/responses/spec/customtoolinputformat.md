@@ -1,6 +1,7 @@
 # :material-approximately-equal: CustomToolInputFormat
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.responses.spec.CustomToolInputFormat` &nbsp;·&nbsp; **Interface**

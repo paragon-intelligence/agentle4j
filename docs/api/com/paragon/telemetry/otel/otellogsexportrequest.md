@@ -1,6 +1,7 @@
 # :material-database: OtelLogsExportRequest
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.telemetry.otel.OtelLogsExportRequest` &nbsp;·&nbsp; **Record**

@@ -1,6 +1,7 @@
 # :material-approximately-equal: ContextWindowStrategy
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.agents.context.ContextWindowStrategy` &nbsp;·&nbsp; **Interface**

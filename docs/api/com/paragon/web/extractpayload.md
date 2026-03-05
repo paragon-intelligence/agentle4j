@@ -1,6 +1,7 @@
 # :material-code-braces: ExtractPayload
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.web.ExtractPayload` &nbsp;·&nbsp; **Class**

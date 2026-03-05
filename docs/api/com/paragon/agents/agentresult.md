@@ -1,6 +1,7 @@
 # :material-code-braces: AgentResult
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.agents.AgentResult` &nbsp;·&nbsp; **Class**

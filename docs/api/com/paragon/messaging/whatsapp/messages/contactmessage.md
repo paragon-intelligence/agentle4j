@@ -1,6 +1,7 @@
 # :material-database: ContactMessage
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.messaging.whatsapp.messages.ContactMessage` &nbsp;·&nbsp; **Record**

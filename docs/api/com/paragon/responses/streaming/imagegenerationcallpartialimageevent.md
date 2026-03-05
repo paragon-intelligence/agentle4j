@@ -1,6 +1,7 @@
 # :material-database: ImageGenerationCallPartialImageEvent
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.responses.streaming.ImageGenerationCallPartialImageEvent` &nbsp;·&nbsp; **Record**

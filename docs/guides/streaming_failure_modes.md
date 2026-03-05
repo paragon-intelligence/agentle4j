@@ -1,6 +1,7 @@
 # Streaming Failure Modes Guide
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 This guide documents edge cases and failure modes for streaming with partial JSON parsing. Understanding these scenarios helps you build resilient applications.

@@ -1,6 +1,7 @@
 # :material-database: TraceMetadata
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.responses.TraceMetadata` &nbsp;·&nbsp; **Record**

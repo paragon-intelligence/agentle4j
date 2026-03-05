@@ -1,6 +1,7 @@
 # :material-code-braces: LangfuseProcessor
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.telemetry.langfuse.LangfuseProcessor` &nbsp;·&nbsp; **Class**

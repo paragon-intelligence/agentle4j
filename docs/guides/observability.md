@@ -1,6 +1,7 @@
 # Observability Guide
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 Agentle4j provides built-in observability through OpenTelemetry, enabling you to trace, measure, and monitor your AI interactions.

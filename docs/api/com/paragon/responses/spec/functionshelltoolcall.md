@@ -1,6 +1,7 @@
 # :material-code-braces: FunctionShellToolCall
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.responses.spec.FunctionShellToolCall` &nbsp;·&nbsp; **Class**

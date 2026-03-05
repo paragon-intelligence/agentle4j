@@ -1,6 +1,7 @@
 # :material-code-braces: ImageMessage
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.messaging.whatsapp.payload.ImageMessage` &nbsp;·&nbsp; **Class**

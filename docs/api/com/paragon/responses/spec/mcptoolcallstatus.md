@@ -1,6 +1,7 @@
 # :material-format-list-bulleted-type: McpToolCallStatus
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.responses.spec.McpToolCallStatus` &nbsp;·&nbsp; **Enum**

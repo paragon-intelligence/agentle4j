@@ -1,6 +1,7 @@
 # :material-code-braces: ApiException
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.responses.exception.ApiException` &nbsp;·&nbsp; **Class**

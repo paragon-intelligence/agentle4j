@@ -1,6 +1,7 @@
 # Package `com.paragon.mcp.dto`
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 ---

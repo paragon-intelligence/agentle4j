@@ -1,6 +1,7 @@
 # :material-code-braces: NamedOutputGuardrail
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.agents.NamedOutputGuardrail` &nbsp;·&nbsp; **Class**

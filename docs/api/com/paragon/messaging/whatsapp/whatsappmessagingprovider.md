@@ -1,6 +1,7 @@
 # :material-code-braces: WhatsAppMessagingProvider
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.messaging.whatsapp.WhatsAppMessagingProvider` &nbsp;·&nbsp; **Class**

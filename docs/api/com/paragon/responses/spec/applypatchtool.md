@@ -1,6 +1,7 @@
 # :material-code-braces: ApplyPatchTool
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.responses.spec.ApplyPatchTool` &nbsp;·&nbsp; **Class**

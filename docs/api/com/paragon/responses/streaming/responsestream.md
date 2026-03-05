@@ -1,6 +1,7 @@
 # :material-code-braces: ResponseStream
 
-> This docs was updated at: 2026-03-03
+> This docs was updated at: 2026-03-05
+
 
 
 `com.paragon.responses.streaming.ResponseStream` &nbsp;·&nbsp; **Class**
