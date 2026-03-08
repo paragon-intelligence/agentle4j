@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.messaging.core.TemplateMessageInterface` &nbsp;·&nbsp; **Interface**
 
 Extends `OutboundMessage`

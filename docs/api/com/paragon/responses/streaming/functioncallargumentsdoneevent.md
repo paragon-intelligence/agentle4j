@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.responses.streaming.FunctionCallArgumentsDoneEvent` &nbsp;·&nbsp; **Record**
 
 ---

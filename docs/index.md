@@ -21,6 +21,7 @@ hide:
 
 
 
+
 **The Modern Java Library for OpenAI Responses API**
 
 [![Java](https://img.shields.io/badge/Java-21+-orange?logo=openjdk)](https://openjdk.org/)
@@ -93,7 +94,7 @@ Measures **time to create an agent instance** (not API calls). Lower is better.
 
 Framework        │  Time (μs) │  Memory (KiB) │ Language
 ─────────────────┼────────────┼───────────────┼─────────────────────
-🚀 Agentle4j     │       0.8.2 │         0.39  │ Java 25+ (this lib)
+🚀 Agentle4j     │       0.8.3 │         0.39  │ Java 25+ (this lib)
 AGNO             │       3.00 │         6.60  │ Python
 PydanticAI       │     170.00 │        28.71  │ Python
 CrewAI           │     210.00 │        65.65  │ Python
@@ -151,14 +152,14 @@ System.out.println(response.outputText());
     <dependency>
         <groupId>io.github.paragon-intelligence</groupId>
         <artifactId>agentle4j</artifactId>
-        <version>0.8.2</version>
+        <version>0.8.3</version>
     </dependency>
     ```
 
 === "Gradle"
 
     ```groovy
-    implementation 'io.github.paragon-intelligence:agentle4j:0.8.2'
+    implementation 'io.github.paragon-intelligence:agentle4j:0.8.3'
     ```
 
 ---

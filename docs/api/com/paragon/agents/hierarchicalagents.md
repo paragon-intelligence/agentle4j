@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.agents.HierarchicalAgents` &nbsp;·&nbsp; **Class**
 
 Implements `Interactable`

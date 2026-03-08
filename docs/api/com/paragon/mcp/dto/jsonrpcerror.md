@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.mcp.dto.JsonRpcError` &nbsp;·&nbsp; **Record**
 
 ---

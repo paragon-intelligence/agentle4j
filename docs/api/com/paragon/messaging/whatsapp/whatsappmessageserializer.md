@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.WhatsAppMessageSerializer` &nbsp;·&nbsp; **Class**
 
 ---

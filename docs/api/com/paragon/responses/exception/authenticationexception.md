@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.responses.exception.AuthenticationException` &nbsp;·&nbsp; **Class**
 
 Extends `ApiException`

@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.agents.GuardrailResult` &nbsp;·&nbsp; **Interface**
 
 ---

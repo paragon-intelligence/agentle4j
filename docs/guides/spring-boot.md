@@ -5,6 +5,7 @@
 
 
 
+
 This guide shows how to integrate Agentle4j into a Spring Boot application with best practices for production.
 
 ---
@@ -1756,7 +1757,7 @@ agentle4j:
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.8.2</version>
+    <version>0.8.3</version>
 </dependency>
 ```
 

@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.responses.streaming.ImageGenerationCallCompletedEvent` &nbsp;·&nbsp; **Record**
 
 ---

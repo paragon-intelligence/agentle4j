@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.payload.ListReply` &nbsp;·&nbsp; **Class**
 
 Implements `InteractiveMessage.InteractiveContent`

@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.responses.spec.UserLocation` &nbsp;·&nbsp; **Class**
 
 ---

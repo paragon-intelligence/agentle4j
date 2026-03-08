@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.responses.exception.ApiException` &nbsp;·&nbsp; **Class**
 
 Extends `AgentleException`

@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.messaging.store.history.ConversationHistoryStore` &nbsp;·&nbsp; **Interface**
 
 ---

@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.responses.spec.FunctionToolCall` &nbsp;·&nbsp; **Class**
 
 Extends `ToolCall` &nbsp;·&nbsp; Implements `Item`, `ResponseOutput`

@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.responses.streaming.McpCallFailedEvent` &nbsp;·&nbsp; **Record**
 
 ---

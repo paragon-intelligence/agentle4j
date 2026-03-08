@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.responses.spec.extends` &nbsp;·&nbsp; **Class**
 
 ---

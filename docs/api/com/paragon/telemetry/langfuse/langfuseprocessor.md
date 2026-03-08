@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.telemetry.langfuse.LangfuseProcessor` &nbsp;·&nbsp; **Class**
 
 Extends `TelemetryProcessor`

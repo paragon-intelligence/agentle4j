@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.responses.spec.FunctionShellToolCallChunkOutcome` &nbsp;·&nbsp; **Interface**
 
 ---

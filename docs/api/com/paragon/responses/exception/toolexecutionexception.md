@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.responses.exception.ToolExecutionException` &nbsp;·&nbsp; **Class**
 
 Extends `AgentleException`

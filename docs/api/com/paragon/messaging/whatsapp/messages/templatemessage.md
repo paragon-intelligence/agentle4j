@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.messages.TemplateMessage` &nbsp;·&nbsp; **Record**
 
 ---

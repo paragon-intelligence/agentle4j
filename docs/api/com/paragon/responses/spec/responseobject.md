@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.responses.spec.ResponseObject` &nbsp;·&nbsp; **Enum**
 
 ---

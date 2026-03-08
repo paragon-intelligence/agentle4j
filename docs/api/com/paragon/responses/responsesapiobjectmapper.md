@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.responses.ResponsesApiObjectMapper` &nbsp;·&nbsp; **Class**
 
 Extends `ObjectMapper`

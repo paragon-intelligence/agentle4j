@@ -5,6 +5,7 @@
 
 
 
+
 `com.paragon.responses.spec.Message` &nbsp;·&nbsp; **Class**
 
 Implements `ResponseInputItem`, `Item`
