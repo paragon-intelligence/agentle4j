@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.harness.tools.ShellVerificationTool` &nbsp;·&nbsp; **Class** (in `com.paragon.harness.tools`)
 
 Extends `FunctionTool<ShellVerificationTool.TriggerRequest>`

@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.http.HttpException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`

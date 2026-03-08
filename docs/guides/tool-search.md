@@ -6,6 +6,7 @@
 
 
 
+
 When building agents with many tools, sending all of them in every API call wastes context window tokens and can degrade tool selection accuracy. **Tool Search** solves this by searching the available tools based on the user's input and only sending the most relevant subset to the LLM.
 
 This is the framework-level equivalent of Anthropic's server-side tool search feature, but works client-side with **any LLM provider** (OpenAI, OpenRouter, local models).

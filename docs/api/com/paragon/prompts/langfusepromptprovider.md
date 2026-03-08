@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.prompts.LangfusePromptProvider` &nbsp;·&nbsp; **Class**
 
 Implements `PromptProvider`

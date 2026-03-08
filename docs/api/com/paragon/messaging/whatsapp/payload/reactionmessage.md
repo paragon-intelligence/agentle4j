@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.payload.ReactionMessage` &nbsp;·&nbsp; **Class**
 
 Extends `AbstractInboundMessage`

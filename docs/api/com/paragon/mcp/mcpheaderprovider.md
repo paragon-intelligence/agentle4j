@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.mcp.McpHeaderProvider` &nbsp;·&nbsp; **Interface**
 
 ---

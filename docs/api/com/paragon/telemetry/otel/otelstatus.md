@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.telemetry.otel.OtelStatus` &nbsp;·&nbsp; **Record**
 
 ---

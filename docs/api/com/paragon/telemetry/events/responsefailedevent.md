@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.telemetry.events.ResponseFailedEvent` &nbsp;·&nbsp; **Record**
 
 ---

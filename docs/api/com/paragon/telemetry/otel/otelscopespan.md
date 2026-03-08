@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.telemetry.otel.OtelScopeSpan` &nbsp;·&nbsp; **Record**
 
 ---

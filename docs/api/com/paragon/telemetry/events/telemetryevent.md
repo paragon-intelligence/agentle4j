@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.telemetry.events.TelemetryEvent` &nbsp;·&nbsp; **Interface**
 
 ---

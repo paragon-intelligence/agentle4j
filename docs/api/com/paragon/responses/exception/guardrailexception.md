@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.responses.exception.GuardrailException` &nbsp;·&nbsp; **Class**
 
 Extends `AgentleException`

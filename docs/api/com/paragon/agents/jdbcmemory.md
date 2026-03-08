@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.agents.JdbcMemory` &nbsp;·&nbsp; **Class**
 
 Implements `Memory`

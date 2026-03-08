@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.embeddings.EmbeddingProvider` &nbsp;·&nbsp; **Interface**
 
 ---

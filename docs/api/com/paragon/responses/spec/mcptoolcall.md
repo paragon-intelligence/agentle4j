@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.responses.spec.McpToolCall` &nbsp;·&nbsp; **Class**
 
 Extends `ToolCall` &nbsp;·&nbsp; Implements `Item`, `ResponseOutput`

@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.responses.spec.McpApprovalRequest` &nbsp;·&nbsp; **Record**
 
 ---

@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.config.WhatsAppConfig` &nbsp;·&nbsp; **Record**
 
 ---

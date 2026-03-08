@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.telemetry.otel.OtelResourceMetric` &nbsp;·&nbsp; **Record**
 
 ---

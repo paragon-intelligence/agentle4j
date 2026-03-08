@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.messages.ContactMessage` &nbsp;·&nbsp; **Record**
 
 ---

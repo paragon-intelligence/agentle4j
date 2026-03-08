@@ -6,6 +6,7 @@
 
 
 
+
 `com.paragon.responses.streaming.ImageGenerationCallPartialImageEvent` &nbsp;·&nbsp; **Record**
 
 ---
