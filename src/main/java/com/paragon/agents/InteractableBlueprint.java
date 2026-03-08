@@ -70,7 +70,6 @@ import org.slf4j.LoggerFactory;
       value = InteractableBlueprint.HierarchicalAgentsBlueprint.class,
       name = "hierarchical")
 })
-@JsonDeserialize(using = InteractableBlueprint.BlueprintDeserializer.class)
 public sealed interface InteractableBlueprint
     permits InteractableBlueprint.AgentBlueprint,
         InteractableBlueprint.AgentNetworkBlueprint,
@@ -348,7 +347,10 @@ public sealed interface InteractableBlueprint
   record HandoffDescriptor(
       @JsonProperty("name") @NonNull String name,
       @JsonProperty("description") @NonNull String description,
-      @JsonProperty("target") @NonNull InteractableBlueprint target) {
+      @JsonProperty("target")
+          @JsonDeserialize(using = BlueprintDeserializer.class)
+          @NonNull
+          InteractableBlueprint target) {
 
     public static HandoffDescriptor from(@NonNull Handoff handoff) {
       return new HandoffDescriptor(
@@ -358,18 +360,27 @@ public sealed interface InteractableBlueprint
 
   /** Serializable descriptor for a {@link SupervisorAgent.Worker}. */
   record WorkerBlueprint(
-      @JsonProperty("worker") @NonNull InteractableBlueprint worker,
+      @JsonProperty("worker")
+          @JsonDeserialize(using = BlueprintDeserializer.class)
+          @NonNull
+          InteractableBlueprint worker,
       @JsonProperty("description") @NonNull String description) {}
 
   /** Serializable descriptor for a {@link RouterAgent.Route}. */
   record RouteBlueprint(
-      @JsonProperty("target") @NonNull InteractableBlueprint target,
+      @JsonProperty("target")
+          @JsonDeserialize(using = BlueprintDeserializer.class)
+          @NonNull
+          InteractableBlueprint target,
       @JsonProperty("description") @NonNull String description) {}
 
   /** Serializable descriptor for a {@link HierarchicalAgents.Department}. */
   record DepartmentBlueprint(
       @JsonProperty("manager") @NonNull AgentBlueprint manager,
-      @JsonProperty("workers") @NonNull List<InteractableBlueprint> workers) {}
+      @JsonProperty("workers")
+          @JsonDeserialize(contentUsing = BlueprintDeserializer.class)
+          @NonNull
+          List<InteractableBlueprint> workers) {}
 
   /** Serializable descriptor for {@link ContextManagementConfig}. */
   record ContextBlueprint(
@@ -509,9 +520,15 @@ public sealed interface InteractableBlueprint
   /** Blueprint for an {@link AgentNetwork}. */
   record AgentNetworkBlueprint(
       @JsonProperty("name") @NonNull String name,
-      @JsonProperty("peers") @NonNull List<InteractableBlueprint> peers,
+      @JsonProperty("peers")
+          @JsonDeserialize(contentUsing = BlueprintDeserializer.class)
+          @NonNull
+          List<InteractableBlueprint> peers,
       @JsonProperty("maxRounds") int maxRounds,
-      @JsonProperty("synthesizer") @Nullable InteractableBlueprint synthesizer,
+      @JsonProperty("synthesizer")
+          @JsonDeserialize(using = BlueprintDeserializer.class)
+          @Nullable
+          InteractableBlueprint synthesizer,
       @JsonProperty("traceMetadata") @Nullable TraceMetadata traceMetadata)
       implements InteractableBlueprint {
 
@@ -569,7 +586,10 @@ public sealed interface InteractableBlueprint
   /** Blueprint for {@link ParallelAgents}. */
   record ParallelAgentsBlueprint(
       @JsonProperty("name") @NonNull String name,
-      @JsonProperty("members") @NonNull List<InteractableBlueprint> members,
+      @JsonProperty("members")
+          @JsonDeserialize(contentUsing = BlueprintDeserializer.class)
+          @NonNull
+          List<InteractableBlueprint> members,
       @JsonProperty("traceMetadata") @Nullable TraceMetadata traceMetadata)
       implements InteractableBlueprint {
 
@@ -586,7 +606,10 @@ public sealed interface InteractableBlueprint
       @JsonProperty("name") @NonNull String name,
       @JsonProperty("model") @NonNull String model,
       @JsonProperty("routes") @NonNull List<RouteBlueprint> routes,
-      @JsonProperty("fallback") @Nullable InteractableBlueprint fallback,
+      @JsonProperty("fallback")
+          @JsonDeserialize(using = BlueprintDeserializer.class)
+          @Nullable
+          InteractableBlueprint fallback,
       @JsonProperty("responder") @NonNull ResponderBlueprint responder,
       @JsonProperty("traceMetadata") @Nullable TraceMetadata traceMetadata)
       implements InteractableBlueprint {
@@ -729,10 +752,27 @@ public sealed interface InteractableBlueprint
         };
       }
 
-      // Existing inline embedding — unchanged.
-      // All registered @JsonSubTypes are InteractableBlueprint implementations; the
-      // double-cast via Object bypasses the compiler's incompatible-type check.
-      return (InteractableBlueprint) (Object) mapper.treeToValue(node, Delegate.class);
+      // Inline blueprint — dispatch to concrete class by type discriminator.
+      JsonNode typeNode = node.get("type");
+      if (typeNode == null || typeNode.isNull()) {
+        throw new com.fasterxml.jackson.core.JsonParseException(
+            p,
+            "Blueprint is missing required 'type' field. "
+                + "Expected one of: agent, network, supervisor, parallel, router, hierarchical.");
+      }
+      return switch (typeNode.asText()) {
+        case "agent" -> mapper.treeToValue(node, AgentBlueprint.class);
+        case "network" -> mapper.treeToValue(node, AgentNetworkBlueprint.class);
+        case "supervisor" -> mapper.treeToValue(node, SupervisorAgentBlueprint.class);
+        case "parallel" -> mapper.treeToValue(node, ParallelAgentsBlueprint.class);
+        case "router" -> mapper.treeToValue(node, RouterAgentBlueprint.class);
+        case "hierarchical" -> mapper.treeToValue(node, HierarchicalAgentsBlueprint.class);
+        default -> throw new com.fasterxml.jackson.core.JsonParseException(
+            p,
+            "Unknown blueprint type: '"
+                + typeNode.asText()
+                + "'. Expected one of: agent, network, supervisor, parallel, router, hierarchical.");
+      };
     }
 
     /**
