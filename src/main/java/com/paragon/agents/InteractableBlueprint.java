@@ -692,31 +692,80 @@ public sealed interface InteractableBlueprint
       ObjectMapper mapper = (ObjectMapper) p.getCodec();
       JsonNode node = mapper.readTree(p);
 
-      // Check for $ref file reference
+      // Legacy $ref — kept for backward compatibility
       if (node.has("$ref")) {
         String refPath = node.get("$ref").asText();
-        return resolveRef(refPath);
+        return resolveFileRef(refPath, p);
       }
 
-      // Delegate to standard polymorphic deserialization via the Delegate interface.
+      // New discriminated union: source: file | registry
+      if (node.has("source")) {
+        String source = node.get("source").asText();
+        return switch (source) {
+          case "file" -> {
+            String path = requireField(node, "path", "source: file", p);
+            yield resolveFileRef(path, p);
+          }
+          case "registry" -> {
+            String id = requireField(node, "id", "source: registry", p);
+            InteractableBlueprint bp = BlueprintRegistry.get(id);
+            if (bp == null) {
+              throw new com.fasterxml.jackson.core.JsonParseException(
+                  p,
+                  "Blueprint not found in registry: '"
+                      + id
+                      + "'. Ensure BlueprintRegistry.register(\""
+                      + id
+                      + "\", ...) is called at startup.");
+            }
+            yield bp;
+          }
+          default -> throw new com.fasterxml.jackson.core.JsonParseException(
+              p,
+              "Unknown blueprint source: '"
+                  + source
+                  + "'. Valid values: 'file', 'registry'.");
+        };
+      }
+
+      // Existing inline embedding — unchanged.
       // All registered @JsonSubTypes are InteractableBlueprint implementations; the
       // double-cast via Object bypasses the compiler's incompatible-type check.
       return (InteractableBlueprint) (Object) mapper.treeToValue(node, Delegate.class);
     }
 
     /**
-     * Resolves a {@code $ref} path by reading the file and parsing it as an
-     * {@link InteractableBlueprint}.
+     * Requires a field to be present in the node, throwing a descriptive error if missing.
+     *
+     * @param node the JSON node
+     * @param field the required field name
+     * @param context a human-readable description of the context (e.g. "source: file")
+     * @param p the parser (for error location)
+     * @return the field value as text
+     * @throws com.fasterxml.jackson.core.JsonParseException if the field is absent
+     */
+    private String requireField(JsonNode node, String field, String context, JsonParser p)
+        throws IOException {
+      if (!node.has(field) || node.get(field).isNull()) {
+        throw new com.fasterxml.jackson.core.JsonParseException(
+            p, "Missing required field '" + field + "' for " + context + " blueprint reference.");
+      }
+      return node.get(field).asText();
+    }
+
+    /**
+     * Resolves a file path by reading the file and parsing it as an {@link InteractableBlueprint}.
      *
      * @param refPath the file path (relative to CWD or absolute)
+     * @param p the parser (for error messages)
      * @return the deserialized blueprint
      * @throws IOException if the file cannot be read or parsed
      */
-    private InteractableBlueprint resolveRef(String refPath) throws IOException {
+    private InteractableBlueprint resolveFileRef(String refPath, JsonParser p) throws IOException {
       Path path = Path.of(refPath);
       if (!Files.exists(path)) {
         throw new IOException(
-            "Blueprint $ref file not found: "
+            "Blueprint file not found: "
                 + path.toAbsolutePath()
                 + ". Ensure the path is correct relative to the working directory.");
       }
