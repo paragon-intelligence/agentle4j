@@ -5,12 +5,32 @@ All notable changes to Agentle4j will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.8.3] - 2026-03-08
+## [0.8.4] - 2026-03-08
 
 ### Fixed
 
-- preparing harness
-- add Jackson desserialization annotation
+- **Blueprint deserialization for nested `InteractableBlueprint` fields**: `$ref`, `source: file`,
+  and `source: registry` now work correctly inside nested blueprint fields (`RouteBlueprint.target`,
+  `WorkerBlueprint.worker`, `HandoffDescriptor.target`, `AgentNetworkBlueprint.peers/synthesizer`,
+  `ParallelAgentsBlueprint.members`, `DepartmentBlueprint.workers`, `RouterAgentBlueprint.fallback`).
+  Each field is now explicitly annotated with `@JsonDeserialize(using = BlueprintDeserializer.class)`
+  (or `contentUsing` for lists), and `BlueprintDeserializer.deserialize()` uses manual type dispatch
+  instead of the `Delegate` interface trick — eliminating both the Jackson subtype-check failure and
+  the infinite-recursion risk.
+
+## [0.8.3] - 2026-03-08
+
+### Added
+
+- **Harness engineering package** (`com.paragon.harness`): `ProgressLog`, `ArtifactStore`,
+  `FilesystemArtifactStore`, `AgentHook`, `HookRegistry`, `SelfCorrectionConfig`,
+  `SelfCorrectingInteractable`, `VerificationResult`, `ShellVerificationTool`, `ProgressLogTool`,
+  `ArtifactStoreTool`, `AgentRunReport`, `RunReportExporter`, `FailureAnalysisTool`, and the
+  top-level `Harness` builder that composes all policies around any `Interactable`.
+- **Durable memory backends**: `FilesystemMemory` and `JdbcMemory` implementing `Memory` for
+  long-running, multi-session agents.
+- **Agent hooks**: `Agent.Builder.hookRegistry(HookRegistry)` wires `beforeRun`/`afterRun` and
+  `beforeToolCall`/`afterToolCall` lifecycle events without modifying agent logic.
 
 ## [0.8.2] - 2026-03-08
 

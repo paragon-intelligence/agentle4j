@@ -691,25 +691,6 @@ public sealed interface InteractableBlueprint
    */
   final class BlueprintDeserializer extends JsonDeserializer<InteractableBlueprint> {
 
-    /**
-     * Internal interface that mirrors the polymorphic type annotations of
-     * {@link InteractableBlueprint}. Used to delegate non-{@code $ref} deserialization
-     * back to Jackson's standard type resolution without infinite recursion.
-     */
-    @JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "type")
-    @JsonSubTypes({
-      @JsonSubTypes.Type(value = AgentBlueprint.class, name = "agent"),
-      @JsonSubTypes.Type(value = AgentNetworkBlueprint.class, name = "network"),
-      @JsonSubTypes.Type(value = SupervisorAgentBlueprint.class, name = "supervisor"),
-      @JsonSubTypes.Type(value = ParallelAgentsBlueprint.class, name = "parallel"),
-      @JsonSubTypes.Type(value = RouterAgentBlueprint.class, name = "router"),
-      @JsonSubTypes.Type(value = HierarchicalAgentsBlueprint.class, name = "hierarchical")
-    })
-    interface Delegate {}
-
     @Override
     public InteractableBlueprint deserialize(JsonParser p, DeserializationContext ctxt)
         throws IOException {
@@ -752,7 +733,11 @@ public sealed interface InteractableBlueprint
         };
       }
 
-      // Inline blueprint — dispatch to concrete class by type discriminator.
+      // Inline blueprint — manually dispatch to the concrete class by type discriminator.
+      // This avoids both infinite recursion (calling treeToValue with InteractableBlueprint would
+      // re-enter BlueprintDeserializer) and the Delegate subtype-check failure that occurs when
+      // Jackson validates AgentBlueprint extends Delegate (it doesn't — it extends
+      // InteractableBlueprint).
       JsonNode typeNode = node.get("type");
       if (typeNode == null || typeNode.isNull()) {
         throw new com.fasterxml.jackson.core.JsonParseException(
@@ -771,7 +756,8 @@ public sealed interface InteractableBlueprint
             p,
             "Unknown blueprint type: '"
                 + typeNode.asText()
-                + "'. Expected one of: agent, network, supervisor, parallel, router, hierarchical.");
+                + "'. Expected one of: agent, network, supervisor, parallel, router,"
+                + " hierarchical.");
       };
     }
 
