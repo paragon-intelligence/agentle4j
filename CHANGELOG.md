@@ -5,20 +5,34 @@ All notable changes to Agentle4j will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.2] - 2026-03-08
+
+### Fixed
+
+- removed $ref examples from agent router and added "source".
+
 ## [0.8.1] - 2026-03-05
 
 ### Fixed
 
-- **Structured output via Responses API**: ensured all agents that declare `outputType` now use native `withStructuredOutput(...)`, fixing parsing errors when models returned markdown-wrapped JSON.
-- **JSON schema naming with OpenAI/OpenRouter**: normalized `text.format.json_schema.name` to a safe identifier (e.g. `ResultadoConsulta`) to satisfy `^[a-zA-Z0-9_-]+$` and eliminate 400 errors from the provider.
-- **Blueprint + Router structured flow (clínica médica cookbook)**: wired `outputType` into YAML blueprints and `RouterAgent.Structured` so routed specialists reliably return parsed `ResultadoConsulta` instead of raw text.
-- **Tool call round-trips**: added explicit Jackson serializers for all `ToolCall` variants (function, file_search, computer, shell, MCP, image generation, etc.) so they can be safely resent in `input` without missing or incorrect `type` fields.
-- **Messaging serialization robustness**: made `Message` / `MessageContent` (de)serialization tolerant to both string and structured forms while keeping compatibility with the Responses API schema.
-- **WhatsApp provider tests**: hardened `WhatsAppMessagingProviderTest` teardown against MockWebServer shutdown timeouts in long-delay scenarios.
+- **Structured output via Responses API**: ensured all agents that declare `outputType` now use native
+  `withStructuredOutput(...)`, fixing parsing errors when models returned markdown-wrapped JSON.
+- **JSON schema naming with OpenAI/OpenRouter**: normalized `text.format.json_schema.name` to a safe identifier (e.g.
+  `ResultadoConsulta`) to satisfy `^[a-zA-Z0-9_-]+$` and eliminate 400 errors from the provider.
+- **Blueprint + Router structured flow (clínica médica cookbook)**: wired `outputType` into YAML blueprints and
+  `RouterAgent.Structured` so routed specialists reliably return parsed `ResultadoConsulta` instead of raw text.
+- **Tool call round-trips**: added explicit Jackson serializers for all `ToolCall` variants (function, file_search,
+  computer, shell, MCP, image generation, etc.) so they can be safely resent in `input` without missing or incorrect
+  `type` fields.
+- **Messaging serialization robustness**: made `Message` / `MessageContent` (de)serialization tolerant to both string
+  and structured forms while keeping compatibility with the Responses API schema.
+- **WhatsApp provider tests**: hardened `WhatsAppMessagingProviderTest` teardown against MockWebServer shutdown timeouts
+  in long-delay scenarios.
 
 ### Changed
 
-- Disabled a small set of overly broad property-based tests whose generated shapes no longer match the stricter but more realistic wire format, keeping the public API behavior correct while maintaining a green test suite.
+- Disabled a small set of overly broad property-based tests whose generated shapes no longer match the stricter but more
+  realistic wire format, keeping the public API behavior correct while maintaining a green test suite.
 
 ## [0.8.0] - 2026-02-23
 
@@ -26,29 +40,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 feat(blueprints): yaml serialization format with support for structured outputs
 
-
 ## [0.7.0] - 2026-02-23
 
 ### Added
 
 - **Tool Search & Planning Capabilities** 🔍
-    - **Tool Search Integration**: Dynamically select and load relevant tools on the fly, dramatically reducing context window overhead for agents with huge tool sets.
-    - **Parallel & Batched Tools Execution**: Agents can now plan and execute multiple tool calls simultaneously in batched and parallel fashion.
+    - **Tool Search Integration**: Dynamically select and load relevant tools on the fly, dramatically reducing context
+      window overhead for agents with huge tool sets.
+    - **Parallel & Batched Tools Execution**: Agents can now plan and execute multiple tool calls simultaneously in
+      batched and parallel fashion.
 
 - **WhatsApp & Messaging Engine** 💬
     - Robust, fully-tested out-of-the-box WhatsApp integration natively connected to agent workflows.
-    - **Smart Messaging Flow**: Introduced adaptive batching, robust rate-limiting, and deep conversation history management.
-    - **Rich Interactive Content**: Send interactive payloads and even audio files directly natively via standard payload models.
-    - Fail-fast configuration mechanism integrated via Jakarta Validations and comprehensive error tracking capabilities.
+    - **Smart Messaging Flow**: Introduced adaptive batching, robust rate-limiting, and deep conversation history
+      management.
+    - **Rich Interactive Content**: Send interactive payloads and even audio files directly natively via standard
+      payload models.
+    - Fail-fast configuration mechanism integrated via Jakarta Validations and comprehensive error tracking
+      capabilities.
 
 - **Agent Blueprints & Structured Outputs** 🏗️
     - `InteractableBlueprint` introduced as a standard to elegantly serialize implementations across agents.
-    - Completely redesigned `AgentDefinition` to be strictly behavioral—stripping away heavy infrastructure variables like `Responder`s, establishing a flawless standard for receiving meta-agent definitions via LLM Structured Outputs.
-    - Structured outputs natively deployed across **ALL** organizational and architectural agent patterns (Supervisor, Parallel, etc.).
+    - Completely redesigned `AgentDefinition` to be strictly behavioral—stripping away heavy infrastructure variables
+      like `Responder`s, establishing a flawless standard for receiving meta-agent definitions via LLM Structured
+      Outputs.
+    - Structured outputs natively deployed across **ALL** organizational and architectural agent patterns (Supervisor,
+      Parallel, etc.).
 
 - **Tracing & Framework Core Enhancements** 📡
-    - Added deep trace support through `TraceMetadata` bridging OpenRouter specs to underlying responders for optimal ecosystem observability.
-    - Consolidating inputs into the `AgenticContext`, avoiding huge boilerplate and standardizing context consumption on defaults.
+    - Added deep trace support through `TraceMetadata` bridging OpenRouter specs to underlying responders for optimal
+      ecosystem observability.
+    - Consolidating inputs into the `AgenticContext`, avoiding huge boilerplate and standardizing context consumption on
+      defaults.
 
 ### Improved & Fixed
 
@@ -57,7 +80,8 @@ feat(blueprints): yaml serialization format with support for structured outputs
 ### Documentation
 
 - **Brand New MkDocs API Reference** 📖: Fully rewritten and structured API documentation setup for high readability.
-- Authored sweeping new architecture guides explaining `Tool Planning`, `Tool Search`, `Blueprints`, and WhatsApp `Messaging` layers.
+- Authored sweeping new architecture guides explaining `Tool Planning`, `Tool Search`, `Blueprints`, and WhatsApp
+  `Messaging` layers.
 
 ---
 
