@@ -1,0 +1,289 @@
+Estou montando uma palestra com o seguinte tema:
+
+
+
+<tema>
+
+O Futuro da Saúde na Era da Inteligência Artificial
+
+</tema>
+
+
+
+Acabei de montar um roteiro para apresentação dos slides e irei utilizar o Claude Code para gerar uma página em React native para mim. Ao invés de apresentar um simples powerpoint estático, quero ser motor de inovação nesse congresso, apresentar algo nunca antes visto e muito bonito.
+
+
+
+Observe as imagens que coloquei em anexo nessa mensagem. Essas serão algumas das imagens que irei utilizar na apresentação. Estou enviando elas por aqui pois elas me dão uma sensação cinematográfica/estilo filme, com um aesthetics jamais visto em uma apresentação de congresso, com profundidade, paleta de cores, o verde bonito, o granulado cinematográfico, a natureza. Quero que minha apresentação contenha estes elementos de design para construir a melhor apresentação possível. A apresentação será dividida em 2 capítulos. E, para cada capítulo, quero apresentar o título com uma fonte serifada, bonita. Os capítulos dessa apresentação serão:
+
+
+
+<capitulos>
+
+Capítulo I
+
+DADOS
+
+
+
+Neste capítulo, discutirei sobre a importancia 
+
+
+
+</capitulos>
+
+
+
+Ao apresentar o título do capítulo, quero apenas "Capítulo X + TITULO BREVE". E em algum local bem posicionado da página, irei colocar uma imagem, que conterá o mesmo estilo/aesthetics das imagens em anexo, então a imagem anexada eu mesmo irei colocar. Todas as imagens/vídeos que irei inserir eu que irei escolher. e todas elas conterão esses elementos visuais parecidos e o mesmo estilo das imagens que estou anexando. Quero dividir a página que o Claude Code montar em seções. Cada seção deve conter um texto visível e bonito, seguindo o estilo que estou mencionando. Assim que pensei em começarmos a apresentação:
+
+
+<slides>
+Começa com uma tela com o estilo que você escolher. Escrito "Bem-Vindos"!
+
+
+
+Partimos para a tela de apresentação do título da palestra. Nela, imagino uma caixa de texto, semelhante a caixa de texto em anexo desta mensagem, ela surgirá com uma animação sutil, simples. E o título "O Futuro da Saúde na Era da Inteligência Artificial" vai sendo digitado nesta caixa de texto. Ao finalizar a digitação e apertar "Enter", o título será mostrado de uma maneira bem bonita na tela (estou omitindo muitas informações por aqui de estilos, background, animacoes. voce vai escolher isso)
+
+
+
+Após isso, irei falar um pouco sobre mim. Nesta tela, vou colocar 10 fotos minhas, que irão aparecer em formato de grade e muito grandes na tela. Nesta parte, irei falar um pouco sobre mim. Colocar o símbolo do instagram e o @arthurbrennoo
+
+
+Após isso, falarei sobre minha formação e experiência profissional. Exemplo de informações que podem aparecer nessa tela:
+
+Bacharel em Sistemas de Informação @uniubeoficial Atuação no mercado de Software, mais especificamente IA Generativa, há 2 anos, como Analista de Sistemas Pleno (Uniube). 18 Agentes de IA Generativa desenvolvidos dentro do nosso AVA e gerando resultados positivos para a instituição. Autor das pesquisas: “Sistema IoT de baixo custo para monitoramento climático e automação de uma estufa de hortaliças”, “Sistema de detecção de resíduos em rios e nascentes utilizando visão computacional e inteligência artificial” e “Desenvolvimento de um CRM educacional para auxílio da gestão de relacionamento com o cliente”.
+
+Após isso, iremos para a tela do primeiro capítulo, com o título "Capítulo I (quebra linha) DADOS) e uma imagem aestetically posicionada na seção.
+
+Após isso, irei colocar um vídeo (remover áudio, nao deixar tocar áudio) de fundo e na página, um título em uma única linha, com um shadow curto, sem blur no shadow, escrito assim: "Quanto valem seus dados de saúde" (sobrepondo o vídeo, centralizado).
+
+Um slide que será só vídeo. Eu que escolherei o vídeo. Vou começar a falar sobre Farmácias de exemplo
+
+Vou mostrar uma caixa de nimesulida (tenho a imagem). De um lado, ele custando R$31,78. De o outro, o mesmo remédio, mas se eu inserir o CPF (CPF pode ser uma seta entre os dois), o preço cai para R$8,50.
+
+"Vamos Falar de Dark Web" - vou colocar uma imagem de um iceberg da internet.
+
+Aqui vou começar a falar da diferença de preços de diferentes tipos de objetos/informações na Dark Web. Começaremos com um cartão de crédito. Primeiro, vou mostrar uma imagem em tela cheia de um cartão de crédito. Ao passar o slide, aparecerá o valor $5
+
+Depois, algum tipo de arte com animações sutis que simularão uma tela de login de uma rede social. Do estilo que você quiser. Ao passar o slide, o valor $12 irá aparecer na tela.
+
+Depois irá aparecer um passaporte falso, que será montado via código (o visual), ao invés de eu anexar a imagem de um passaporte. Ao passar o slide, aparecerá o valor $50.
+
+Depois, irá aparecer o elemento final e principal: um prontuário médico, que, também, ao invés de ser representado por uma imagem, será representado por código. Ao passar o slide, o valor que deve aparecer é $1000.
+
+Após isso, a intenção, em um próximo slide, é mostrar como contornar quando cada objeto desses é "vazado"/vendido. Mas não mostrar todos os objetos e soluções de uma vez. Vou mostrar um por um, incrementalmente. Com o objeto aparecendo (visualmente) + título do objeto + descrição. Ao passar os slides, eles vão aparecendo incrementalmente.
+
+primeiro, o cartao de credito, colocar na descrição: bloquear cartão e solicitar segunda via
+depois, login de rede social, colocar na descricão: trocar a senha e ativar 2FA
+depois, passaporte, colocar na descrição: comunicar a Polícia Federal e solicitar reemissão
+depois, por fim, o principal: o prontuário médico. colocar na descrição: Nada... não dá pra trocar seu DNA.
+
+Depois, em outra seção, quero que mostre 4 bonequinhos humanóides, 3 deles coloridos e 1 não colorido, com o seguinte texto:
+Americanos tiveram seus dados de saúde vazados em 2024.
+259.000.000 pessoas
+Fonte: HIPAA Journal, HHS Breach Portal, 2024
+
+Depois, um slide mostrando em um gráfico, o "Crescimento de dados por setor por ano"
+Saude: 36%
+Manufatura: 30%
+serviços financeiros: 26%
+mídia e entretenimento: 25%
+
+Depois, em outro slide, vou mostrar uma quote do Tim Cook (vou inserir uma foto dele): 
+“Se você olhar para o futuro e perguntar qual foi a maior contribuição da Apple para a humanidade, será sobre saúde.”
+- Tim Cook, CEO da Apple
+
+Depois, em outro slide, quero que mostre, da maneira que quiser, sobre Health Data Economy (do artigo From Information to Valuable Asset). Tenho as seguintes informações:
+**APPLE**
+Centenas de milhões de dados biométricos
+
+**GOOGLE**
+70 mil buscas de saúde por minuto no mundo
+
+**AMAZON**
+Comprou a One Medical por **US$ 3,9 bi**
+
+**MICROSOFT**
+Comprou a Nuance por **US$ 19,7 bi**
+
+
+Agora, vamos para o último capítulo: Capítulo II: Inteligência Artificial como infraestrutura científica
+Vou inserir uma imagem também. 1:1 a imagem. Ao lado do texto.
+
+Depois o seguinte slide:
+**PRÊMIO NOBEL DE QUÍMICA 2024**
+
+**Demis Hassabis & John Jumper**
+Google DeepMind
+
+**AlphaFold:** resolveu um problema de **50 anos** da biologia.
+
+**200M+ proteínas**
+**3M+ pesquisadores**
+**190 países**
+
+Fonte: Nobel Committee, Google DeepMind, 2024
+Nesse, pensei em mostrar uma proteína em 3D girando na tela, centralizada, com o texto em volta.
+
+
+Depois, o seguinte slide:
+**IA que já supera expectativas**
+
+**MAMOGRAFIA COM IA**
+Nature Medicine, 2024
+
+463.094 mulheres
+119 radiologistas
+
+**+17,6%**
+detecção de câncer
+
+sem mais falsos positivos
+
+---
+
+**PREDIÇÃO DE DOENÇAS**
+Univ. de Edimburgo
+
+Dados de proteínas no sangue
+
+**10 anos antes**
+dos sintomas
+
+Alzheimer, cardíacas, diabetes
+
+
+Depois, o seguinte slide:
+**O primeiro remédio criado por IA**
+
+**MÉTODO TRADICIONAL**
+Tempo: **3 a 6 anos**
+Custo: **centenas de milhões de dólares**
+
+**COM IA (INSILICO)**
+Tempo: **18 meses**
+Custo: **~10% do valor tradicional**
+
+Fonte: Insilico Medicine, Nature Medicine (jun/2025)
+
+Nesse, pensei em colocar uma pilula azul 3D também.
+
+Depois, o seguinte slide (em formato de gráfico):
+**ECONOMIA WELLNESS GLOBAL**
+
+**US$ 6,8 tri (2024)**
+
+**US$ 9,8 tri até 2029**
+
+Farmacêutica — **US$ 1,8 tri**
+Turismo — **US$ 5,0 tri**
+TI — **US$ 5,3 tri**
+Wellness
+
+Fonte: Global Wellness Institute, 2024
+
+
+
+Depois, em outro slide, vou falar que a Gen Z é a geração que mais investe em saúde e bem-estar da história.
+Fonte: McKinsey Health Institute, 2024
+
+Depois, o seguinte slide de frase de impacto:
+Tudo que eu falei até agora é presente.
+Agora vem o futuro.
+
+
+Depois, falarei sobre Gêmeos Digitais, Uma réplica virtual completa do seu corpo.
+US$ 60 bi até 2032.
+
+Depois, falarei sobre "Interfaces Cérebro-Computador", citando:
+NEURALINK
+Chip implantado em janeiro de 2024
+Paciente tetraplégico joga xadrez com a mente Avaliação: US$ 8,5 bi
+
+
+Depois, falarei sobre novos métodos de armazenar informações. de que 1 grama de DNA pode armazenar 215.000.000 GB, com uma Vida útil mínima:
+150 anos
+
+
+Depois, uma secao/slide com o título "E o Brasil?". Nesse slide vou colocar uma imagem do brasil/cristo redentor abaixo do texto. entao assuma que irei colocar a imagem ai.
+
+Depois, esse slide:
+**HEALTHTECH BRASIL**
+
+**1.200+**
+healthtechs ativas
+
+**130**
+aplicando IA
+
+**R$ 799M**
+investidos em 2024
+
+**Brasil = líder na América Latina**
+— **64,8% das startups da região**
+
+Fonte: Distrito Healthtech Report, Lavca, 2024
+
+
+
+Depois, esse slide:
+**RNDS — Rede Nacional de Dados em Saúde**
+Decreto de julho de 2025
+
+**2,8 bilhões** de registros — vacinas, exames, atendimentos
+
+**21** estados integrados · **3.805** municípios enviando dados
+
+**59 milhões** de downloads do Meu SUS Digital
+
+**R$ 4,8 bi** para Rede de Hospitais Inteligentes
+
+**162** projetos de IA com **73** universidades
+
+Fonte: Ministério da Saúde, Decreto jul/2025, DataSUS
+
+
+Depois, esse slide:
+O Brasil forma
+**53.000**
+profissionais/ano
+
+A demanda é de
+**159.000**
+profissionais/ano
+
+**Déficit:**
+**530.000**
+profissionais.
+
+Taxa de desocupação: **3,5%** — praticamente pleno emprego.
+
+Fonte: Brasscom, Google/Abstartups, 2024
+
+
+E, por último slide:
+**Seus dados de saúde já estão sendo coletados.**
+
+Pelo relógio
+Pelo smartphone
+Pelo app
+
+---
+
+**A questão é:**
+
+você vai ser **consumidor**
+ou **criador** desse futuro?
+
+
+
+Para finalizar, um obrigado. Com o meu instagram: @arthurbrennoo e o meu linkedin: @arthurbrenno.
+</slides>
+
+
+
+Para o Claude code, irei incluir o plugin que está em anexo nesta mensagem. O plugin frontend (skill) habilita que ele crie designs fora do comum. Estou anexando aqui para você entender do que se trata. A apresentação pode ser scrollável verticalmente ou horizontalmente. Não quero scroll livre. Quero um scroll que scrolle automaticamente para mim até a próxima seção aparecer, com uma transição/animação suave. Fique a vontade para escolher elementos criatívos para cada seção. Por exemplo, para a seção de qualquer capítulo, adicionar granulado de filme, sutil, mas com uma pegada cinematográfica. Meu foco não é somente apresentar dados, mas sim *contar uma história, com emoção, profissionalismo (base científica/acadêmica e experiência, inovadora)*. O foco é montar cada seção com pouco texto, textos médios/grandes e um visual cinemátográfico. Note que eu omiti várias informações ao descrever algumas seções, pois espero que, no seu output final, você retorne tudo mastigado para o claude code apenas executar a tarefa. Apenas descreva todo o contexto, estilo e conteúdo de cada slide (como se fosse um designer explicando para um dev frontend), que o Claude Code vai determinar a melhor maneira de fazer isso. De preferência, acho que um tema light seria mais legal que um tema dark, mas você que irá decidir tudo isso. Explique pra ele que ele pode usar QUALQUER BIBLIOTECAS QUE ELE QUISER. Pode instalar tudo. Sobre os slides, o tema principal é sobre inteligência artificial. Então, em alguns slides, sobre "Gêmeos Digitais", por exemplo, tente inserir informações de onde a IA se encaixa nisso. E leve em conta que irei dar a palestra para um público de TI, mas terão TODOS os cursos presentes, incluindo pós graduações. Então nenhum curso pode se sentir de fora dessa apresentação. A apresentação deve ser AI-First e inclusiva a todos, sem ser superficial para os que já sabem tecnologia, mas sem ser muito técnica para os que não sabem (Os que sabem tecnologia devem ter momentos de grande aprendizado e ver que a apresentação não é superficial).
+
+Seu papel, aqui, é montar um ROTEIRO DE APRESENTAÇÃO. Explicando o estilo visual da apresentação, como os elementos devem ser posicionados, CADA SLIDE com CADA um dos conteúdos, melhorando o que já enviei para você, se quiser, adicionando mais detalhes que não pensei e explicando o posicionamento/estilo de cada elemento/seção e deixando a apresentação, no geral, AI-first e dando a entender que todos os cursos serão abrangidos. Sem parecer que o conteúdo que estou falando está tangenciando o tema, pois do nada eu começo realmente a falar de gemeos digitais e outros temas, entao quero que inclua conteúdos de IA nesse tipo de slide, pois o tema da palestra é "O Futuro da Saúde na Era da Inteligência Artificial" então preciso fazer jus a isso. 
+
+Você não vai escrever o código aqui, mas vai escrever TODO O CONTEXTO necessário para que o claude code escreva o código (Menos a parte do plugin, que eu irei anexar eu mesmo essas instruções),
