@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- preparing harness
+- add Jackson desserialization annotation
+
+## [0.8.2] - 2026-03-08
+
+### Fixed
+
 - removed $ref examples from agent router and added "source".
 
 ## [0.8.1] - 2026-03-05

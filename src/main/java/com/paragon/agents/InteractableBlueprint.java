@@ -70,6 +70,7 @@ import org.slf4j.LoggerFactory;
       value = InteractableBlueprint.HierarchicalAgentsBlueprint.class,
       name = "hierarchical")
 })
+@JsonDeserialize(using = InteractableBlueprint.BlueprintDeserializer.class)
 public sealed interface InteractableBlueprint
     permits InteractableBlueprint.AgentBlueprint,
         InteractableBlueprint.AgentNetworkBlueprint,

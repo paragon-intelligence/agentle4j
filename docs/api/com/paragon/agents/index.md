@@ -21,7 +21,9 @@
 | [`GuardrailRegistry`](guardrailregistry.md) | Thread-safe global registry for named guardrails |
 | [`Handoff`](handoff.md) | A handoff defines when and to which agent control should be transferred |
 | [`HierarchicalAgents`](hierarchicalagents.md) | Implements the Hierarchical pattern: multi-layered supervisor structure |
+| [`FilesystemMemory`](filesystemmemory.md) | Durable filesystem-backed implementation of `Memory` — survives JVM restarts |
 | [`InMemoryMemory`](inmemorymemory.md) | Thread-safe in-memory implementation of `Memory` with user isolation |
+| [`JdbcMemory`](jdbcmemory.md) | JDBC-backed durable implementation of `Memory` for any SQL database |
 | [`InteractableSubAgentTool`](interactablesubagenttool.md) | Wraps any Interactable as a FunctionTool, enabling composition of multi-agent patterns |
 | [`MemoryTool`](memorytool.md) | Memory exposed as FunctionTools for agent use |
 | [`NamedInputGuardrail`](namedinputguardrail.md) | An `InputGuardrail` wrapper that carries a string ID for serialization support |

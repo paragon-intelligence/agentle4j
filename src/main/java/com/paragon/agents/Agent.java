@@ -16,6 +16,7 @@ import com.paragon.skills.Skill;
 import com.paragon.skills.SkillProvider;
 import com.paragon.skills.SkillReaderTool;
 import com.paragon.skills.SkillStore;
+import com.paragon.harness.HookRegistry;
 import com.paragon.telemetry.TelemetryContext;
 import com.paragon.telemetry.events.AgentFailedEvent;
 import com.paragon.telemetry.processors.ProcessorRegistry;
@@ -137,6 +138,9 @@ public final class Agent implements Serializable, Interactable {
   // ===== Context Management =====
   private final @Nullable ContextManagementConfig contextManagementConfig;
 
+  // ===== Harness Hooks =====
+  private final @NonNull HookRegistry hookRegistry;
+
   // ===== Runtime Dependencies =====
   private final transient @NonNull Responder responder;
   private final transient @NonNull FunctionToolStore toolStore;
@@ -160,6 +164,9 @@ public final class Agent implements Serializable, Interactable {
 
     // Context management
     this.contextManagementConfig = builder.contextManagementConfig;
+
+    // Harness hooks
+    this.hookRegistry = builder.hookRegistry != null ? builder.hookRegistry : HookRegistry.create();
 
     // Tool search registry
     this.toolRegistry = builder.toolRegistry;
@@ -430,6 +437,15 @@ public final class Agent implements Serializable, Interactable {
     return toolRegistry;
   }
 
+  /**
+   * Returns the hook registry configured for this agent.
+   *
+   * @return the hook registry
+   */
+  public @NonNull HookRegistry hookRegistry() {
+    return hookRegistry;
+  }
+
   /** Returns the tool store. Package-private for AgentStream. */
   @NonNull FunctionToolStore toolStore() {
     return toolStore;
@@ -655,6 +671,9 @@ public final class Agent implements Serializable, Interactable {
 
     context.ensureTraceContext();
 
+    // Fire beforeRun hooks
+    hookRegistry.fireBeforeRun(context);
+
     // Validate input guardrails before processing
     String inputText = extractTextFromInput(context.getHistory());
     for (InputGuardrail guardrail : inputGuardrails) {
@@ -663,12 +682,16 @@ public final class Agent implements Serializable, Interactable {
         GuardrailResult.Failed failed = (GuardrailResult.Failed) result;
         GuardrailException guardEx = GuardrailException.inputViolation(failed.reason());
         broadcastFailedEvent(guardEx, context);
-        return AgentResult.error(guardEx, context, context.getTurnCount());
+        AgentResult errorResult = AgentResult.error(guardEx, context, context.getTurnCount());
+        hookRegistry.fireAfterRun(errorResult, context);
+        return errorResult;
       }
     }
 
     // Execute agentic loop with trace
-    return executeAgenticLoop(context, new ArrayList<>(), callbacks, "", trace);
+    AgentResult loopResult = executeAgenticLoop(context, new ArrayList<>(), callbacks, "", trace);
+    hookRegistry.fireAfterRun(loopResult, context);
+    return loopResult;
   }
 
   /** Unified agentic loop. Shared by interact, resume, and AgentStream. */
@@ -788,7 +811,9 @@ public final class Agent implements Serializable, Interactable {
           boolean shouldExecute = callbacks == null || callbacks.onToolCall(call);
 
           if (shouldExecute) {
+            hookRegistry.fireBeforeToolCall(call, context);
             ToolExecution exec = executeSingleToolWithErrorHandling(call, context);
+            hookRegistry.fireAfterToolCall(call, exec, context);
             allToolExecutions.add(exec);
             if (callbacks != null) callbacks.onToolExecuted(exec);
             context.addToolResult(exec.output());
@@ -1163,6 +1188,8 @@ public final class Agent implements Serializable, Interactable {
     private @Nullable ToolRegistry toolRegistry;
     // Tool planning
     private boolean toolPlanningEnabled = false;
+    // Harness hooks
+    private @Nullable HookRegistry hookRegistry;
 
     /**
      * Sets the agent's name (required).
@@ -1673,6 +1700,26 @@ public final class Agent implements Serializable, Interactable {
      */
     public @NonNull Builder enableToolPlanning() {
       this.toolPlanningEnabled = true;
+      return this;
+    }
+
+    /**
+     * Sets the {@link HookRegistry} for lifecycle hooks around agent and tool execution.
+     *
+     * <p>Hooks are invoked at the following points:
+     * <ul>
+     *   <li>{@code beforeRun} — before the agentic loop starts</li>
+     *   <li>{@code afterRun} — after the agentic loop completes</li>
+     *   <li>{@code beforeToolCall} — before each tool execution</li>
+     *   <li>{@code afterToolCall} — after each tool execution</li>
+     * </ul>
+     *
+     * @param hookRegistry the registry containing hooks to run
+     * @return this builder
+     * @see HookRegistry
+     */
+    public @NonNull Builder hookRegistry(@NonNull HookRegistry hookRegistry) {
+      this.hookRegistry = Objects.requireNonNull(hookRegistry, "hookRegistry cannot be null");
       return this;
     }
 

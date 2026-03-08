@@ -252,6 +252,109 @@ agent.interact("¿Cómo puedo recuperar mi contraseña?");
 
 See the [Blueprints Guide](docs/guides/blueprints.md) for the full JSON schema reference, multi-agent serialization examples, and Spring Boot integration.
 
+## Harness engineering
+
+*The bottleneck is infrastructure, not intelligence.* Agentle ships a full harness layer — constraints, verification loops, and feedback systems that let agents do reliable long-horizon work.
+
+### Self-correction loop
+
+When an agent fails (guardrail violation, tool error, bad output), inject the error back and retry. LangChain benchmarks show this one feature gives the largest accuracy improvement.
+
+```java
+Interactable correcting = SelfCorrectingInteractable.wrap(agent,
+    SelfCorrectionConfig.builder()
+        .maxRetries(3)
+        .retryOn(result -> result.isError())
+        .feedbackTemplate("Your attempt failed:\n{error}\nPlease fix it and try again.")
+        .build());
+
+AgentResult result = correcting.interact("Write a sorting algorithm");
+```
+
+### Lifecycle hooks
+
+Inject logging, cost tracking, rate limiting, or circuit breakers around any agent run or tool call — without modifying the agent.
+
+```java
+HookRegistry hooks = HookRegistry.create()
+    .add(new AgentHook() {
+        @Override
+        public void beforeToolCall(FunctionToolCall call, AgenticContext ctx) {
+            System.out.println("Calling: " + call.name());
+        }
+        @Override
+        public void afterToolCall(FunctionToolCall call, ToolExecution exec, AgenticContext ctx) {
+            System.out.println("Done: " + exec.isSuccess() + " in " + exec.duration().toMillis() + "ms");
+        }
+    });
+
+Agent agent = Agent.builder()
+    .hookRegistry(hooks)
+    .build();
+```
+
+### Shell verification tools
+
+Give agents the ability to run their own tests and linters. The command is fixed at construction time — the agent can trigger it but cannot inject arguments.
+
+```java
+Agent agent = Agent.builder()
+    .name("CodeWriter")
+    .instructions("Write code, then run_tests. If tests fail, fix the code and run again.")
+    .addTool(ShellVerificationTool.builder()
+        .name("run_tests")
+        .command("mvn", "test", "-q")
+        .workingDir(Path.of("/my/project"))
+        .timeoutSeconds(120)
+        .build())
+    .build();
+```
+
+### Durable memory
+
+`InMemoryMemory` is fine for prototyping. For production long-running agents:
+
+```java
+// Filesystem: survives JVM restarts
+Memory memory = FilesystemMemory.create(Path.of("/var/agent-data/memory"));
+
+// JDBC: any SQL database
+Memory memory = JdbcMemory.create(hikariDataSource);
+
+// Both plug into the same interface — no agent code changes
+Agent agent = Agent.builder().addMemoryTools(memory).build();
+```
+
+### Progress logs and artifact stores
+
+For Anthropic-style long-running multi-session agents that need to track work across restarts:
+
+```java
+ProgressLog log = ProgressLog.create();
+ArtifactStore store = FilesystemArtifactStore.create(Path.of("./artifacts"));
+
+Agent agent = Agent.builder()
+    .addTools(ProgressLogTool.all(log).toArray(new FunctionTool[0]))
+    .addTools(ArtifactStoreTool.all(store).toArray(new FunctionTool[0]))
+    .build();
+
+// Agent can now: read_progress_log, append_progress_log, read_artifact, write_artifact, list_artifacts
+```
+
+### Harness builder — compose everything
+
+```java
+Interactable harnessedAgent = Harness.builder()
+    .selfCorrection()                                          // 3 retries on error
+    .addHook(new LoggingHook())
+    .artifactStore(FilesystemArtifactStore.create(Path.of("./artifacts")))
+    .progressLog(ProgressLog.create())
+    .reportExporter(RunReportExporter.create(Path.of("./reports")))
+    .wrap(myAgent);
+```
+
+See the [Harness API Reference](docs/api/com/paragon/harness/index.md) for the full package documentation.
+
 ## Everything else
 
 Agentle ships with more than agents. Each feature has a dedicated guide.
@@ -261,7 +364,7 @@ Agentle ships with more than agents. Each feature has a dedicated guide.
 - **[Web Extraction](docs/guides/web-extraction.md)** — Playwright renders the page, LLM extracts structured data. `WebExtractor.create(responder, model)`.
 - **[Guardrails](docs/guides/agents.md#guardrails)** — Input/output validation. Block dangerous prompts, enforce constraints, fail before the LLM runs.
 - **[Context Management](docs/guides/context-management.md)** — Sliding window or LLM-powered summarization for long conversations. Pluggable strategies.
-- **[Memory](docs/guides/agents.md)** — Persistent cross-conversation memory. `agent.addMemoryTools(memory)` — the agent stores and retrieves on its own.
+- **[Memory](docs/guides/agents.md)** — Persistent cross-conversation memory. `InMemoryMemory`, `FilesystemMemory`, or `JdbcMemory`. The agent stores and retrieves on its own.
 - **[Prompt Builder](docs/guides/prompt-management.md)** — Fluent API with chain-of-thought, few-shot examples, templates, and multi-language support.
 - **[Observability](docs/guides/observability.md)** — Built-in OpenTelemetry. Traces span across agent handoffs and parallel execution. One line: `.addTelemetryProcessor(LangfuseProcessor.fromEnv())`.
 - **[Vision](docs/guides/vision.md)** — Multi-modal input with `Image.fromUrl()`, base64, or file ID. Control detail level per image.
@@ -270,6 +373,7 @@ Agentle ships with more than agents. Each feature has a dedicated guide.
 - **[Streaming](docs/guides/streaming.md)** — Text deltas, tool call events, structured output — all via virtual-thread callbacks.
 - **[Tools](docs/guides/tools.md)** — Type-safe function tools using Java records. Auto-generated JSON schemas from generics.
 - **[Tool Planning](docs/guides/tool-planning.md)** — DAG-based parallel tool execution with reference resolution between steps.
+- **[Harness Engineering](docs/api/com/paragon/harness/index.md)** — Self-correction loops, lifecycle hooks, shell verification, durable memory, progress logs, artifact stores, and run reports.
 
 ## How it compares
 
@@ -286,6 +390,11 @@ Agentle ships with more than agents. Each feature has a dedicated guide.
 | Error model | `AgentResult` (never throws) | Exceptions | Exceptions |
 | MCP support | stdio + HTTP | No | Limited |
 | Observability | Built-in OpenTelemetry | Plugin | Plugin |
+| Self-correction loops | Built-in (`SelfCorrectingInteractable`) | No | No |
+| Lifecycle hooks | Built-in (`HookRegistry`) | No | No |
+| Durable memory | Filesystem + JDBC backends | No | No |
+| Verification tools | `ShellVerificationTool` (injection-safe) | No | No |
+| Artifact management | `ArtifactStore` + `ProgressLog` | No | No |
 
 LangChain4j and Spring AI have broader provider support through native integrations and offer Spring Boot / Quarkus starters. Agentle requires a Responses API-compatible provider (OpenAI, OpenRouter, or any compatible endpoint). Pick based on what your project needs.
 
