@@ -1,6 +1,7 @@
 # Package `com.paragon.embeddings`
 
-> This docs was updated at: 2026-03-05
+> This docs was updated at: 2026-03-08
+
 
 
 

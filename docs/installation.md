@@ -1,6 +1,7 @@
 # Installation
 
-> This docs was updated at: 2026-03-05
+> This docs was updated at: 2026-03-08
+
 
 
 
@@ -19,7 +20,7 @@ Add the following dependency to your `pom.xml`:
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.8.1</version>
+    <version>0.8.2</version>
 </dependency>
 ```
 
@@ -28,13 +29,13 @@ Add the following dependency to your `pom.xml`:
 === "Groovy DSL"
 
     ```groovy
-    implementation 'io.github.paragon-intelligence:agentle4j:0.8.1'
+    implementation 'io.github.paragon-intelligence:agentle4j:0.8.2'
     ```
 
 === "Kotlin DSL"
 
     ```kotlin
-    implementation("io.github.paragon-intelligence:agentle4j:0.8.1")
+    implementation("io.github.paragon-intelligence:agentle4j:0.8.2")
     ```
 
 ## Verifying Installation
