@@ -104,6 +104,10 @@ public final class SupervisorAgent implements Interactable {
       agentBuilder.addSkill(skill);
     }
 
+    if (builder.outputType != null) {
+      agentBuilder.outputType(builder.outputType);
+    }
+
     this.supervisorAgent = agentBuilder.build();
   }
 
@@ -222,8 +226,14 @@ public final class SupervisorAgent implements Interactable {
     private @Nullable Responder responder;
     private int maxTurns = 10;
     private @Nullable TraceMetadata traceMetadata;
+    @Nullable Class<?> outputType;
 
     private Builder() {}
+
+    @NonNull Builder outputType(@NonNull Class<?> outputType) {
+      this.outputType = Objects.requireNonNull(outputType);
+      return this;
+    }
 
     /**
      * Sets the supervisor name.
@@ -461,6 +471,7 @@ public final class SupervisorAgent implements Interactable {
      * @return the configured Structured supervisor
      */
     public SupervisorAgent.Structured<T> build() {
+      parentBuilder.outputType(outputType);
       SupervisorAgent supervisor = parentBuilder.build();
       ObjectMapper mapper = objectMapper != null ? objectMapper : new ObjectMapper();
       return new SupervisorAgent.Structured<>(supervisor, outputType, mapper);

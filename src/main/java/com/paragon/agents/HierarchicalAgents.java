@@ -60,6 +60,7 @@ public final class HierarchicalAgents implements Interactable {
   private final int maxTurns;
   private final @NonNull SupervisorAgent rootSupervisor;
   private final @Nullable TraceMetadata traceMetadata;
+  private final @Nullable Class<?> outputType;
 
   private HierarchicalAgents(Builder builder) {
     this.executive = Objects.requireNonNull(builder.executive, "executive cannot be null");
@@ -67,6 +68,7 @@ public final class HierarchicalAgents implements Interactable {
     this.maxTurns = builder.maxTurns;
     this.departmentSupervisors = new HashMap<>();
     this.traceMetadata = builder.traceMetadata;
+    this.outputType = builder.outputType;
 
     if (departments.isEmpty()) {
       throw new IllegalArgumentException("At least one department is required");
@@ -216,6 +218,10 @@ public final class HierarchicalAgents implements Interactable {
           deptName + " department - " + entry.getValue().manager().instructions().text());
     }
 
+    if (outputType != null) {
+      rootBuilder.outputType(outputType);
+    }
+
     return rootBuilder.build();
   }
 
@@ -274,8 +280,14 @@ public final class HierarchicalAgents implements Interactable {
     private @Nullable Agent executive;
     private int maxTurns = 10;
     private @Nullable TraceMetadata traceMetadata;
+    @Nullable Class<?> outputType;
 
     private Builder() {}
+
+    @NonNull Builder outputType(@NonNull Class<?> outputType) {
+      this.outputType = Objects.requireNonNull(outputType);
+      return this;
+    }
 
     /**
      * Sets the executive agent at the top of the hierarchy.
@@ -459,6 +471,7 @@ public final class HierarchicalAgents implements Interactable {
      * @return the configured Structured hierarchy
      */
     public HierarchicalAgents.Structured<T> build() {
+      parentBuilder.outputType(outputType);
       HierarchicalAgents hierarchy = parentBuilder.build();
       ObjectMapper mapper = objectMapper != null ? objectMapper : new ObjectMapper();
       return new HierarchicalAgents.Structured<>(hierarchy, outputType, mapper);
