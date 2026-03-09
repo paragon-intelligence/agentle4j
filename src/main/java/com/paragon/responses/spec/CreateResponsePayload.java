@@ -571,7 +571,7 @@ public class CreateResponsePayload {
     @Nullable Boolean store = false;
     @Nullable Boolean stream = false;
     @Nullable StreamOptions streamOptions = null;
-    @Nullable Double temperature = 2.0;
+    @Nullable Double temperature = 1.0;
     @Nullable TextConfigurationOptions text = null;
     @Nullable ToolChoice toolChoice = null;
     @Nullable List<Tool> tools = null;

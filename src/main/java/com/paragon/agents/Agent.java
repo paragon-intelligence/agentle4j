@@ -1928,6 +1928,7 @@ public final class Agent implements Serializable, Interactable {
      * @throws NullPointerException if required fields are missing
      */
     public @NonNull Structured<T> build() {
+      parentBuilder.outputType(outputType);
       Agent agent = parentBuilder.build();
       return new Structured<>(agent, outputType);
     }
@@ -2011,6 +2012,21 @@ public final class Agent implements Serializable, Interactable {
       return parseResult(result);
     }
 
+    /**
+     * Strips markdown code fences (e.g. ```json ... ```) from model output. Some
+     * OpenRouter-proxied models ignore strict mode and wrap JSON in a code block.
+     */
+    private static String stripMarkdownFences(String text) {
+      if (text == null) return text;
+      String trimmed = text.strip();
+      if (!trimmed.startsWith("```")) return text;
+      int firstNewline = trimmed.indexOf('\n');
+      if (firstNewline == -1) return text;
+      int lastFence = trimmed.lastIndexOf("```");
+      if (lastFence <= firstNewline) return text;
+      return trimmed.substring(firstNewline + 1, lastFence).strip();
+    }
+
     /** Parses the AgentResult into a type-safe StructuredAgentResult. */
     private @NonNull StructuredAgentResult<T> parseResult(AgentResult result) {
       if (result.isError()) {
@@ -2024,7 +2040,7 @@ public final class Agent implements Serializable, Interactable {
       }
 
       try {
-        T parsed = objectMapper.readValue(result.output(), outputType);
+        T parsed = objectMapper.readValue(stripMarkdownFences(result.output()), outputType);
         return StructuredAgentResult.success(
             parsed,
             result.output(),

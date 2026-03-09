@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   references (Jackson's URN-style `$ref`/`id` pattern) instead of leaving them unresolved, and the Jackson-generated
   `"id": "urn:jsonschema:..."` metadata is stripped from every object node. Both issues caused HTTP 500 errors from the
   OpenAI/OpenRouter API when `strict: true` was set on structured output.
+- **`Agent.Structured` markdown fence stripping**: `parseResult` now strips ` ```json ... ``` ` code fences before
+  deserializing the model output. OpenRouter-proxied models that do not fully honour `strict: true` sometimes wrap
+  their JSON response in a markdown code block, which previously caused a `JsonParseException`.
+- **`Agent.Structured` never sent the structured output schema**: `StructuredBuilder.build()` wrapped the agent with
+  `outputType` but never forwarded it to the underlying `Agent.Builder` via `outputType()`. As a result, the agent's
+  `buildPayload()` skipped `withStructuredOutput(...)` entirely — the model received no schema and returned plain text.
+  Fixed by calling `parentBuilder.outputType(outputType)` before `parentBuilder.build()`.
+- **`CreateResponsePayload.Builder` default temperature**: changed from `2.0` (the maximum, causing highly
+  unpredictable output) to `1.0`. The previous default caused models to ignore structured output schemas even when
+  `strict: true` was set, producing malformed or hallucinated field names.
 
 ## [0.8.7] - 2026-03-08
 
