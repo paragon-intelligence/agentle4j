@@ -5,7 +5,7 @@ All notable changes to Agentle4j will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.8.8]
+## [0.8.9]
 
 ### Fixed
 
@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`CreateResponsePayload.Builder` default temperature**: changed from `2.0` (the maximum, causing highly
   unpredictable output) to `1.0`. The previous default caused models to ignore structured output schemas even when
   `strict: true` was set, producing malformed or hallucinated field names.
+
+## [0.8.7] - 2026-03-08
+
+### Fixed
+
+small fixes.
 
 ## [0.8.7] - 2026-03-08
 
