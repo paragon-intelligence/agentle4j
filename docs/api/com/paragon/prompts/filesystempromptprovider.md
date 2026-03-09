@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.prompts.FilesystemPromptProvider` &nbsp;·&nbsp; **Class**
 
 Implements `PromptProvider`

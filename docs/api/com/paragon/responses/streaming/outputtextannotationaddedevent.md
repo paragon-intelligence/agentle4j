@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.responses.streaming.OutputTextAnnotationAddedEvent` &nbsp;·&nbsp; **Record**
 
 ---

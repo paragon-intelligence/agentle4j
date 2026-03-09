@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.responses.exception.StreamingException` &nbsp;·&nbsp; **Class**
 
 Extends `AgentleException`

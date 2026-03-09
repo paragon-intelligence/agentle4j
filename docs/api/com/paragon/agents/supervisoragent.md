@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.agents.SupervisorAgent` &nbsp;·&nbsp; **Class**
 
 Implements `Interactable`

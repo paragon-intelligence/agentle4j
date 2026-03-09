@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.responses.exception.AgentExecutionException` &nbsp;·&nbsp; **Class**
 
 Extends `AgentleException`

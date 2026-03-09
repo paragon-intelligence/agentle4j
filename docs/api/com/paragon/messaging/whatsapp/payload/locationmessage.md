@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.payload.LocationMessage` &nbsp;·&nbsp; **Class**
 
 Extends `AbstractInboundMessage`

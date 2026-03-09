@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.mcp.dto.McpToolResult` &nbsp;·&nbsp; **Record**
 
 ---

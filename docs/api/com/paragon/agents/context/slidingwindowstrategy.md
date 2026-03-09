@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.agents.context.SlidingWindowStrategy` &nbsp;·&nbsp; **Class**
 
 Implements `ContextWindowStrategy`

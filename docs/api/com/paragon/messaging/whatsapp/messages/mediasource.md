@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.messages.MediaSource` &nbsp;·&nbsp; **Interface**
 
 ---

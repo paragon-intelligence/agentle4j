@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.responses.spec.DeveloperMessage` &nbsp;·&nbsp; **Class**
 
 Extends `Message`

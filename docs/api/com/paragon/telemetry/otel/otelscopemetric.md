@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.telemetry.otel.OtelScopeMetric` &nbsp;·&nbsp; **Record**
 
 ---

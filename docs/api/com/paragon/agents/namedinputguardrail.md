@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.agents.NamedInputGuardrail` &nbsp;·&nbsp; **Class**
 
 Implements `InputGuardrail`

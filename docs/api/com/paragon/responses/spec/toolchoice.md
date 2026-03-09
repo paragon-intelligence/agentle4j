@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.responses.spec.ToolChoice` &nbsp;·&nbsp; **Interface**
 
 Extends `ToolChoiceRepresentable`

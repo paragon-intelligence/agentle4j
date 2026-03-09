@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.payload.AudioMessage` &nbsp;·&nbsp; **Class**
 
 Extends `AbstractInboundMessage`

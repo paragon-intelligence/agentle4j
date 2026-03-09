@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.payload.ContactMessage` &nbsp;·&nbsp; **Record**
 
 ---

@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.messaging.core.MessagingException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`

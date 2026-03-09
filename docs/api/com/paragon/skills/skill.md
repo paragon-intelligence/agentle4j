@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.skills.Skill` &nbsp;·&nbsp; **Class**
 
 ---

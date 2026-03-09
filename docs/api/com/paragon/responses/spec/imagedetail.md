@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.responses.spec.ImageDetail` &nbsp;·&nbsp; **Enum**
 
 ---

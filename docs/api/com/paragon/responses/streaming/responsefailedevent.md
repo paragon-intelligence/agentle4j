@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.responses.streaming.ResponseFailedEvent` &nbsp;·&nbsp; **Record**
 
 ---

@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.agents.SubAgentTool` &nbsp;·&nbsp; **Class**
 
 Extends `FunctionTool<SubAgentTool.SubAgentParams>`

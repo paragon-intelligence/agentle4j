@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.web.ScrapeResult` &nbsp;·&nbsp; **Record**
 
 ---

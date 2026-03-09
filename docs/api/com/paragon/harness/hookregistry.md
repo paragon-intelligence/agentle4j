@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.harness.HookRegistry` &nbsp;·&nbsp; **Class**
 
 ---

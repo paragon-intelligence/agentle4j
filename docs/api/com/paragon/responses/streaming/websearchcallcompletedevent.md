@@ -11,6 +11,7 @@
 
 
 
+
 `com.paragon.responses.streaming.WebSearchCallCompletedEvent` &nbsp;·&nbsp; **Record**
 
 ---
