@@ -159,7 +159,8 @@ public final class RouterAgent implements Interactable {
     }
     routingPrompt.append("\nUser input: \"").append(input).append("\"\n\n");
     routingPrompt.append(
-        "Respond with ONLY the handler number (e.g., \"1\" or \"2\"). Nothing else.");
+        "Respond with ONLY the handler number (e.g., \"1\" or \"2\"). "
+            + "If none of the handlers are appropriate for the input, respond with \"0\". Nothing else.");
 
     // Call LLM for classification
     CreateResponsePayload payload =
@@ -173,6 +174,9 @@ public final class RouterAgent implements Interactable {
     try {
       String output = response.outputText().trim();
       int selectedIndex = Integer.parseInt(output) - 1;
+      if (selectedIndex == -1) {
+        return Optional.ofNullable(fallback); // explicit 0 = no match → fallback
+      }
       if (selectedIndex >= 0 && selectedIndex < routes.size()) {
         return Optional.of(routes.get(selectedIndex).target);
       }
