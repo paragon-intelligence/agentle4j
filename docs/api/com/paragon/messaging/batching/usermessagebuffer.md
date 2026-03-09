@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.messaging.batching.UserMessageBuffer` &nbsp;·&nbsp; **Class**
 
 ---

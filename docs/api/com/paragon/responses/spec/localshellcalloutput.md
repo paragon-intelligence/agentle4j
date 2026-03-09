@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.responses.spec.LocalShellCallOutput` &nbsp;·&nbsp; **Record**
 
 ---

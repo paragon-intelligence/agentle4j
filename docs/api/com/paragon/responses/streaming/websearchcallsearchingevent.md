@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.responses.streaming.WebSearchCallSearchingEvent` &nbsp;·&nbsp; **Record**
 
 ---

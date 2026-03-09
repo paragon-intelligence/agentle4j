@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.prompts.PromptProviderException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`

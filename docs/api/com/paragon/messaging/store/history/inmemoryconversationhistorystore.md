@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.messaging.store.history.InMemoryConversationHistoryStore` &nbsp;·&nbsp; **Class**
 
 Implements `ConversationHistoryStore`

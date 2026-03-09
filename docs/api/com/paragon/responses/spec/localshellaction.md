@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.responses.spec.LocalShellAction` &nbsp;·&nbsp; **Interface**
 
 ---

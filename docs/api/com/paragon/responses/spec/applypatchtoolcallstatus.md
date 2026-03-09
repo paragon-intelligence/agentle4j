@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.responses.spec.ApplyPatchToolCallStatus` &nbsp;·&nbsp; **Enum**
 
 ---

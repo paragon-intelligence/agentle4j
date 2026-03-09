@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.responses.streaming.ImageGenerationCallGeneratingEvent` &nbsp;·&nbsp; **Record**
 
 ---

@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.responses.spec.CustomToolCall` &nbsp;·&nbsp; **Class**
 
 Extends `ToolCall` &nbsp;·&nbsp; Implements `Item`, `ResponseOutput`

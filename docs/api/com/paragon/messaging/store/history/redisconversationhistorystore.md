@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.messaging.store.history.RedisConversationHistoryStore` &nbsp;·&nbsp; **Class**
 
 Implements `ConversationHistoryStore`

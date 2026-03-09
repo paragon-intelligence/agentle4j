@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.mcp.McpClient` &nbsp;·&nbsp; **Class**
 
 Implements `AutoCloseable`

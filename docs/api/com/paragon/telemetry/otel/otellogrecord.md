@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.telemetry.otel.OtelLogRecord` &nbsp;·&nbsp; **Record**
 
 ---

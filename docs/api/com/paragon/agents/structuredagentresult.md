@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.agents.StructuredAgentResult` &nbsp;·&nbsp; **Record**
 
 ---

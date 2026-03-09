@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.responses.streaming.FileSearchCallCompletedEvent` &nbsp;·&nbsp; **Record**
 
 ---

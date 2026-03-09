@@ -10,6 +10,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.config.TTSConfig` &nbsp;·&nbsp; **Record**
 
 ---
