@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.messaging.core.ContactMessageInterface` &nbsp;·&nbsp; **Interface**
 
 Extends `OutboundMessage`

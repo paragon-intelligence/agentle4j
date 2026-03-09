@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.responses.spec.ComparisonFilterBooleanValue` &nbsp;·&nbsp; **Record**
 
 ---

@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.embeddings.OpenRouterEmbeddingProvider` &nbsp;·&nbsp; **Class**
 
 Implements `EmbeddingProvider`

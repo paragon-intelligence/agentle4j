@@ -25,6 +25,7 @@ hide:
 
 
 
+
 **The Modern Java Library for OpenAI Responses API**
 
 [![Java](https://img.shields.io/badge/Java-21+-orange?logo=openjdk)](https://openjdk.org/)

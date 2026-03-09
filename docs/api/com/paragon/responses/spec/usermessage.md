@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.responses.spec.UserMessage` &nbsp;·&nbsp; **Class**
 
 Extends `Message`

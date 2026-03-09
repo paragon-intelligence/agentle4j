@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.responses.spec.FileSearchToolCall` &nbsp;·&nbsp; **Class**
 
 Extends `ToolCall` &nbsp;·&nbsp; Implements `Item`, `ResponseOutput`

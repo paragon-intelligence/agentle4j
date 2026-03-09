@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.messaging.batching.BatchingConfig` &nbsp;·&nbsp; **Record**
 
 ---

@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.responses.spec.ApplyPatchToolCallOutput` &nbsp;·&nbsp; **Record**
 
 ---

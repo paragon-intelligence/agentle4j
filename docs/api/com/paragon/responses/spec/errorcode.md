@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.responses.spec.ErrorCode` &nbsp;·&nbsp; **Enum**
 
 ---

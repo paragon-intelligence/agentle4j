@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.skills.SkillProviderException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`

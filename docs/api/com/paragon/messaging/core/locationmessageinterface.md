@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.messaging.core.LocationMessageInterface` &nbsp;·&nbsp; **Interface**
 
 Extends `OutboundMessage`

@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.responses.streaming.ResponseCompletedEvent` &nbsp;·&nbsp; **Record**
 
 ---

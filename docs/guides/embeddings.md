@@ -9,6 +9,7 @@
 
 
 
+
 Text embeddings convert words and sentences into numerical vectors that capture semantic meaning. Agentle4j provides embedding support through OpenRouter with built-in retry handling.
 
 ---

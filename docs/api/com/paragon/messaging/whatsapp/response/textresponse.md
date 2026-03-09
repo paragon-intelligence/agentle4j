@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.response.TextResponse` &nbsp;·&nbsp; **Record**
 
 ---

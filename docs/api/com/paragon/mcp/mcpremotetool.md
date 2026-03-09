@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.mcp.McpRemoteTool` &nbsp;·&nbsp; **Class**
 
 Extends `FunctionTool<McpRemoteTool.McpParams>`

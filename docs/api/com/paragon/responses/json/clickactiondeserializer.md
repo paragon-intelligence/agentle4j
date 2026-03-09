@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.responses.json.ClickActionDeserializer` &nbsp;·&nbsp; **Class**
 
 Extends `JsonDeserializer<ClickAction>`

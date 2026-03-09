@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.responses.streaming.ImageGenerationCallInProgressEvent` &nbsp;·&nbsp; **Record**
 
 ---

@@ -9,6 +9,7 @@
 
 
 
+
 Batch multiple tool calls into a single execution plan, saving tokens and reducing latency by eliminating unnecessary LLM round-trips.
 
 ---

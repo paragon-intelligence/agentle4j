@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.mcp.McpException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`

@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.responses.exception.AgentleException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`

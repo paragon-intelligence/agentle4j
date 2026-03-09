@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.responses.spec.CompoundFilter` &nbsp;·&nbsp; **Record**
 
 ---

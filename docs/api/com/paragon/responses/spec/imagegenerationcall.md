@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.responses.spec.ImageGenerationCall` &nbsp;·&nbsp; **Class**
 
 Extends `ToolCall` &nbsp;·&nbsp; Implements `Item`, `ResponseOutput`

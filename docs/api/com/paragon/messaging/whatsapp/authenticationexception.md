@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.AuthenticationException` &nbsp;·&nbsp; **Class**
 
 Extends `MessagingException`

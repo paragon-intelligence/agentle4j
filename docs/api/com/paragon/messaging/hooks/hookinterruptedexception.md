@@ -9,6 +9,7 @@
 
 
 
+
 `com.paragon.messaging.hooks.HookInterruptedException` &nbsp;·&nbsp; **Class**
 
 Extends `Exception`
