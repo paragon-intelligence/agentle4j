@@ -16,7 +16,7 @@ import org.jspecify.annotations.Nullable;
  * @since 1.0
  */
 public record StructuredAgentResult<T>(
-    @NonNull T output,
+    @Nullable T output,
     @NonNull String rawOutput,
     @NonNull Response finalResponse,
     @NonNull List<ResponseInputItem> history,
@@ -50,6 +50,28 @@ public record StructuredAgentResult<T>(
    */
   public boolean isError() {
     return error != null;
+  }
+
+  /**
+   * Returns the typed output, or throws the underlying error if the interaction failed.
+   *
+   * <p>Use this instead of {@link #output()} when you want fail-fast behaviour: it guarantees a
+   * non-null return on success and surfaces the root cause on failure, preventing callers from
+   * silently receiving {@code null} and propagating it downstream (e.g. as a tool result that
+   * confuses the LLM and causes an infinite retry loop).
+   *
+   * @return the typed output (never null on this path)
+   * @throws RuntimeException wrapping {@link #error()} if {@link #isError()} is true
+   */
+  public @NonNull T outputOrThrow() {
+    if (error != null) {
+      if (error instanceof RuntimeException re) throw re;
+      throw new RuntimeException("Agent interaction failed: " + error.getMessage(), error);
+    }
+    if (output == null) {
+      throw new RuntimeException("Agent returned null output with no error");
+    }
+    return output;
   }
 
   /**
