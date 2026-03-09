@@ -5,6 +5,12 @@ All notable changes to Agentle4j will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **`JacksonJsonSchemaProducer` OpenAI strict mode compliance**: schemas with nested types now inline all `$ref` references (Jackson's URN-style `$ref`/`id` pattern) instead of leaving them unresolved, and the Jackson-generated `"id": "urn:jsonschema:..."` metadata is stripped from every object node. Both issues caused HTTP 500 errors from the OpenAI/OpenRouter API when `strict: true` was set on structured output.
+
 ## [0.8.7] - 2026-03-08
 
 ### Fixed
