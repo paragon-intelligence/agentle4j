@@ -7,6 +7,9 @@ import com.paragon.agents.InstructionSource;
 import com.paragon.agents.InteractableBlueprint.*;
 import com.paragon.http.RetryPolicy;
 import com.paragon.responses.TraceMetadata;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import org.junit.jupiter.api.*;
 
@@ -885,5 +888,105 @@ class InteractableBlueprintTest {
     InteractableBlueprint salesRoute = routerBp.routes().get(1).target();
     assertInstanceOf(AgentBlueprint.class, salesRoute);
     assertEquals("Sales", salesRoute.name());
+  }
+
+  // ===== $ref in nested fields =====
+
+  @Test
+  void nestedRefInRouteTarget() throws IOException {
+    // Write a temporary agent blueprint JSON file
+    Path tmpFile = Files.createTempFile("agent-bp-", ".json");
+    try {
+      var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
+      var agentBp =
+          new AgentBlueprint(
+              "NestedAgent",
+              "gpt-4o",
+              new InstructionSource.Inline("Nested agent instructions"),
+              5,
+              null,
+              null,
+              null,
+              responder,
+              List.of(),
+              List.of(),
+              List.of(),
+              List.of(),
+              null);
+      mapper.writeValue(tmpFile.toFile(), agentBp);
+
+      // Build a router JSON with the route's target as a $ref to the temp file
+      String json =
+          """
+          {
+            "type": "router",
+            "name": "TestRouter",
+            "model": "gpt-4o",
+            "routes": [
+              {
+                "target": { "$ref": "%s" },
+                "description": "Route to nested agent"
+              }
+            ],
+            "fallback": null,
+            "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": null }
+          }
+          """
+              .formatted(tmpFile.toAbsolutePath());
+
+      InteractableBlueprint parsed = mapper.readValue(json, InteractableBlueprint.class);
+      assertInstanceOf(RouterAgentBlueprint.class, parsed);
+      RouterAgentBlueprint router = (RouterAgentBlueprint) parsed;
+      assertEquals(1, router.routes().size());
+      assertInstanceOf(AgentBlueprint.class, router.routes().get(0).target());
+      assertEquals("NestedAgent", router.routes().get(0).target().name());
+    } finally {
+      Files.deleteIfExists(tmpFile);
+    }
+  }
+
+  @Test
+  void nestedSourceRegistryInFallback() {
+    var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
+    var fallbackBp =
+        new AgentBlueprint(
+            "FallbackAgent",
+            "gpt-4o",
+            new InstructionSource.Inline("Fallback instructions"),
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null);
+    BlueprintRegistry.register("fallback-agent", fallbackBp);
+    try {
+      String json =
+          """
+          {
+            "type": "router",
+            "name": "TestRouter",
+            "model": "gpt-4o",
+            "routes": [],
+            "fallback": { "source": "registry", "id": "fallback-agent" },
+            "responder": { "provider": "OPEN_ROUTER", "apiKeyEnvVar": null }
+          }
+          """;
+
+      InteractableBlueprint parsed = mapper.readValue(json, InteractableBlueprint.class);
+      assertInstanceOf(RouterAgentBlueprint.class, parsed);
+      RouterAgentBlueprint router = (RouterAgentBlueprint) parsed;
+      assertNotNull(router.fallback());
+      assertInstanceOf(AgentBlueprint.class, router.fallback());
+      assertEquals("FallbackAgent", router.fallback().name());
+    } catch (Exception e) {
+      fail("Expected $ref in nested fallback to work but got: " + e.getMessage());
+    } finally {
+      BlueprintRegistry.clear();
+    }
   }
 }

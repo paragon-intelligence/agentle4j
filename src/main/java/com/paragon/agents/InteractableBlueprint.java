@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.paragon.agents.context.ContextManagementConfig;
 import com.paragon.agents.context.SlidingWindowStrategy;
@@ -426,6 +427,7 @@ public sealed interface InteractableBlueprint
   // ===== Sealed Hierarchy: Blueprint Variants =====
 
   /** Blueprint for an {@link Agent}. */
+
   record AgentBlueprint(
       @JsonProperty("name") @NonNull String name,
       @JsonProperty("model") @NonNull String model,
@@ -518,6 +520,7 @@ public sealed interface InteractableBlueprint
   }
 
   /** Blueprint for an {@link AgentNetwork}. */
+
   record AgentNetworkBlueprint(
       @JsonProperty("name") @NonNull String name,
       @JsonProperty("peers")
@@ -552,6 +555,7 @@ public sealed interface InteractableBlueprint
   }
 
   /** Blueprint for a {@link SupervisorAgent}. */
+
   record SupervisorAgentBlueprint(
       @JsonProperty("name") @NonNull String name,
       @JsonProperty("model") @NonNull String model,
@@ -584,12 +588,11 @@ public sealed interface InteractableBlueprint
   }
 
   /** Blueprint for {@link ParallelAgents}. */
+
   record ParallelAgentsBlueprint(
       @JsonProperty("name") @NonNull String name,
-      @JsonProperty("members")
-          @JsonDeserialize(contentUsing = BlueprintDeserializer.class)
-          @NonNull
-          List<InteractableBlueprint> members,
+      @JsonDeserialize(contentUsing = BlueprintDeserializer.class)
+      @JsonProperty("members") @NonNull List<InteractableBlueprint> members,
       @JsonProperty("traceMetadata") @Nullable TraceMetadata traceMetadata)
       implements InteractableBlueprint {
 
@@ -602,14 +605,13 @@ public sealed interface InteractableBlueprint
   }
 
   /** Blueprint for a {@link RouterAgent}. */
+
   record RouterAgentBlueprint(
       @JsonProperty("name") @NonNull String name,
       @JsonProperty("model") @NonNull String model,
       @JsonProperty("routes") @NonNull List<RouteBlueprint> routes,
-      @JsonProperty("fallback")
-          @JsonDeserialize(using = BlueprintDeserializer.class)
-          @Nullable
-          InteractableBlueprint fallback,
+      @JsonDeserialize(using = BlueprintDeserializer.class)
+      @JsonProperty("fallback") @Nullable InteractableBlueprint fallback,
       @JsonProperty("responder") @NonNull ResponderBlueprint responder,
       @JsonProperty("traceMetadata") @Nullable TraceMetadata traceMetadata)
       implements InteractableBlueprint {
@@ -633,6 +635,7 @@ public sealed interface InteractableBlueprint
   }
 
   /** Blueprint for {@link HierarchicalAgents}. */
+
   record HierarchicalAgentsBlueprint(
       @JsonProperty("executive") @NonNull AgentBlueprint executive,
       @JsonProperty("departments") @NonNull Map<String, DepartmentBlueprint> departments,
@@ -691,53 +694,78 @@ public sealed interface InteractableBlueprint
    */
   final class BlueprintDeserializer extends JsonDeserializer<InteractableBlueprint> {
 
+    /**
+     * Called by Jackson when both {@code @JsonTypeInfo} and {@code @JsonDeserialize} are present on
+     * the same type. Overriding this gives us full control of the token stream <em>before</em> the
+     * {@code TypeDeserializer} reads and consumes the {@code type} property.
+     *
+     * <ul>
+     *   <li>For {@code $ref} / {@code source: file|registry} nodes we resolve the reference
+     *       directly — no {@code type} field is required.
+     *   <li>For inline definitions we replay the full node into {@code typeDeserializer} so it can
+     *       read {@code type} and dispatch to the correct concrete class as normal.
+     * </ul>
+     */
+    @Override
+    public InteractableBlueprint deserializeWithType(
+        JsonParser p, DeserializationContext ctxt, TypeDeserializer typeDeserializer)
+        throws IOException {
+      // Fast path: if the format provides a native type id (e.g. YAML !<agent> tags),
+      // delegate directly to the standard TypeDeserializer — no need to read the tree.
+      if (p.canReadTypeId()) {
+        Object nativeTypeId = p.getTypeId();
+        if (nativeTypeId != null) {
+          return (InteractableBlueprint) typeDeserializer.deserializeTypedFromAny(p, ctxt);
+        }
+      }
+
+      // Slow path: read the full node so we can inspect it before type dispatch.
+      // This handles $ref, source:, and property-based type ids (JSON).
+      ObjectMapper mapper = (ObjectMapper) p.getCodec();
+      JsonNode node = mapper.readTree(p);
+
+      // $ref / source: — no type field required
+      if (node.has("$ref")) {
+        return resolveFileRef(node.get("$ref").asText(), p);
+      }
+      if (node.has("source")) {
+        return resolveSource(node, p);
+      }
+
+      // Inline blueprint with property-based type id: convert to TreeTraversingParser
+      // (avoids YAML-specific tokenizer quirks) and delegate to AsPropertyTypeDeserializer.
+      // Concrete classes carry no @JsonDeserialize → plain record deserializer, no recursion.
+      JsonParser nodeParser = node.traverse(mapper);
+      nodeParser.nextToken(); // advance to START_OBJECT
+      return (InteractableBlueprint) typeDeserializer.deserializeTypedFromObject(nodeParser, ctxt);
+    }
+
     @Override
     public InteractableBlueprint deserialize(JsonParser p, DeserializationContext ctxt)
         throws IOException {
       ObjectMapper mapper = (ObjectMapper) p.getCodec();
       JsonNode node = mapper.readTree(p);
 
-      // Legacy $ref — kept for backward compatibility
+      // $ref / source: — same logic shared with deserializeWithType()
       if (node.has("$ref")) {
-        String refPath = node.get("$ref").asText();
-        return resolveFileRef(refPath, p);
+        return resolveFileRef(node.get("$ref").asText(), p);
       }
-
-      // New discriminated union: source: file | registry
       if (node.has("source")) {
-        String source = node.get("source").asText();
-        return switch (source) {
-          case "file" -> {
-            String path = requireField(node, "path", "source: file", p);
-            yield resolveFileRef(path, p);
-          }
-          case "registry" -> {
-            String id = requireField(node, "id", "source: registry", p);
-            InteractableBlueprint bp = BlueprintRegistry.get(id);
-            if (bp == null) {
-              throw new com.fasterxml.jackson.core.JsonParseException(
-                  p,
-                  "Blueprint not found in registry: '"
-                      + id
-                      + "'. Ensure BlueprintRegistry.register(\""
-                      + id
-                      + "\", ...) is called at startup.");
-            }
-            yield bp;
-          }
-          default -> throw new com.fasterxml.jackson.core.JsonParseException(
-              p,
-              "Unknown blueprint source: '"
-                  + source
-                  + "'. Valid values: 'file', 'registry'.");
-        };
+        return resolveSource(node, p);
       }
 
       // Inline blueprint — manually dispatch to the concrete class by type discriminator.
-      // This avoids both infinite recursion (calling treeToValue with InteractableBlueprint would
-      // re-enter BlueprintDeserializer) and the Delegate subtype-check failure that occurs when
-      // Jackson validates AgentBlueprint extends Delegate (it doesn't — it extends
-      // InteractableBlueprint).
+      return dispatchByType(node, mapper, p);
+    }
+
+    /**
+     * Dispatches to the concrete blueprint class by reading the {@code type} field from {@code
+     * node}. Each concrete class carries {@code @JsonDeserialize(using=None.class)} to suppress the
+     * inherited {@link BlueprintDeserializer}, so {@code treeToValue(node, ConcreteClass.class)}
+     * uses the default record deserializer — no recursion.
+     */
+    private InteractableBlueprint dispatchByType(JsonNode node, ObjectMapper mapper, JsonParser p)
+        throws IOException {
       JsonNode typeNode = node.get("type");
       if (typeNode == null || typeNode.isNull()) {
         throw new com.fasterxml.jackson.core.JsonParseException(
@@ -756,8 +784,33 @@ public sealed interface InteractableBlueprint
             p,
             "Unknown blueprint type: '"
                 + typeNode.asText()
-                + "'. Expected one of: agent, network, supervisor, parallel, router,"
-                + " hierarchical.");
+                + "'. Expected one of: agent, network, supervisor, parallel, router, hierarchical.");
+      };
+    }
+
+    private InteractableBlueprint resolveSource(JsonNode node, JsonParser p) throws IOException {
+      String source = node.get("source").asText();
+      return switch (source) {
+        case "file" -> {
+          String path = requireField(node, "path", "source: file", p);
+          yield resolveFileRef(path, p);
+        }
+        case "registry" -> {
+          String id = requireField(node, "id", "source: registry", p);
+          InteractableBlueprint bp = BlueprintRegistry.get(id);
+          if (bp == null) {
+            throw new com.fasterxml.jackson.core.JsonParseException(
+                p,
+                "Blueprint not found in registry: '"
+                    + id
+                    + "'. Ensure BlueprintRegistry.register(\""
+                    + id
+                    + "\", ...) is called at startup.");
+          }
+          yield bp;
+        }
+        default -> throw new com.fasterxml.jackson.core.JsonParseException(
+            p, "Unknown blueprint source: '" + source + "'. Valid values: 'file', 'registry'.");
       };
     }
 
