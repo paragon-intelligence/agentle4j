@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.messaging.batching.MessageBatchingService` &nbsp;·&nbsp; **Class**
 
 ---

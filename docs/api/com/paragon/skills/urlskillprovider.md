@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.skills.UrlSkillProvider` &nbsp;·&nbsp; **Class**
 
 Implements `SkillProvider`

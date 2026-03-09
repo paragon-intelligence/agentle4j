@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.agents.NamedOutputGuardrail` &nbsp;·&nbsp; **Class**
 
 Implements `OutputGuardrail`

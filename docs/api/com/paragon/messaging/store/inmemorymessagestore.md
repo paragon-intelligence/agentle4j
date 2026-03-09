@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.messaging.store.InMemoryMessageStore` &nbsp;·&nbsp; **Class**
 
 Implements `MessageStore`

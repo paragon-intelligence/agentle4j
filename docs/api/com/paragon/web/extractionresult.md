@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.web.ExtractionResult` &nbsp;·&nbsp; **Class**
 
 ---

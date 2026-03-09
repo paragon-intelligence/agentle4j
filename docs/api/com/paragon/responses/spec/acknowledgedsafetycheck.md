@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.responses.spec.AcknowledgedSafetyCheck` &nbsp;·&nbsp; **Record**
 
 ---

@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.responses.spec.ApplyPatchDeleteFileOperation` &nbsp;·&nbsp; **Record**
 
 ---

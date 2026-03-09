@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.responses.streaming.StreamingErrorEvent` &nbsp;·&nbsp; **Record**
 
 ---

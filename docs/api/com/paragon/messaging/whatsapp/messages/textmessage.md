@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.messages.TextMessage` &nbsp;·&nbsp; **Record**
 
 ---

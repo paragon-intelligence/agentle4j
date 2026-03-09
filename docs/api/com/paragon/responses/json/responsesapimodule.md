@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.responses.json.ResponsesApiModule` &nbsp;·&nbsp; **Class**
 
 Extends `SimpleModule`

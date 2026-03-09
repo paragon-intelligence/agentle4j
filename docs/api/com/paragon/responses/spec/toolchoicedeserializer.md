@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.responses.spec.ToolChoiceDeserializer` &nbsp;·&nbsp; **Class**
 
 Extends `JsonDeserializer<ToolChoice>`

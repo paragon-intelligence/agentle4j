@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.responses.json.CreateResponsePayloadDeserializer` &nbsp;·&nbsp; **Class**
 
 Extends `JsonDeserializer<CreateResponsePayload>`

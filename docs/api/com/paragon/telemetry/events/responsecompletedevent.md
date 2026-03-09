@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.telemetry.events.ResponseCompletedEvent` &nbsp;·&nbsp; **Record**
 
 ---

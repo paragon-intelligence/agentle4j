@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.WebhookValidationException` &nbsp;·&nbsp; **Class**
 
 Extends `MessagingException`

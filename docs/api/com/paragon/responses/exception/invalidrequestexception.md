@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.responses.exception.InvalidRequestException` &nbsp;·&nbsp; **Class**
 
 Extends `ApiException`

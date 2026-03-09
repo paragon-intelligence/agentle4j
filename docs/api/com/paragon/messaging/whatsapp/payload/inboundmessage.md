@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.payload.InboundMessage` &nbsp;·&nbsp; **Interface**
 
 ---

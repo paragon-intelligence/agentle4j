@@ -8,6 +8,7 @@
 
 
 
+
 `com.paragon.responses.spec.OutputFormat` &nbsp;·&nbsp; **Enum**
 
 ---
