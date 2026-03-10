@@ -12,6 +12,7 @@
 
 
 
+
 The `Responder` is the core HTTP client for the OpenAI Responses API. It handles all API communication, streaming, telemetry, and provider configuration.
 
 ---

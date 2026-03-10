@@ -12,6 +12,7 @@
 
 
 
+
 `com.paragon.responses.spec.LocalShellCall` &nbsp;·&nbsp; **Class**
 
 Extends `ToolCall` &nbsp;·&nbsp; Implements `Item`, `ResponseOutput`

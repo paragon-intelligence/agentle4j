@@ -12,6 +12,7 @@
 
 
 
+
 `com.paragon.responses.spec.IncompleteDetails` &nbsp;·&nbsp; **Record**
 
 ---

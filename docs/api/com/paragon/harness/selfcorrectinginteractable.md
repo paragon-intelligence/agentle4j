@@ -12,6 +12,7 @@
 
 
 
+
 `com.paragon.harness.SelfCorrectingInteractable` &nbsp;·&nbsp; **Class**
 
 Implements `Interactable`

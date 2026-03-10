@@ -12,6 +12,7 @@
 
 
 
+
 `com.paragon.agents.InteractableSubAgentTool` &nbsp;·&nbsp; **Class**
 
 Extends `FunctionTool<InteractableSubAgentTool.InteractableParams>`

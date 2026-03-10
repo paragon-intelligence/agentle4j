@@ -12,6 +12,7 @@
 
 
 
+
 Extract structured data from web pages using Playwright for rendering and LLM for intelligent data extraction.
 
 ---

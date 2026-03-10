@@ -12,6 +12,7 @@
 
 
 
+
 `com.paragon.responses.json.ScrollActionDeserializer` &nbsp;·&nbsp; **Class**
 
 Extends `JsonDeserializer<ScrollAction>`

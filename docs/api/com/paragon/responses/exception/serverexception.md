@@ -12,6 +12,7 @@
 
 
 
+
 `com.paragon.responses.exception.ServerException` &nbsp;·&nbsp; **Class**
 
 Extends `ApiException`

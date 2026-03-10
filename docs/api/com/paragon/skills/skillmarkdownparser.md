@@ -12,6 +12,7 @@
 
 
 
+
 `com.paragon.skills.SkillMarkdownParser` &nbsp;·&nbsp; **Class**
 
 ---

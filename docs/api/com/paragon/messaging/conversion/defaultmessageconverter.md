@@ -12,6 +12,7 @@
 
 
 
+
 `com.paragon.messaging.conversion.DefaultMessageConverter` &nbsp;·&nbsp; **Class**
 
 Implements `MessageConverter`

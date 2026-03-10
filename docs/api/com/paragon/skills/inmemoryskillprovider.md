@@ -12,6 +12,7 @@
 
 
 
+
 `com.paragon.skills.InMemorySkillProvider` &nbsp;·&nbsp; **Class**
 
 Implements `SkillProvider`

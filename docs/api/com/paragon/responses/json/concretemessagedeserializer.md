@@ -12,6 +12,7 @@
 
 
 
+
 `com.paragon.responses.json.ConcreteMessageDeserializer` &nbsp;·&nbsp; **Class**
 
 Extends `Message> extends JsonDeserializer<T>`

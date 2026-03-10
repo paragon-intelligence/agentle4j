@@ -12,6 +12,7 @@
 
 
 
+
 `com.paragon.agents.context.SimpleTokenCounter` &nbsp;·&nbsp; **Class**
 
 Implements `TokenCounter`

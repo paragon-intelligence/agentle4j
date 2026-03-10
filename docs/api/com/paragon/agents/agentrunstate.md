@@ -12,6 +12,7 @@
 
 
 
+
 `com.paragon.agents.AgentRunState` &nbsp;·&nbsp; **Class**
 
 Implements `Serializable`

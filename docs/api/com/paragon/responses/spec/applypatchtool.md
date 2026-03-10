@@ -12,6 +12,7 @@
 
 
 
+
 `com.paragon.responses.spec.ApplyPatchTool` &nbsp;·&nbsp; **Class**
 
 Extends `FunctionTool<ApplyPatchParams>`
