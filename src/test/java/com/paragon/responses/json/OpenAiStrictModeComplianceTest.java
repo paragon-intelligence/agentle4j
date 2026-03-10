@@ -349,6 +349,70 @@ class OpenAiStrictModeComplianceTest {
     }
   }
 
+  // ===== Tests: no boolean required =====
+
+  @Nested
+  class NoBooleanRequired {
+
+    /**
+     * Jackson draft-3 schema puts {@code "required": true} on individual property schemas.
+     * OpenAI strict mode expects {@code "required"} to be an array on the parent object only.
+     * This helper returns true if any node in the tree has {@code "required"} set to a Boolean.
+     */
+    @SuppressWarnings("unchecked")
+    private boolean schemaTreeContainsBooleanRequired(Object node) {
+      if (!(node instanceof Map)) return false;
+      Map<String, Object> map = (Map<String, Object>) node;
+      if (map.get("required") instanceof Boolean) return true;
+      for (Object value : map.values()) {
+        if (value instanceof Map && schemaTreeContainsBooleanRequired(value)) return true;
+        if (value instanceof List<?> list) {
+          for (Object item : list) {
+            if (schemaTreeContainsBooleanRequired(item)) return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    @Test
+    void simpleSchemaHasNoBooleanRequired() {
+      Map<String, Object> schema = producer.produce(Address.class);
+      assertFalse(
+          schemaTreeContainsBooleanRequired(schema),
+          "Schema must not contain 'required: true' (boolean) on property schemas — OpenAI expects an array");
+    }
+
+    @Test
+    void nestedSchemaHasNoBooleanRequired() {
+      Map<String, Object> schema = producer.produce(ContactInfo.class);
+      assertFalse(
+          schemaTreeContainsBooleanRequired(schema),
+          "Nested schema must not contain boolean 'required' on any property node");
+    }
+
+    @Test
+    void deeplyNestedSchemaHasNoBooleanRequired() {
+      Map<String, Object> schema = producer.produce(Person.class);
+      assertFalse(
+          schemaTreeContainsBooleanRequired(schema),
+          "Deeply nested schema must not contain boolean 'required' anywhere in the tree");
+    }
+
+    @Test
+    void requiredOnObjectNodesIsAlwaysAnArray() {
+      for (Map<String, Object> obj : collectAllObjectNodes(producer.produce(Team.class))) {
+        Object req = obj.get("required");
+        if (req != null) {
+          assertInstanceOf(
+              List.class,
+              req,
+              "'required' on an object node must be a List, not: " + req.getClass().getSimpleName());
+        }
+      }
+    }
+  }
+
   // ===== Tests: circular reference safety =====
 
   @Nested

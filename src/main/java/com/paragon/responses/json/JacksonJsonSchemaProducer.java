@@ -134,6 +134,14 @@ public record JacksonJsonSchemaProducer(@NonNull ObjectMapper mapper)
       node.remove("id");
     }
     node.remove("$schema");
+
+    // Jackson's draft-3 schema puts "required": true on individual property schemas to mark them
+    // as required. OpenAI strict mode (draft-7 style) expects "required" to be an array on the
+    // parent object — never a boolean. Remove any boolean "required" from every node; the correct
+    // array form is added by addRequiredProperties() after this pass.
+    if (node.get("required") instanceof Boolean) {
+      node.remove("required");
+    }
   }
 
   /** Shallow-enough deep copy: new HashMap at every level, preserving leaf values. */

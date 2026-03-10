@@ -5,6 +5,17 @@ All notable changes to Agentle4j will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.11]
+
+### Fixed
+
+- **`JacksonJsonSchemaProducer` boolean `required` leaking into schema**: Jackson's draft-3 schema
+  generator marks required properties by setting `"required": true` on individual property schemas.
+  OpenAI strict mode (draft-7 style) only accepts `"required"` as an array on the parent object node.
+  The boolean form was not stripped, causing API rejections with `"True is not of type 'array'"`.
+  Fixed by removing any `"required": Boolean` value in `resolveRefs()` — the correct array form is
+  then added by `addRequiredProperties()`.
+
 ## [0.8.10]
 
 ### Fixed
