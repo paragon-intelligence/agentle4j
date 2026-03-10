@@ -5,6 +5,17 @@ All notable changes to Agentle4j will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.10]
+
+### Fixed
+
+- **`JacksonJsonSchemaProducer` circular reference `StackOverflowError`**: `resolveRefs()` had no
+  cycle guard, so self-referential or mutually-recursive types (e.g. `record Node(List<Node> children)`)
+  caused infinite recursion. Fixed with DFS cycle detection — a `Set<String> resolving` tracks URNs
+  currently on the stack; a circular `$ref` is replaced with an empty-object fallback
+  (`{"type":"object","additionalProperties":false,"properties":{},"required":[]}`) since OpenAI
+  strict mode cannot represent recursive schemas.
+
 ## [0.8.9]
 
 ### Fixed

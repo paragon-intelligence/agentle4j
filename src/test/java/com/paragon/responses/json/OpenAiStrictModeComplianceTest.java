@@ -45,6 +45,9 @@ class OpenAiStrictModeComplianceTest {
 
   record Team(String name, Person lead, List<Person> members) {}
 
+  // Circular reference: Node references itself via children
+  record Node(String value, List<Node> children) {}
+
   // ===== Helpers =====
 
   /** Recursively collects all schema nodes that have type "object". */
@@ -343,6 +346,36 @@ class OpenAiStrictModeComplianceTest {
       assertFalse(
           schemaTreeContainsKey(schema, "$schema"),
           "Schema must not contain '$schema' — not supported by OpenAI strict mode");
+    }
+  }
+
+  // ===== Tests: circular reference safety =====
+
+  @Nested
+  class CircularReferenceSafety {
+
+    @Test
+    void selfReferentialTypeDoesNotCauseStackOverflow() {
+      // Node references itself via List<Node> children — must not throw StackOverflowError
+      assertDoesNotThrow(
+          () -> producer.produce(Node.class),
+          "Circular schema must not cause StackOverflowError in resolveRefs()");
+    }
+
+    @Test
+    void selfReferentialSchemaHasNoRef() {
+      Map<String, Object> schema = producer.produce(Node.class);
+      assertFalse(
+          schemaTreeContainsKey(schema, "$ref"),
+          "Circular schema must not contain $ref after resolution — all refs must be inlined or replaced");
+    }
+
+    @Test
+    void selfReferentialSchemaIsStrictModeCompliant() {
+      Map<String, Object> schema = producer.produce(Node.class);
+      assertFalse(schemaTreeContainsKey(schema, "$ref"), "No $ref allowed");
+      assertFalse(schemaTreeContainsUrnId(schema), "No URN id metadata allowed");
+      assertEquals(false, schema.get("additionalProperties"), "Root must have additionalProperties:false");
     }
   }
 

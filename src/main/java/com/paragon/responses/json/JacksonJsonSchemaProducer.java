@@ -7,9 +7,11 @@ import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -47,7 +49,7 @@ public record JacksonJsonSchemaProducer(@NonNull ObjectMapper mapper)
     collectIds(schema, idToSchema);
 
     // Pass 2: replace $ref nodes with deep-copied inlined schemas, strip unsupported keywords
-    resolveRefs(schema, idToSchema);
+    resolveRefs(schema, idToSchema, new HashSet<>());
 
     // Add 'required' array with all property names for OpenAI strict mode
     addRequiredProperties(schema);
@@ -77,9 +79,17 @@ public record JacksonJsonSchemaProducer(@NonNull ObjectMapper mapper)
   /**
    * Pass 2: replaces every {@code {"$ref": "urn:..."}} node with a deep copy of the referenced
    * schema, and strips {@code id} and {@code $schema} from every node (unsupported by OpenAI).
+   *
+   * <p>{@code resolving} tracks URNs currently on the DFS stack. When a {@code $ref} points to a
+   * URN that is already being resolved (circular reference), we replace it with an empty-object
+   * fallback instead of recursing, breaking the cycle. OpenAI strict mode cannot represent
+   * recursive schemas, so the fallback is the only safe option.
    */
   @SuppressWarnings("unchecked")
-  private void resolveRefs(Map<String, Object> node, Map<String, Map<String, Object>> idToSchema) {
+  private void resolveRefs(
+      Map<String, Object> node,
+      Map<String, Map<String, Object>> idToSchema,
+      Set<String> resolving) {
     List<String> keysToReplace = new ArrayList<>();
     for (Map.Entry<String, Object> entry : node.entrySet()) {
       if (entry.getValue() instanceof Map<?, ?> child) {
@@ -87,7 +97,7 @@ public record JacksonJsonSchemaProducer(@NonNull ObjectMapper mapper)
         if (childMap.containsKey("$ref")) {
           keysToReplace.add(entry.getKey());
         } else {
-          resolveRefs(childMap, idToSchema);
+          resolveRefs(childMap, idToSchema, resolving);
         }
       }
     }
@@ -96,11 +106,25 @@ public record JacksonJsonSchemaProducer(@NonNull ObjectMapper mapper)
       @SuppressWarnings("unchecked")
       Map<String, Object> refNode = (Map<String, Object>) node.get(key);
       String ref = (String) refNode.get("$ref");
-      Map<String, Object> resolved = idToSchema.get(ref);
-      if (resolved != null) {
-        Map<String, Object> copy = deepCopy(resolved);
-        resolveRefs(copy, idToSchema);
-        node.put(key, copy);
+
+      if (resolving.contains(ref)) {
+        // Circular reference detected — replace with an empty object to break the cycle.
+        // OpenAI strict mode does not support recursive schemas.
+        Map<String, Object> fallback = new HashMap<>();
+        fallback.put("type", "object");
+        fallback.put("additionalProperties", false);
+        fallback.put("properties", new HashMap<>());
+        fallback.put("required", new ArrayList<>());
+        node.put(key, fallback);
+      } else {
+        Map<String, Object> resolved = idToSchema.get(ref);
+        if (resolved != null) {
+          resolving.add(ref);
+          Map<String, Object> copy = deepCopy(resolved);
+          resolveRefs(copy, idToSchema, resolving);
+          resolving.remove(ref);
+          node.put(key, copy);
+        }
       }
     }
 
