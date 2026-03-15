@@ -1,6 +1,7 @@
 # :material-database: OutputItemAddedEvent
 
-> This docs was updated at: 2026-03-10
+> This docs was updated at: 2026-03-15
+
 
 
 
