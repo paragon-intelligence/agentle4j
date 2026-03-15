@@ -5,6 +5,94 @@ All notable changes to Agentle4j will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0]
+
+### Added
+
+- **Unified `interact()` API** — one method name across all `Interactable` types; the declared
+  interface determines the return type:
+    - `Interactable` → `interact()` returns `AgentResult` (unchanged).
+    - `Interactable.Structured<T>` → `interact()` returns `StructuredAgentResult<T>` via covariant
+      override. `interactStructured(...)` is gone.
+    - New `Interactable.Streaming` nested interface with `interact()` returning `AgentStream`.
+      Streaming is now accessed via `agent.asStreaming().interact(...)` instead of the old
+      `agent.interactStream(...)`. All concrete agent types (`Agent`, `RouterAgent`,
+      `SupervisorAgent`, `HierarchicalAgents`, `ParallelAgents`, `AgentNetwork`,
+      `SelfCorrectingInteractable`) expose `asStreaming()`.
+- **`StructuredAgentResult<T>` promoted to a first-class class** — converted from a record to a
+  class that extends `AgentResult`. The typed accessor is now `typedOutput()` (returns `T`);
+  `rawOutput()` is a convenience alias for the inherited `output()` (returns `String`). Structural
+  `equals()` / `hashCode()` implemented manually.
+- **`InteractableBlueprint.toStructured(Class<T>)`** — load any supported blueprint and get an
+  `Interactable.Structured<T>` in one call, with no cast and no knowledge of the concrete agent
+  type:
+  ```java
+  // Before (3 lines, unsafe cast, type-specific factory):
+  var agente = (RouterAgent) InteractableBlueprint.fromYaml(yaml).toInteractable();
+  return RouterAgent.Structured.of(agente, ResultadoConsulta.class, new ObjectMapper());
+
+  // After (1 line):
+  return InteractableBlueprint.fromYaml(yaml).toStructured(ResultadoConsulta.class);
+  ```
+  An `ObjectMapper`-accepting overload is also available. Supported blueprint types: `agent`,
+  `router`, `supervisor`. Others throw `UnsupportedOperationException` with a descriptive message.
+- **`Harness` engineering package** (`com.paragon.harness`): `ProgressLog`, `ArtifactStore`,
+  `FilesystemArtifactStore`, `AgentHook`, `HookRegistry`, `SelfCorrectionConfig`,
+  `SelfCorrectingInteractable`, `VerificationResult`, `ShellVerificationTool`, `ProgressLogTool`,
+  `ArtifactStoreTool`, `AgentRunReport`, `RunReportExporter`, `FailureAnalysisTool`, and the
+  top-level `Harness` builder that composes all policies around any `Interactable`.
+- **Durable memory backends**: `FilesystemMemory` and `JdbcMemory` implementing `Memory` for
+  long-running, multi-session agents.
+- **Agent hooks**: `Agent.Builder.hookRegistry(HookRegistry)` wires `beforeRun`/`afterRun` and
+  `beforeToolCall`/`afterToolCall` lifecycle events without modifying agent logic.
+- **`StructuredAgentResult.outputOrThrow()`** — throws if the result is an error, returns the
+  typed output otherwise. Previously required a null check on `typedOutput()`.
+- **Blueprint `source:` directive for routes** — `RouterAgent` YAML blueprints now support
+  `source: file` and `source: registry` on route targets, allowing large routing configurations to
+  be split across files.
+
+### Changed
+
+- **`Interactable.Streaming` replaces `interactStream`** — `interactStream(...)` is removed from
+  the `Interactable` contract. Streaming is now an opt-in capability obtained via `asStreaming()`,
+  keeping the base interface lean.
+- **`StructuredAgentResult.output()` renamed to `typedOutput()`** — aligns with the new class
+  hierarchy where `output()` (inherited from `AgentResult`) always returns `String`. Call sites
+  updated throughout the framework and cookbooks.
+
+### Fixed
+
+- **`JacksonJsonSchemaProducer` boolean `required` leaking into schema**: Jackson's draft-3 schema
+  generator marks required properties by setting `"required": true` on individual property schemas.
+  OpenAI strict mode (draft-7 style) only accepts `"required"` as an array on the parent object
+  node. Fixed by stripping any boolean `"required"` value in `resolveRefs()`.
+- **`JacksonJsonSchemaProducer` circular reference `StackOverflowError`**: `resolveRefs()` had no
+  cycle guard, causing infinite recursion on self-referential types (e.g.
+  `record Node(List<Node> children)`). Fixed with DFS cycle detection; circular `$ref` entries are
+  replaced with an empty-object fallback compatible with OpenAI strict mode.
+- **`JacksonJsonSchemaProducer` OpenAI strict mode compliance**: schemas with nested types now
+  inline all `$ref` references and strip Jackson-generated `"id": "urn:jsonschema:..."` metadata,
+  both of which caused HTTP 500 errors from the API when `strict: true` was set.
+- **`Agent.Structured` markdown fence stripping**: `parseResult` now strips ` ```json ``` ` code
+  fences before deserializing; models proxied through OpenRouter sometimes wrap JSON in markdown
+  even when `strict: true` is requested.
+- **`Agent.Structured` never sent the structured output schema**: `StructuredBuilder.build()` was
+  wrapping the agent with `outputType` but never forwarding it to `Agent.Builder.outputType()`, so
+  `buildPayload()` omitted `withStructuredOutput(...)` entirely and the model returned plain text.
+- **`CreateResponsePayload.Builder` default temperature**: changed from `2.0` to `1.0`. The
+  previous value caused models to ignore structured output schemas and return hallucinated field
+  names.
+- **Blueprint deserialization for nested `InteractableBlueprint` fields**: `$ref`,
+  `source: file`, and `source: registry` now work correctly inside `RouteBlueprint.target`,
+  `WorkerBlueprint.worker`, `HandoffDescriptor.target`, and list fields (`peers`, `members`,
+  `workers`, `fallback`).
+- **YAML deserialization error on router blueprints**.
+- **Routing to fallback agent** when no route matched.
+- **OpenAI strict mode JSON schema** field ordering and `additionalProperties` propagation.
+- **Structured output failures when temperature > 1.0**.
+
+---
+
 ## [0.8.11]
 
 ### Fixed

@@ -278,8 +278,8 @@ class AIAgentProcessorTest {
       TestResponse testResponse = new TestResponse("Structured response");
 
       when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Hello"));
-      when(structuredAgent.interactStructured(any(AgenticContext.class)))
-          .thenReturn(StructuredAgentResult.success(testResponse, "raw output"));
+      doReturn(StructuredAgentResult.success(testResponse, "raw output"))
+          .when(structuredAgent).interact(any(AgenticContext.class), isNull());
 
       AIAgentProcessor<TestResponse> processor =
           AIAgentProcessor.forStructuredAgent(structuredAgent)
@@ -303,8 +303,8 @@ class AIAgentProcessorTest {
       Interactable.Structured<TestResponse> structuredAgent = mock(Interactable.Structured.class);
 
       when(mockConverter.toUserMessage(anyList())).thenReturn(UserMessage.text("Hello"));
-      when(structuredAgent.interactStructured(any(AgenticContext.class)))
-          .thenReturn(StructuredAgentResult.error(new RuntimeException("Structured agent failed")));
+      doReturn(StructuredAgentResult.structuredError(new RuntimeException("Structured agent failed")))
+          .when(structuredAgent).interact(any(AgenticContext.class), isNull());
 
       AIAgentProcessor<TestResponse> processor =
           AIAgentProcessor.forStructuredAgent(structuredAgent)

@@ -165,12 +165,19 @@ public final class HierarchicalAgents implements Interactable {
     return rootSupervisor.interact(context, trace);
   }
 
-  @Override
+  /**
+   * Returns a streaming view of this hierarchy.
+   *
+   * @return an {@link Interactable.Streaming} that delegates to the root supervisor's streaming
+   */
+  public Interactable.@NonNull Streaming asStreaming() {
+    return (ctx, trace) -> this.interactStream(ctx, trace);
+  }
+
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
     return interactStream(context, null);
   }
 
-  @Override
   public @NonNull AgentStream interactStream(
       @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     Objects.requireNonNull(context, "context cannot be null");
@@ -506,22 +513,19 @@ public final class HierarchicalAgents implements Interactable {
     }
 
     @Override
-    public @NonNull AgentResult interact(
-        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-      return hierarchy.interact(context, trace);
-    }
-
-    @Override
-    public @NonNull AgentStream interactStream(
-        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-      return hierarchy.interactStream(context, trace);
-    }
-
-    @Override
-    public @NonNull StructuredAgentResult<T> interactStructured(
+    public @NonNull StructuredAgentResult<T> interact(
         @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       AgentResult result = hierarchy.interact(context, trace);
       return result.toStructured(outputType, objectMapper);
+    }
+
+    /**
+     * Returns a streaming view of the underlying hierarchy.
+     *
+     * @return an {@link Interactable.Streaming} that delegates to the hierarchy's streaming
+     */
+    public Interactable.@NonNull Streaming asStreaming() {
+      return hierarchy.asStreaming();
     }
 
     /** Returns the structured output type. */

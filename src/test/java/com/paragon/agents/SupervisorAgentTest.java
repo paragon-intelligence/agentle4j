@@ -337,7 +337,7 @@ class SupervisorAgentTest {
       Agent worker = createTestAgent("Worker");
       SupervisorAgent supervisor = createTestSupervisor(worker);
 
-      AgentStream stream = supervisor.interactStream("Test task");
+      AgentStream stream = supervisor.asStreaming().interact("Test task");
 
       assertNotNull(stream);
       assertInstanceOf(AgentStream.class, stream);
@@ -352,7 +352,7 @@ class SupervisorAgentTest {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Test task"));
 
-      AgentStream stream = supervisor.interactStream(context);
+      AgentStream stream = supervisor.asStreaming().interact(context);
 
       assertNotNull(stream);
     }

@@ -40,6 +40,6 @@ public class AtenderPacienteUseCase<T> {
     String mensagem =
         "Paciente: %s (%d anos)\nQueixa: %s"
             .formatted(input.nomePaciente(), input.idadePaciente(), input.queixa());
-    return roteador.interactStructured(mensagem);
+    return roteador.interact(mensagem);
   }
 }

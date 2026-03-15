@@ -218,7 +218,7 @@ public class Main {
   // =========================================================================
 
   private static void exibirResultado(StructuredAgentResult<ResultadoConsulta> resultado) {
-    ResultadoConsulta consulta = resultado.output();
+    ResultadoConsulta consulta = resultado.typedOutput();
     if (consulta == null) {
       System.out.println("  [Sem resultado estruturado]");
       if (resultado.error() != null) {

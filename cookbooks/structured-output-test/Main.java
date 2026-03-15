@@ -180,7 +180,7 @@ public class Main {
       System.exit(1);
     }
 
-    ProductOrder order = result.output();
+    ProductOrder order = result.typedOutput();
     System.out.println("\nSUCCESS - parsed ProductOrder:");
     System.out.println("  orderId:   " + order.orderId());
     System.out.println("  status:    " + order.status());

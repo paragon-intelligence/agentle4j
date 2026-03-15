@@ -50,3 +50,6 @@ tools/releaser/releaser
 
 # MkDocs generated site
 site/
+
+# WIP cookbooks
+cookbooks/tbl/

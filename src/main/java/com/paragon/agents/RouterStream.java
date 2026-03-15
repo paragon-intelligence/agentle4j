@@ -170,7 +170,7 @@ public final class RouterStream {
     }
 
     // Execute the selected Interactable with streaming
-    AgentStream agentStream = selected.interactStream(context);
+    AgentStream agentStream = selected.asStreaming().interact(context);
 
     // Wire up callbacks
     if (onTextDelta != null) {

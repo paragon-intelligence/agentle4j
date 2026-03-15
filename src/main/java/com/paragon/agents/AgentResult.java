@@ -43,7 +43,7 @@ import org.jspecify.annotations.Nullable;
  * @see Agent
  * @since 1.0
  */
-public final class AgentResult {
+public class AgentResult {
 
   private final @Nullable String output;
   private final @Nullable Response finalResponse;
@@ -56,7 +56,7 @@ public final class AgentResult {
   private final @Nullable AgentRunState pausedState;
   private final @NonNull List<AgentResult> relatedResults;
 
-  private AgentResult(Builder builder) {
+  protected AgentResult(Builder builder) {
     this.output = builder.output;
     this.finalResponse = builder.finalResponse;
     this.history = builder.history != null ? List.copyOf(builder.history) : List.of();
@@ -445,7 +445,7 @@ public final class AgentResult {
 
   // ===== Builder =====
 
-  private static final class Builder {
+  static final class Builder {
     private @Nullable String output;
     private @Nullable Response finalResponse;
     private @Nullable List<ResponseInputItem> history;

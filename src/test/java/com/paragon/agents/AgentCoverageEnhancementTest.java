@@ -457,7 +457,7 @@ class AgentCoverageEnhancementTest {
       enqueueSuccessResponse("Done after rejection");
 
       agent
-          .interactStream("Do something")
+          .asStreaming().interact("Do something")
           .onToolCallPending(
               (call, approve) -> {
                 toolCallCaptured.set(true);
@@ -868,7 +868,7 @@ class AgentCoverageEnhancementTest {
       enqueueSuccessResponse("Some response that will be blocked");
 
       agent
-          .interactStream("Test input")
+          .asStreaming().interact("Test input")
           .onGuardrailFailed(failed -> guardrailFailedCalled.set(true))
           .onComplete(
               result -> {
@@ -977,7 +977,7 @@ class AgentCoverageEnhancementTest {
       enqueueSuccessResponse("After rejection");
 
       agent
-          .interactStream("Do something")
+          .asStreaming().interact("Do something")
           .onToolCallPending(
               (call, approve) -> {
                 toolRejected.set(true);
@@ -1056,7 +1056,7 @@ class AgentCoverageEnhancementTest {
 
       // Should be error due to guardrail
       assertTrue(result.isError(), "Result should be error from guardrail");
-      assertNull(result.output(), "Parsed output should be null on error");
+      assertNull(result.typedOutput(), "Parsed output should be null on error");
     }
 
     @Test

@@ -117,7 +117,7 @@ public class ContratarMedicoTool extends FunctionTool<ContratarMedicoTool.Params
           "Crie um agente especialista em %s para uma clínica médica. Necessidade: %s"
               .formatted(params.especialidade(), params.descricaoNecessidade());
 
-      AgentDefinition definicao = metaAgente.interact(prompt).output();
+      AgentDefinition definicao = metaAgente.interact(prompt).typedOutput();
 
       if (definicao == null) {
         return FunctionToolCallOutput.error("Meta-agente não conseguiu criar a definição");

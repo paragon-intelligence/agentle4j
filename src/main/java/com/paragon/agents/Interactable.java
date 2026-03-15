@@ -54,8 +54,20 @@ import org.jspecify.annotations.Nullable;
  *
  * <pre>{@code
  * Interactable.Structured<Person> agent = ...;
- * StructuredAgentResult<Person> result = agent.interactStructured("Extract person info");
- * Person person = result.output();
+ * StructuredAgentResult<Person> result = agent.interact("Extract person info");
+ * Person person = result.typedOutput();
+ * }</pre>
+ *
+ * <h2>Streaming</h2>
+ *
+ * <p>For streaming support, call {@code asStreaming()} on any concrete implementation that
+ * supports it, or use the {@link Streaming} interface:
+ *
+ * <pre>{@code
+ * agent.asStreaming().interact("Hello")
+ *     .onTextDelta(System.out::print)
+ *     .onComplete(result -> System.out.println("Done!"))
+ *     .start();
  * }</pre>
  *
  * @see Agent
@@ -358,89 +370,26 @@ public interface Interactable {
   @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace);
 
   /**
-   * Interacts with the agent with streaming support.
+   * Returns a streaming view of this interactable.
    *
-   * <p>Default implementation creates a fresh context with the input as a user message.
+   * <p>The default implementation throws {@link UnsupportedOperationException}. Concrete
+   * implementations that support streaming override this method.
    *
-   * @param input the user's text input
-   * @return an AgentStream for processing streaming events
+   * @return an {@link Streaming} backed by this interactable's streaming logic
+   * @throws UnsupportedOperationException if this interactable does not support streaming
    */
   @NonNull
-  default AgentStream interactStream(@NonNull String input) {
-    return interactStream(input, null);
+  default Streaming asStreaming() {
+    throw new UnsupportedOperationException(
+        getClass().getSimpleName() + " does not support streaming");
   }
-
-  /**
-   * Interacts with the agent with streaming support and trace metadata.
-   *
-   * <p>Default implementation creates a fresh context with the input as a user message.
-   *
-   * @param input the user's text input
-   * @param trace optional trace metadata (overrides agent-level configuration)
-   * @return an AgentStream for processing streaming events
-   */
-  @NonNull
-  default AgentStream interactStream(@NonNull String input, @Nullable TraceMetadata trace) {
-    AgenticContext context = AgenticContext.create();
-    context.addInput(Message.user(input));
-    return interactStream(context, trace);
-  }
-
-  /**
-   * Interacts with the agent with streaming using a Prompt.
-   *
-   * <p>The prompt's text content is extracted and used as the input.
-   *
-   * @param prompt the prompt input
-   * @return an AgentStream for processing streaming events
-   */
-  @NonNull
-  default AgentStream interactStream(@NonNull Prompt prompt) {
-    return interactStream(prompt, null);
-  }
-
-  /**
-   * Interacts with the agent with streaming using a Prompt and trace metadata.
-   *
-   * <p>The prompt's text content is extracted and used as the input.
-   *
-   * @param prompt the prompt input
-   * @param trace optional trace metadata (overrides agent-level configuration)
-   * @return an AgentStream for processing streaming events
-   */
-  @NonNull
-  default AgentStream interactStream(@NonNull Prompt prompt, @Nullable TraceMetadata trace) {
-    return interactStream(prompt.text(), trace);
-  }
-
-  /**
-   * Interacts with the agent with streaming using an existing context.
-   *
-   * @param context the conversation context containing history
-   * @return an AgentStream for processing streaming events
-   */
-  @NonNull
-  default AgentStream interactStream(@NonNull AgenticContext context) {
-    return interactStream(context, null);
-  }
-
-  /**
-   * Interacts with the agent with streaming using an existing context and trace metadata.
-   *
-   * <p>This is the main streaming method that all other streaming overloads delegate to.
-   *
-   * @param context the conversation context containing history
-   * @param trace optional trace metadata (overrides agent-level configuration)
-   * @return an AgentStream for processing streaming events
-   */
-  @NonNull AgentStream interactStream(
-      @NonNull AgenticContext context, @Nullable TraceMetadata trace);
 
   /**
    * Extended interface for agents that return structured (typed) output.
    *
    * <p>Use this interface when you need type-safe parsed output from agents configured with
-   * structured output schemas.
+   * structured output schemas. The declared return type of {@code interact()} is covariant —
+   * it returns {@link StructuredAgentResult}{@code <T>} instead of {@link AgentResult}.
    *
    * <h2>Example</h2>
    *
@@ -455,9 +404,9 @@ public interface Interactable {
    *     .responder(responder)
    *     .build();
    *
-   * // Get typed result
-   * StructuredAgentResult<Person> result = agent.interactStructured("John is 30 years old");
-   * Person person = result.output();
+   * // Get typed result via the unified interact() API
+   * StructuredAgentResult<Person> result = agent.interact("John is 30 years old");
+   * Person person = result.typedOutput();
    * }</pre>
    *
    * @param <T> the type of the structured output
@@ -473,8 +422,8 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interactStructured(@NonNull String input) {
-      return interactStructured(input, null);
+    default StructuredAgentResult<T> interact(@NonNull String input) {
+      return interact(input, null);
     }
 
     /**
@@ -487,11 +436,11 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interactStructured(
+    default StructuredAgentResult<T> interact(
         @NonNull String input, @Nullable TraceMetadata trace) {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user(input));
-      return interactStructured(context, trace);
+      return interact(context, trace);
     }
 
     /**
@@ -503,8 +452,8 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interactStructured(@NonNull Text text) {
-      return interactStructured(text, null);
+    default StructuredAgentResult<T> interact(@NonNull Text text) {
+      return interact(text, null);
     }
 
     /**
@@ -518,11 +467,11 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interactStructured(
+    default StructuredAgentResult<T> interact(
         @NonNull Text text, @Nullable TraceMetadata trace) {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user(text));
-      return interactStructured(context, trace);
+      return interact(context, trace);
     }
 
     /**
@@ -534,8 +483,8 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interactStructured(@NonNull Message message) {
-      return interactStructured(message, null);
+    default StructuredAgentResult<T> interact(@NonNull Message message) {
+      return interact(message, null);
     }
 
     /**
@@ -548,11 +497,11 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interactStructured(
+    default StructuredAgentResult<T> interact(
         @NonNull Message message, @Nullable TraceMetadata trace) {
       AgenticContext context = AgenticContext.create();
       context.addInput(message);
-      return interactStructured(context, trace);
+      return interact(context, trace);
     }
 
     /**
@@ -564,8 +513,8 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interactStructured(@NonNull Prompt prompt) {
-      return interactStructured(prompt, null);
+    default StructuredAgentResult<T> interact(@NonNull Prompt prompt) {
+      return interact(prompt, null);
     }
 
     /**
@@ -578,9 +527,9 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interactStructured(
+    default StructuredAgentResult<T> interact(
         @NonNull Prompt prompt, @Nullable TraceMetadata trace) {
-      return interactStructured(prompt.text(), trace);
+      return interact(prompt.text(), trace);
     }
 
     /**
@@ -590,21 +539,115 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interactStructured(@NonNull AgenticContext context) {
-      return interactStructured(context, null);
+    default StructuredAgentResult<T> interact(@NonNull AgenticContext context) {
+      return interact(context, null);
     }
 
     /**
      * Interacts with the agent with an existing context and returns a structured result with trace
      * metadata.
      *
-     * <p>This is the main structured method that all other structured overloads delegate to.
+     * <p>This is the main structured method that all other overloads delegate to.
      *
      * @param context the conversation context
      * @param trace optional trace metadata (overrides agent-level configuration)
      * @return the structured result with parsed output
      */
-    @NonNull StructuredAgentResult<T> interactStructured(
+    @NonNull StructuredAgentResult<T> interact(
         @NonNull AgenticContext context, @Nullable TraceMetadata trace);
+  }
+
+  /**
+   * Interface for agents that support streaming output.
+   *
+   * <p>Obtain an instance by calling {@code asStreaming()} on any concrete implementation that
+   * supports streaming.
+   *
+   * <pre>{@code
+   * agent.asStreaming().interact("Hello")
+   *     .onTextDelta(System.out::print)
+   *     .onComplete(result -> System.out.println("Done!"))
+   *     .start();
+   * }</pre>
+   */
+  interface Streaming {
+
+    /**
+     * Interacts with the agent with streaming support.
+     *
+     * <p>Default implementation creates a fresh context with the input as a user message.
+     *
+     * @param input the user's text input
+     * @return an AgentStream for processing streaming events
+     */
+    @NonNull
+    default AgentStream interact(@NonNull String input) {
+      return interact(input, null);
+    }
+
+    /**
+     * Interacts with the agent with streaming support and trace metadata.
+     *
+     * <p>Default implementation creates a fresh context with the input as a user message.
+     *
+     * @param input the user's text input
+     * @param trace optional trace metadata (overrides agent-level configuration)
+     * @return an AgentStream for processing streaming events
+     */
+    @NonNull
+    default AgentStream interact(@NonNull String input, @Nullable TraceMetadata trace) {
+      AgenticContext context = AgenticContext.create();
+      context.addInput(Message.user(input));
+      return interact(context, trace);
+    }
+
+    /**
+     * Interacts with the agent with streaming using a Prompt.
+     *
+     * <p>The prompt's text content is extracted and used as the input.
+     *
+     * @param prompt the prompt input
+     * @return an AgentStream for processing streaming events
+     */
+    @NonNull
+    default AgentStream interact(@NonNull Prompt prompt) {
+      return interact(prompt, null);
+    }
+
+    /**
+     * Interacts with the agent with streaming using a Prompt and trace metadata.
+     *
+     * <p>The prompt's text content is extracted and used as the input.
+     *
+     * @param prompt the prompt input
+     * @param trace optional trace metadata (overrides agent-level configuration)
+     * @return an AgentStream for processing streaming events
+     */
+    @NonNull
+    default AgentStream interact(@NonNull Prompt prompt, @Nullable TraceMetadata trace) {
+      return interact(prompt.text(), trace);
+    }
+
+    /**
+     * Interacts with the agent with streaming using an existing context.
+     *
+     * @param context the conversation context containing history
+     * @return an AgentStream for processing streaming events
+     */
+    @NonNull
+    default AgentStream interact(@NonNull AgenticContext context) {
+      return interact(context, null);
+    }
+
+    /**
+     * Interacts with the agent with streaming using an existing context and trace metadata.
+     *
+     * <p>This is the main streaming method that all other streaming overloads delegate to.
+     *
+     * @param context the conversation context containing history
+     * @param trace optional trace metadata (overrides agent-level configuration)
+     * @return an AgentStream for processing streaming events
+     */
+    @NonNull AgentStream interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace);
   }
 }

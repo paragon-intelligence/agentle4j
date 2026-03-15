@@ -1091,9 +1091,9 @@ class AgentExtendedTest {
       StructuredAgentResult<PersonInfo> result = agent.interact("Extract: John is 30");
 
       assertNotNull(result);
-      if (result.output() != null) {
-        assertEquals("John", result.output().name());
-        assertEquals(30, result.output().age());
+      if (result.typedOutput() != null) {
+        assertEquals("John", result.typedOutput().name());
+        assertEquals(30, result.typedOutput().age());
       }
     }
 
@@ -1117,7 +1117,7 @@ class AgentExtendedTest {
       // Result may indicate error or have null output
       assertNotNull(result);
       // Either parsing fails (isError=true) or output is null
-      assertTrue(result.isError() || result.output() == null);
+      assertTrue(result.isError() || result.typedOutput() == null);
     }
   }
 
@@ -1143,7 +1143,7 @@ class AgentExtendedTest {
     void interactStreamReturnsAgentStream() {
       Agent agent = createTestAgent();
 
-      AgentStream stream = agent.interactStream("Hello");
+      AgentStream stream = agent.asStreaming().interact("Hello");
 
       assertNotNull(stream);
     }
@@ -1155,7 +1155,7 @@ class AgentExtendedTest {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
-      AgentStream stream = agent.interactStream(context);
+      AgentStream stream = agent.asStreaming().interact(context);
 
       assertNotNull(stream);
     }
@@ -1167,7 +1167,7 @@ class AgentExtendedTest {
       AgenticContext context = AgenticContext.create();
       // Do not add input - context is empty
       // The stream should handle this gracefully
-      AgentStream stream = agent.interactStream(context);
+      AgentStream stream = agent.asStreaming().interact(context);
 
       assertNotNull(stream);
     }
@@ -1189,7 +1189,7 @@ class AgentExtendedTest {
               .addInputGuardrail((inputText, ctx) -> GuardrailResult.failed("Input not allowed"))
               .build();
 
-      AgentStream stream = agent.interactStream("This should fail");
+      AgentStream stream = agent.asStreaming().interact("This should fail");
 
       assertNotNull(stream);
       // Stream should contain the failure

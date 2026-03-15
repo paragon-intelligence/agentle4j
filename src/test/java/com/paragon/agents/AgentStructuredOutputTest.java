@@ -178,9 +178,9 @@ class AgentStructuredOutputTest {
 
       StructuredAgentResult<PersonInfo> result = structured.interact("Tell me about John");
 
-      assertNotNull(result.output());
-      assertEquals("John Doe", result.output().name());
-      assertEquals(30, result.output().age());
+      assertNotNull(result.typedOutput());
+      assertEquals("John Doe", result.typedOutput().name());
+      assertEquals(30, result.typedOutput().age());
     }
 
     @Test
@@ -196,7 +196,7 @@ class AgentStructuredOutputTest {
 
       assertNotNull(result);
       assertFalse(result.isError());
-      assertNotNull(result.output());
+      assertNotNull(result.typedOutput());
     }
   }
 

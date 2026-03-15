@@ -175,13 +175,20 @@ public final class SupervisorAgent implements Interactable {
     return supervisorAgent.interact(context, trace);
   }
 
-  @Override
+  /**
+   * Returns a streaming view of this supervisor.
+   *
+   * @return an {@link Interactable.Streaming} that delegates to the underlying agent's streaming
+   */
+  public Interactable.@NonNull Streaming asStreaming() {
+    return (ctx, trace) -> this.interactStream(ctx, trace);
+  }
+
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
     Objects.requireNonNull(context, "context cannot be null");
     return supervisorAgent.interactStream(context);
   }
 
-  @Override
   public @NonNull AgentStream interactStream(
       @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     Objects.requireNonNull(context, "context cannot be null");
@@ -491,7 +498,7 @@ public final class SupervisorAgent implements Interactable {
     private final Class<T> outputType;
     private final ObjectMapper objectMapper;
 
-    private Structured(
+    Structured(
         @NonNull SupervisorAgent supervisor,
         @NonNull Class<T> outputType,
         @NonNull ObjectMapper objectMapper) {
@@ -506,22 +513,19 @@ public final class SupervisorAgent implements Interactable {
     }
 
     @Override
-    public @NonNull AgentResult interact(
-        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-      return supervisor.interact(context, trace);
-    }
-
-    @Override
-    public @NonNull AgentStream interactStream(
-        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-      return supervisor.interactStream(context, trace);
-    }
-
-    @Override
-    public @NonNull StructuredAgentResult<T> interactStructured(
+    public @NonNull StructuredAgentResult<T> interact(
         @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       AgentResult result = supervisor.interact(context, trace);
       return result.toStructured(outputType, objectMapper);
+    }
+
+    /**
+     * Returns a streaming view of the underlying supervisor.
+     *
+     * @return an {@link Interactable.Streaming} that delegates to the supervisor's streaming
+     */
+    public Interactable.@NonNull Streaming asStreaming() {
+      return supervisor.asStreaming();
     }
 
     /** Returns the structured output type. */

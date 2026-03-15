@@ -438,12 +438,18 @@ public final class AgentNetwork implements Interactable {
   }
 
   /**
-   * {@inheritDoc}
+   * Returns a streaming view of this network.
    *
-   * <p>If a synthesizer is configured, runs the discussion and streams the synthesis. Otherwise,
+   * @return an {@link Interactable.Streaming} backed by this network's streaming logic
+   */
+  public Interactable.@NonNull Streaming asStreaming() {
+    return (ctx, trace) -> this.interactStream(ctx, trace);
+  }
+
+  /**
+   * If a synthesizer is configured, runs the discussion and streams the synthesis. Otherwise,
    * returns a completed stream with the discussion result.
    */
-  @Override
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
     if (synthesizer == null) {
       NetworkResult result = discuss(context);
@@ -451,16 +457,13 @@ public final class AgentNetwork implements Interactable {
     }
     NetworkResult result = discuss(context);
     String synthesisPrompt = buildSynthesisPrompt(result);
-    return synthesizer.interactStream(synthesisPrompt);
+    return synthesizer.asStreaming().interact(synthesisPrompt);
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * <p>If a synthesizer is configured, runs the discussion and streams the synthesis. Trace
-   * metadata is propagated through peer interactions.
+   * If a synthesizer is configured, runs the discussion and streams the synthesis. Trace metadata
+   * is propagated through peer interactions.
    */
-  @Override
   public @NonNull AgentStream interactStream(
       @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     // AgentNetwork doesn't directly use trace metadata; peers handle their own traces
@@ -470,7 +473,7 @@ public final class AgentNetwork implements Interactable {
     }
     NetworkResult result = discuss(context);
     String synthesisPrompt = buildSynthesisPrompt(result);
-    return synthesizer.interactStream(synthesisPrompt);
+    return synthesizer.asStreaming().interact(synthesisPrompt);
   }
 
   private AgentResult toAgentResult(NetworkResult networkResult) {

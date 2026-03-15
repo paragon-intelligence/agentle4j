@@ -94,6 +94,54 @@ public sealed interface InteractableBlueprint
   Interactable toInteractable();
 
   /**
+   * Reconstructs a fully functional {@link Interactable.Structured} from this blueprint.
+   *
+   * <p>Equivalent to {@code toStructured(outputType, new ObjectMapper())}.
+   *
+   * @param <T> the structured output type
+   * @param outputType the class to parse the agent's output into
+   * @return a fully functional {@code Interactable.Structured<T>}
+   * @throws UnsupportedOperationException if the blueprint type does not support structured output
+   */
+  default <T> Interactable.@NonNull Structured<T> toStructured(@NonNull Class<T> outputType) {
+    return toStructured(outputType, new ObjectMapper());
+  }
+
+  /**
+   * Reconstructs a fully functional {@link Interactable.Structured} from this blueprint.
+   *
+   * <p>Supported blueprint types: {@code agent}, {@code router}, {@code supervisor}.
+   *
+   * <p>Example:
+   *
+   * <pre>{@code
+   * Interactable.Structured<ResultadoConsulta> agente = InteractableBlueprint
+   *     .fromYaml(yaml)
+   *     .toStructured(ResultadoConsulta.class);
+   * }</pre>
+   *
+   * @param <T> the structured output type
+   * @param outputType the class to parse the agent's output into
+   * @param objectMapper the ObjectMapper to use for JSON parsing
+   * @return a fully functional {@code Interactable.Structured<T>}
+   * @throws UnsupportedOperationException if the blueprint type does not support structured output
+   */
+  default <T> Interactable.@NonNull Structured<T> toStructured(
+      @NonNull Class<T> outputType, @NonNull ObjectMapper objectMapper) {
+    return switch (toInteractable()) {
+      case Agent agent -> new Agent.Structured<>(agent, outputType);
+      case RouterAgent router -> RouterAgent.Structured.of(router, outputType, objectMapper);
+      case SupervisorAgent supervisor ->
+          new SupervisorAgent.Structured<>(supervisor, outputType, objectMapper);
+      case Interactable other ->
+          throw new UnsupportedOperationException(
+              other.getClass().getSimpleName()
+                  + " does not support structured output. "
+                  + "Supported blueprint types: agent, router, supervisor.");
+    };
+  }
+
+  /**
    * Serializes this blueprint to a JSON string using the provided {@link ObjectMapper}.
    *
    * @param mapper the ObjectMapper to use for serialization

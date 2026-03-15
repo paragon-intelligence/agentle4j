@@ -176,7 +176,7 @@ public final class ParallelStream {
                 AgenticContext ctx = context.copy();
                 ctx.withTraceContext(parentTraceId, parentSpanId);
 
-                AgentStream stream = member.interactStream(ctx);
+                AgentStream stream = member.asStreaming().interact(ctx);
 
                 if (onAgentTextDelta != null) {
                   stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
@@ -226,7 +226,7 @@ public final class ParallelStream {
           Thread.startVirtualThread(
               () -> {
                 AgenticContext ctx = context.copy();
-                AgentStream stream = member.interactStream(ctx);
+                AgentStream stream = member.asStreaming().interact(ctx);
 
                 if (onAgentTextDelta != null) {
                   stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
@@ -283,7 +283,7 @@ public final class ParallelStream {
                 AgenticContext ctx = context.copy();
                 ctx.withTraceContext(parentTraceId, parentSpanId);
 
-                AgentStream stream = member.interactStream(ctx);
+                AgentStream stream = member.asStreaming().interact(ctx);
 
                 if (onAgentTextDelta != null) {
                   stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
@@ -334,7 +334,7 @@ public final class ParallelStream {
     AgenticContext synthContext = AgenticContext.create();
     synthContext.addInput(Message.user(synthesisPrompt.toString()));
 
-    AgentStream synthStream = synthesizer.interactStream(synthContext);
+    AgentStream synthStream = synthesizer.asStreaming().interact(synthContext);
 
     if (onAgentTextDelta != null) {
       synthStream.onTextDelta(delta -> onAgentTextDelta.accept(synthesizer, delta));

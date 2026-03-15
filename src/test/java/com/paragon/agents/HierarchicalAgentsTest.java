@@ -375,7 +375,7 @@ class HierarchicalAgentsTest {
     void executeStream_string_returnsAgentStream() {
       HierarchicalAgents hierarchy = createTestHierarchy();
 
-      AgentStream stream = hierarchy.interactStream("Task");
+      AgentStream stream = hierarchy.asStreaming().interact("Task");
 
       assertNotNull(stream);
       assertInstanceOf(AgentStream.class, stream);
@@ -388,7 +388,7 @@ class HierarchicalAgentsTest {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Task"));
 
-      AgentStream stream = hierarchy.interactStream(context);
+      AgentStream stream = hierarchy.asStreaming().interact(context);
 
       assertNotNull(stream);
     }

@@ -135,11 +135,15 @@ public final class Harness {
       return result;
     }
 
-    @Override
-    public @NonNull AgentStream interactStream(
-        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-      // Hooks are not applied to streaming; delegate directly
-      return delegate.interactStream(context, trace);
+    /**
+     * Returns a streaming view backed by the delegate's streaming.
+     *
+     * <p>Hooks are not applied to streaming; delegates directly to the wrapped interactable.
+     *
+     * @return an {@link com.paragon.agents.Interactable.Streaming} backed by the delegate
+     */
+    public com.paragon.agents.Interactable.@NonNull Streaming asStreaming() {
+      return delegate.asStreaming();
     }
   }
 

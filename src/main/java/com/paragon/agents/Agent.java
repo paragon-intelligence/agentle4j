@@ -507,12 +507,20 @@ public final class Agent implements Serializable, Interactable {
    * @param trace optional trace metadata (overrides agent-level configuration)
    * @return an AgentStream for processing streaming events
    */
-  @Override
   public @NonNull AgentStream interactStream(
       @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     // Trace metadata for streaming will be handled when AgentStream is updated
     // For now, just delegate to AgentStream constructor
     return new AgentStream(this, List.of(), context, responder, objectMapper);
+  }
+
+  /**
+   * Returns a streaming view of this agent.
+   *
+   * @return an {@link Interactable.Streaming} backed by this agent's streaming implementation
+   */
+  public Interactable.@NonNull Streaming asStreaming() {
+    return (ctx, trace) -> this.interactStream(ctx, trace);
   }
 
   // ===== Streaming API =====
@@ -1954,18 +1962,19 @@ public final class Agent implements Serializable, Interactable {
    *
    * @param <T> the output type
    */
-  public static final class Structured<T> {
+  public static final class Structured<T> implements Interactable.Structured<T> {
     private final Agent agent;
     private final Class<T> outputType;
     private final ObjectMapper objectMapper;
 
-    private Structured(@NonNull Agent agent, @NonNull Class<T> outputType) {
+    Structured(@NonNull Agent agent, @NonNull Class<T> outputType) {
       this.agent = Objects.requireNonNull(agent);
       this.outputType = Objects.requireNonNull(outputType);
       this.objectMapper = agent.objectMapper;
     }
 
     /** Returns the wrapped agent's name. */
+    @Override
     public @NonNull String name() {
       return agent.name();
     }
@@ -1981,6 +1990,7 @@ public final class Agent implements Serializable, Interactable {
      * @param input the user's text input
      * @return the typed result
      */
+    @Override
     public @NonNull StructuredAgentResult<T> interact(@NonNull String input) {
       return interact(input, AgenticContext.create());
     }
@@ -1996,20 +2006,43 @@ public final class Agent implements Serializable, Interactable {
         @NonNull String input, @NonNull AgenticContext context) {
       Objects.requireNonNull(input, "input cannot be null");
       context.addInput(Message.user(input));
-      return interact(context);
+      return interact(context, null);
     }
 
     /**
      * Interacts with the agent using an existing context.
      *
-     * <p>This is the core method. All other interact overloads delegate here.
-     *
      * @param context the conversation context containing all history
      * @return the typed result
      */
+    @Override
     public @NonNull StructuredAgentResult<T> interact(@NonNull AgenticContext context) {
-      AgentResult result = agent.interact(context);
+      return interact(context, null);
+    }
+
+    /**
+     * Interacts with the agent using an existing context with optional trace metadata.
+     *
+     * <p>This is the core method. All other interact overloads delegate here.
+     *
+     * @param context the conversation context containing all history
+     * @param trace optional trace metadata
+     * @return the typed result
+     */
+    @Override
+    public @NonNull StructuredAgentResult<T> interact(
+        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+      AgentResult result = agent.interact(context, trace);
       return parseResult(result);
+    }
+
+    /**
+     * Returns a streaming view of the underlying agent.
+     *
+     * @return an {@link Interactable.Streaming} backed by the underlying agent's streaming
+     */
+    public Interactable.@NonNull Streaming asStreaming() {
+      return agent.asStreaming();
     }
 
     /**

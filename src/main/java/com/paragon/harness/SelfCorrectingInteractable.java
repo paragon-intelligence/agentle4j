@@ -103,11 +103,15 @@ public final class SelfCorrectingInteractable implements Interactable {
     return result;
   }
 
-  @Override
-  public @NonNull AgentStream interactStream(
-      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-    // Self-correction is a blocking concept; streaming delegates directly to the wrapped agent
-    return delegate.interactStream(context, trace);
+  /**
+   * Returns a streaming view backed by the delegate's streaming.
+   *
+   * <p>Self-correction is a blocking concept; streaming delegates directly to the wrapped agent.
+   *
+   * @return an {@link com.paragon.agents.Interactable.Streaming} backed by the delegate
+   */
+  public com.paragon.agents.Interactable.@NonNull Streaming asStreaming() {
+    return delegate.asStreaming();
   }
 
   // ===== Private Helpers =====

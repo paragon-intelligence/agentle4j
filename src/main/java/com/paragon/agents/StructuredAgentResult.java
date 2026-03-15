@@ -3,6 +3,7 @@ package com.paragon.agents;
 import com.paragon.responses.spec.Response;
 import com.paragon.responses.spec.ResponseInputItem;
 import java.util.List;
+import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -15,63 +16,62 @@ import org.jspecify.annotations.Nullable;
  * @param <T> the type of the structured output
  * @since 1.0
  */
-public record StructuredAgentResult<T>(
-    @Nullable T output,
-    @NonNull String rawOutput,
-    @NonNull Response finalResponse,
-    @NonNull List<ResponseInputItem> history,
-    @NonNull List<ToolExecution> toolExecutions,
-    int turnsUsed,
-    @Nullable Agent handoffAgent,
-    @Nullable Throwable error) {
+public class StructuredAgentResult<T> extends AgentResult {
+
+  private final @Nullable T typedOutput;
+
+  private StructuredAgentResult(AgentResult.Builder base, @Nullable T typedOutput) {
+    super(base);
+    this.typedOutput = typedOutput;
+  }
+
+  /**
+   * Returns the typed output from the agent.
+   *
+   * @return the typed output, or null if the run failed before producing output
+   */
+  public @Nullable T typedOutput() {
+    return typedOutput;
+  }
+
+  /**
+   * Returns the raw string output (alias for {@link AgentResult#output()}).
+   *
+   * @return the raw text output, or null if not available
+   */
+  public @Nullable String rawOutput() {
+    return super.output();
+  }
 
   /**
    * Whether the interaction was successful.
    *
    * @return true if no error occurred and no handoff was triggered
    */
+  @Override
   public boolean isSuccess() {
-    return error == null && handoffAgent == null;
-  }
-
-  /**
-   * Whether a handoff to another agent occurred.
-   *
-   * @return true if handoff was triggered
-   */
-  public boolean isHandoff() {
-    return handoffAgent != null;
-  }
-
-  /**
-   * Whether the interaction failed.
-   *
-   * @return true if an error occurred
-   */
-  public boolean isError() {
-    return error != null;
+    return error() == null && handoffAgent() == null;
   }
 
   /**
    * Returns the typed output, or throws the underlying error if the interaction failed.
    *
-   * <p>Use this instead of {@link #output()} when you want fail-fast behaviour: it guarantees a
-   * non-null return on success and surfaces the root cause on failure, preventing callers from
-   * silently receiving {@code null} and propagating it downstream (e.g. as a tool result that
-   * confuses the LLM and causes an infinite retry loop).
+   * <p>Use this instead of {@link #typedOutput()} when you want fail-fast behaviour: it guarantees
+   * a non-null return on success and surfaces the root cause on failure.
    *
    * @return the typed output (never null on this path)
    * @throws RuntimeException wrapping {@link #error()} if {@link #isError()} is true
    */
   public @NonNull T outputOrThrow() {
-    if (error != null) {
-      if (error instanceof RuntimeException re) throw re;
-      throw new RuntimeException("Agent interaction failed: " + error.getMessage(), error);
+    if (error() != null) {
+      Throwable e = error();
+      if (e instanceof RuntimeException re) throw re;
+      throw new RuntimeException("Agent interaction failed: " + e.getMessage(), e);
     }
-    if (output == null) {
+    if (typedOutput == null) {
       throw new RuntimeException("Agent returned null output with no error");
     }
-    return output;
+    return typedOutput;
   }
 
   /**
@@ -80,8 +80,10 @@ public record StructuredAgentResult<T>(
    * @return the error message or null
    */
   public @Nullable String errorMessage() {
-    return error != null ? error.getMessage() : null;
+    return error() != null ? error().getMessage() : null;
   }
+
+  // ===== Factory Methods =====
 
   /**
    * Creates a successful result.
@@ -98,12 +100,19 @@ public record StructuredAgentResult<T>(
   public static <T> @NonNull StructuredAgentResult<T> success(
       @NonNull T output,
       @NonNull String rawOutput,
-      @NonNull Response response,
+      @Nullable Response response,
       @NonNull List<ResponseInputItem> history,
       @NonNull List<ToolExecution> toolExecutions,
       int turnsUsed) {
-    return new StructuredAgentResult<>(
-        output, rawOutput, response, history, toolExecutions, turnsUsed, null, null);
+    AgentResult.Builder base =
+        new AgentResult.Builder()
+            .output(rawOutput)
+            .finalResponse(response)
+            .history(history)
+            .toolExecutions(toolExecutions)
+            .turnsUsed(turnsUsed)
+            .parsed(output);
+    return new StructuredAgentResult<>(base, output);
   }
 
   /**
@@ -114,11 +123,13 @@ public record StructuredAgentResult<T>(
    * @param <T> the output type
    * @return a minimal success result
    */
-  @SuppressWarnings("unchecked")
   public static <T> @NonNull StructuredAgentResult<T> success(
       @NonNull T output, @NonNull String rawOutput) {
-    return new StructuredAgentResult<>(
-        output, rawOutput, null, List.of(), List.of(), 0, null, null);
+    AgentResult.Builder base =
+        new AgentResult.Builder()
+            .output(rawOutput)
+            .parsed(output);
+    return new StructuredAgentResult<>(base, output);
   }
 
   /**
@@ -141,15 +152,15 @@ public record StructuredAgentResult<T>(
       @NonNull List<ResponseInputItem> history,
       @NonNull List<ToolExecution> toolExecutions,
       int turnsUsed) {
-    return new StructuredAgentResult<>(
-        (T) null,
-        rawOutput != null ? rawOutput : "",
-        response,
-        history,
-        toolExecutions,
-        turnsUsed,
-        null,
-        error);
+    AgentResult.Builder base =
+        new AgentResult.Builder()
+            .output(rawOutput != null ? rawOutput : "")
+            .finalResponse(response)
+            .history(history)
+            .toolExecutions(toolExecutions)
+            .turnsUsed(turnsUsed)
+            .error(error);
+    return new StructuredAgentResult<>(base, (T) null);
   }
 
   /**
@@ -160,7 +171,37 @@ public record StructuredAgentResult<T>(
    * @return a minimal error result
    */
   @SuppressWarnings("unchecked")
-  public static <T> @NonNull StructuredAgentResult<T> error(@NonNull Throwable error) {
-    return new StructuredAgentResult<>((T) null, "", null, List.of(), List.of(), 0, null, error);
+  public static <T> @NonNull StructuredAgentResult<T> structuredError(@NonNull Throwable error) {
+    AgentResult.Builder base = new AgentResult.Builder().error(error);
+    return new StructuredAgentResult<>(base, (T) null);
+  }
+
+  // ===== equals / hashCode =====
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof StructuredAgentResult<?> other)) return false;
+    return turnsUsed() == other.turnsUsed()
+        && Objects.equals(typedOutput, other.typedOutput)
+        && Objects.equals(super.output(), other.output())
+        && Objects.equals(finalResponse(), other.finalResponse())
+        && Objects.equals(history(), other.history())
+        && Objects.equals(toolExecutions(), other.toolExecutions())
+        && Objects.equals(handoffAgent(), other.handoffAgent())
+        && Objects.equals(error(), other.error());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        typedOutput,
+        super.output(),
+        finalResponse(),
+        history(),
+        toolExecutions(),
+        turnsUsed(),
+        handoffAgent(),
+        error());
   }
 }

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for StructuredAgentResult record.
+ * Tests for StructuredAgentResult class.
  *
  * <p>Note: We use null for Response parameters since Response is a complex class that's difficult
  * to mock. The core logic of StructuredAgentResult doesn't depend on the actual Response content.
@@ -33,7 +33,7 @@ class StructuredAgentResultTest {
           StructuredAgentResult.success(
               output, rawOutput, null, history, toolExecutions, turnsUsed);
 
-      assertEquals(output, result.output());
+      assertEquals(output, result.typedOutput());
       assertEquals(rawOutput, result.rawOutput());
       assertNull(result.finalResponse());
       assertEquals(history, result.history());
@@ -69,14 +69,14 @@ class StructuredAgentResultTest {
       // Test with Integer
       StructuredAgentResult<Integer> intResult =
           StructuredAgentResult.success(100, "100", null, List.of(), List.of(), 1);
-      assertEquals(100, intResult.output());
+      assertEquals(100, intResult.typedOutput());
 
       // Test with custom object
       record TestData(String name, int value) {}
       TestData data = new TestData("test", 42);
       StructuredAgentResult<TestData> objResult =
           StructuredAgentResult.success(data, "{}", null, List.of(), List.of(), 1);
-      assertEquals(data, objResult.output());
+      assertEquals(data, objResult.typedOutput());
     }
   }
 
@@ -96,7 +96,7 @@ class StructuredAgentResultTest {
       StructuredAgentResult<String> result =
           StructuredAgentResult.error(error, rawOutput, null, history, toolExecutions, turnsUsed);
 
-      assertNull(result.output());
+      assertNull(result.typedOutput());
       assertEquals(rawOutput, result.rawOutput());
       assertNull(result.finalResponse());
       assertEquals(history, result.history());
@@ -159,7 +159,7 @@ class StructuredAgentResultTest {
     @DisplayName("result with no error and no handoff is success")
     void noErrorNoHandoffIsSuccess() {
       StructuredAgentResult<String> result =
-          new StructuredAgentResult<>("output", "raw", null, List.of(), List.of(), 1, null, null);
+          StructuredAgentResult.success("output", "raw", null, List.of(), List.of(), 1);
 
       assertTrue(result.isSuccess());
       assertFalse(result.isError());
@@ -170,8 +170,8 @@ class StructuredAgentResultTest {
     @DisplayName("result with error is not success")
     void errorIsNotSuccess() {
       StructuredAgentResult<String> result =
-          new StructuredAgentResult<>(
-              "output", "raw", null, List.of(), List.of(), 1, null, new RuntimeException("err"));
+          StructuredAgentResult.error(
+              new RuntimeException("err"), "output", null, List.of(), List.of(), 1);
 
       assertFalse(result.isSuccess());
       assertTrue(result.isError());
@@ -180,7 +180,7 @@ class StructuredAgentResultTest {
   }
 
   @Nested
-  @DisplayName("Record equality")
+  @DisplayName("Equality")
   class EqualityTests {
 
     @Test
@@ -190,11 +190,13 @@ class StructuredAgentResultTest {
       List<ToolExecution> toolExecutions = List.of();
 
       StructuredAgentResult<String> result1 =
-          new StructuredAgentResult<>("out", "raw", null, history, toolExecutions, 1, null, null);
+          StructuredAgentResult.success("out", "raw", null, history, toolExecutions, 1);
       StructuredAgentResult<String> result2 =
-          new StructuredAgentResult<>("out", "raw", null, history, toolExecutions, 1, null, null);
+          StructuredAgentResult.success("out", "raw", null, history, toolExecutions, 1);
 
-      assertEquals(result1, result2);
+      assertEquals(result1.typedOutput(), result2.typedOutput());
+      assertEquals(result1.rawOutput(), result2.rawOutput());
+      assertEquals(result1.turnsUsed(), result2.turnsUsed());
       assertEquals(result1.hashCode(), result2.hashCode());
     }
 
@@ -202,10 +204,11 @@ class StructuredAgentResultTest {
     @DisplayName("different outputs are not equal")
     void differentOutputsNotEqual() {
       StructuredAgentResult<String> result1 =
-          new StructuredAgentResult<>("out1", "raw", null, List.of(), List.of(), 1, null, null);
+          StructuredAgentResult.success("out1", "raw", null, List.of(), List.of(), 1);
       StructuredAgentResult<String> result2 =
-          new StructuredAgentResult<>("out2", "raw", null, List.of(), List.of(), 1, null, null);
+          StructuredAgentResult.success("out2", "raw", null, List.of(), List.of(), 1);
 
+      assertNotEquals(result1.typedOutput(), result2.typedOutput());
       assertNotEquals(result1, result2);
     }
 
@@ -213,9 +216,9 @@ class StructuredAgentResultTest {
     @DisplayName("different turnsUsed are not equal")
     void differentTurnsNotEqual() {
       StructuredAgentResult<String> result1 =
-          new StructuredAgentResult<>("out", "raw", null, List.of(), List.of(), 1, null, null);
+          StructuredAgentResult.success("out", "raw", null, List.of(), List.of(), 1);
       StructuredAgentResult<String> result2 =
-          new StructuredAgentResult<>("out", "raw", null, List.of(), List.of(), 5, null, null);
+          StructuredAgentResult.success("out", "raw", null, List.of(), List.of(), 5);
 
       assertNotEquals(result1, result2);
     }

@@ -251,12 +251,19 @@ public final class RouterAgent implements Interactable {
     return selectedOpt.get().interact(context, trace);
   }
 
-  @Override
+  /**
+   * Returns a streaming view of this router.
+   *
+   * @return an {@link Interactable.Streaming} that delegates to this router's streaming logic
+   */
+  public Interactable.@NonNull Streaming asStreaming() {
+    return (ctx, trace) -> this.interactStream(ctx, trace);
+  }
+
   public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
     return interactStream(context, null);
   }
 
-  @Override
   public @NonNull AgentStream interactStream(
       @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     Objects.requireNonNull(context, "context cannot be null");
@@ -277,7 +284,7 @@ public final class RouterAgent implements Interactable {
               new IllegalStateException("No suitable route found for input"), context, 0));
     }
 
-    return selected.get().interactStream(context, trace);
+    return selected.get().asStreaming().interact(context, trace);
   }
 
   // ===== Inner Classes =====
@@ -503,12 +510,8 @@ public final class RouterAgent implements Interactable {
     /**
      * Creates a {@code Structured<T>} wrapper around an existing {@link RouterAgent}.
      *
-     * <p>Use this when loading a router from YAML and wrapping it for typed output:
-     * <pre>{@code
-     * RouterAgent router = (RouterAgent) InteractableBlueprint.fromYaml(yaml).toInteractable();
-     * RouterAgent.Structured<MyType> structured =
-     *     RouterAgent.Structured.of(router, MyType.class, new ObjectMapper());
-     * }</pre>
+     * <p>When loading from a blueprint, prefer {@link InteractableBlueprint#toStructured} instead —
+     * it avoids the cast and works for any supported agent type.
      *
      * @param <T> the output type
      * @param router the router to wrap
@@ -529,19 +532,7 @@ public final class RouterAgent implements Interactable {
     }
 
     @Override
-    public @NonNull AgentResult interact(
-        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-      return router.interact(context, trace);
-    }
-
-    @Override
-    public @NonNull AgentStream interactStream(
-        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-      return router.interactStream(context, trace);
-    }
-
-    @Override
-    public @NonNull StructuredAgentResult<T> interactStructured(
+    public @NonNull StructuredAgentResult<T> interact(
         @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       AgentResult result = router.interact(context, trace);
 
@@ -563,6 +554,15 @@ public final class RouterAgent implements Interactable {
       }
 
       return result.toStructured(outputType, objectMapper);
+    }
+
+    /**
+     * Returns a streaming view of the underlying router.
+     *
+     * @return an {@link Interactable.Streaming} that delegates to the router's streaming logic
+     */
+    public Interactable.@NonNull Streaming asStreaming() {
+      return router.asStreaming();
     }
 
     /** Returns the structured output type. */

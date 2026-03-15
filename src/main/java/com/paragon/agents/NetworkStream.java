@@ -188,7 +188,7 @@ public final class NetworkStream {
         AgenticContext peerContext = buildPeerContext(peer, currentRound);
         peerContext.withTraceContext(parentTraceId, parentSpanId);
 
-        AgentStream stream = peer.interactStream(peerContext);
+        AgentStream stream = peer.asStreaming().interact(peerContext);
 
         if (onPeerTextDelta != null) {
           stream.onTextDelta(delta -> onPeerTextDelta.accept(peer, delta));
@@ -249,7 +249,7 @@ public final class NetworkStream {
     AgenticContext synthContext = AgenticContext.create();
     synthContext.addInput(Message.user(synthPrompt.toString()));
 
-    AgentStream synthStream = synthesizer.interactStream(synthContext);
+    AgentStream synthStream = synthesizer.asStreaming().interact(synthContext);
 
     if (onSynthesisTextDelta != null) {
       synthStream.onTextDelta(onSynthesisTextDelta);
@@ -288,7 +288,7 @@ public final class NetworkStream {
                 AgenticContext peerContext = context.copy();
                 peerContext.withTraceContext(parentTraceId, parentSpanId);
 
-                AgentStream stream = peer.interactStream(peerContext);
+                AgentStream stream = peer.asStreaming().interact(peerContext);
 
                 if (onPeerTextDelta != null) {
                   stream.onTextDelta(delta -> onPeerTextDelta.accept(peer, delta));

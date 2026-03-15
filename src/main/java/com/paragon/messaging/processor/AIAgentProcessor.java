@@ -213,13 +213,13 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
   private void processStructured(String userId, AgenticContext context, String replyToMessageId)
       throws Exception {
     assert structuredAgent != null;
-    StructuredAgentResult<T> result = structuredAgent.interactStructured(context);
+    StructuredAgentResult<T> result = structuredAgent.interact(context, null);
 
     if (result.isError()) {
       throw new AIProcessingException("Structured agent processing failed", result.error());
     }
 
-    T output = result.output();
+    T output = result.typedOutput();
 
     // Store the raw output in history
     if (historyStore != null) {
