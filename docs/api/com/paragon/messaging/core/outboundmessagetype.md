@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.messaging.core.OutboundMessageType` &nbsp;·&nbsp; **Enum**
 
 ---

@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.responses.json.MoveActionDeserializer` &nbsp;·&nbsp; **Class**
 
 Extends `JsonDeserializer<MoveAction>`

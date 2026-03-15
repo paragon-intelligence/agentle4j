@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.web.ExtractionPreferences` &nbsp;·&nbsp; **Class**
 
 ---

@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.telemetry.events.AgentFailedEvent` &nbsp;·&nbsp; **Record**
 
 ---

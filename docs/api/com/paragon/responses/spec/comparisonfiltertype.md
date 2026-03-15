@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.responses.spec.ComparisonFilterType` &nbsp;·&nbsp; **Enum**
 
 ---

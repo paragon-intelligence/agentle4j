@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.responses.spec.ParsedResponse` &nbsp;·&nbsp; **Class**
 
 Extends `Response`

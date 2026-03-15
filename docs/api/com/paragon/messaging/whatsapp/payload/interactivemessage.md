@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.payload.InteractiveMessage` &nbsp;·&nbsp; **Class**
 
 Extends `AbstractInboundMessage`

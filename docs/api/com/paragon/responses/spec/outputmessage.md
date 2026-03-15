@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.responses.spec.OutputMessage` &nbsp;·&nbsp; **Class**
 
 Extends `AssistantMessage` &nbsp;·&nbsp; Implements `Item`, `ResponseOutput`

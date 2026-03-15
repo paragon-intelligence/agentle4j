@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.responses.spec.Reasoning` &nbsp;·&nbsp; **Record**
 
 ---

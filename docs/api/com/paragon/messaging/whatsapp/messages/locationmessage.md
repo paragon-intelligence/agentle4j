@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.messages.LocationMessage` &nbsp;·&nbsp; **Record**
 
 ---

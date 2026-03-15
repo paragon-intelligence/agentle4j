@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.WhatsAppMessagingProvider` &nbsp;·&nbsp; **Class**
 
 Implements `MessagingProvider`

@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.agents.InMemoryMemory` &nbsp;·&nbsp; **Class**
 
 Implements `Memory`

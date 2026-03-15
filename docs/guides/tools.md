@@ -15,6 +15,7 @@
 
 
 
+
 Function tools let the AI call your Java functions to interact with external systems, databases, APIs, and more.
 
 ---

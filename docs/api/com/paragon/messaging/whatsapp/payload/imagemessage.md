@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.messaging.whatsapp.payload.ImageMessage` &nbsp;·&nbsp; **Class**
 
 Extends `AbstractInboundMessage`

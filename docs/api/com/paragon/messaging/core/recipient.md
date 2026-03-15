@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.messaging.core.Recipient` &nbsp;·&nbsp; **Record**
 
 ---

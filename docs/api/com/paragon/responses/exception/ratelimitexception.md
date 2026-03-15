@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.responses.exception.RateLimitException` &nbsp;·&nbsp; **Class**
 
 Extends `ApiException`

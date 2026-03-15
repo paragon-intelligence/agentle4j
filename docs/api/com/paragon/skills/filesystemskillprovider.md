@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.skills.FilesystemSkillProvider` &nbsp;·&nbsp; **Class**
 
 Implements `SkillProvider`

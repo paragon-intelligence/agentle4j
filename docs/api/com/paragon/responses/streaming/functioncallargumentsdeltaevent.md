@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.responses.streaming.FunctionCallArgumentsDeltaEvent` &nbsp;·&nbsp; **Record**
 
 ---

@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.messaging.security.SecurityConfig` &nbsp;·&nbsp; **Record**
 
 ---

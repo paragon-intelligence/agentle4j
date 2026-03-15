@@ -15,6 +15,7 @@
 
 
 
+
 `FunctionTool` wrappers that expose harness primitives — progress logs, artifact stores, shell verification, and failure analysis — as native agent tools.
 
 ---

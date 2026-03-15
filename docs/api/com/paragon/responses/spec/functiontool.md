@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.responses.spec.FunctionTool` &nbsp;·&nbsp; **Class**
 
 Extends `Record>` &nbsp;·&nbsp; Implements `Tool`

@@ -15,6 +15,7 @@
 
 
 
+
 `com.paragon.mcp.StreamableHttpMcpClient` &nbsp;·&nbsp; **Class**
 
 Extends `McpClient`
