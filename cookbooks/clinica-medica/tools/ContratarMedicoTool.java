@@ -117,11 +117,11 @@ public class ContratarMedicoTool extends FunctionTool<ContratarMedicoTool.Params
           "Crie um agente especialista em %s para uma clínica médica. Necessidade: %s"
               .formatted(params.especialidade(), params.descricaoNecessidade());
 
-      AgentDefinition definicao = metaAgente.interact(prompt).typedOutput();
-
-      if (definicao == null) {
+      var metaResult = metaAgente.interact(prompt);
+      if (metaResult.isError()) {
         return FunctionToolCallOutput.error("Meta-agente não conseguiu criar a definição");
       }
+      AgentDefinition definicao = metaResult.parsed();
 
       // 3. Converter a definição para blueprint YAML
       ResponderBlueprint responderBlueprint = ResponderBlueprint.from(responder);

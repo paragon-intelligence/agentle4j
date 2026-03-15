@@ -1091,9 +1091,9 @@ class AgentExtendedTest {
       StructuredAgentResult<PersonInfo> result = agent.interact("Extract: John is 30");
 
       assertNotNull(result);
-      if (result.typedOutput() != null) {
-        assertEquals("John", result.typedOutput().name());
-        assertEquals(30, result.typedOutput().age());
+      if (result.isSuccess()) {
+        assertEquals("John", result.parsed().name());
+        assertEquals(30, result.parsed().age());
       }
     }
 
@@ -1117,7 +1117,7 @@ class AgentExtendedTest {
       // Result may indicate error or have null output
       assertNotNull(result);
       // Either parsing fails (isError=true) or output is null
-      assertTrue(result.isError() || result.typedOutput() == null);
+      assertTrue(result.isError());
     }
   }
 

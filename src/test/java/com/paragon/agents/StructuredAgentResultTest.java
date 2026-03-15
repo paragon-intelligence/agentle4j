@@ -33,8 +33,8 @@ class StructuredAgentResultTest {
           StructuredAgentResult.success(
               output, rawOutput, null, history, toolExecutions, turnsUsed);
 
-      assertEquals(output, result.typedOutput());
-      assertEquals(rawOutput, result.rawOutput());
+      assertEquals(output, result.parsed());
+      assertEquals(rawOutput, result.output());
       assertNull(result.finalResponse());
       assertEquals(history, result.history());
       assertEquals(toolExecutions, result.toolExecutions());
@@ -69,14 +69,14 @@ class StructuredAgentResultTest {
       // Test with Integer
       StructuredAgentResult<Integer> intResult =
           StructuredAgentResult.success(100, "100", null, List.of(), List.of(), 1);
-      assertEquals(100, intResult.typedOutput());
+      assertEquals(100, intResult.parsed());
 
       // Test with custom object
       record TestData(String name, int value) {}
       TestData data = new TestData("test", 42);
       StructuredAgentResult<TestData> objResult =
           StructuredAgentResult.success(data, "{}", null, List.of(), List.of(), 1);
-      assertEquals(data, objResult.typedOutput());
+      assertEquals(data, objResult.parsed());
     }
   }
 
@@ -96,8 +96,8 @@ class StructuredAgentResultTest {
       StructuredAgentResult<String> result =
           StructuredAgentResult.error(error, rawOutput, null, history, toolExecutions, turnsUsed);
 
-      assertNull(result.typedOutput());
-      assertEquals(rawOutput, result.rawOutput());
+      assertThrows(IllegalStateException.class, result::parsed);
+      assertEquals(rawOutput, result.output());
       assertNull(result.finalResponse());
       assertEquals(history, result.history());
       assertEquals(toolExecutions, result.toolExecutions());
@@ -136,7 +136,7 @@ class StructuredAgentResultTest {
           StructuredAgentResult.error(
               new RuntimeException("err"), null, null, List.of(), List.of(), 1);
 
-      assertEquals("", result.rawOutput());
+      assertEquals("", result.output());
     }
 
     @Test
@@ -147,7 +147,7 @@ class StructuredAgentResultTest {
           StructuredAgentResult.error(
               new RuntimeException("err"), rawOutput, null, List.of(), List.of(), 1);
 
-      assertEquals(rawOutput, result.rawOutput());
+      assertEquals(rawOutput, result.output());
     }
   }
 
@@ -194,8 +194,8 @@ class StructuredAgentResultTest {
       StructuredAgentResult<String> result2 =
           StructuredAgentResult.success("out", "raw", null, history, toolExecutions, 1);
 
-      assertEquals(result1.typedOutput(), result2.typedOutput());
-      assertEquals(result1.rawOutput(), result2.rawOutput());
+      assertEquals(result1.parsed(), result2.parsed());
+      assertEquals(result1.output(), result2.output());
       assertEquals(result1.turnsUsed(), result2.turnsUsed());
       assertEquals(result1.hashCode(), result2.hashCode());
     }
@@ -208,7 +208,7 @@ class StructuredAgentResultTest {
       StructuredAgentResult<String> result2 =
           StructuredAgentResult.success("out2", "raw", null, List.of(), List.of(), 1);
 
-      assertNotEquals(result1.typedOutput(), result2.typedOutput());
+      assertNotEquals(result1.parsed(), result2.parsed());
       assertNotEquals(result1, result2);
     }
 

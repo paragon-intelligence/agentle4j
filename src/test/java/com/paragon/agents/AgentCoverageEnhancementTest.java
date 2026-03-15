@@ -1056,7 +1056,7 @@ class AgentCoverageEnhancementTest {
 
       // Should be error due to guardrail
       assertTrue(result.isError(), "Result should be error from guardrail");
-      assertNull(result.typedOutput(), "Parsed output should be null on error");
+      assertThrows(IllegalStateException.class, result::parsed, "Parsed output should throw on error");
     }
 
     @Test

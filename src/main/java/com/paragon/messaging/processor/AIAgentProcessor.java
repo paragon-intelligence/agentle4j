@@ -219,11 +219,11 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
       throw new AIProcessingException("Structured agent processing failed", result.error());
     }
 
-    T output = result.typedOutput();
+    T output = result.parsed();
 
     // Store the raw output in history
     if (historyStore != null) {
-      historyStore.addMessage(userId, Message.assistant(result.rawOutput()));
+      historyStore.addMessage(userId, Message.assistant(result.output()));
     }
 
     // Handle WhatsAppResponse implementations

@@ -218,18 +218,16 @@ public class Main {
   // =========================================================================
 
   private static void exibirResultado(StructuredAgentResult<ResultadoConsulta> resultado) {
-    ResultadoConsulta consulta = resultado.typedOutput();
-    if (consulta == null) {
+    if (resultado.isError()) {
       System.out.println("  [Sem resultado estruturado]");
-      if (resultado.error() != null) {
-        System.out.println("  Erro: " + resultado.error().getMessage());
-        if (resultado.error().getCause() != null) {
-          System.out.println("  Causa: " + resultado.error().getCause().getMessage());
-        }
+      System.out.println("  Erro: " + resultado.error().getMessage());
+      if (resultado.error().getCause() != null) {
+        System.out.println("  Causa: " + resultado.error().getCause().getMessage());
       }
-      System.out.println("  Resposta bruta: [" + resultado.rawOutput() + "]");
+      System.out.println("  Resposta bruta: [" + resultado.output() + "]");
       return;
     }
+    ResultadoConsulta consulta = resultado.parsed();
 
     System.out.println("\n  [Resultado da Consulta]");
     System.out.println("  Medico:       " + consulta.medicoResponsavel());

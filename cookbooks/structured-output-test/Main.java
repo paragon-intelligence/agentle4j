@@ -170,7 +170,7 @@ public class Main {
 
     StructuredAgentResult<ProductOrder> result = agent.interact(userMessage);
 
-    System.out.println("\nRaw output: [" + result.rawOutput() + "]");
+    System.out.println("\nRaw output: [" + result.output() + "]");
 
     if (result.isError()) {
       System.out.println("\nFAILED - error: " + result.error().getMessage());
@@ -180,7 +180,7 @@ public class Main {
       System.exit(1);
     }
 
-    ProductOrder order = result.typedOutput();
+    ProductOrder order = result.parsed();
     System.out.println("\nSUCCESS - parsed ProductOrder:");
     System.out.println("  orderId:   " + order.orderId());
     System.out.println("  status:    " + order.status());

@@ -18,29 +18,29 @@ import org.jspecify.annotations.Nullable;
  */
 public class StructuredAgentResult<T> extends AgentResult {
 
-  private final @Nullable T typedOutput;
+  private final @Nullable T parsed;
 
-  private StructuredAgentResult(AgentResult.Builder base, @Nullable T typedOutput) {
+  private StructuredAgentResult(AgentResult.Builder base, @Nullable T parsed) {
     super(base);
-    this.typedOutput = typedOutput;
+    this.parsed = parsed;
   }
 
   /**
-   * Returns the typed output from the agent.
+   * Returns the parsed typed output from the agent.
    *
-   * @return the typed output, or null if the run failed before producing output
+   * @return the parsed output (never null on success)
+   * @throws IllegalStateException if the result is an error or the parsed value is unexpectedly null
    */
-  public @Nullable T typedOutput() {
-    return typedOutput;
-  }
-
-  /**
-   * Returns the raw string output (alias for {@link AgentResult#output()}).
-   *
-   * @return the raw text output, or null if not available
-   */
-  public @Nullable String rawOutput() {
-    return super.output();
+  @Override
+  public @NonNull T parsed() {
+    if (isError()) {
+      throw new IllegalStateException(
+          "Cannot get parsed output from a failed result: " + error().getMessage(), error());
+    }
+    if (parsed == null) {
+      throw new IllegalStateException("Parsed output is null despite a successful result");
+    }
+    return parsed;
   }
 
   /**
@@ -51,27 +51,6 @@ public class StructuredAgentResult<T> extends AgentResult {
   @Override
   public boolean isSuccess() {
     return error() == null && handoffAgent() == null;
-  }
-
-  /**
-   * Returns the typed output, or throws the underlying error if the interaction failed.
-   *
-   * <p>Use this instead of {@link #typedOutput()} when you want fail-fast behaviour: it guarantees
-   * a non-null return on success and surfaces the root cause on failure.
-   *
-   * @return the typed output (never null on this path)
-   * @throws RuntimeException wrapping {@link #error()} if {@link #isError()} is true
-   */
-  public @NonNull T outputOrThrow() {
-    if (error() != null) {
-      Throwable e = error();
-      if (e instanceof RuntimeException re) throw re;
-      throw new RuntimeException("Agent interaction failed: " + e.getMessage(), e);
-    }
-    if (typedOutput == null) {
-      throw new RuntimeException("Agent returned null output with no error");
-    }
-    return typedOutput;
   }
 
   /**
@@ -125,10 +104,7 @@ public class StructuredAgentResult<T> extends AgentResult {
    */
   public static <T> @NonNull StructuredAgentResult<T> success(
       @NonNull T output, @NonNull String rawOutput) {
-    AgentResult.Builder base =
-        new AgentResult.Builder()
-            .output(rawOutput)
-            .parsed(output);
+    AgentResult.Builder base = new AgentResult.Builder().output(rawOutput).parsed(output);
     return new StructuredAgentResult<>(base, output);
   }
 
@@ -183,7 +159,7 @@ public class StructuredAgentResult<T> extends AgentResult {
     if (this == o) return true;
     if (!(o instanceof StructuredAgentResult<?> other)) return false;
     return turnsUsed() == other.turnsUsed()
-        && Objects.equals(typedOutput, other.typedOutput)
+        && Objects.equals(parsed, other.parsed)
         && Objects.equals(super.output(), other.output())
         && Objects.equals(finalResponse(), other.finalResponse())
         && Objects.equals(history(), other.history())
@@ -195,7 +171,7 @@ public class StructuredAgentResult<T> extends AgentResult {
   @Override
   public int hashCode() {
     return Objects.hash(
-        typedOutput,
+        parsed,
         super.output(),
         finalResponse(),
         history(),

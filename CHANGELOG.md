@@ -5,6 +5,27 @@ All notable changes to Agentle4j will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1]
+
+### Changed
+
+- **`StructuredAgentResult<T>` now exposes a single `parsed()` accessor** — the three previous
+  output accessors (`typedOutput()`, `rawOutput()`, `outputOrThrow()`) are removed in favour of one
+  well-named method that matches the `AgentResult` internal field name:
+    - `parsed()` returns `@NonNull T`; throws `IllegalStateException` if the result is an error.
+      No null-check is ever needed on the success path.
+    - `output()` (inherited from `AgentResult`) still returns the raw JSON `String` the model
+      produced and is unchanged.
+
+### Removed
+
+- **`StructuredAgentResult.typedOutput()`** — use `parsed()`.
+- **`StructuredAgentResult.rawOutput()`** — was a redundant alias for `output()`; use `output()`.
+- **`StructuredAgentResult.outputOrThrow()`** — `parsed()` always throws on error, making this
+  method redundant.
+
+---
+
 ## [0.9.0]
 
 ### Added
