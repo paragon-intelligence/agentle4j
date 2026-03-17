@@ -256,7 +256,7 @@ class ParallelStreamTest {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
-      Object result = parallel.runAllStream(context).start();
+      Object result = parallel.runAllStream(context).startBlocking();
 
       assertNotNull(result);
     }
@@ -276,7 +276,7 @@ class ParallelStreamTest {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello all"));
 
-      Object result = parallel.runAllStream(context).onComplete(collectedResults::addAll).start();
+      Object result = parallel.runAllStream(context).onComplete(collectedResults::addAll).startBlocking();
 
       // In ALL mode, both agents should complete
       assertTrue(collectedResults.size() >= 1);
@@ -312,7 +312,7 @@ class ParallelStreamTest {
                     if (firstResult == null) firstResult.set(r);
                     completed.set(true);
                   })
-              .start();
+              .startBlocking();
 
       // The test passes if either callback was invoked
       assertTrue(completed.get());
@@ -342,7 +342,7 @@ class ParallelStreamTest {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello"));
 
-      parallel.runAllStream(context).onError(errorRef::set).start();
+      parallel.runAllStream(context).onError(errorRef::set).startBlocking();
 
       // Give it time to process
       Thread.sleep(2000);
@@ -375,7 +375,7 @@ class ParallelStreamTest {
           parallel
               .runAllStream(context)
               .onAgentComplete((agent, r) -> completedAgents.add(agent.name()))
-              .start();
+              .startBlocking();
 
       assertTrue(completedAgents.size() >= 1);
     }
@@ -393,7 +393,7 @@ class ParallelStreamTest {
       context.addInput(Message.user("Hello"));
 
       Object result =
-          parallel.runAllStream(context).onAgentTurnStart((agent, turn) -> turns.add(turn)).start();
+          parallel.runAllStream(context).onAgentTurnStart((agent, turn) -> turns.add(turn)).startBlocking();
 
       // At least one turn should start
       assertFalse(turns.isEmpty());

@@ -1,5 +1,6 @@
 package com.paragon.agents;
 
+import com.paragon.responses.spec.FunctionToolCall;
 import com.paragon.responses.spec.Message;
 import com.paragon.telemetry.processors.TraceIdGenerator;
 import java.util.ArrayList;
@@ -40,6 +41,12 @@ public final class ParallelStream {
   private Consumer<AgentResult> onSynthesisComplete;
   private Consumer<Throwable> onError;
   private BiConsumer<Interactable, Integer> onAgentTurnStart;
+  private BiConsumer<Interactable, ToolExecution> onAgentToolExecuted;
+  private BiConsumer<Interactable, GuardrailResult.Failed> onAgentGuardrailFailed;
+  private BiConsumer<Interactable, FunctionToolCall> onAgentClientSideTool;
+  private Consumer<Interactable> onAgentCancelled;
+  private BiConsumer<Interactable, Throwable> onAgentError;
+  private Consumer<List<AgentResult>> onSynthesisStart;
 
   ParallelStream(ParallelAgents orchestrator, AgenticContext context, Mode mode) {
     this(orchestrator, context, mode, null);
@@ -137,6 +144,92 @@ public final class ParallelStream {
   }
 
   /**
+   * Called when a tool is executed by any member agent.
+   *
+   * @param callback receives the member and the tool execution result
+   * @return this stream
+   */
+  public @NonNull ParallelStream onAgentToolExecuted(
+      @NonNull BiConsumer<Interactable, ToolExecution> callback) {
+    this.onAgentToolExecuted = Objects.requireNonNull(callback);
+    return this;
+  }
+
+  /**
+   * Called when a guardrail fails for any member agent.
+   *
+   * @param callback receives the member and the failed guardrail result
+   * @return this stream
+   */
+  public @NonNull ParallelStream onAgentGuardrailFailed(
+      @NonNull BiConsumer<Interactable, GuardrailResult.Failed> callback) {
+    this.onAgentGuardrailFailed = Objects.requireNonNull(callback);
+    return this;
+  }
+
+  /**
+   * Called when a client-side tool ({@code stopsLoop = true}) is detected in any member agent.
+   *
+   * @param callback receives the member and the tool call that triggered the exit
+   * @return this stream
+   */
+  public @NonNull ParallelStream onAgentClientSideTool(
+      @NonNull BiConsumer<Interactable, FunctionToolCall> callback) {
+    this.onAgentClientSideTool = Objects.requireNonNull(callback);
+    return this;
+  }
+
+  /**
+   * Called (FIRST mode only) for each agent whose result was discarded because another completed
+   * first.
+   *
+   * @param callback receives the agent that lost the race
+   * @return this stream
+   */
+  public @NonNull ParallelStream onAgentCancelled(@NonNull Consumer<Interactable> callback) {
+    this.onAgentCancelled = Objects.requireNonNull(callback);
+    return this;
+  }
+
+  /**
+   * Called when a member agent's virtual thread throws an exception before producing a result
+   * (ALL and SYNTHESIZE modes).
+   *
+   * @param callback receives the member and the error
+   * @return this stream
+   */
+  public @NonNull ParallelStream onAgentError(
+      @NonNull BiConsumer<Interactable, Throwable> callback) {
+    this.onAgentError = Objects.requireNonNull(callback);
+    return this;
+  }
+
+  /**
+   * Called (SYNTHESIZE mode only) just before the synthesizer agent starts, with all gathered
+   * member results.
+   *
+   * @param callback receives the list of all member results
+   * @return this stream
+   */
+  public @NonNull ParallelStream onSynthesisStart(
+      @NonNull Consumer<List<AgentResult>> callback) {
+    this.onSynthesisStart = Objects.requireNonNull(callback);
+    return this;
+  }
+
+  /**
+   * Starts the streaming parallel execution. Blocks until completion.
+   *
+   * <p>On virtual threads, blocking is efficient and does not consume platform threads.
+   *
+   * @return results based on mode: List&lt;AgentResult&gt; for ALL, AgentResult for
+   *     FIRST/SYNTHESIZE
+   */
+  public @NonNull Object startBlocking() {
+    return start();
+  }
+
+  /**
    * Starts the streaming parallel execution. Blocks until completion.
    *
    * <p>On virtual threads, blocking is efficient and does not consume platform threads.
@@ -173,24 +266,41 @@ public final class ParallelStream {
       Thread thread =
           Thread.startVirtualThread(
               () -> {
-                AgenticContext ctx = context.copy();
-                ctx.withTraceContext(parentTraceId, parentSpanId);
+                try {
+                  AgenticContext ctx = context.copy();
+                  ctx.withTraceContext(parentTraceId, parentSpanId);
 
-                AgentStream stream = member.asStreaming().interact(ctx);
+                  AgentStream stream = member.asStreaming().interact(ctx);
 
-                if (onAgentTextDelta != null) {
-                  stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
-                }
+                  if (onAgentTextDelta != null) {
+                    stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
+                  }
+                  if (onAgentTurnStart != null) {
+                    stream.onTurnStart(turn -> onAgentTurnStart.accept(member, turn));
+                  }
+                  if (onAgentToolExecuted != null) {
+                    stream.onToolExecuted(exec -> onAgentToolExecuted.accept(member, exec));
+                  }
+                  if (onAgentGuardrailFailed != null) {
+                    stream.onGuardrailFailed(f -> onAgentGuardrailFailed.accept(member, f));
+                  }
+                  if (onAgentClientSideTool != null) {
+                    stream.onClientSideTool(call -> onAgentClientSideTool.accept(member, call));
+                  }
 
-                if (onAgentTurnStart != null) {
-                  stream.onTurnStart(turn -> onAgentTurnStart.accept(member, turn));
-                }
+                  AgentResult result = stream.startBlocking();
+                  results.add(result);
 
-                AgentResult result = stream.start();
-                results.add(result);
-
-                if (onAgentComplete != null) {
-                  onAgentComplete.accept(member, result);
+                  if (onAgentComplete != null) {
+                    onAgentComplete.accept(member, result);
+                  }
+                } catch (Throwable t) {
+                  if (onAgentError != null) {
+                    onAgentError.accept(member, t);
+                  }
+                  if (onError != null) {
+                    onError.accept(t);
+                  }
                 }
               });
       threads.add(thread);
@@ -225,25 +335,53 @@ public final class ParallelStream {
       Thread thread =
           Thread.startVirtualThread(
               () -> {
-                AgenticContext ctx = context.copy();
-                AgentStream stream = member.asStreaming().interact(ctx);
+                try {
+                  AgenticContext ctx = context.copy();
+                  AgentStream stream = member.asStreaming().interact(ctx);
 
-                if (onAgentTextDelta != null) {
-                  stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
-                }
-
-                AgentResult result = stream.start();
-
-                if (onAgentComplete != null) {
-                  onAgentComplete.accept(member, result);
-                }
-
-                // Only the first to complete wins
-                if (firstCompleted.compareAndSet(false, true)) {
-                  firstResult.set(result);
-                  if (onFirstComplete != null) {
-                    onFirstComplete.accept(result);
+                  if (onAgentTextDelta != null) {
+                    stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
                   }
+                  if (onAgentTurnStart != null) {
+                    stream.onTurnStart(turn -> onAgentTurnStart.accept(member, turn));
+                  }
+                  if (onAgentToolExecuted != null) {
+                    stream.onToolExecuted(exec -> onAgentToolExecuted.accept(member, exec));
+                  }
+                  if (onAgentGuardrailFailed != null) {
+                    stream.onGuardrailFailed(f -> onAgentGuardrailFailed.accept(member, f));
+                  }
+                  if (onAgentClientSideTool != null) {
+                    stream.onClientSideTool(call -> onAgentClientSideTool.accept(member, call));
+                  }
+
+                  AgentResult result = stream.startBlocking();
+
+                  if (onAgentComplete != null) {
+                    onAgentComplete.accept(member, result);
+                  }
+
+                  // Only the first to complete wins
+                  if (firstCompleted.compareAndSet(false, true)) {
+                    firstResult.set(result);
+                    if (onFirstComplete != null) {
+                      onFirstComplete.accept(result);
+                    }
+                  } else {
+                    // This agent lost the race — notify caller
+                    if (onAgentCancelled != null) {
+                      onAgentCancelled.accept(member);
+                    }
+                  }
+                } catch (Throwable t) {
+                  if (onAgentError != null) {
+                    onAgentError.accept(member, t);
+                  }
+                  if (onError != null) {
+                    onError.accept(t);
+                  }
+                  // Ensure firstResult gets set if all agents fail
+                  firstCompleted.compareAndSet(false, true);
                 }
               });
       threads.add(thread);
@@ -280,20 +418,41 @@ public final class ParallelStream {
       Thread thread =
           Thread.startVirtualThread(
               () -> {
-                AgenticContext ctx = context.copy();
-                ctx.withTraceContext(parentTraceId, parentSpanId);
+                try {
+                  AgenticContext ctx = context.copy();
+                  ctx.withTraceContext(parentTraceId, parentSpanId);
 
-                AgentStream stream = member.asStreaming().interact(ctx);
+                  AgentStream stream = member.asStreaming().interact(ctx);
 
-                if (onAgentTextDelta != null) {
-                  stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
-                }
+                  if (onAgentTextDelta != null) {
+                    stream.onTextDelta(delta -> onAgentTextDelta.accept(member, delta));
+                  }
+                  if (onAgentTurnStart != null) {
+                    stream.onTurnStart(turn -> onAgentTurnStart.accept(member, turn));
+                  }
+                  if (onAgentToolExecuted != null) {
+                    stream.onToolExecuted(exec -> onAgentToolExecuted.accept(member, exec));
+                  }
+                  if (onAgentGuardrailFailed != null) {
+                    stream.onGuardrailFailed(f -> onAgentGuardrailFailed.accept(member, f));
+                  }
+                  if (onAgentClientSideTool != null) {
+                    stream.onClientSideTool(call -> onAgentClientSideTool.accept(member, call));
+                  }
 
-                AgentResult result = stream.start();
-                results.add(result);
+                  AgentResult result = stream.startBlocking();
+                  results.add(result);
 
-                if (onAgentComplete != null) {
-                  onAgentComplete.accept(member, result);
+                  if (onAgentComplete != null) {
+                    onAgentComplete.accept(member, result);
+                  }
+                } catch (Throwable t) {
+                  if (onAgentError != null) {
+                    onAgentError.accept(member, t);
+                  }
+                  if (onError != null) {
+                    onError.accept(t);
+                  }
                 }
               });
       threads.add(thread);
@@ -307,6 +466,11 @@ public final class ParallelStream {
         Thread.currentThread().interrupt();
         throw new RuntimeException("Parallel execution interrupted", e);
       }
+    }
+
+    // Notify before synthesis starts
+    if (onSynthesisStart != null) {
+      onSynthesisStart.accept(new ArrayList<>(results));
     }
 
     // Second phase: synthesize results
@@ -340,7 +504,7 @@ public final class ParallelStream {
       synthStream.onTextDelta(delta -> onAgentTextDelta.accept(synthesizer, delta));
     }
 
-    AgentResult synthResult = synthStream.start();
+    AgentResult synthResult = synthStream.startBlocking();
 
     if (onSynthesisComplete != null) {
       onSynthesisComplete.accept(synthResult);

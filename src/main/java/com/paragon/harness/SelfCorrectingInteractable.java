@@ -7,6 +7,8 @@ import com.paragon.agents.Interactable;
 import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.Message;
 import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -50,6 +52,9 @@ public final class SelfCorrectingInteractable implements Interactable {
 
   private final Interactable delegate;
   private final SelfCorrectionConfig config;
+  private @Nullable RetryStartHandler onRetryStart;
+  private @Nullable BiConsumer<Integer, AgentResult> onRetryComplete;
+  private @Nullable Consumer<AgentResult> onMaxRetriesExhausted;
 
   private SelfCorrectingInteractable(Interactable delegate, SelfCorrectionConfig config) {
     this.delegate = Objects.requireNonNull(delegate, "delegate cannot be null");
@@ -78,6 +83,41 @@ public final class SelfCorrectingInteractable implements Interactable {
     return new SelfCorrectingInteractable(agent, SelfCorrectionConfig.builder().build());
   }
 
+  /**
+   * Called before each retry attempt, with the attempt number, error message, and failed result.
+   *
+   * @param handler receives (attempt, errorMessage, failedResult)
+   * @return this instance for chaining
+   */
+  public @NonNull SelfCorrectingInteractable onRetryStart(@NonNull RetryStartHandler handler) {
+    this.onRetryStart = Objects.requireNonNull(handler);
+    return this;
+  }
+
+  /**
+   * Called after each retry attempt completes, with the attempt number and new result.
+   *
+   * @param handler receives (attempt, newResult)
+   * @return this instance for chaining
+   */
+  public @NonNull SelfCorrectingInteractable onRetryComplete(
+      @NonNull BiConsumer<Integer, AgentResult> handler) {
+    this.onRetryComplete = Objects.requireNonNull(handler);
+    return this;
+  }
+
+  /**
+   * Called when all retries are exhausted and the result still fails the retry predicate.
+   *
+   * @param handler receives the final failed result
+   * @return this instance for chaining
+   */
+  public @NonNull SelfCorrectingInteractable onMaxRetriesExhausted(
+      @NonNull Consumer<AgentResult> handler) {
+    this.onMaxRetriesExhausted = Objects.requireNonNull(handler);
+    return this;
+  }
+
   @Override
   public @NonNull String name() {
     return delegate.name() + "[SelfCorrecting]";
@@ -92,12 +132,25 @@ public final class SelfCorrectingInteractable implements Interactable {
     while (config.retryOn().test(result) && attempt < config.maxRetries()) {
       attempt++;
       String errorMessage = extractErrorMessage(result);
+
+      if (onRetryStart != null) {
+        onRetryStart.onRetry(attempt, errorMessage, result);
+      }
+
       String feedback = config.formatFeedback(errorMessage);
 
       // Inject error feedback as a user message so the agent can correct itself
       context.addMessage(Message.user(feedback));
 
       result = delegate.interact(context, trace);
+
+      if (onRetryComplete != null) {
+        onRetryComplete.accept(attempt, result);
+      }
+    }
+
+    if (config.retryOn().test(result) && onMaxRetriesExhausted != null) {
+      onMaxRetriesExhausted.accept(result);
     }
 
     return result;
@@ -112,6 +165,25 @@ public final class SelfCorrectingInteractable implements Interactable {
    */
   public com.paragon.agents.Interactable.@NonNull Streaming asStreaming() {
     return delegate.asStreaming();
+  }
+
+  // ===== Functional Interfaces =====
+
+  /**
+   * Handler for retry-start events in the self-correction loop.
+   *
+   * <p>Fired before each retry attempt, before the feedback is injected into context.
+   */
+  @FunctionalInterface
+  public interface RetryStartHandler {
+    /**
+     * Called at the start of each retry attempt.
+     *
+     * @param attempt the 1-indexed attempt number
+     * @param error   the error message extracted from the failed result
+     * @param failed  the failed {@link AgentResult} that triggered the retry
+     */
+    void onRetry(int attempt, @NonNull String error, @NonNull AgentResult failed);
   }
 
   // ===== Private Helpers =====

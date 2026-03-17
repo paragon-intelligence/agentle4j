@@ -252,7 +252,7 @@ Interactable.Structured<AgentDefinition> metaAgent = Agent.builder()
     .responder(responder)
     .build();
 
-AgentDefinition def = metaAgent.interactStructured(
+AgentDefinition def = metaAgent.interact(
     "Create a Spanish-speaking support agent"
 ).output();
 

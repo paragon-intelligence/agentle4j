@@ -36,6 +36,9 @@ public final class NetworkStream {
   private Consumer<String> onSynthesisTextDelta;
   private Consumer<AgentNetwork.NetworkResult> onComplete;
   private Consumer<Throwable> onError;
+  private BiConsumer<Interactable, ToolExecution> onPeerToolExecuted;
+  private BiConsumer<Interactable, GuardrailResult.Failed> onPeerGuardrailFailed;
+  private BiConsumer<Interactable, AgentResult> onPeerError;
 
   NetworkStream(AgentNetwork network, AgenticContext context, Mode mode) {
     this.network = Objects.requireNonNull(network, "network cannot be null");
@@ -124,6 +127,43 @@ public final class NetworkStream {
   }
 
   /**
+   * Called when a peer executes a tool.
+   *
+   * @param callback receives the peer and the tool execution result
+   * @return this stream
+   */
+  public @NonNull NetworkStream onPeerToolExecuted(
+      @NonNull BiConsumer<Interactable, ToolExecution> callback) {
+    this.onPeerToolExecuted = Objects.requireNonNull(callback);
+    return this;
+  }
+
+  /**
+   * Called when a guardrail fails for a peer.
+   *
+   * @param callback receives the peer and the failed guardrail result
+   * @return this stream
+   */
+  public @NonNull NetworkStream onPeerGuardrailFailed(
+      @NonNull BiConsumer<Interactable, GuardrailResult.Failed> callback) {
+    this.onPeerGuardrailFailed = Objects.requireNonNull(callback);
+    return this;
+  }
+
+  /**
+   * Called when a peer's result is an error. Fires alongside {@code onPeerComplete} only when
+   * the peer result has {@code isError() == true}.
+   *
+   * @param callback receives the peer and its errored result
+   * @return this stream
+   */
+  public @NonNull NetworkStream onPeerError(
+      @NonNull BiConsumer<Interactable, AgentResult> callback) {
+    this.onPeerError = Objects.requireNonNull(callback);
+    return this;
+  }
+
+  /**
    * Starts the streaming network execution. Blocks until completion.
    *
    * <p>On virtual threads, blocking is efficient and does not consume platform threads.
@@ -193,9 +233,15 @@ public final class NetworkStream {
         if (onPeerTextDelta != null) {
           stream.onTextDelta(delta -> onPeerTextDelta.accept(peer, delta));
         }
+        if (onPeerToolExecuted != null) {
+          stream.onToolExecuted(exec -> onPeerToolExecuted.accept(peer, exec));
+        }
+        if (onPeerGuardrailFailed != null) {
+          stream.onGuardrailFailed(f -> onPeerGuardrailFailed.accept(peer, f));
+        }
 
         // Execute synchronously (blocking)
-        AgentResult result = stream.start();
+        AgentResult result = stream.startBlocking();
 
         String output = result.output();
         boolean isError = result.isError();
@@ -212,6 +258,9 @@ public final class NetworkStream {
         allContributions.add(contrib);
         roundContributions.add(contrib);
 
+        if (isError && onPeerError != null) {
+          onPeerError.accept(peer, result);
+        }
         if (onPeerComplete != null) {
           onPeerComplete.accept(peer, result);
         }
@@ -256,7 +305,7 @@ public final class NetworkStream {
     }
 
     // Execute synchronously (blocking)
-    AgentResult synthResult = synthStream.start();
+    AgentResult synthResult = synthStream.startBlocking();
 
     String synthesis = synthResult.output();
     AgentNetwork.NetworkResult networkResult =
@@ -293,13 +342,22 @@ public final class NetworkStream {
                 if (onPeerTextDelta != null) {
                   stream.onTextDelta(delta -> onPeerTextDelta.accept(peer, delta));
                 }
+                if (onPeerToolExecuted != null) {
+                  stream.onToolExecuted(exec -> onPeerToolExecuted.accept(peer, exec));
+                }
+                if (onPeerGuardrailFailed != null) {
+                  stream.onGuardrailFailed(f -> onPeerGuardrailFailed.accept(peer, f));
+                }
 
-                AgentResult result = stream.start();
+                AgentResult result = stream.startBlocking();
 
                 AgentNetwork.Contribution contrib =
                     new AgentNetwork.Contribution(peer, 1, result.output(), result.isError());
                 syncContributions.add(contrib);
 
+                if (result.isError() && onPeerError != null) {
+                  onPeerError.accept(peer, result);
+                }
                 if (onPeerComplete != null) {
                   onPeerComplete.accept(peer, result);
                 }

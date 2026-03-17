@@ -29,7 +29,7 @@ at each phase.
 Example usage:
 
 ```java
-agent.interactStream("Help me debug this code", context)
+agent.asStreaming().interact("Help me debug this code")
     .onTurnStart(turn -> System.out.println("--- Turn " + turn + " ---"))
     .onTextDelta(chunk -> System.out.print(chunk))
     .onToolCallPending((call, approve) -> {

@@ -443,37 +443,15 @@ public final class AgentNetwork implements Interactable {
    * @return an {@link Interactable.Streaming} backed by this network's streaming logic
    */
   public Interactable.@NonNull Streaming asStreaming() {
-    return (ctx, trace) -> this.interactStream(ctx, trace);
-  }
-
-  /**
-   * If a synthesizer is configured, runs the discussion and streams the synthesis. Otherwise,
-   * returns a completed stream with the discussion result.
-   */
-  public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
-    if (synthesizer == null) {
-      NetworkResult result = discuss(context);
-      return AgentStream.completed(toAgentResult(result));
-    }
-    NetworkResult result = discuss(context);
-    String synthesisPrompt = buildSynthesisPrompt(result);
-    return synthesizer.asStreaming().interact(synthesisPrompt);
-  }
-
-  /**
-   * If a synthesizer is configured, runs the discussion and streams the synthesis. Trace metadata
-   * is propagated through peer interactions.
-   */
-  public @NonNull AgentStream interactStream(
-      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-    // AgentNetwork doesn't directly use trace metadata; peers handle their own traces
-    if (synthesizer == null) {
-      NetworkResult result = discuss(context);
-      return AgentStream.completed(toAgentResult(result));
-    }
-    NetworkResult result = discuss(context);
-    String synthesisPrompt = buildSynthesisPrompt(result);
-    return synthesizer.asStreaming().interact(synthesisPrompt);
+    return (ctx, trace) -> {
+      if (synthesizer == null) {
+        NetworkResult result = discuss(ctx);
+        return AgentStream.completed(toAgentResult(result));
+      }
+      NetworkResult result = discuss(ctx);
+      String synthesisPrompt = buildSynthesisPrompt(result);
+      return synthesizer.asStreaming().interact(synthesisPrompt);
+    };
   }
 
   private AgentResult toAgentResult(NetworkResult networkResult) {

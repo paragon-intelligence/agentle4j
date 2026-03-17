@@ -594,31 +594,13 @@ public final class ParallelAgents implements Interactable {
    * @return an {@link Interactable.Streaming} backed by this orchestrator's streaming logic
    */
   public Interactable.@NonNull Streaming asStreaming() {
-    return (ctx, trace) -> this.interactStream(ctx, trace);
-  }
-
-  /**
-   * Streams and returns when the first agent completes. For streaming all agents, use {@link
-   * #runAllStream(String)} with the explicit ParallelStream return type.
-   */
-  public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
-    Objects.requireNonNull(context, "context cannot be null");
-    if (!members.isEmpty()) {
-      return members.get(0).asStreaming().interact(context.copy());
-    }
-    return AgentStream.failed(
-        AgentResult.error(new IllegalStateException("No members configured"), context, 0));
-  }
-
-  /** Streams first member; trace propagated through peer interactions. */
-  public @NonNull AgentStream interactStream(
-      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-    // ParallelAgents doesn't directly use trace; it's passed through peer interactions
-    Objects.requireNonNull(context, "context cannot be null");
-    if (!members.isEmpty()) {
-      return members.get(0).asStreaming().interact(context.copy());
-    }
-    return AgentStream.failed(
-        AgentResult.error(new IllegalStateException("No members configured"), context, 0));
+    return (ctx, trace) -> {
+      Objects.requireNonNull(ctx, "context cannot be null");
+      if (!members.isEmpty()) {
+        return members.get(0).asStreaming().interact(ctx.copy());
+      }
+      return AgentStream.failed(
+          AgentResult.error(new IllegalStateException("No members configured"), ctx, 0));
+    };
   }
 }

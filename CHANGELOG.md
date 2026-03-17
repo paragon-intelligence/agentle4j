@@ -5,6 +5,46 @@ All notable changes to Agentle4j will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2]
+
+### Fixed
+
+- **`AgentStream.start()` was blocking** — `start()` now spawns a virtual thread and returns
+  `void` (fire-and-forget). Use `startBlocking()` when you need the `AgentResult` synchronously.
+  All internal callers (`RouterStream`, `NetworkStream`, `ParallelStream`) updated.
+
+- **`onTextDelta` did not use real SSE** — registering an `onTextDelta` callback now sends a
+  proper SSE request via `CreateResponsePayload.Streaming` so deltas arrive incrementally.
+  A null-safe fallback covers providers (e.g. OpenRouter) whose SSE format omits
+  `response.completed`, keeping the callback fired at least once via the blocking path.
+
+- **Handoff execution was broken in streaming** — after detecting a handoff tool call, the
+  streaming loop now correctly forks an `AgenticContext`, invokes the target agent, and returns
+  `AgentResult.handoff()`. Previously it fell through to regular tool execution and produced a
+  wrong result.
+
+- **Hooks never fired in streaming** — `HookRegistry` lifecycle events (`beforeRun`, `afterRun`,
+  `beforeToolCall`, `afterToolCall`) are now wired throughout `AgentStream.runAgenticLoop()`,
+  bringing streaming to parity with the blocking path.
+
+- **`Harness.asStreaming()` bypassed harness hooks** — `HarnessedInteractable.asStreaming()` now
+  fires `beforeRun` before the stream starts and wires `onComplete`/`onError` to fire `afterRun`,
+  so hooks added via `Harness.addHook()` are honoured in streaming mode.
+
+- **`TraceMetadata` was silently dropped in streaming** — `Agent.interactStream(context, trace)`
+  now passes `trace` into `AgentStream` via `withTrace()`, propagating it to telemetry processors.
+
+- **`FunctionTool` serialized with wrong `type` and leaked `param_class`** — added
+  `@JsonTypeName("function")` so the Jackson type discriminator emits `"type":"function"` instead
+  of the Java class name. Marked `getType()`, `getParamClass()`, `requiresConfirmation()`, and
+  `stopsLoop()` with `@JsonIgnore` to remove implementation-detail fields from API requests.
+
+- **Empty-parameter tool schema missing `properties`** — `JacksonJsonSchemaProducer` now ensures
+  `"properties": {}` is always present on object schemas, satisfying OpenAI's strict-mode
+  requirement even when the tool's `Params` record has no fields.
+
+---
+
 ## [0.9.1]
 
 ### Changed

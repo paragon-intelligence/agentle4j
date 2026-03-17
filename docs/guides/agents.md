@@ -1,6 +1,6 @@
 # Agents Guide
 
-> This docs was updated at: 2026-03-15
+> This docs was updated at: 2026-03-16
 
 
 
@@ -796,7 +796,7 @@ public class GetWeatherTool extends FunctionTool<WeatherParams> {
 For CLI apps, chatbots, or UI dialogs where user can respond immediately:
 
 ```java
-agent.interactStream("Delete all test records and check weather in Tokyo")
+agent.asStreaming().interact("Delete all test records and check weather in Tokyo")
     .onToolCallPending((toolCall, approve) -> {
         // ⚠️ Only called for tools with requiresConfirmation=true
         System.out.println("🔧 Approval required: " + toolCall.name());
@@ -829,7 +829,7 @@ For approvals that take hours or days (manager approval, compliance review):
 // ═══════════════════════════════════════════════════════
 // STEP 1: Start agent and pause when dangerous tool called
 // ═══════════════════════════════════════════════════════
-agent.interactStream("Delete all customer records from production")
+agent.asStreaming().interact("Delete all customer records from production")
     .onPause(state -> {
         // AgentRunState is Serializable - save to database
         String json = objectMapper.writeValueAsString(state);
@@ -1179,7 +1179,7 @@ See the [Tool Planning Guide](tool-planning.md) for full details on the plan for
 Full agentic loop with streaming and real-time events:
 
 ```java
-agent.interactStream("Research and summarize AI trends")
+agent.asStreaming().interact("Research and summarize AI trends")
     // Turn lifecycle
     .onTurnStart(turn -> {
         System.out.println("=== Turn " + turn + " ===");
@@ -1619,7 +1619,7 @@ public class AgentService {
     }
 
     public AgentStream processStream(String input) {
-        return agent.interactStream(input);
+        return agent.asStreaming().interact(input);
     }
 }
 
@@ -1641,12 +1641,51 @@ new AgentService(hierarchy);
 | `interact(Message)` | `AgentResult` | Interact with Message |
 | `interact(Prompt)` | `AgentResult` | Interact with Prompt |
 | `interact(AgenticContext)` | `AgentResult` | Interact with existing context |
-| `interactStream(String)` | `AgentStream` | Streaming with text input |
-| `interactStream(Prompt)` | `AgentStream` | Streaming with Prompt |
-| `interactStream(AgenticContext)` | `AgentStream` | Streaming with context |
+| `asStreaming().interact(String)` | `AgentStream` | Streaming with text input |
+| `asStreaming().interact(Prompt)` | `AgentStream` | Streaming with Prompt |
+| `asStreaming().interact(AgenticContext)` | `AgentStream` | Streaming with context |
 
 > [!NOTE]
 > For `ParallelAgents`, the `interact()` method runs all agents in parallel. The first result is the primary output; use `result.relatedResults()` to access results from other agents.
+
+---
+
+## Hooks in Streaming
+
+`HookRegistry` hooks (`beforeRun`, `afterRun`, `beforeToolCall`, `afterToolCall`) fire during
+`AgentStream` runs — not just blocking `interact()` calls. Wire the registry into the agent
+builder as usual; no extra streaming-specific configuration is required.
+
+```java
+HookRegistry hooks = HookRegistry.create();
+hooks.add(new AgentHook() {
+    @Override
+    public void beforeToolCall(FunctionToolCall call, AgenticContext ctx) {
+        metrics.increment("tool_calls");
+    }
+
+    @Override
+    public void afterRun(AgentResult result, AgenticContext ctx) {
+        logger.info("Run finished — turns: {}", result.turnsUsed());
+    }
+});
+
+Agent agent = Agent.builder()
+    .name("Assistant")
+    .model("openai/gpt-4o")
+    .responder(responder)
+    .hookRegistry(hooks)
+    .build();
+
+// beforeToolCall fires for every tool call during this streaming run
+AgentResult result = agent.asStreaming().interact("Summarise the quarterly report")
+    .onTextDelta(System.out::print)
+    .startBlocking();
+```
+
+> **`SelfCorrectingInteractable` note:** When a `SelfCorrectingInteractable` is used, the
+> streaming path delegates directly to the wrapped agent — self-correction is a blocking-only
+> concept and is bypassed in the streaming path.
 
 ---
 

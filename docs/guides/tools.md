@@ -1,6 +1,6 @@
 # Function Tools Guide
 
-> This docs was updated at: 2026-03-15
+> This docs was updated at: 2026-03-16
 
 
 
@@ -572,6 +572,71 @@ public class RateLimitedTool extends FunctionTool<Params> {
         }
         // ... execute tool
     }
+}
+```
+
+---
+
+## Client-Side Tools (`stopsLoop`)
+
+Some tools are pure **UI signals**: the LLM decides to call them, but the tool should never
+actually execute on the server — instead, the client (browser, desktop app, etc.) should react
+to the call and then continue the conversation with the user's response.
+
+Mark these with `stopsLoop = true` on `@FunctionMetadata`. When detected:
+
+- The tool call is **not** persisted to conversation history.
+- The agentic loop **exits immediately** after calling `onClientSideTool`.
+- The tool's `call()` method is **never invoked** — you can return `null` or leave it unimplemented.
+
+### Defining a Client-Side Tool
+
+```java
+@FunctionMetadata(
+    name = "ask_user",
+    description = "Ask the user a clarifying question before proceeding.",
+    stopsLoop = true
+)
+public class AskUserTool extends FunctionTool<AskUserTool.Params> {
+
+    public record Params(String question) {}
+
+    @Override
+    public FunctionToolCallOutput call(@Nullable Params p) {
+        return null; // Never called
+    }
+}
+```
+
+> **Note on empty parameters:** A tool with no fields — `record Params() {}` — is valid and
+> generates `{"type":"object","properties":{}}`. Useful for simple signal tools like
+> `confirm_action` that carry no extra data.
+
+### Handling via Streaming
+
+```java
+agent.asStreaming().interact("Help me choose a colour scheme")
+    .onClientSideTool(call -> {
+        // call.arguments() contains the JSON-encoded Params
+        AskUserTool.Params params = objectMapper.readValue(
+                call.arguments(), AskUserTool.Params.class);
+        showDialog(params.question()); // Show UI to user
+    })
+    .startBlocking();
+```
+
+### Handling via Blocking Path
+
+On the blocking path the result carries the tool call instead of a text output:
+
+```java
+AgentResult result = agent.interact("Help me choose a colour scheme");
+
+if (result.isClientSideTool()) {
+    FunctionToolCall call = result.clientSideToolCall();
+    AskUserTool.Params params = objectMapper.readValue(
+            call.arguments(), AskUserTool.Params.class);
+    showDialog(params.question());
 }
 ```
 

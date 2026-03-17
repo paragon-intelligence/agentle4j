@@ -136,14 +136,27 @@ public final class Harness {
     }
 
     /**
-     * Returns a streaming view backed by the delegate's streaming.
+     * Returns a streaming view backed by the delegate's streaming, with harness hooks applied.
      *
-     * <p>Hooks are not applied to streaming; delegates directly to the wrapped interactable.
+     * <p>Fires {@code beforeRun} before the stream starts and {@code afterRun} when
+     * {@code onComplete} or {@code onError} fires. Tool-level hooks are covered by the agent's
+     * own {@link HookRegistry} (wired in {@link com.paragon.agents.AgentStream}).
      *
      * @return an {@link com.paragon.agents.Interactable.Streaming} backed by the delegate
      */
     public com.paragon.agents.Interactable.@NonNull Streaming asStreaming() {
-      return delegate.asStreaming();
+      return (context, trace) -> {
+        hooks.fireBeforeRun(context);
+        com.paragon.agents.AgentStream stream = delegate.asStreaming().interact(context, trace);
+        return stream
+            .onComplete(result -> hooks.fireAfterRun(result, context))
+            .onError(
+                e -> {
+                  AgentResult err =
+                      AgentResult.error(e, context, 0);
+                  hooks.fireAfterRun(err, context);
+                });
+      };
     }
   }
 

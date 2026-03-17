@@ -171,18 +171,11 @@ public final class HierarchicalAgents implements Interactable {
    * @return an {@link Interactable.Streaming} that delegates to the root supervisor's streaming
    */
   public Interactable.@NonNull Streaming asStreaming() {
-    return (ctx, trace) -> this.interactStream(ctx, trace);
-  }
-
-  public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
-    return interactStream(context, null);
-  }
-
-  public @NonNull AgentStream interactStream(
-      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-    Objects.requireNonNull(context, "context cannot be null");
-    context.ensureTraceContext();
-    return rootSupervisor.interactStream(context, trace);
+    return (ctx, trace) -> {
+      Objects.requireNonNull(ctx, "context cannot be null");
+      ctx.ensureTraceContext();
+      return rootSupervisor.asStreaming().interact(ctx, trace);
+    };
   }
 
   private SupervisorAgent buildHierarchy() {

@@ -2,6 +2,7 @@ package com.paragon.agents;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paragon.responses.spec.FunctionToolCall;
 import com.paragon.responses.spec.Response;
 import com.paragon.responses.spec.ResponseInputItem;
 import java.util.List;
@@ -55,6 +56,7 @@ public class AgentResult {
   private final @Nullable Object parsed;
   private final @Nullable AgentRunState pausedState;
   private final @NonNull List<AgentResult> relatedResults;
+  private final @Nullable FunctionToolCall clientSideToolCall;
 
   protected AgentResult(Builder builder) {
     this.output = builder.output;
@@ -69,6 +71,7 @@ public class AgentResult {
     this.pausedState = builder.pausedState;
     this.relatedResults =
         builder.relatedResults != null ? List.copyOf(builder.relatedResults) : List.of();
+    this.clientSideToolCall = builder.clientSideToolCall;
   }
 
   // ===== Factory Methods =====
@@ -214,6 +217,26 @@ public class AgentResult {
         .pausedState(state)
         .history(context.getHistory())
         .turnsUsed(context.getTurnCount())
+        .build();
+  }
+
+  /**
+   * Creates a client-side tool result when a {@code stopsLoop = true} tool is called.
+   *
+   * <p>The call is NOT persisted to history and the tool's {@code call()} method is NOT invoked.
+   * This is a clean, non-error exit from the agentic loop.
+   *
+   * @param call the function tool call that triggered the exit
+   * @param context the agent context at time of exit
+   * @param turnsUsed number of LLM turns used
+   * @return a client-side tool result
+   */
+  public static @NonNull AgentResult clientSideTool(
+      @NonNull FunctionToolCall call, @NonNull AgenticContext context, int turnsUsed) {
+    return new Builder()
+        .clientSideToolCall(call)
+        .history(context.getHistory())
+        .turnsUsed(turnsUsed)
         .build();
   }
 
@@ -376,6 +399,24 @@ public class AgentResult {
   }
 
   /**
+   * Checks if the loop was stopped by a client-side tool ({@code stopsLoop = true}).
+   *
+   * @return true if a stopsLoop tool triggered the exit
+   */
+  public boolean isClientSideTool() {
+    return clientSideToolCall != null;
+  }
+
+  /**
+   * Returns the tool call that stopped the loop, if applicable.
+   *
+   * @return the client-side tool call, or null if not a client-side tool exit
+   */
+  public @Nullable FunctionToolCall clientSideToolCall() {
+    return clientSideToolCall;
+  }
+
+  /**
    * Returns related results from parallel or composite execution.
    *
    * <p>When using patterns like parallel execution, this contains the results from other agents
@@ -456,6 +497,7 @@ public class AgentResult {
     private @Nullable Object parsed;
     private @Nullable AgentRunState pausedState;
     private @Nullable List<AgentResult> relatedResults;
+    private @Nullable FunctionToolCall clientSideToolCall;
 
     Builder output(String output) {
       this.output = output;
@@ -504,6 +546,11 @@ public class AgentResult {
 
     Builder relatedResults(List<AgentResult> relatedResults) {
       this.relatedResults = relatedResults;
+      return this;
+    }
+
+    Builder clientSideToolCall(FunctionToolCall call) {
+      this.clientSideToolCall = call;
       return this;
     }
 

@@ -1174,7 +1174,7 @@ public class AgentStreamingController {
         
         SseEmitter emitter = new SseEmitter(180_000L); // 3 min for complex interactions
 
-        customerServiceAgent.interactStream(message)
+        customerServiceAgent.asStreaming().interact(message)
             // Track multi-turn progress
             .onTurnStart(turn -> {
                 try {
@@ -1314,7 +1314,7 @@ public class OrderAssistantService {
     }
 
     public void streamOrderAssistance(String userId, String message, SseEmitter emitter) {
-        orderAgent.interactStream(message)
+        orderAgent.asStreaming().interact(message)
             .onTextDelta(delta -> sendSafe(emitter, "text", delta))
             .onToolExecuted(exec -> {
                 sendSafe(emitter, "action", Map.of(

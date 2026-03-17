@@ -7,8 +7,11 @@ import com.paragon.skills.Skill;
 import com.paragon.skills.SkillProvider;
 import com.paragon.skills.SkillStore;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -64,6 +67,10 @@ public final class SupervisorAgent implements Interactable {
   private final int maxTurns;
   private final @NonNull Agent supervisorAgent;
   private final @Nullable TraceMetadata traceMetadata;
+
+  // Worker-level streaming callbacks (mutable, set after construction)
+  private @Nullable BiConsumer<Worker, ToolExecution> onWorkerInvoked;
+  private @Nullable BiConsumer<Worker, ToolExecution> onWorkerComplete;
 
   private SupervisorAgent(Builder builder) {
     this.name = Objects.requireNonNull(builder.name, "name cannot be null");
@@ -181,18 +188,85 @@ public final class SupervisorAgent implements Interactable {
    * @return an {@link Interactable.Streaming} that delegates to the underlying agent's streaming
    */
   public Interactable.@NonNull Streaming asStreaming() {
-    return (ctx, trace) -> this.interactStream(ctx, trace);
+    return (ctx, trace) -> {
+      Objects.requireNonNull(ctx, "context cannot be null");
+      AgentStream stream = supervisorAgent.asStreaming().interact(ctx, trace);
+      return wireWorkerCallbacks(stream);
+    };
   }
 
-  public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
-    Objects.requireNonNull(context, "context cannot be null");
-    return supervisorAgent.interactStream(context);
+  /**
+   * Registers a callback that fires when a worker is invoked by the supervisor (streaming path).
+   *
+   * <p>Fires at the same moment as {@code onWorkerComplete} because worker invocation is
+   * synchronous in the current model.
+   *
+   * @param handler receives the worker and the tool execution result
+   * @return this supervisor (for chaining)
+   */
+  public @NonNull SupervisorAgent onWorkerInvoked(
+      @NonNull BiConsumer<Worker, ToolExecution> handler) {
+    this.onWorkerInvoked = Objects.requireNonNull(handler);
+    return this;
   }
 
-  public @NonNull AgentStream interactStream(
-      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-    Objects.requireNonNull(context, "context cannot be null");
-    return supervisorAgent.interactStream(context, trace);
+  /**
+   * Registers a callback that fires when a worker completes its execution (streaming path).
+   *
+   * @param handler receives the worker and the tool execution result
+   * @return this supervisor (for chaining)
+   */
+  public @NonNull SupervisorAgent onWorkerComplete(
+      @NonNull BiConsumer<Worker, ToolExecution> handler) {
+    this.onWorkerComplete = Objects.requireNonNull(handler);
+    return this;
+  }
+
+  private @NonNull AgentStream wireWorkerCallbacks(@NonNull AgentStream stream) {
+    if (onWorkerInvoked == null && onWorkerComplete == null) {
+      return stream;
+    }
+    Map<String, Worker> workersByToolName = buildWorkerToolNameMap();
+    return stream.onToolExecuted(exec -> {
+      Worker worker = workersByToolName.get(exec.toolName());
+      if (worker != null) {
+        if (onWorkerInvoked != null) {
+          onWorkerInvoked.accept(worker, exec);
+        }
+        if (onWorkerComplete != null) {
+          onWorkerComplete.accept(worker, exec);
+        }
+      }
+    });
+  }
+
+  private @NonNull Map<String, Worker> buildWorkerToolNameMap() {
+    Map<String, Worker> map = new HashMap<>();
+    for (Worker worker : workers) {
+      map.put("invoke_" + toSnakeCase(worker.worker().name()), worker);
+    }
+    return map;
+  }
+
+  private static String toSnakeCase(String input) {
+    if (input == null || input.isEmpty()) {
+      return input;
+    }
+    StringBuilder result = new StringBuilder();
+    for (int i = 0; i < input.length(); i++) {
+      char c = input.charAt(i);
+      if (Character.isUpperCase(c)) {
+        if (i > 0) {
+          result.append('_');
+        }
+        result.append(Character.toLowerCase(c));
+      } else if (Character.isWhitespace(c)) {
+        result.append('_');
+      } else {
+        result.append(c);
+      }
+    }
+    return result.toString();
   }
 
   private String buildSupervisorInstructions() {

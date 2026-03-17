@@ -1,6 +1,7 @@
 package com.paragon.agents;
 
 import com.paragon.responses.Responder;
+import com.paragon.responses.spec.FunctionToolCall;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -29,12 +30,17 @@ public final class RouterStream {
 
   // Callbacks
   private Consumer<Interactable> onRouteSelected;
+  private Consumer<String> onRoutingFailed;
   private Consumer<String> onTextDelta;
   private Consumer<AgentResult> onComplete;
   private Consumer<Throwable> onError;
   private Consumer<Integer> onTurnStart;
   private Consumer<ToolExecution> onToolExecuted;
   private Consumer<Handoff> onHandoff;
+  private AgentStream.ToolConfirmationHandler onToolCallPending;
+  private AgentStream.PauseHandler onPause;
+  private Consumer<GuardrailResult.Failed> onGuardrailFailed;
+  private Consumer<FunctionToolCall> onClientSideTool;
 
   RouterStream(RouterAgent router, AgenticContext context, Responder responder) {
     this.router = Objects.requireNonNull(router, "router cannot be null");
@@ -50,6 +56,17 @@ public final class RouterStream {
    */
   public @NonNull RouterStream onRouteSelected(@NonNull Consumer<Interactable> callback) {
     this.onRouteSelected = Objects.requireNonNull(callback);
+    return this;
+  }
+
+  /**
+   * Called when no route is found for the input (empty input or no matching route).
+   *
+   * @param callback receives a description of the routing failure
+   * @return this stream
+   */
+  public @NonNull RouterStream onRoutingFailed(@NonNull Consumer<String> callback) {
+    this.onRoutingFailed = Objects.requireNonNull(callback);
     return this;
   }
 
@@ -120,6 +137,61 @@ public final class RouterStream {
   }
 
   /**
+   * Called when a tool call requires confirmation (human-in-the-loop), forwarded from the child agent.
+   *
+   * @param handler receives the pending tool call and approval callback
+   * @return this stream
+   */
+  public @NonNull RouterStream onToolCallPending(AgentStream.ToolConfirmationHandler handler) {
+    this.onToolCallPending = Objects.requireNonNull(handler);
+    return this;
+  }
+
+  /**
+   * Called when the child agent should pause for async approval, forwarded from the child agent.
+   *
+   * @param handler receives the serializable run state
+   * @return this stream
+   */
+  public @NonNull RouterStream onPause(AgentStream.PauseHandler handler) {
+    this.onPause = Objects.requireNonNull(handler);
+    return this;
+  }
+
+  /**
+   * Called when an output guardrail fails in the child agent.
+   *
+   * @param callback receives the failed guardrail result
+   * @return this stream
+   */
+  public @NonNull RouterStream onGuardrailFailed(@NonNull Consumer<GuardrailResult.Failed> callback) {
+    this.onGuardrailFailed = Objects.requireNonNull(callback);
+    return this;
+  }
+
+  /**
+   * Called when a client-side tool ({@code stopsLoop = true}) is detected in the child agent.
+   *
+   * @param callback receives the tool call that triggered the exit
+   * @return this stream
+   */
+  public @NonNull RouterStream onClientSideTool(@NonNull Consumer<FunctionToolCall> callback) {
+    this.onClientSideTool = Objects.requireNonNull(callback);
+    return this;
+  }
+
+  /**
+   * Starts the streaming router execution. Blocks until completion.
+   *
+   * <p>On virtual threads, blocking is efficient and does not consume platform threads.
+   *
+   * @return the final result
+   */
+  public @NonNull AgentResult startBlocking() {
+    return start();
+  }
+
+  /**
    * Starts the streaming router execution. Blocks until completion.
    *
    * <p>On virtual threads, blocking is efficient and does not consume platform threads.
@@ -135,6 +207,9 @@ public final class RouterStream {
               new IllegalStateException("No user message found in context for routing"),
               context,
               0);
+      if (onRoutingFailed != null) {
+        onRoutingFailed.accept("No user message found in context for routing");
+      }
       if (onError != null) {
         onError.accept(errorResult.error());
       }
@@ -153,6 +228,9 @@ public final class RouterStream {
       AgentResult errorResult =
           AgentResult.error(
               new IllegalStateException("No suitable route found for input"), context, 0);
+      if (onRoutingFailed != null) {
+        onRoutingFailed.accept("No suitable route found for input: " + inputText);
+      }
       if (onError != null) {
         onError.accept(errorResult.error());
       }
@@ -186,12 +264,24 @@ public final class RouterStream {
     if (onHandoff != null) {
       agentStream.onHandoff(onHandoff);
     }
+    if (onToolCallPending != null) {
+      agentStream.onToolCallPending(onToolCallPending);
+    }
+    if (onPause != null) {
+      agentStream.onPause(onPause);
+    }
+    if (onGuardrailFailed != null) {
+      agentStream.onGuardrailFailed(onGuardrailFailed);
+    }
+    if (onClientSideTool != null) {
+      agentStream.onClientSideTool(onClientSideTool);
+    }
     if (onError != null) {
       agentStream.onError(onError);
     }
 
     // Execute and wrap result
-    AgentResult innerResult = agentStream.start();
+    AgentResult innerResult = agentStream.startBlocking();
 
     if (onComplete != null) {
       onComplete.accept(innerResult);

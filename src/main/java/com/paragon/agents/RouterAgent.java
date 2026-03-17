@@ -257,34 +257,21 @@ public final class RouterAgent implements Interactable {
    * @return an {@link Interactable.Streaming} that delegates to this router's streaming logic
    */
   public Interactable.@NonNull Streaming asStreaming() {
-    return (ctx, trace) -> this.interactStream(ctx, trace);
-  }
-
-  public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
-    return interactStream(context, null);
-  }
-
-  public @NonNull AgentStream interactStream(
-      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-    Objects.requireNonNull(context, "context cannot be null");
-
-    Optional<String> inputTextOpt = context.extractLastUserMessageText();
-    if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
-      return AgentStream.failed(
-          AgentResult.error(
-              new IllegalStateException("No user message found in context for routing"),
-              context,
-              0));
-    }
-
-    Optional<Interactable> selected = classify(inputTextOpt.get());
-    if (selected.isEmpty()) {
-      return AgentStream.failed(
-          AgentResult.error(
-              new IllegalStateException("No suitable route found for input"), context, 0));
-    }
-
-    return selected.get().asStreaming().interact(context, trace);
+    return (ctx, trace) -> {
+      Objects.requireNonNull(ctx, "context cannot be null");
+      Optional<String> inputTextOpt = ctx.extractLastUserMessageText();
+      if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
+        return AgentStream.failed(AgentResult.error(
+            new IllegalStateException("No user message found in context for routing"),
+            ctx, 0));
+      }
+      Optional<Interactable> selected = classify(inputTextOpt.get());
+      if (selected.isEmpty()) {
+        return AgentStream.failed(AgentResult.error(
+            new IllegalStateException("No suitable route found for input"), ctx, 0));
+      }
+      return selected.get().asStreaming().interact(ctx, trace);
+    };
   }
 
   // ===== Inner Classes =====

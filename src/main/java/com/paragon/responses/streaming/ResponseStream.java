@@ -398,6 +398,48 @@ public final class ResponseStream<T> {
   }
 
   /**
+   * Executes streaming inline on the calling thread and returns the final Response. Unlike {@link
+   * #get()}, this does NOT spawn a virtual thread — the SSE loop runs directly on the caller.
+   *
+   * <p>Use this inside loops (e.g., AgentStream's agentic loop) where spawning a thread just to
+   * block on it would be wasteful.
+   *
+   * @return the final Response
+   * @throws RuntimeException if streaming fails
+   * @throws IllegalStateException if already started
+   */
+  public @NonNull Response startBlocking() {
+    if (!started.compareAndSet(false, true)) {
+      throw new IllegalStateException("Stream already started");
+    }
+
+    final AtomicReference<Response> resultRef = new AtomicReference<>();
+    final AtomicReference<Throwable> errorRef = new AtomicReference<>();
+
+    Consumer<Response> originalComplete = this.onCompleteHandler;
+    Consumer<Throwable> originalError = this.onErrorHandler;
+
+    this.onCompleteHandler =
+        response -> {
+          if (originalComplete != null) originalComplete.accept(response);
+          resultRef.set(response);
+        };
+
+    this.onErrorHandler =
+        error -> {
+          if (originalError != null) originalError.accept(error);
+          errorRef.set(error);
+        };
+
+    executeStream(); // inline — no thread spawn
+
+    if (errorRef.get() != null) {
+      throw new RuntimeException("Streaming failed", errorRef.get());
+    }
+    return resultRef.get();
+  }
+
+  /**
    * Blocks until streaming completes and returns a parsed structured response. Only available for
    * structured output streams.
    *
@@ -515,9 +557,12 @@ public final class ResponseStream<T> {
                     onTextDeltaHandler.accept(delta);
                   }
 
-                  // Accumulate for partial parsing
-                  if (onPartialParsedHandler != null && partialParser != null) {
+                  // Accumulate for partial parsing (single append, shared by both handlers)
+                  if (onPartialParsedHandler != null || onPartialJsonHandler != null) {
                     accumulatedText.append(delta);
+                  }
+
+                  if (onPartialParsedHandler != null && partialParser != null) {
                     T partial = partialParser.parsePartial(accumulatedText.toString());
                     if (partial != null) {
                       onPartialParsedHandler.accept(partial);
@@ -526,7 +571,6 @@ public final class ResponseStream<T> {
 
                   // Map-based partial parsing (zero-class approach)
                   if (onPartialJsonHandler != null) {
-                    accumulatedText.append(delta);
                     try {
                       @SuppressWarnings("unchecked")
                       Map<String, Object> partialMap =

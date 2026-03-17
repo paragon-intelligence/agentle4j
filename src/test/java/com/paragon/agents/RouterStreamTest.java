@@ -291,7 +291,7 @@ class RouterStreamTest {
       AtomicReference<AgentResult> resultRef = new AtomicReference<>();
 
       AgentResult result =
-          router.routeStream(context).onError(errorRef::set).onComplete(resultRef::set).start();
+          router.routeStream(context).onError(errorRef::set).onComplete(resultRef::set).startBlocking();
 
       assertTrue(result.isError());
       assertNotNull(errorRef);
@@ -307,7 +307,7 @@ class RouterStreamTest {
 
       AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
-      AgentResult result = router.routeStream(context).onError(errorRef::set).start();
+      AgentResult result = router.routeStream(context).onError(errorRef::set).startBlocking();
 
       assertTrue(result.isError());
     }
@@ -341,7 +341,7 @@ class RouterStreamTest {
 
       AtomicBoolean completed = new AtomicBoolean(false);
 
-      AgentResult result = router.routeStream(context).onComplete(r -> completed.set(true)).start();
+      AgentResult result = router.routeStream(context).onComplete(r -> completed.set(true)).startBlocking();
 
       // Test that we get some result
       assertNotNull(result);
@@ -369,7 +369,7 @@ class RouterStreamTest {
 
       List<String> deltas = new ArrayList<>();
 
-      AgentResult result = router.routeStream(context).onTextDelta(deltas::add).start();
+      AgentResult result = router.routeStream(context).onTextDelta(deltas::add).startBlocking();
 
       // Deltas may or may not be captured depending on streaming behavior
       assertNotNull(deltas);

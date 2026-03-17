@@ -1,5 +1,7 @@
 package com.paragon.responses.spec;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.responses.annotations.FunctionMetadata;
@@ -17,6 +19,7 @@ import org.jspecify.annotations.Nullable;
  *
  * @param <P> the parameters the function accept in a Java Record format.
  */
+@JsonTypeName("function")
 public abstract non-sealed class FunctionTool<P extends Record> implements Tool {
 
   private final @NonNull String name;
@@ -25,6 +28,7 @@ public abstract non-sealed class FunctionTool<P extends Record> implements Tool 
   private final @Nullable String description;
   private final @NonNull Class<P> paramClass;
   private final boolean requiresConfirmation;
+  private final boolean stopsLoop;
 
   public FunctionTool() {
     this(new JacksonJsonSchemaProducer(new ObjectMapper()));
@@ -42,11 +46,13 @@ public abstract non-sealed class FunctionTool<P extends Record> implements Tool 
       this.name = metadata.name();
       this.description = metadata.description().isEmpty() ? null : metadata.description();
       this.requiresConfirmation = metadata.requiresConfirmation();
+      this.stopsLoop = metadata.stopsLoop();
     } else {
       // Derive name from class simple name converted to snake_case
       this.name = toSnakeCase(this.getClass().getSimpleName());
       this.description = null;
       this.requiresConfirmation = false;
+      this.stopsLoop = false;
     }
     this.strict = true;
 
@@ -81,10 +87,12 @@ public abstract non-sealed class FunctionTool<P extends Record> implements Tool 
       this.name = metadata.name();
       this.description = metadata.description().isEmpty() ? null : metadata.description();
       this.requiresConfirmation = metadata.requiresConfirmation();
+      this.stopsLoop = metadata.stopsLoop();
     } else {
       this.name = toSnakeCase(this.getClass().getSimpleName());
       this.description = null;
       this.requiresConfirmation = false;
+      this.stopsLoop = false;
     }
     this.parameters = Map.copyOf(parameters);
     this.strict = strict;
@@ -139,6 +147,7 @@ public abstract non-sealed class FunctionTool<P extends Record> implements Tool 
     return mapper.writeValueAsString(Map.of("name", name, "type", "function"));
   }
 
+  @JsonIgnore
   public @NonNull String getType() {
     return "function";
   }
@@ -165,6 +174,7 @@ public abstract non-sealed class FunctionTool<P extends Record> implements Tool 
    *
    * @return the parameter class
    */
+  @JsonIgnore
   public @NonNull Class<P> getParamClass() {
     return paramClass;
   }
@@ -177,7 +187,21 @@ public abstract non-sealed class FunctionTool<P extends Record> implements Tool 
    *
    * @return true if confirmation is required, false otherwise
    */
+  @JsonIgnore
   public boolean requiresConfirmation() {
     return requiresConfirmation;
+  }
+
+  /**
+   * Returns whether this tool is client-side only and terminates the agentic loop immediately.
+   *
+   * <p>When true, the framework skips history persistence and tool execution, returning
+   * {@code AgentResult.clientSideTool()} instead.
+   *
+   * @return true if this tool stops the loop, false otherwise
+   */
+  @JsonIgnore
+  public boolean stopsLoop() {
+    return stopsLoop;
   }
 }

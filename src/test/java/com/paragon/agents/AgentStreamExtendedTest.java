@@ -55,6 +55,36 @@ class AgentStreamExtendedTest {
   // CALLBACK INVOCATIONS
   // ═══════════════════════════════════════════════════════════════════════════
 
+  /**
+   * Enqueues a proper SSE response for use when onTextDelta is registered.
+   * onTextDelta now triggers true SSE mode, so the mock must return SSE-formatted events.
+   */
+  private void enqueueSSESuccessResponse(String text) {
+    String escapedText = text.replace("\"", "\\\"");
+    String sseBody =
+        "data: {\"type\":\"response.output_text.delta\",\"item_id\":\"msg_001\","
+            + "\"output_index\":0,\"content_index\":0,\"delta\":\""
+            + escapedText
+            + "\",\"sequence_number\":1}\n"
+            + "\n"
+            + "data: {\"type\":\"response.completed\",\"sequence_number\":2,\"response\":"
+            + "{\"id\":\"resp_001\",\"object\":\"response\",\"created_at\":1234567890,"
+            + "\"status\":\"completed\",\"model\":\"test-model\","
+            + "\"output\":[{\"type\":\"message\",\"id\":\"msg_001\",\"role\":\"assistant\","
+            + "\"content\":[{\"type\":\"output_text\",\"text\":\""
+            + escapedText
+            + "\"}]}],"
+            + "\"usage\":{\"input_tokens\":10,\"output_tokens\":5,\"total_tokens\":15}}}\n"
+            + "\n"
+            + "data: [DONE]\n";
+
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(200)
+            .setBody(sseBody)
+            .addHeader("Content-Type", "text/event-stream"));
+  }
+
   private void enqueueSuccessResponse(String text) {
     String json =
         """
@@ -246,7 +276,7 @@ class AgentStreamExtendedTest {
 
       AtomicReference<AgentResult> resultRef = new AtomicReference<>();
 
-      AgentResult result = agent.interactStream("Hello").onComplete(resultRef::set).start();
+      AgentResult result = agent.asStreaming().interact("Hello").onComplete(resultRef::set).startBlocking();
 
       assertNotNull(result);
       assertTrue(result.isSuccess());
@@ -259,7 +289,7 @@ class AgentStreamExtendedTest {
       Agent agent = createTestAgent();
       enqueueSuccessResponse("Blocking response");
 
-      AgentResult result = agent.interactStream("Hello").startBlocking();
+      AgentResult result = agent.asStreaming().interact("Hello").startBlocking();
 
       assertNotNull(result);
       assertTrue(result.isSuccess());
@@ -277,11 +307,11 @@ class AgentStreamExtendedTest {
 
       // First interaction
       context.addInput(Message.user("First message"));
-      agent.interactStream(context).start();
+      agent.asStreaming().interact(context).startBlocking();
 
       // Second interaction uses same context
       context.addInput(Message.user("Second message"));
-      AgentResult result = agent.interactStream(context).start();
+      AgentResult result = agent.asStreaming().interact(context).startBlocking();
 
       assertNotNull(result);
       assertTrue(context.getHistory().size() > 2);
@@ -300,20 +330,21 @@ class AgentStreamExtendedTest {
 
       AtomicInteger turnNumber = new AtomicInteger(-1);
 
-      agent.interactStream("Hello").onTurnStart(turnNumber::set).start();
+      agent.asStreaming().interact("Hello").onTurnStart(turnNumber::set).startBlocking();
 
       assertEquals(1, turnNumber.get());
     }
 
     @Test
-    @DisplayName("onTextDelta is called with response text")
+    @DisplayName("onTextDelta is called with response text (true SSE)")
     void onTextDeltaIsCalled() throws Exception {
       Agent agent = createTestAgent();
-      enqueueSuccessResponse("Delta text content");
+      // onTextDelta now triggers real SSE mode — mock must return SSE-formatted events
+      enqueueSSESuccessResponse("Delta text content");
 
       AtomicReference<String> deltaRef = new AtomicReference<>();
 
-      agent.interactStream("Hello").onTextDelta(deltaRef::set).start();
+      agent.asStreaming().interact("Hello").onTextDelta(deltaRef::set).startBlocking();
 
       assertEquals("Delta text content", deltaRef.get());
     }
@@ -326,7 +357,7 @@ class AgentStreamExtendedTest {
 
       AtomicReference<Response> responseRef = new AtomicReference<>();
 
-      agent.interactStream("Hello").onTurnComplete(responseRef::set).start();
+      agent.asStreaming().interact("Hello").onTurnComplete(responseRef::set).startBlocking();
 
       assertNotNull(responseRef);
       assertNotNull(responseRef.get().id());
@@ -340,7 +371,7 @@ class AgentStreamExtendedTest {
 
       AtomicReference<AgentResult> completedRef = new AtomicReference<>();
 
-      agent.interactStream("Hello").onComplete(completedRef::set).start();
+      agent.asStreaming().interact("Hello").onComplete(completedRef::set).startBlocking();
 
       assertNotNull(completedRef);
       assertTrue(completedRef.get().isSuccess());
@@ -360,7 +391,7 @@ class AgentStreamExtendedTest {
 
       AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
-      AgentResult result = agent.interactStream("Hello").onError(errorRef::set).start();
+      AgentResult result = agent.asStreaming().interact("Hello").onError(errorRef::set).startBlocking();
 
       // Either error callback was called or result is error
       assertTrue(errorRef != null || result.isError());
@@ -390,7 +421,7 @@ class AgentStreamExtendedTest {
 
       AtomicReference<ToolExecution> execRef = new AtomicReference<>();
 
-      agent.interactStream("Call the tool").onToolExecuted(execRef::set).start();
+      agent.asStreaming().interact("Call the tool").onToolExecuted(execRef::set).startBlocking();
 
       assertNotNull(execRef);
       assertEquals("simple_tool", execRef.get().toolName());
@@ -418,7 +449,7 @@ class AgentStreamExtendedTest {
 
       List<ToolExecution> executions = new ArrayList<>();
 
-      agent.interactStream("Call tools").onToolExecuted(executions::add).start();
+      agent.asStreaming().interact("Call tools").onToolExecuted(executions::add).startBlocking();
 
       assertEquals(2, executions.size());
     }
@@ -449,14 +480,14 @@ class AgentStreamExtendedTest {
       AtomicReference<FunctionToolCall> pendingCall = new AtomicReference<>();
 
       agent
-          .interactStream("Run dangerous tool")
+          .asStreaming().interact("Run dangerous tool")
           .onToolCallPending(
               (call, approve) -> {
                 callbackCalled.set(true);
                 pendingCall.set(call);
                 approve.accept(true); // Approve the tool
               })
-          .start();
+          .startBlocking();
 
       assertTrue(callbackCalled.get());
       assertNotNull(pendingCall.get());
@@ -483,10 +514,10 @@ class AgentStreamExtendedTest {
       AtomicBoolean toolExecuted = new AtomicBoolean(false);
 
       agent
-          .interactStream("Run dangerous tool")
+          .asStreaming().interact("Run dangerous tool")
           .onToolCallPending((call, approve) -> approve.accept(false)) // Reject
           .onToolExecuted(exec -> toolExecuted.set(true))
-          .start();
+          .startBlocking();
 
       // Tool should NOT be executed when rejected
       assertFalse(toolExecuted.get());
@@ -513,10 +544,10 @@ class AgentStreamExtendedTest {
       AtomicBoolean toolExecuted = new AtomicBoolean(false);
 
       agent
-          .interactStream("Run safe tool")
+          .asStreaming().interact("Run safe tool")
           .onToolCallPending((call, approve) -> confirmationCalled.set(true))
           .onToolExecuted(exec -> toolExecuted.set(true))
-          .start();
+          .startBlocking();
 
       // Safe tool should NOT trigger confirmation
       assertFalse(confirmationCalled.get());
@@ -552,7 +583,7 @@ class AgentStreamExtendedTest {
       AtomicReference<AgentRunState> pauseStateRef = new AtomicReference<>();
 
       AgentResult result =
-          agent.interactStream("Run dangerous tool").onPause(pauseStateRef::set).start();
+          agent.asStreaming().interact("Run dangerous tool").onPause(pauseStateRef::set).startBlocking();
 
       assertNotNull(pauseStateRef);
       assertTrue(pauseStateRef.get().isPendingApproval());
@@ -588,7 +619,7 @@ class AgentStreamExtendedTest {
       AtomicReference<GuardrailResult.Failed> failedRef = new AtomicReference<>();
 
       AgentResult result =
-          agent.interactStream("Generate response").onGuardrailFailed(failedRef::set).start();
+          agent.asStreaming().interact("Generate response").onGuardrailFailed(failedRef::set).startBlocking();
 
       assertNotNull(failedRef);
       assertTrue(failedRef.get().reason().contains("forbidden"));
@@ -608,7 +639,7 @@ class AgentStreamExtendedTest {
 
       AtomicReference<AgentResult> completedRef = new AtomicReference<>();
 
-      AgentResult result = AgentStream.failed(failedResult).onComplete(completedRef::set).start();
+      AgentResult result = AgentStream.failed(failedResult).onComplete(completedRef::set).startBlocking();
 
       assertNotNull(result);
       assertTrue(result.isError());

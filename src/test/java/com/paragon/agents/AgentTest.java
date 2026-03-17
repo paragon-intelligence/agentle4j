@@ -692,33 +692,6 @@ class AgentTest {
   // Helper methods
 
   @Nested
-  @DisplayName("Streaming API")
-  class StreamingApi {
-
-    @Test
-    @DisplayName("interactStream(String) returns AgentStream")
-    void interactStream_String_returnsAgentStream() {
-      Agent agent = createTestAgent("Test");
-
-      AgentStream stream = agent.interactStream("Hello");
-
-      assertNotNull(stream);
-    }
-
-    @Test
-    @DisplayName("interactStream(Context) returns AgentStream")
-    void interactStream_Context_returnsAgentStream() {
-      Agent agent = createTestAgent("Test");
-      AgenticContext context = AgenticContext.create();
-      context.addInput(Message.user("Hello"));
-
-      AgentStream stream = agent.interactStream(context);
-
-      assertNotNull(stream);
-    }
-  }
-
-  @Nested
   @DisplayName("Builder Additional Options")
   class BuilderAdditionalOptions {
 

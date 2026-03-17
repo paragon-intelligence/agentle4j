@@ -59,7 +59,7 @@ class AgentStreamCallbackTest {
       enqueueSuccessResponse("Hello!");
 
       agent
-          .interactStream("Hi")
+          .asStreaming().interact("Hi")
           .onTurnStart(
               turn -> {
                 turnStartCount.incrementAndGet();
@@ -84,7 +84,7 @@ class AgentStreamCallbackTest {
       enqueueSuccessResponse("Response");
 
       agent
-          .interactStream("Hi")
+          .asStreaming().interact("Hi")
           .onTurnComplete(response -> turnCompleted.set(true))
           .onComplete(result -> latch.countDown())
           .onError(e -> latch.countDown())
@@ -110,7 +110,7 @@ class AgentStreamCallbackTest {
       enqueueSuccessResponse("Hello World");
 
       agent
-          .interactStream("Hi")
+          .asStreaming().interact("Hi")
           .onTextDelta(chunk -> capturedText.append(chunk))
           .onComplete(result -> latch.countDown())
           .onError(e -> latch.countDown())
@@ -149,7 +149,7 @@ class AgentStreamCallbackTest {
       enqueueSuccessResponse("Done");
 
       agent
-          .interactStream("Test")
+          .asStreaming().interact("Test")
           .onToolExecuted(
               exec -> {
                 toolExecuted.set(true);
@@ -186,7 +186,7 @@ class AgentStreamCallbackTest {
       enqueueSuccessResponse("Done");
 
       agent
-          .interactStream("Delete stuff")
+          .asStreaming().interact("Delete stuff")
           .onToolCallPending(
               (call, approve) -> {
                 pendingCalled.set(true);
@@ -217,7 +217,7 @@ class AgentStreamCallbackTest {
       enqueueSuccessResponse("Done");
 
       agent
-          .interactStream("Hi")
+          .asStreaming().interact("Hi")
           .onComplete(
               result -> {
                 completed.set(true);
@@ -243,7 +243,7 @@ class AgentStreamCallbackTest {
       // No response enqueued - will fail
 
       agent
-          .interactStream("Hi")
+          .asStreaming().interact("Hi")
           .onComplete(result -> latch.countDown())
           .onError(
               e -> {
@@ -278,7 +278,7 @@ class AgentStreamCallbackTest {
               .build();
 
       agent
-          .interactStream("Any input")
+          .asStreaming().interact("Any input")
           .onComplete(
               result -> {
                 capturedResult.set(result);
@@ -328,7 +328,7 @@ class AgentStreamCallbackTest {
       enqueueSuccessResponse("Support here");
 
       mainAgent
-          .interactStream("Need support")
+          .asStreaming().interact("Need support")
           .onHandoff(
               handoff -> {
                 handoffCalled.set(true);

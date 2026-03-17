@@ -446,6 +446,15 @@ public final class Agent implements Serializable, Interactable {
     return hookRegistry;
   }
 
+  /**
+   * Returns the structured output type configured for this agent, or {@code null} if none.
+   *
+   * @return the output type class or null
+   */
+  public @Nullable Class<?> outputType() {
+    return outputType;
+  }
+
   /** Returns the tool store. Package-private for AgentStream. */
   @NonNull FunctionToolStore toolStore() {
     return toolStore;
@@ -456,63 +465,7 @@ public final class Agent implements Serializable, Interactable {
     return buildPayload(context);
   }
 
-  // ===== Interact Methods (All Async) =====
-
-  /**
-   * Interacts with the agent using streaming with full agentic loop. Creates a fresh context.
-   *
-   * <p>Returns an {@link AgentStream} that runs the complete agentic loop including guardrails,
-   * tool execution, and multi-turn conversations, emitting events at each phase.
-   *
-   * <p>Example:
-   *
-   * <pre>{@code
-   * agent.interactStream("Help me debug this code")
-   *     .onTurnStart(turn -> System.out.println("--- Turn " + turn + " ---"))
-   *     .onTextDelta(chunk -> System.out.print(chunk))
-   *     .onToolCallPending((call, approve) -> approve.accept(true))  // Human-in-the-loop
-   *     .onToolExecuted(exec -> System.out.println("Tool: " + exec.toolName()))
-   *     .onComplete(result -> System.out.println("\nDone!"))
-   *     .start();
-   * }</pre>
-   *
-   * @param input the user's text input
-   * @return an AgentStream for processing streaming events
-   */
-  public @NonNull AgentStream interactStream(@NonNull String input) {
-    Objects.requireNonNull(input, "input cannot be null");
-
-    AgenticContext context = AgenticContext.create();
-    List<ResponseInputItem> inputList = List.of(Message.user(input));
-
-    // Validate input guardrails before creating stream
-    String inputText = extractTextFromInput(inputList);
-    for (InputGuardrail guardrail : inputGuardrails) {
-      GuardrailResult result = guardrail.validate(inputText, context);
-      if (result.isFailed()) {
-        GuardrailResult.Failed failed = (GuardrailResult.Failed) result;
-        GuardrailException guardEx = GuardrailException.inputViolation(failed.reason());
-        broadcastFailedEvent(guardEx, context);
-        return AgentStream.failed(AgentResult.error(guardEx, context, context.getTurnCount()));
-      }
-    }
-
-    return new AgentStream(this, inputList, context, responder, objectMapper);
-  }
-
-  /**
-   * Interacts with the agent with streaming using an existing context and trace metadata.
-   *
-   * @param context the conversation context containing history
-   * @param trace optional trace metadata (overrides agent-level configuration)
-   * @return an AgentStream for processing streaming events
-   */
-  public @NonNull AgentStream interactStream(
-      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
-    // Trace metadata for streaming will be handled when AgentStream is updated
-    // For now, just delegate to AgentStream constructor
-    return new AgentStream(this, List.of(), context, responder, objectMapper);
-  }
+  // ===== Streaming API =====
 
   /**
    * Returns a streaming view of this agent.
@@ -520,23 +473,35 @@ public final class Agent implements Serializable, Interactable {
    * @return an {@link Interactable.Streaming} backed by this agent's streaming implementation
    */
   public Interactable.@NonNull Streaming asStreaming() {
-    return (ctx, trace) -> this.interactStream(ctx, trace);
-  }
+    return new Interactable.Streaming() {
 
-  // ===== Streaming API =====
+      @Override
+      public @NonNull AgentStream interact(
+          @NonNull AgenticContext ctx, @Nullable TraceMetadata trace) {
+        return new AgentStream(Agent.this, List.of(), ctx, responder, objectMapper)
+            .withTrace(trace);
+      }
 
-  /**
-   * Interacts with the agent using streaming with an existing context.
-   *
-   * <p>This is the core streaming method. All other streaming overloads ultimately delegate here
-   * after adding their input to the context.
-   *
-   * @param context the conversation context containing all history
-   * @return an AgentStream for processing streaming events
-   */
-  public @NonNull AgentStream interactStream(@NonNull AgenticContext context) {
-    Objects.requireNonNull(context, "context cannot be null");
-    return new AgentStream(this, context, responder, objectMapper);
+      @Override
+      public @NonNull AgentStream interact(
+          @NonNull String input, @Nullable TraceMetadata trace) {
+        AgenticContext context = AgenticContext.create();
+        List<ResponseInputItem> inputList = List.of(Message.user(input));
+        String inputText = extractTextFromInput(inputList);
+        for (InputGuardrail guardrail : inputGuardrails) {
+          GuardrailResult r = guardrail.validate(inputText, context);
+          if (r.isFailed()) {
+            GuardrailResult.Failed failed = (GuardrailResult.Failed) r;
+            GuardrailException guardEx =
+                GuardrailException.inputViolation(failed.reason());
+            broadcastFailedEvent(guardEx, context);
+            return AgentStream.failed(
+                AgentResult.error(guardEx, context, context.getTurnCount()));
+          }
+        }
+        return new AgentStream(Agent.this, inputList, context, responder, objectMapper);
+      }
+    };
   }
 
   /**
@@ -750,8 +715,12 @@ public final class Agent implements Serializable, Interactable {
             } else if (outputItem instanceof Message msg) {
               context.addMessage(msg);
             } else if (outputItem instanceof FunctionToolCall ftc) {
-              // FunctionToolCall must be in history before the tool output (required by API)
-              context.addInput(ftc);
+              // stopsLoop tools must NOT be persisted to history (they are UI signals, not API items)
+              FunctionTool<?> maybeTool = toolStore.get(ftc.name());
+              if (maybeTool == null || !maybeTool.stopsLoop()) {
+                // FunctionToolCall must be in history before the tool output (required by API)
+                context.addInput(ftc);
+              }
             }
           }
         }
@@ -794,6 +763,14 @@ public final class Agent implements Serializable, Interactable {
         // Execute tools (with callback hooks)
         for (FunctionToolCall call : toolCalls) {
           if (call == null) continue;
+
+          // stopsLoop: client-side only tool — exit immediately, call not persisted
+          {
+            FunctionTool<?> maybeTool = toolStore.get(call.name());
+            if (maybeTool != null && maybeTool.stopsLoop()) {
+              return AgentResult.clientSideTool(call, context, context.getTurnCount());
+            }
+          }
 
           // Non-streaming: auto-pause for tools requiring confirmation
           if (callbacks == null) {

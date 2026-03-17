@@ -57,6 +57,12 @@ public record JacksonJsonSchemaProducer(@NonNull ObjectMapper mapper)
     // Add 'additionalProperties: false' for strict mode
     schema.put("additionalProperties", false);
 
+    // OpenAI strict mode requires 'properties' to be present on every object schema,
+    // even when there are no parameters (empty record). Ensure it always exists.
+    if ("object".equals(schema.get("type"))) {
+      schema.putIfAbsent("properties", new HashMap<>());
+    }
+
     return schema;
   }
 
