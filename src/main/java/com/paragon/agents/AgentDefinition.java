@@ -420,7 +420,8 @@ public record AgentDefinition(
         handoffDescriptors,
         inputRefs,
         outputRefs,
-        contextManagement != null ? contextManagement.toContextBlueprint() : null);
+        contextManagement != null ? contextManagement.toContextBlueprint() : null,
+        null); // reasoning
   }
 
   /**

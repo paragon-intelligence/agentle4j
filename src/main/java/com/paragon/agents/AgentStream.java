@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.*;
+import com.paragon.responses.streaming.ReasoningTextDeltaEvent;
 import com.paragon.responses.streaming.ResponseStream;
 import java.time.Duration;
 import java.time.Instant;
@@ -71,6 +72,7 @@ public final class AgentStream {
   private Consumer<Throwable> onError;
   private Consumer<FunctionToolCall> onClientSideTool;
   private @Nullable Consumer<Map<String, Object>> onPartialJson;
+  private @Nullable Consumer<String> onReasoningDeltaHandler;
 
   // Settings
   private boolean autoExecuteTools = true;
@@ -312,6 +314,19 @@ public final class AgentStream {
     return this;
   }
 
+  /**
+   * Called for each reasoning token delta streamed by the model (e.g., o-series / extended
+   * thinking models). Only fires when the model emits {@code response.reasoning_text.delta} SSE
+   * events.
+   *
+   * @param handler receives reasoning token chunks
+   * @return this for chaining
+   */
+  public @NonNull AgentStream onReasoningDelta(@NonNull Consumer<String> handler) {
+    this.onReasoningDeltaHandler = Objects.requireNonNull(handler);
+    return this;
+  }
+
   // ===== Execution =====
 
   /**
@@ -524,13 +539,24 @@ public final class AgentStream {
       return stream.startBlocking();
     }
 
-    // Issue 1: when onTextDelta is registered, use true SSE so deltas arrive incrementally.
-    // Fallback to blocking if the provider's SSE format produces no ResponseCompletedEvent
-    // (e.g., OpenRouter sends Chat-Completions-format chunks instead of Responses-API events).
-    if (onTextDelta != null) {
+    // Issue 1: when onTextDelta or onReasoningDelta is registered, use true SSE so deltas arrive
+    // incrementally. Fallback to blocking if the provider's SSE format produces no
+    // ResponseCompletedEvent (e.g., OpenRouter sends Chat-Completions-format chunks instead of
+    // Responses-API events).
+    if (onTextDelta != null || onReasoningDeltaHandler != null) {
       CreateResponsePayload.Streaming streamingPayload = new CreateResponsePayload.Streaming(payload);
       ResponseStream<Void> responseStream = responder.respond(streamingPayload);
-      responseStream.onTextDelta(onTextDelta);
+      if (onTextDelta != null) {
+        responseStream.onTextDelta(onTextDelta);
+      }
+      if (onReasoningDeltaHandler != null) {
+        Consumer<String> handler = onReasoningDeltaHandler;
+        responseStream.onEvent(event -> {
+          if (event instanceof ReasoningTextDeltaEvent rde) {
+            handler.accept(rde.delta());
+          }
+        });
+      }
       Response sseResponse = responseStream.startBlocking();
       if (sseResponse != null) {
         return sseResponse;

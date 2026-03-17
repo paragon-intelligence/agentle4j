@@ -20,6 +20,7 @@ import com.paragon.http.RetryPolicy;
 import com.paragon.responses.Responder;
 import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.FunctionTool;
+import com.paragon.responses.spec.ReasoningConfig;
 import com.paragon.responses.spec.ResponsesAPIProvider;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -489,7 +490,8 @@ public sealed interface InteractableBlueprint
       @JsonProperty("handoffs") @NonNull List<HandoffDescriptor> handoffs,
       @JsonProperty("inputGuardrails") @NonNull List<GuardrailReference> inputGuardrails,
       @JsonProperty("outputGuardrails") @NonNull List<GuardrailReference> outputGuardrails,
-      @JsonProperty("contextManagement") @Nullable ContextBlueprint contextManagement)
+      @JsonProperty("contextManagement") @Nullable ContextBlueprint contextManagement,
+      @JsonProperty("reasoning") @Nullable ReasoningConfig reasoning)
       implements InteractableBlueprint {
 
     private static final Logger log = LoggerFactory.getLogger(AgentBlueprint.class);
@@ -561,6 +563,11 @@ public sealed interface InteractableBlueprint
       if (contextManagement != null) {
         ContextManagementConfig config = contextManagement.toConfig(resp);
         builder.contextManagement(config);
+      }
+
+      // Reasoning config
+      if (reasoning != null) {
+        builder.reasoning(reasoning);
       }
 
       return builder.build();
