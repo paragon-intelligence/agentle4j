@@ -99,6 +99,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     String json = mapper.writeValueAsString(blueprint);
@@ -142,6 +143,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     String json = mapper.writeValueAsString(blueprint);
@@ -170,6 +172,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     String json = mapper.writeValueAsString(blueprint);
@@ -198,6 +201,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     String json = mapper.writeValueAsString(blueprint);
@@ -224,6 +228,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
     var peer2 =
         new AgentBlueprint(
@@ -239,6 +244,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     var network = new AgentNetworkBlueprint("TestNetwork", List.of(peer1, peer2), 3, null, null);
@@ -262,7 +268,7 @@ class InteractableBlueprintTest {
     var peer =
         new AgentBlueprint(
             "Peer", "gpt-4o", new InstructionSource.Inline("Inst"), 5, null, null, null, responder, List.of(), List.of(),
-            List.of(), List.of(), null);
+            List.of(), List.of(), null, null);
     var synth =
         new AgentBlueprint(
             "Synth",
@@ -277,6 +283,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     var network = new AgentNetworkBlueprint("Net", List.of(peer, peer), 2, synth, null);
@@ -309,6 +316,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
     var workerBp = new WorkerBlueprint(worker, "Research assistant");
 
@@ -348,6 +356,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
     var member2 =
         new AgentBlueprint(
@@ -363,6 +372,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     var parallel = new ParallelAgentsBlueprint("ParallelTeam", List.of(member1, member2), null);
@@ -397,6 +407,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
     var target2 =
         new AgentBlueprint(
@@ -412,6 +423,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
     var fallback =
         new AgentBlueprint(
@@ -427,6 +439,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     var router =
@@ -473,6 +486,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
     var manager =
         new AgentBlueprint(
@@ -488,6 +502,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
     var worker =
         new AgentBlueprint(
@@ -503,6 +518,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     var dept = new DepartmentBlueprint(manager, List.of(worker));
@@ -609,6 +625,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(new GuardrailReference(null, "profanity_filter")),
             List.of(new GuardrailReference(null, "length_check")),
+            null,
             null);
 
     String json = mapper.writeValueAsString(blueprint);
@@ -639,6 +656,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     var handoff = new HandoffDescriptor("escalate", "Escalate to specialist", targetAgent);
@@ -669,6 +687,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     var blueprint =
@@ -685,6 +704,7 @@ class InteractableBlueprintTest {
             List.of(new HandoffDescriptor("handoff_to_target", "Transfer to target agent", target)),
             List.of(),
             List.of(),
+            null,
             null);
 
     String json = mapper.writeValueAsString(blueprint);
@@ -742,7 +762,8 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
-            ctx);
+            ctx,
+            null);
 
     String json = mapper.writeValueAsString(blueprint);
     AgentBlueprint restored = (AgentBlueprint) mapper.readValue(json, InteractableBlueprint.class);
@@ -760,7 +781,7 @@ class InteractableBlueprintTest {
     var agent =
         new AgentBlueprint(
             "A", "m", new InstructionSource.Inline("i"), 5, null, null, null, responder, List.of(), List.of(), List.of(),
-            List.of(), null);
+            List.of(), null, null);
 
     // Each type serializes with the correct "type" discriminator
     Map<String, InteractableBlueprint> blueprints =
@@ -811,6 +832,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
     var reviewAgent =
         new AgentBlueprint(
@@ -826,6 +848,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     var devSupervisor =
@@ -854,6 +877,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     var router =
@@ -912,6 +936,7 @@ class InteractableBlueprintTest {
               List.of(),
               List.of(),
               List.of(),
+              null,
               null);
       mapper.writeValue(tmpFile.toFile(), agentBp);
 
@@ -962,6 +987,7 @@ class InteractableBlueprintTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
     BlueprintRegistry.register("fallback-agent", fallbackBp);
     try {

@@ -1,5 +1,8 @@
 package com.paragon.agents;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.MessageRole;
@@ -44,18 +47,32 @@ import org.jspecify.annotations.Nullable;
  * @see Agent
  * @since 1.0
  */
+@JsonAutoDetect(
+    fieldVisibility = JsonAutoDetect.Visibility.ANY,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class AgenticContext {
 
   // ScopedValue for context propagation — virtual thread optimized
   static final ScopedValue<AgenticContext> CURRENT_CONTEXT = ScopedValue.newInstance();
 
+  @JsonProperty("history")
   private final List<ResponseInputItem> history;
+
+  @JsonProperty("state")
   private final Map<String, Object> state;
+
+  @JsonProperty("turn_count")
   private int turnCount;
 
   // Trace correlation fields
+  @JsonProperty("parent_trace_id")
   private @Nullable String parentTraceId;
+
+  @JsonProperty("parent_span_id")
   private @Nullable String parentSpanId;
+
+  @JsonProperty("request_id")
   private @Nullable String requestId;
 
   private AgenticContext(
@@ -86,6 +103,33 @@ public final class AgenticContext {
   public static @NonNull AgenticContext create(
       @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state, int turnCount) {
     return new AgenticContext(new ArrayList<>(history), state, turnCount);
+  }
+
+  /**
+   * Jackson deserialization entry point.
+   *
+   * <p>State map values are deserialized as standard Jackson types: JSON objects become {@link
+   * java.util.LinkedHashMap}, arrays become {@link java.util.ArrayList}, and primitives map to
+   * their Java equivalents. For full type fidelity with custom objects, use {@code
+   * mapper.convertValue(ctx.getState("key").orElseThrow(), MyType.class)}.
+   */
+  @JsonCreator
+  static AgenticContext fromJson(
+      @JsonProperty("history") @Nullable List<ResponseInputItem> history,
+      @JsonProperty("state") @Nullable Map<String, Object> state,
+      @JsonProperty("turn_count") int turnCount,
+      @JsonProperty("parent_trace_id") @Nullable String parentTraceId,
+      @JsonProperty("parent_span_id") @Nullable String parentSpanId,
+      @JsonProperty("request_id") @Nullable String requestId) {
+    AgenticContext ctx =
+        new AgenticContext(
+            history != null ? new ArrayList<>(history) : new ArrayList<>(),
+            state != null ? new HashMap<>(state) : new HashMap<>(),
+            turnCount);
+    ctx.parentTraceId = parentTraceId;
+    ctx.parentSpanId = parentSpanId;
+    ctx.requestId = requestId;
+    return ctx;
   }
 
   /**

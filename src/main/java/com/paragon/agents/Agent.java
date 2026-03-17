@@ -7,6 +7,7 @@ import com.paragon.agents.toolplan.ToolPlanTool;
 import com.paragon.agents.toolsearch.ToolRegistry;
 import com.paragon.harness.HookRegistry;
 import com.paragon.prompts.Prompt;
+import com.paragon.responses.OpenRouterCustomPayload;
 import com.paragon.responses.Responder;
 import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.exception.AgentExecutionException;
@@ -133,6 +134,7 @@ public final class Agent implements Serializable, Interactable {
   private final @NonNull TelemetryContext telemetryContext;
   private final @Nullable TraceMetadata traceMetadata;
   private final @Nullable ReasoningConfig reasoning;
+  private final @Nullable OpenRouterCustomPayload openRouterCustomPayload;
 
   // ===== Tool Search =====
   private final @Nullable ToolRegistry toolRegistry;
@@ -160,6 +162,7 @@ public final class Agent implements Serializable, Interactable {
             builder.telemetryContext != null ? builder.telemetryContext : TelemetryContext.empty();
     this.traceMetadata = builder.traceMetadata;
     this.reasoning = builder.reasoning;
+    this.openRouterCustomPayload = builder.openRouterCustomPayload;
     this.telemetryProcessors =
             builder.telemetryProcessors.isEmpty()
                     ? ProcessorRegistry.empty()
@@ -965,6 +968,11 @@ public final class Agent implements Serializable, Interactable {
       builder.reasoning(reasoning);
     }
 
+    // Add OpenRouter custom payload (plugins, provider config, etc.) if set
+    if (openRouterCustomPayload != null) {
+      builder.openRouterCustomPayload(openRouterCustomPayload);
+    }
+
     // When an output type is configured, always request native structured output
     // from the Responses API instead of relying solely em instruções de prompt.
     if (outputType != null) {
@@ -1233,6 +1241,8 @@ public final class Agent implements Serializable, Interactable {
     private @Nullable HookRegistry hookRegistry;
     // Reasoning config
     private @Nullable ReasoningConfig reasoning;
+    // OpenRouter plugins / custom payload
+    private @Nullable OpenRouterCustomPayload openRouterCustomPayload;
 
     /**
      * Sets the agent's name (required).
@@ -1774,6 +1784,27 @@ public final class Agent implements Serializable, Interactable {
      */
     public @NonNull Builder reasoning(@NonNull ReasoningConfig reasoning) {
       this.reasoning = Objects.requireNonNull(reasoning, "reasoning cannot be null");
+      return this;
+    }
+
+    /**
+     * Sets the OpenRouter custom payload (plugins, provider config, route strategy, etc.).
+     *
+     * <p>Use this to enable OpenRouter-specific features such as the web search plugin:
+     *
+     * <pre>{@code
+     * Agent.builder()
+     *     .openRouterCustomPayload(OpenRouterCustomPayload.builder()
+     *         .plugins(List.of(new OpenRouterWebPlugin(5, null, null, null, null)))
+     *         .build())
+     *     .build();
+     * }</pre>
+     *
+     * @param payload the OpenRouter custom payload
+     * @return this builder
+     */
+    public @NonNull Builder openRouterCustomPayload(@NonNull OpenRouterCustomPayload payload) {
+      this.openRouterCustomPayload = Objects.requireNonNull(payload, "payload cannot be null");
       return this;
     }
 

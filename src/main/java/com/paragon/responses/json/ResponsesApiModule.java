@@ -62,6 +62,7 @@ public class ResponsesApiModule extends SimpleModule {
 
     // Register custom serializer for FunctionToolCallOutput (output must be a plain string)
     addSerializer(FunctionToolCallOutput.class, new FunctionToolCallOutputSerializer());
+    addDeserializer(FunctionToolCallOutput.class, new FunctionToolCallOutputDeserializer());
 
     // Register custom serializers for tool calls so that the "type" discriminator and
     // wire format always match the Responses API spec, even when serialized as

@@ -44,6 +44,7 @@ class InteractableBlueprintYamlTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     String yaml = blueprint.toYaml();
@@ -77,6 +78,7 @@ class InteractableBlueprintYamlTest {
             List.of(),
             List.of(),
             List.of(),
+            null,
             null);
 
     String yaml = blueprint.toYaml();
@@ -97,13 +99,13 @@ class InteractableBlueprintYamlTest {
             "Sales", "gpt-4o",
             new InstructionSource.Inline("Sales agent"),
             5, null, null, null, responder,
-            List.of(), List.of(), List.of(), List.of(), null);
+            List.of(), List.of(), List.of(), List.of(), null, null);
     var support =
         new AgentBlueprint(
             "Support", "gpt-4o",
             new InstructionSource.Inline("Support agent"),
             5, null, null, null, responder,
-            List.of(), List.of(), List.of(), List.of(), null);
+            List.of(), List.of(), List.of(), List.of(), null, null);
 
     var router =
         new RouterAgentBlueprint(
@@ -133,7 +135,7 @@ class InteractableBlueprintYamlTest {
             "Researcher", "gpt-4o",
             new InstructionSource.Inline("Do research"),
             5, null, null, null, responder,
-            List.of(), List.of(), List.of(), List.of(), null);
+            List.of(), List.of(), List.of(), List.of(), null, null);
 
     var supervisor =
         new SupervisorAgentBlueprint(
@@ -161,7 +163,7 @@ class InteractableBlueprintYamlTest {
             "Agent", "gpt-4o",
             new InstructionSource.Inline("Instructions"),
             10, 0.5, null, null, responder,
-            List.of(), List.of(), List.of(), List.of(), null);
+            List.of(), List.of(), List.of(), List.of(), null, null);
 
     String json = blueprint.toJson();
     String yaml = blueprint.toYaml();

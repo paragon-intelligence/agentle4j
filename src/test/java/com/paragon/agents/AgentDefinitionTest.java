@@ -193,6 +193,7 @@ class AgentDefinitionTest {
             List.of(),
             List.of(new GuardrailReference(null, "profanity_filter")),
             List.of(),
+            null,
             null);
 
     AgentDefinition def = AgentDefinition.fromBlueprint(blueprint);
