@@ -1,6 +1,7 @@
 # :material-code-braces: ExtractionResult
 
-> This docs was updated at: 2026-03-15
+> This docs was updated at: 2026-03-17
+
 
 
 

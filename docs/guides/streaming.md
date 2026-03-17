@@ -1,6 +1,7 @@
 # Streaming Guide
 
-> This docs was updated at: 2026-03-16
+> This docs was updated at: 2026-03-17
+
 
 
 
