@@ -764,9 +764,28 @@ public final class Agent implements Serializable, Interactable {
           String handoffMessage =
                   extractHandoffMessage(toolCalls, handoff.name()).orElse(fallbackHandoffText);
 
+          // Close the tool exchange: add a synthetic output for the handoff tool call.
+          // Without it the history contains an assistant tool_calls message with no corresponding
+          // tool result, which the OpenAI API rejects as invalid.
+          for (FunctionToolCall call : toolCalls) {
+            if (handoff.name().equals(call.name())) {
+              context.addToolResult(
+                      FunctionToolCallOutput.success(
+                              call.callId(),
+                              "Transferring to " + handoff.targetAgent().name() + "."));
+              break;
+            }
+          }
+
           // Fork context with new parent span for child agent
           String childSpanId = TraceIdGenerator.generateSpanId();
           AgenticContext childContext = context.fork(childSpanId);
+
+          // Inject handoff awareness (DEVELOPER priority — highest precedence)
+          String awareness = handoff.buildAwarenessMessage(this.name);
+          if (awareness != null && !awareness.isEmpty()) {
+            childContext.addInput(Message.developer(awareness));
+          }
 
           // Add handoff message to child context
           if (handoffMessage != null && !handoffMessage.isEmpty()) {

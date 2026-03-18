@@ -152,15 +152,20 @@ public class AgentResult {
       @NonNull Agent handoffAgent,
       @NonNull AgentResult innerResult,
       @NonNull AgenticContext context) {
-    return new Builder()
-        .output(innerResult.output)
-        .finalResponse(innerResult.finalResponse)
-        .history(context.getHistory())
-        .toolExecutions(innerResult.toolExecutions)
-        .turnsUsed(innerResult.turnsUsed)
-        .handoffAgent(handoffAgent)
-        .parsed(innerResult.parsed)
-        .build();
+    Builder builder =
+        new Builder()
+            .output(innerResult.output)
+            .finalResponse(innerResult.finalResponse)
+            .history(context.getHistory())
+            .toolExecutions(innerResult.toolExecutions)
+            .turnsUsed(innerResult.turnsUsed)
+            .handoffAgent(handoffAgent)
+            .parsed(innerResult.parsed);
+    // Propagate errors from the inner (child) result so callers can detect failures.
+    if (innerResult.error != null) {
+      builder.error(innerResult.error);
+    }
+    return builder.build();
   }
 
   /**

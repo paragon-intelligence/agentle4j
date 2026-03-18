@@ -401,11 +401,49 @@ public final class AgentStream {
               allCalls.stream().anyMatch(call -> handoff.name().equals(call.name()));
           if (hasHandoffCall) {
             emit(onHandoff, handoff);
+
+            // Close the tool exchange: add a synthetic output for the handoff tool call.
+            // Without it the history contains an assistant message with tool_calls that has no
+            // corresponding tool result, which the OpenAI API rejects as invalid.
+            for (FunctionToolCall call : allCalls) {
+              if (handoff.name().equals(call.name())) {
+                context.addToolResult(
+                    FunctionToolCallOutput.success(
+                        call.callId(),
+                        "Transferring to " + handoff.targetAgent().name() + "."));
+                break;
+              }
+            }
+
             String childSpanId = TraceIdGenerator.generateSpanId();
             AgenticContext childContext = context.fork(childSpanId);
+
+            // Inject handoff awareness (DEVELOPER priority — highest precedence)
+            String awareness = handoff.buildAwarenessMessage(agent.name());
+            if (awareness != null && !awareness.isEmpty()) {
+              childContext.addInput(Message.developer(awareness));
+            }
+
             extractHandoffMessage(allCalls, handoff.name())
                 .ifPresent(msg -> childContext.addInput(Message.user(msg)));
-            AgentResult innerResult = handoff.targetAgent().interact(childContext);
+
+            // Use the child's streaming path so text deltas and tool callbacks
+            // propagate back to the caller — avoids the blocking interact() call.
+            AgentStream childStream =
+                handoff.targetAgent().asStreaming().interact(childContext, trace);
+            if (onTextDelta != null)             childStream.onTextDelta(onTextDelta);
+            if (onTurnStart != null)             childStream.onTurnStart(onTurnStart);
+            if (onTurnComplete != null)          childStream.onTurnComplete(onTurnComplete);
+            if (onToolExecuted != null)          childStream.onToolExecuted(onToolExecuted);
+            if (onToolCallPending != null)       childStream.onToolCallPending(onToolCallPending);
+            if (onPause != null)                 childStream.onPause(onPause);
+            if (onGuardrailFailed != null)       childStream.onGuardrailFailed(onGuardrailFailed);
+            if (onHandoff != null)               childStream.onHandoff(onHandoff);
+            if (onClientSideTool != null)        childStream.onClientSideTool(onClientSideTool);
+            if (onPartialJson != null)           childStream.onPartialJson(onPartialJson);
+            if (onReasoningDeltaHandler != null) childStream.onReasoningDelta(onReasoningDeltaHandler);
+            // onComplete / onError are intentionally NOT forwarded — the parent fires those
+            AgentResult innerResult = childStream.startBlocking();
             AgentResult handoffResult =
                 AgentResult.handoff(handoff.targetAgent(), innerResult, context);
             agent.hookRegistry().fireAfterRun(handoffResult, context);

@@ -42,11 +42,14 @@ public final class Handoff {
   private final @NonNull String name;
   private final @NonNull String description;
   private final @NonNull Agent targetAgent;
+  /** null = use default message; empty string = disabled */
+  private final @Nullable String awarenessMessage;
 
   private Handoff(Builder builder) {
     this.name = Objects.requireNonNull(builder.name, "name cannot be null");
     this.description = Objects.requireNonNull(builder.description, "description cannot be null");
     this.targetAgent = Objects.requireNonNull(builder.targetAgent, "targetAgent cannot be null");
+    this.awarenessMessage = builder.awarenessMessage;
   }
 
   /**
@@ -90,6 +93,23 @@ public final class Handoff {
   }
 
   /**
+   * Builds the awareness message to inject into the child agent's context.
+   *
+   * <p>Returns {@code null} if awareness is disabled via {@link Builder#withoutAwarenessMessage()}.
+   *
+   * @param parentAgentName the name of the agent transferring control
+   * @return the message to inject, or {@code null} if disabled
+   */
+  public @Nullable String buildAwarenessMessage(@NonNull String parentAgentName) {
+    if (awarenessMessage != null && awarenessMessage.isEmpty()) return null; // disabled
+    if (awarenessMessage != null) return awarenessMessage;                   // custom
+    return "You have been transferred from agent '" + parentAgentName + "'."
+        + " You were selected because: " + description + "."
+        + " The conversation history above contains the full context from the previous agent."
+        + " Continue from where the previous agent left off, applying your own specialization.";
+  }
+
+  /**
    * Converts this handoff to a FunctionTool that can be passed to the LLM.
    *
    * @return a FunctionTool representing this handoff
@@ -122,7 +142,9 @@ public final class Handoff {
               java.util.List.of(),
               "additionalProperties",
               false),
-          true);
+          false);
+      // strict=false because message is genuinely optional;
+      // strict=true requires all properties in "required", which would break if left empty.
       this.toolName = name;
       this.toolDescription = description;
     }
@@ -151,6 +173,8 @@ public final class Handoff {
     private final @NonNull Agent targetAgent;
     private @Nullable String name;
     private @Nullable String description;
+    /** null = default; empty = disabled */
+    private @Nullable String awarenessMessage = null;
 
     private Builder(@NonNull Agent targetAgent) {
       this.targetAgent = Objects.requireNonNull(targetAgent, "targetAgent cannot be null");
@@ -179,6 +203,27 @@ public final class Handoff {
      */
     public @NonNull Builder withDescription(@NonNull String description) {
       this.description = Objects.requireNonNull(description);
+      return this;
+    }
+
+    /**
+     * Sets a custom awareness message to inject into the child agent's context on handoff.
+     *
+     * @param message the message to inject as a developer-priority message
+     * @return this builder
+     */
+    public @NonNull Builder withAwarenessMessage(@NonNull String message) {
+      this.awarenessMessage = Objects.requireNonNull(message);
+      return this;
+    }
+
+    /**
+     * Disables the automatic awareness message injection entirely.
+     *
+     * @return this builder
+     */
+    public @NonNull Builder withoutAwarenessMessage() {
+      this.awarenessMessage = "";
       return this;
     }
 
