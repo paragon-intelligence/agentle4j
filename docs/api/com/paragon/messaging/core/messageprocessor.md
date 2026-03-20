@@ -1,23 +1,5 @@
 # :material-approximately-equal: MessageProcessor
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.core.MessageProcessor` &nbsp;·&nbsp; **Interface**
 
 ---

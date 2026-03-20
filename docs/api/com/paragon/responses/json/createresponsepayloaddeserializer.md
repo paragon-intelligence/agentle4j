@@ -1,26 +1,8 @@
 # :material-code-braces: CreateResponsePayloadDeserializer
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.json.CreateResponsePayloadDeserializer` &nbsp;·&nbsp; **Class**
 
-Extends `JsonDeserializer<CreateResponsePayload>`
+Extends `ValueDeserializer<CreateResponsePayload>`
 
 ---
 

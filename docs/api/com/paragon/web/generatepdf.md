@@ -1,23 +1,5 @@
 # :material-database: GeneratePdf
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.web.GeneratePdf` &nbsp;·&nbsp; **Record**
 
 ---

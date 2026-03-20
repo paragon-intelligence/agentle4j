@@ -1,23 +1,5 @@
 # :material-code-braces: MessageBatchingService
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.batching.MessageBatchingService` &nbsp;·&nbsp; **Class**
 
 ---

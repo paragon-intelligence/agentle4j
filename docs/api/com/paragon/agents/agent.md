@@ -1,23 +1,5 @@
 # :material-code-braces: Agent
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.Agent` &nbsp;·&nbsp; **Class**
 
 Implements `Serializable`, `Interactable`
@@ -61,7 +43,7 @@ System.out.println(result.output());
 #### With Context Persistence
 
 ```java
-AgentContext context = AgentContext.create();
+AgenticContext context = AgenticContext.create();
 // First turn
 agent.interact("Hi, I need help with my order", context);
 // Second turn (remembers first)
@@ -234,6 +216,62 @@ the handoffs (unmodifiable)
 
 ---
 
+### `toolRegistry`
+
+```java
+public @Nullable ToolRegistry toolRegistry()
+```
+
+Returns the tool registry, if one is configured.
+
+**Returns**
+
+the tool registry or null if not using tool search
+
+---
+
+### `hookRegistry`
+
+```java
+public @NonNull HookRegistry hookRegistry()
+```
+
+Returns the hook registry configured for this agent.
+
+**Returns**
+
+the hook registry
+
+---
+
+### `outputType`
+
+```java
+public @Nullable Class<?> outputType()
+```
+
+Returns the structured output type configured for this agent, or `null` if none.
+
+**Returns**
+
+the output type class or null
+
+---
+
+### `reasoning`
+
+```java
+public @Nullable ReasoningConfig reasoning()
+```
+
+Returns the reasoning configuration, or `null` if not set.
+
+**Returns**
+
+the reasoning config or null
+
+---
+
 ### `toolStore`
 
 ```java
@@ -254,83 +292,17 @@ Builds a payload from context. Package-private for AgentStream.
 
 ---
 
-### `interactStream`
+### `asStreaming`
 
 ```java
-public @NonNull AgentStream interactStream(@NonNull String input)
+public Interactable.@NonNull Streaming asStreaming()
 ```
 
-Interacts with the agent using streaming with full agentic loop. Creates a fresh context.
-
-Returns an `AgentStream` that runs the complete agentic loop including guardrails,
-tool execution, and multi-turn conversations, emitting events at each phase.
-
-Example:
-
-```java
-agent.interactStream("Help me debug this code")
-    .onTurnStart(turn -> System.out.println("--- Turn " + turn + " ---"))
-    .onTextDelta(chunk -> System.out.print(chunk))
-    .onToolCallPending((call, approve) -> approve.accept(true))  // Human-in-the-loop
-    .onToolExecuted(exec -> System.out.println("Tool: " + exec.toolName()))
-    .onComplete(result -> System.out.println("\nDone!"))
-    .start();
-```
-
-**Parameters**
-
-| Name | Description |
-|------|-------------|
-| `input` | the user's text input |
+Returns a streaming view of this agent.
 
 **Returns**
 
-an AgentStream for processing streaming events
-
----
-
-### `interactStream`
-
-```java
-public @NonNull AgentStream interactStream(
-      @NonNull AgenticContext context, @Nullable TraceMetadata trace)
-```
-
-Interacts with the agent with streaming using an existing context and trace metadata.
-
-**Parameters**
-
-| Name | Description |
-|------|-------------|
-| `context` | the conversation context containing history |
-| `trace` | optional trace metadata (overrides agent-level configuration) |
-
-**Returns**
-
-an AgentStream for processing streaming events
-
----
-
-### `interactStream`
-
-```java
-public @NonNull AgentStream interactStream(@NonNull AgenticContext context)
-```
-
-Interacts with the agent using streaming with an existing context.
-
-This is the core streaming method. All other streaming overloads ultimately delegate here
-after adding their input to the context.
-
-**Parameters**
-
-| Name | Description |
-|------|-------------|
-| `context` | the conversation context containing all history |
-
-**Returns**
-
-an AgentStream for processing streaming events
+an `Interactable.Streaming` backed by this agent's streaming implementation
 
 ---
 
@@ -398,7 +370,7 @@ an AgentStream for processing remaining events
 
 ```java
 public @NonNull AgentResult interact(
-      @NonNull AgenticContext context, @Nullable TraceMetadata trace)
+          @NonNull AgenticContext context, @Nullable TraceMetadata trace)
 ```
 
 Core interact method. Executes the agentic loop.
@@ -426,9 +398,9 @@ the agent's result
 
 ```java
 AgentResult interactBlocking(
-      @NonNull AgenticContext context,
-      @Nullable LoopCallbacks callbacks,
-      @Nullable TraceMetadata trace)
+          @NonNull AgenticContext context,
+          @Nullable LoopCallbacks callbacks,
+          @Nullable TraceMetadata trace)
 ```
 
 Core blocking interact method with callbacks. Package-private for AgentStream.
@@ -451,11 +423,11 @@ the agent result
 
 ```java
 private AgentResult executeAgenticLoop(
-      AgenticContext context,
-      List<ToolExecution> initialExecutions,
-      @Nullable LoopCallbacks callbacks,
-      String fallbackHandoffText,
-      @Nullable TraceMetadata trace)
+          AgenticContext context,
+          List<ToolExecution> initialExecutions,
+          @Nullable LoopCallbacks callbacks,
+          String fallbackHandoffText,
+          @Nullable TraceMetadata trace)
 ```
 
 Unified agentic loop. Shared by interact, resume, and AgentStream.
@@ -476,13 +448,24 @@ Broadcasts a failed event for telemetry.
 
 ```java
 private AgentResult continueAgenticLoop(
-      AgenticContext context,
-      Response lastResponse,
-      List<ToolExecution> previousExecutions,
-      int startTurn)
+          AgenticContext context,
+          Response lastResponse,
+          List<ToolExecution> previousExecutions,
+          int startTurn)
 ```
 
 Continues the agentic loop from a saved state (used by resume).
+
+---
+
+### `extractInputTextForToolSearch`
+
+```java
+private String extractInputTextForToolSearch(List<ResponseInputItem> input)
+```
+
+Extracts text from the conversation input for tool search.
+Uses the most recent user message as the search query.
 
 ---
 
@@ -492,7 +475,7 @@ Continues the agentic loop from a saved state (used by resume).
 private TelemetryContext buildTelemetryContext(AgenticContext context)
 ```
 
-Builds a TelemetryContext from AgentContext for trace correlation.
+Builds a TelemetryContext from AgenticContext for trace correlation.
 
 ---
 
@@ -500,7 +483,7 @@ Builds a TelemetryContext from AgentContext for trace correlation.
 
 ```java
 private ToolExecution executeSingleToolWithErrorHandling(
-      FunctionToolCall call, AgenticContext context)
+          FunctionToolCall call, AgenticContext context)
 ```
 
 Executes a single tool with proper error handling and telemetry. Wraps errors in
@@ -572,10 +555,10 @@ Called when guardrail fails.
 
 ```java
 default AgentRunState onPauseRequested(
-        FunctionToolCall call,
-        Response lastResponse,
-        List<ToolExecution> executions,
-        AgenticContext context)
+            FunctionToolCall call,
+            Response lastResponse,
+            List<ToolExecution> executions,
+            AgenticContext context)
 ```
 
 Called to pause for approval. Return non-null to pause.
@@ -846,6 +829,39 @@ this builder
 
 ---
 
+### `toolRegistry`
+
+```java
+public @NonNull Builder toolRegistry(
+            @NonNull ToolRegistry toolRegistry)
+```
+
+Sets a `com.paragon.agents.toolsearch.ToolRegistry` for dynamic tool selection.
+
+When a registry is configured, the agent dynamically selects which tools to include in
+each API call based on the user's input, using the registry's search strategy. This is
+useful when the agent has many tools and sending all of them would waste context tokens.
+
+Tools configured via `.addTool` are always included (eager). The registry's
+deferred tools are only included when the search strategy deems them relevant.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `toolRegistry` | the tool registry |
+
+**Returns**
+
+this builder
+
+**See Also**
+
+- `com.paragon.agents.toolsearch.ToolRegistry`
+- `com.paragon.agents.toolsearch.ToolSearchStrategy`
+
+---
+
 ### `addHandoff`
 
 ```java
@@ -1015,8 +1031,9 @@ public @NonNull Builder addSkill(@NonNull Skill skill)
 
 Adds a skill that augments this agent's capabilities.
 
-Skills extend the agent's knowledge by adding their instructions to the agent's system
-prompt. When the skill's expertise is relevant, the LLM can automatically apply it.
+Skills are exposed to the agent as tools, following progressive disclosure. The agent's
+system prompt includes a concise catalog (name + description) of available skills, and a
+`read_skill` tool is registered so the agent can load full instructions on demand.
 
 Example:
 
@@ -1041,6 +1058,7 @@ this builder
 **See Also**
 
 - `Skill`
+- `SkillReaderTool`
 
 ---
 
@@ -1088,7 +1106,8 @@ public @NonNull Builder skillStore(@NonNull SkillStore store)
 
 Registers all skills from a SkillStore.
 
-Each skill's instructions are merged into the agent's system prompt.
+Each skill is added to the agent's catalog and exposed via the `read_skill` tool
+for on-demand loading.
 
 Example:
 
@@ -1115,6 +1134,7 @@ this builder
 **See Also**
 
 - `SkillStore`
+- `SkillReaderTool`
 
 ---
 
@@ -1288,6 +1308,128 @@ this builder
 
 ---
 
+### `enableToolPlanning`
+
+```java
+public @NonNull Builder enableToolPlanning()
+```
+
+Enables programmatic tool planning for this agent.
+
+When enabled, a special `execute_tool_plan` meta-tool is registered that allows the
+LLM to batch multiple tool calls into a single declarative execution plan. The framework
+executes the plan locally — topologically sorting steps, running independent steps in
+parallel, resolving `$ref` references — and returns only the designated output steps'
+results to the LLM context. Intermediate results never touch the context window, saving
+tokens and reducing latency.
+
+Example usage:
+
+```java
+Agent agent = Agent.builder()
+    .name("Researcher")
+    .instructions("You are a research assistant.")
+    .model("openai/gpt-4o")
+    .responder(responder)
+    .addTool(new GetWeatherTool())
+    .addTool(new CompareDataTool())
+    .enableToolPlanning()
+    .build();
+```
+
+**Returns**
+
+this builder
+
+**See Also**
+
+- `com.paragon.agents.toolplan.ToolPlanTool`
+- `com.paragon.agents.toolplan.ToolPlan`
+
+---
+
+### `hookRegistry`
+
+```java
+public @NonNull Builder hookRegistry(@NonNull HookRegistry hookRegistry)
+```
+
+Sets the `HookRegistry` for lifecycle hooks around agent and tool execution.
+
+Hooks are invoked at the following points:
+
+  
+- `beforeRun` — before the agentic loop starts
+- `afterRun` — after the agentic loop completes
+- `beforeToolCall` — before each tool execution
+- `afterToolCall` — after each tool execution
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `hookRegistry` | the registry containing hooks to run |
+
+**Returns**
+
+this builder
+
+**See Also**
+
+- `HookRegistry`
+
+---
+
+### `reasoning`
+
+```java
+public @NonNull Builder reasoning(@NonNull ReasoningConfig reasoning)
+```
+
+Sets the reasoning configuration for models that support extended thinking.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `reasoning` | the reasoning config (effort + summary kind) |
+
+**Returns**
+
+this builder
+
+---
+
+### `openRouterCustomPayload`
+
+```java
+public @NonNull Builder openRouterCustomPayload(@NonNull OpenRouterCustomPayload payload)
+```
+
+Sets the OpenRouter custom payload (plugins, provider config, route strategy, etc.).
+
+Use this to enable OpenRouter-specific features such as the web search plugin:
+
+```java
+Agent.builder()
+    .openRouterCustomPayload(OpenRouterCustomPayload.builder()
+        .plugins(List.of(new OpenRouterWebPlugin(5, null, null, null, null)))
+        .build())
+    .build();
+```
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `payload` | the OpenRouter custom payload |
+
+**Returns**
+
+this builder
+
+---
+
 ### `structured`
 
 ```java
@@ -1363,6 +1505,17 @@ the configured Structured agent
 
 ---
 
+### `stripMarkdownFences`
+
+```java
+private static String stripMarkdownFences(String text)
+```
+
+Strips markdown code fences (e.g. ```json ... ```) from model output. Some
+OpenRouter-proxied models ignore strict mode and wrap JSON in a code block.
+
+---
+
 ### `name`
 
 ```java
@@ -1407,7 +1560,7 @@ the typed result
 
 ```java
 public @NonNull StructuredAgentResult<T> interact(
-        @NonNull String input, @NonNull AgenticContext context)
+            @NonNull String input, @NonNull AgenticContext context)
 ```
 
 Interacts with the agent with context and returns type-safe structured output.
@@ -1433,8 +1586,6 @@ public @NonNull StructuredAgentResult<T> interact(@NonNull AgenticContext contex
 
 Interacts with the agent using an existing context.
 
-This is the core method. All other interact overloads delegate here.
-
 **Parameters**
 
 | Name | Description |
@@ -1444,6 +1595,44 @@ This is the core method. All other interact overloads delegate here.
 **Returns**
 
 the typed result
+
+---
+
+### `interact`
+
+```java
+public @NonNull StructuredAgentResult<T> interact(
+            @NonNull AgenticContext context, @Nullable TraceMetadata trace)
+```
+
+Interacts with the agent using an existing context with optional trace metadata.
+
+This is the core method. All other interact overloads delegate here.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `context` | the conversation context containing all history |
+| `trace` | optional trace metadata |
+
+**Returns**
+
+the typed result
+
+---
+
+### `asStreaming`
+
+```java
+public Interactable.@NonNull Streaming asStreaming()
+```
+
+Returns a streaming view of the underlying agent.
+
+**Returns**
+
+an `Interactable.Streaming` backed by the underlying agent's streaming
 
 ---
 

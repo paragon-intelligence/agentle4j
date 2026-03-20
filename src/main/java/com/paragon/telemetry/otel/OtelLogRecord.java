@@ -7,7 +7,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Represents an OTLP log record.
  *
- * @see <a href="https://opentelemetry.io/docs/specs/otel/logs/data-model/">OTEL Logs Data Model</a>
+ * @see OTEL logs data model: https://opentelemetry.io/docs/specs/otel/logs/data-model/
  */
 public record OtelLogRecord(
     long timeUnixNano,

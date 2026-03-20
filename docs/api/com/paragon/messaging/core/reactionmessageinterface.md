@@ -1,23 +1,5 @@
 # :material-approximately-equal: ReactionMessageInterface
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.core.ReactionMessageInterface` &nbsp;·&nbsp; **Interface**
 
 Extends `OutboundMessage`
@@ -39,7 +21,9 @@ concrete reaction message classes.
 String messageId()
 ```
 
-@return the message ID to react to
+**Returns**
+
+the message ID to react to
 
 ---
 
@@ -49,7 +33,9 @@ String messageId()
 Optional<String> emoji()
 ```
 
-@return optional emoji (empty means removal)
+**Returns**
+
+optional emoji (empty means removal)
 
 ---
 
@@ -59,4 +45,7 @@ Optional<String> emoji()
 default boolean isRemoval()
 ```
 
-@return true if this is a reaction removal
+**Returns**
+
+true if this is a reaction removal
+

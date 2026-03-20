@@ -1,23 +1,5 @@
 # :material-database: Wait
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.web.Wait` &nbsp;·&nbsp; **Record**
 
 ---

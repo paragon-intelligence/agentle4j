@@ -1,23 +1,5 @@
 # :material-database: AgentFailedEvent
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.telemetry.events.AgentFailedEvent` &nbsp;·&nbsp; **Record**
 
 ---

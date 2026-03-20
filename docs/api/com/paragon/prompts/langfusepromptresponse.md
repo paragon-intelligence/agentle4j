@@ -1,23 +1,5 @@
 # :material-database: LangfusePromptResponse
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.prompts.LangfusePromptResponse` &nbsp;·&nbsp; **Record**
 
 ---

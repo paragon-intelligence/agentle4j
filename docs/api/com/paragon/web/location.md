@@ -1,23 +1,5 @@
 # :material-database: Location
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.web.Location` &nbsp;·&nbsp; **Record**
 
 ---

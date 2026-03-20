@@ -1,23 +1,5 @@
 # :material-approximately-equal: ObservabilityBroadcaster
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.broadcasting.ObservabilityBroadcaster` &nbsp;·&nbsp; **Interface**
 
 ---

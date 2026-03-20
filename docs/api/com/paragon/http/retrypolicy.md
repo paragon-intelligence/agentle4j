@@ -1,23 +1,5 @@
 # :material-database: RetryPolicy
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.http.RetryPolicy` &nbsp;·&nbsp; **Record**
 
 ---
@@ -32,12 +14,12 @@ Example usage:
 ```java
 // Simple configuration
 AsyncHttpClient.builder()
-    .baseUrl("https://api.example.com")
+    .baseUrl("[https://api.example.com"](https://api.example.com"))
     .retryPolicy(RetryPolicy.defaults())
     .build();
 // Advanced configuration
 AsyncHttpClient.builder()
-    .baseUrl("https://api.example.com")
+    .baseUrl("[https://api.example.com"](https://api.example.com"))
     .retryPolicy(RetryPolicy.builder()
         .maxRetries(5)
         .initialDelay(Duration.ofMillis(500))

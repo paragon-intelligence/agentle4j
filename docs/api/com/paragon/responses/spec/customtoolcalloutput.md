@@ -1,23 +1,5 @@
 # :material-database: CustomToolCallOutput
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.CustomToolCallOutput` &nbsp;·&nbsp; **Record**
 
 ---

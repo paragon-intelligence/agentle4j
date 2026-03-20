@@ -1,23 +1,5 @@
 # :material-database: McpTextContent
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.mcp.dto.McpTextContent` &nbsp;·&nbsp; **Record**
 
 ---

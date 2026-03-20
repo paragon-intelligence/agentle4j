@@ -1,23 +1,5 @@
 # Package `com.paragon.prompts`
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ---
 
 ## :material-code-braces: Classs
@@ -29,6 +11,7 @@
 | [`LangfusePromptProvider`](langfusepromptprovider.md) | A `PromptProvider` that retrieves prompts from the Langfuse API |
 | [`Prompt`](prompt.md) | Represents an immutable text prompt that can contain template expressions |
 | [`PromptProviderException`](promptproviderexception.md) | Exception thrown when a prompt cannot be retrieved from a `PromptProvider` |
+| [`PromptProviderRegistry`](promptproviderregistry.md) | Global registry for named `PromptProvider` instances |
 
 ## :material-approximately-equal: Interfaces
 

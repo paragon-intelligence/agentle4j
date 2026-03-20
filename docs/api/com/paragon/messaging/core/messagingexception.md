@@ -1,23 +1,5 @@
 # :material-code-braces: MessagingException
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.core.MessagingException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`

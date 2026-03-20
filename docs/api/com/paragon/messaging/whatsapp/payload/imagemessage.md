@@ -1,23 +1,5 @@
 # :material-code-braces: ImageMessage
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.whatsapp.payload.ImageMessage` &nbsp;·&nbsp; **Class**
 
 Extends `AbstractInboundMessage`

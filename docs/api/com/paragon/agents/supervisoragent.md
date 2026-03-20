@@ -1,23 +1,5 @@
 # :material-code-braces: SupervisorAgent
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.SupervisorAgent` &nbsp;·&nbsp; **Class**
 
 Implements `Interactable`
@@ -37,7 +19,7 @@ The supervisor uses its instructions to:
 - Aggregate and synthesize worker outputs
 - Make decisions about task completion
 
-**Virtual Thread Design:** Uses synchronous API optimized for Java 21+ virtual threads.
+**Virtual Thread Design:** Uses a synchronous API optimized for Java 25+ virtual threads.
 Blocking calls are cheap and efficient with virtual threads.
 
 ### Usage Example
@@ -111,6 +93,65 @@ Agent underlyingAgent()
 ```
 
 Returns the underlying supervisor agent for advanced usage.
+
+---
+
+### `asStreaming`
+
+```java
+public Interactable.@NonNull Streaming asStreaming()
+```
+
+Returns a streaming view of this supervisor.
+
+**Returns**
+
+an `Interactable.Streaming` that delegates to the underlying agent's streaming
+
+---
+
+### `onWorkerInvoked`
+
+```java
+public @NonNull SupervisorAgent onWorkerInvoked(
+      @NonNull BiConsumer<Worker, ToolExecution> handler)
+```
+
+Registers a callback that fires when a worker is invoked by the supervisor (streaming path).
+
+Fires at the same moment as `onWorkerComplete` because worker invocation is
+synchronous in the current model.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `handler` | receives the worker and the tool execution result |
+
+**Returns**
+
+this supervisor (for chaining)
+
+---
+
+### `onWorkerComplete`
+
+```java
+public @NonNull SupervisorAgent onWorkerComplete(
+      @NonNull BiConsumer<Worker, ToolExecution> handler)
+```
+
+Registers a callback that fires when a worker completes its execution (streaming path).
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `handler` | receives the worker and the tool execution result |
+
+**Returns**
+
+this supervisor (for chaining)
 
 ---
 
@@ -385,6 +426,20 @@ Builds the type-safe structured supervisor agent.
 **Returns**
 
 the configured Structured supervisor
+
+---
+
+### `asStreaming`
+
+```java
+public Interactable.@NonNull Streaming asStreaming()
+```
+
+Returns a streaming view of the underlying supervisor.
+
+**Returns**
+
+an `Interactable.Streaming` that delegates to the supervisor's streaming
 
 ---
 

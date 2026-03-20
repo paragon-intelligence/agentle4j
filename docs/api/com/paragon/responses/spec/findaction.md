@@ -1,23 +1,5 @@
 # :material-database: FindAction
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.FindAction` &nbsp;·&nbsp; **Record**
 
 ---

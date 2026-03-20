@@ -1,23 +1,5 @@
 # :material-code-braces: ResponsesApiModule
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.json.ResponsesApiModule` &nbsp;·&nbsp; **Class**
 
 Extends `SimpleModule`
@@ -34,3 +16,4 @@ This module includes:
 - Custom deserializers for action classes with @JsonUnwrapped Coordinate fields
 - CreateResponsePayloadDeserializer for @JsonUnwrapped OpenRouterCustomPayload
 - MessageDeserializer for role-based Message subclass selection
+- MessageSerializer for writing content as a plain string (required by OpenRouter)

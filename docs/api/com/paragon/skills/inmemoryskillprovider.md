@@ -1,23 +1,5 @@
 # :material-code-braces: InMemorySkillProvider
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.skills.InMemorySkillProvider` &nbsp;·&nbsp; **Class**
 
 Implements `SkillProvider`

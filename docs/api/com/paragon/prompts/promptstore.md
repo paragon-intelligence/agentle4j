@@ -1,23 +1,5 @@
 # :material-approximately-equal: PromptStore
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.prompts.PromptStore` &nbsp;·&nbsp; **Interface**
 
 ---

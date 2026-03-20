@@ -1,23 +1,5 @@
 # :material-code-braces: AgentNetwork
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.AgentNetwork` &nbsp;·&nbsp; **Class**
 
 Implements `Interactable`
@@ -38,7 +20,7 @@ Key characteristics:
 - Communication happens in rounds until convergence or max rounds
 - Resilient - failure of one agent doesn't cripple the network
 
-**Virtual Thread Design:** Uses synchronous API optimized for Java 21+ virtual threads.
+**Virtual Thread Design:** Uses a synchronous API optimized for Java 25+ virtual threads.
 Blocking calls are cheap and efficient with virtual threads.
 
 ### Usage Example
@@ -247,7 +229,7 @@ Broadcasts a message to all peers simultaneously and collects responses.
 Unlike discuss(), broadcast() runs all agents in parallel without sequential visibility.
 Each agent only sees the original message, not other agents' responses.
 
-Uses structured concurrency (Java 21+) for parallel execution.
+Uses Java 25 structured concurrency for parallel execution.
 
 **Parameters**
 
@@ -420,30 +402,17 @@ interactions.
 
 ---
 
-### `interactStream`
+### `asStreaming`
 
 ```java
-public @NonNull AgentStream interactStream(@NonNull AgenticContext context)
+public Interactable.@NonNull Streaming asStreaming()
 ```
 
-{@inheritDoc}
+Returns a streaming view of this network.
 
-If a synthesizer is configured, runs the discussion and streams the synthesis. Otherwise,
-returns a completed stream with the discussion result.
+**Returns**
 
----
-
-### `interactStream`
-
-```java
-public @NonNull AgentStream interactStream(
-      @NonNull AgenticContext context, @Nullable TraceMetadata trace)
-```
-
-{@inheritDoc}
-
-If a synthesizer is configured, runs the discussion and streams the synthesis. Trace
-metadata is propagated through peer interactions.
+an `Interactable.Streaming` backed by this network's streaming logic
 
 ---
 

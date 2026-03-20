@@ -13,7 +13,10 @@ import org.jspecify.annotations.NonNull;
  * <p>RouterStream first classifies the input, then executes the selected agent with streaming.
  *
  * <pre>{@code
- * router.routeStream("Help with billing")
+ * AgenticContext context = AgenticContext.create()
+ *     .addMessage(Message.user("Help with billing"));
+ *
+ * router.routeStream(context)
  *     .onRouteSelected(agent -> System.out.println("Routed to: " + agent.name()))
  *     .onTextDelta(System.out::print)
  *     .onComplete(result -> System.out.println("\nDone!"))

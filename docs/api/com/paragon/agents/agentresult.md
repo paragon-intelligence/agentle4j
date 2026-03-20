@@ -1,23 +1,5 @@
 # :material-code-braces: AgentResult
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.AgentResult` &nbsp;·&nbsp; **Class**
 
 ---
@@ -254,6 +236,32 @@ a paused result
 
 ---
 
+### `clientSideTool`
+
+```java
+public static @NonNull AgentResult clientSideTool(
+      @NonNull FunctionToolCall call, @NonNull AgenticContext context, int turnsUsed)
+```
+
+Creates a client-side tool result when a `stopsLoop = true` tool is called.
+
+The call is NOT persisted to history and the tool's `call()` method is NOT invoked.
+This is a clean, non-error exit from the agentic loop.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `call` | the function tool call that triggered the exit |
+| `context` | the agent context at time of exit |
+| `turnsUsed` | number of LLM turns used |
+
+**Returns**
+
+a client-side tool result
+
+---
+
 ### `composite`
 
 ```java
@@ -478,6 +486,34 @@ Returns the paused state if this run is paused.
 **Returns**
 
 the paused state, or null if not paused
+
+---
+
+### `isClientSideTool`
+
+```java
+public boolean isClientSideTool()
+```
+
+Checks if the loop was stopped by a client-side tool (`stopsLoop = true`).
+
+**Returns**
+
+true if a stopsLoop tool triggered the exit
+
+---
+
+### `clientSideToolCall`
+
+```java
+public @Nullable FunctionToolCall clientSideToolCall()
+```
+
+Returns the tool call that stopped the loop, if applicable.
+
+**Returns**
+
+the client-side tool call, or null if not a client-side tool exit
 
 ---
 

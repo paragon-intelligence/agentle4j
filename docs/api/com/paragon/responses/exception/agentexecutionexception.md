@@ -1,23 +1,5 @@
 # :material-code-braces: AgentExecutionException
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.exception.AgentExecutionException` &nbsp;·&nbsp; **Class**
 
 Extends `AgentleException`
@@ -36,7 +18,7 @@ Provides agent-specific context:
 Example usage:
 
 ```java
-AgentResult result = agent.interact("Hello").join();
+AgentResult result = agent.interact("Hello");
 if (result.isError() && result.error() instanceof AgentExecutionException e) {
     System.err.println("Agent " + e.agentName() + " failed in " + e.phase());
     System.err.println("Completed " + e.turnsCompleted() + " turns before failure");

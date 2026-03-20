@@ -1,23 +1,5 @@
 # :material-database: OtelMetric
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.telemetry.otel.OtelMetric` &nbsp;·&nbsp; **Record**
 
 ---
@@ -26,7 +8,7 @@ Represents an OTLP metric with its data points.
 
 **See Also**
 
-- `<a href="https://opentelemetry.io/docs/specs/otel/metrics/data-model/">OTEL Metrics Data Model</a>`
+- `OTEL metrics data model: https://opentelemetry.io/docs/specs/otel/metrics/data-model/`
 
 ## Methods
 

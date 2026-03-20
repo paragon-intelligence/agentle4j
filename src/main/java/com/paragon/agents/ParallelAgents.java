@@ -19,7 +19,7 @@ import org.jspecify.annotations.Nullable;
  * <p>From Chapter 7 (Multi-Agent Collaboration): "Multiple agents work on different parts of a
  * problem simultaneously, and their results are later combined."
  *
- * <p><b>Virtual Thread Design:</b> Uses Java 21+ structured concurrency for parallel execution. All
+ * <p><b>Virtual Thread Design:</b> Uses Java 25 structured concurrency for parallel execution. All
  * agents run on virtual threads, making parallel execution cheap and efficient.
  *
  * <p><b>Trace Correlation:</b> All parallel agents share the same parent traceId, enabling
@@ -193,7 +193,7 @@ public final class ParallelAgents implements Interactable {
    * <p>Each agent receives a copy of the context to prevent interference. All parallel agents share
    * the same parent traceId for trace correlation.
    *
-   * <p>Uses structured concurrency (Java 21+) to run all agents on virtual threads.
+   * <p>Uses Java 25 structured concurrency to run all agents on virtual threads.
    *
    * <p>This is the core method. All other runAll overloads delegate here.
    *

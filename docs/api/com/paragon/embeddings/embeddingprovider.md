@@ -1,30 +1,12 @@
 # :material-approximately-equal: EmbeddingProvider
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.embeddings.EmbeddingProvider` &nbsp;·&nbsp; **Interface**
 
 ---
 
 Interface for embedding providers.
 
-Uses synchronous API optimized for Java 21+ virtual threads.
+Uses a synchronous API optimized for Java 25+ virtual threads.
 
 ## Methods
 

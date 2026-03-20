@@ -1,23 +1,5 @@
 # :material-approximately-equal: FunctionToolCallOutputKind
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.FunctionToolCallOutputKind` &nbsp;·&nbsp; **Interface**
 
 ---

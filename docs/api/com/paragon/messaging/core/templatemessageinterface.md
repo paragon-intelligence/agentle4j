@@ -1,23 +1,5 @@
 # :material-approximately-equal: TemplateMessageInterface
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.core.TemplateMessageInterface` &nbsp;·&nbsp; **Interface**
 
 Extends `OutboundMessage`
@@ -39,4 +21,7 @@ concrete template message classes.
 String name()
 ```
 
-@return the template name
+**Returns**
+
+the template name
+

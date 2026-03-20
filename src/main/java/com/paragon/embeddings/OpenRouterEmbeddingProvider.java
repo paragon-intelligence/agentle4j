@@ -22,7 +22,7 @@ import org.jspecify.annotations.NonNull;
  *   <li>5xx Server Errors - Transient server issues
  * </ul>
  *
- * <p><b>Virtual Thread Design:</b> Uses synchronous API optimized for Java 21+ virtual threads.
+ * <p><b>Virtual Thread Design:</b> Uses a synchronous API optimized for Java 25+ virtual threads.
  *
  * <p>Example usage:
  *

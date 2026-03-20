@@ -7,4 +7,5 @@ nav:
   - prompt.md
   - promptprovider.md
   - promptproviderexception.md
+  - promptproviderregistry.md
   - promptstore.md

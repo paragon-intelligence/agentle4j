@@ -24,8 +24,7 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Authentication uses HTTP Basic Auth with public key as username and secret key as password.
  *
- * @see <a href="https://langfuse.com/docs/integrations/opentelemetry">Langfuse OpenTelemetry
- *     Docs</a>
+ * @see Langfuse OpenTelemetry documentation: https://langfuse.com/docs/integrations/opentelemetry
  */
 public class LangfuseProcessor extends TelemetryProcessor {
 

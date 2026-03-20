@@ -1,32 +1,14 @@
 # :material-code-braces: Skill
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.skills.Skill` &nbsp;·&nbsp; **Class**
 
 ---
 
 Represents a modular expertise that augments an agent's capabilities.
 
-A Skill packages instructions and resources that are injected into the agent's system prompt.
-When a skill is added to an agent, its instructions become part of the agent's knowledge,
-allowing the LLM to automatically apply the skill's expertise when relevant.
+A Skill packages instructions and resources that the agent can access on demand via the `SkillReaderTool`. When skills are added to an agent, a concise catalog (name + description)
+appears in the system prompt, and a `read_skill` tool is registered so the agent can load
+full instructions when it decides a skill is relevant.
 
 Unlike sub-agents, skills share the main agent's context window. They extend the agent's
 capabilities without creating separate execution contexts.
@@ -229,6 +211,23 @@ format includes the skill name, description, instructions, and any resources.
 **Returns**
 
 the formatted skill prompt section
+
+---
+
+### `toCatalogEntry`
+
+```java
+public @NonNull String toCatalogEntry()
+```
+
+Generates a concise catalog entry for this skill.
+
+This produces a single-line summary suitable for listing in the agent's system prompt. The
+agent can then call the `read_skill` tool to load full instructions when needed.
+
+**Returns**
+
+a concise catalog line (e.g., `"- **pdf-processor**: Process PDF files\n"`)
 
 ---
 

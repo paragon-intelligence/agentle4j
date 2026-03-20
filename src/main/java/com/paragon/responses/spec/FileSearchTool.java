@@ -8,8 +8,8 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
- * A tool that searches for relevant content from uploaded files. Learn more about the <a href="file
- * search tool">file search tool</a>.
+ * A tool that searches for relevant content from uploaded files. Learn more about the file search
+ * tool at https://platform.openai.com/docs/guides/tools-file-search
  *
  * @param vectorStoreIds The IDs of the vector stores to search.
  * @param filters A filter to apply.

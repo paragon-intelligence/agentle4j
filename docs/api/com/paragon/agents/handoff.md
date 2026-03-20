@@ -1,23 +1,5 @@
 # :material-code-braces: Handoff
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.Handoff` &nbsp;·&nbsp; **Class**
 
 ---
@@ -50,6 +32,26 @@ Agent salesAgent = Agent.builder()
 - `Agent`
 
 *Since: 1.0*
+
+## Fields
+
+### `awarenessMessage`
+
+```java
+private final @Nullable String awarenessMessage
+```
+
+null = use default message; empty string = disabled
+
+---
+
+### `awarenessMessage`
+
+```java
+private @Nullable String awarenessMessage = null
+```
+
+null = default; empty = disabled
 
 ## Methods
 
@@ -118,6 +120,28 @@ the target agent
 
 ---
 
+### `buildAwarenessMessage`
+
+```java
+public @Nullable String buildAwarenessMessage(@NonNull String parentAgentName)
+```
+
+Builds the awareness message to inject into the child agent's context.
+
+Returns `null` if awareness is disabled via `Builder.withoutAwarenessMessage()`.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `parentAgentName` | the name of the agent transferring control |
+
+**Returns**
+
+the message to inject, or `null` if disabled
+
+---
+
 ### `asTool`
 
 ```java
@@ -169,6 +193,40 @@ Defaults to the target agent's instructions.
 | Name | Description |
 |------|-------------|
 | `description` | the handoff description |
+
+**Returns**
+
+this builder
+
+---
+
+### `withAwarenessMessage`
+
+```java
+public @NonNull Builder withAwarenessMessage(@NonNull String message)
+```
+
+Sets a custom awareness message to inject into the child agent's context on handoff.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `message` | the message to inject as a developer-priority message |
+
+**Returns**
+
+this builder
+
+---
+
+### `withoutAwarenessMessage`
+
+```java
+public @NonNull Builder withoutAwarenessMessage()
+```
+
+Disables the automatic awareness message injection entirely.
 
 **Returns**
 

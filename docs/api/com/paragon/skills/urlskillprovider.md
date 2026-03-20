@@ -1,23 +1,5 @@
 # :material-code-braces: UrlSkillProvider
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.skills.UrlSkillProvider` &nbsp;·&nbsp; **Class**
 
 Implements `SkillProvider`
@@ -40,14 +22,14 @@ execute tools or access data in unexpected ways.
 // Load from a direct URL
 UrlSkillProvider provider = UrlSkillProvider.builder().build();
 Skill skill = provider.loadFromUrl(
-    URI.create("https://example.com/skills/pdf-processor/SKILL.md")
+    URI.create("[https://example.com/skills/pdf-processor/SKILL.md"](https://example.com/skills/pdf-processor/SKILL.md"))
 );
 // With base URL pattern
 UrlSkillProvider provider = UrlSkillProvider.builder()
-    .baseUrl("https://example.com/skills")
+    .baseUrl("[https://example.com/skills"](https://example.com/skills"))
     .build();
 Skill skill = provider.provide("pdf-processor");
-// Fetches: https://example.com/skills/pdf-processor/SKILL.md
+// Fetches: [https://example.com/skills/pdf-processor/SKILL.md](https://example.com/skills/pdf-processor/SKILL.md)
 ```
 
 **See Also**

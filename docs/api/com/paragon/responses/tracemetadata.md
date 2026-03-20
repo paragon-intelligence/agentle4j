@@ -1,23 +1,5 @@
 # :material-database: TraceMetadata
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.TraceMetadata` &nbsp;·&nbsp; **Record**
 
 ---
@@ -41,7 +23,7 @@ TraceMetadata trace = TraceMetadata.builder()
 
 **See Also**
 
-- `<a href="https://openrouter.ai/docs/guides/features/broadcast/langfuse">OpenRouter Langfuse Documentation</a>`
+- `OpenRouter Langfuse documentation: https://openrouter.ai/docs/guides/features/broadcast/langfuse`
 
 *Since: 1.0*
 

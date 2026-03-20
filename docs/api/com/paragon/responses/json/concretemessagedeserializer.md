@@ -1,26 +1,8 @@
 # :material-code-braces: ConcreteMessageDeserializer
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.json.ConcreteMessageDeserializer` &nbsp;·&nbsp; **Class**
 
-Extends `Message> extends JsonDeserializer<T>`
+Extends `Message> extends ValueDeserializer<T>`
 
 ---
 

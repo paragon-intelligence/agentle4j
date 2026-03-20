@@ -18,20 +18,22 @@
 
 
 
-Agentle4j provides a comprehensive messaging module designed for building AI-powered messaging integrations with platforms like WhatsApp Business API. The module combines intelligent message batching, rate limiting, security features, and seamless AI agent integration.
+Agentle4j provides a messaging module for building AI-powered WhatsApp integrations. The module
+combines intelligent message batching, rate limiting, security features, and seamless AI agent
+integration.
 
 ---
 
 ## Overview
 
-The messaging module (`com.paragon.messaging`) is a production-ready framework for processing messages from messaging platforms with AI agents. It's designed to handle high-volume messaging scenarios while maintaining context, preventing abuse, and ensuring reliable delivery.
+The messaging module (`com.paragon.messaging`) is a production-ready framework for processing
+incoming WhatsApp messages with AI agents. The public abstractions are generic, but the concrete
+provider shipped in this codebase today is `WhatsAppMessagingProvider`.
 
 ```mermaid
 flowchart TB
     subgraph Input["Incoming Messages"]
         WH[WhatsApp Webhook]
-        TG[Telegram Bot]
-        OT[Other Platforms]
     end
     
     subgraph Security["Security Layer"]
@@ -49,7 +51,7 @@ flowchart TB
     subgraph Processing["AI Processing"]
         PROC[AI Agent Processor]
         AGT[Agent]
-        CTX[Agent Context]
+        CTX[AgenticContext]
     end
     
     subgraph History["Conversation History"]
@@ -64,9 +66,6 @@ flowchart TB
     end
     
     WH --> SIG
-    TG --> SIG
-    OT --> SIG
-    
     SIG --> FLOOD
     FLOOD --> SAN
     SAN --> BAT
@@ -96,8 +95,8 @@ flowchart TB
 | **Conversation History** | Redis or in-memory persistence for multi-turn conversations |
 | **Security** | Webhook validation, flood detection, content sanitization |
 | **Extensibility** | Hook system for custom pre/post processing logic |
-| **Virtual Threads** | High-performance async processing with Java 21+ virtual threads |
-| **Multi-Platform** | Provider abstraction supports WhatsApp, Telegram, and others |
+| **Virtual Threads** | Background work runs efficiently on Java 25+ virtual threads |
+| **Provider Abstraction** | `MessagingProvider` is generic, with WhatsApp support included today |
 
 ---
 
@@ -107,11 +106,14 @@ flowchart TB
 
 ```java
 import com.paragon.agents.Agent;
+import com.paragon.messaging.core.ConversationHistoryStore;
+import com.paragon.messaging.store.history.InMemoryConversationHistoryStore;
 import com.paragon.messaging.processor.AIAgentProcessor;
 import com.paragon.messaging.whatsapp.WhatsAppMessagingProvider;
-import com.paragon.messaging.store.history.RedisConversationHistoryStore;
+import com.paragon.messaging.whatsapp.config.WhatsAppConfig;
 import com.paragon.messaging.batching.*;
 import com.paragon.responses.Responder;
+import java.time.Duration;
 
 // 1. Create AI agent
 Responder responder = Responder.builder()
@@ -130,14 +132,15 @@ Agent agent = Agent.builder()
     .build();
 
 // 2. Create WhatsApp provider
-WhatsAppMessagingProvider whatsapp = WhatsAppMessagingProvider.builder()
-    .phoneNumberId(System.getenv("WHATSAPP_PHONE_NUMBER_ID"))
-    .accessToken(System.getenv("WHATSAPP_ACCESS_TOKEN"))
-    .build();
+WhatsAppMessagingProvider whatsapp = new WhatsAppMessagingProvider(
+    WhatsAppConfig.builder()
+        .phoneNumberId(System.getenv("WHATSAPP_PHONE_NUMBER_ID"))
+        .accessToken(System.getenv("WHATSAPP_ACCESS_TOKEN"))
+        .build()
+);
 
 // 3. Create conversation history store
-RedisConversationHistoryStore history = 
-    RedisConversationHistoryStore.create(redisClient);
+ConversationHistoryStore history = InMemoryConversationHistoryStore.create();
 
 // 4. Create AI processor
 AIAgentProcessor<?> processor = AIAgentProcessor.forAgent(agent)
@@ -179,7 +182,8 @@ public void handleWebhook(@RequestBody WebhookEvent event) {
 
 ### MessagingProvider
 
-The `MessagingProvider` interface abstracts messaging platform APIs (WhatsApp, Telegram, etc.). It provides a unified API for sending various message types.
+The `MessagingProvider` interface abstracts outbound messaging operations. The abstraction is
+generic, and the current implementation shipped by Agentle4j is WhatsApp.
 
 ```java
 public interface MessagingProvider {
@@ -203,14 +207,16 @@ public interface MessagingProvider {
 #### WhatsApp Implementation
 
 ```java
-WhatsAppMessagingProvider provider = WhatsAppMessagingProvider.builder()
-    .phoneNumberId("YOUR_PHONE_NUMBER_ID")
-    .accessToken("YOUR_ACCESS_TOKEN")
-    .apiVersion("v21.0")  // Optional: defaults to v21.0
-    .build();
+WhatsAppMessagingProvider provider = new WhatsAppMessagingProvider(
+    WhatsAppConfig.builder()
+        .phoneNumberId("YOUR_PHONE_NUMBER_ID")
+        .accessToken("YOUR_ACCESS_TOKEN")
+        .apiVersion("v22.0")  // Optional: defaults to v22.0
+        .build()
+);
 
 // Send text message
-Recipient recipient = Recipient.of("5511999999999");
+Recipient recipient = Recipient.ofPhoneNumber("+5511999999999");
 TextMessage text = TextMessage.builder()
     .body("Hello from Agentle!")
     .build();
@@ -274,7 +280,10 @@ BatchingConfig config = BatchingConfig.builder()
     
     // Rate limiting config
     .rateLimitConfig(RateLimitConfig.builder()
-        .maxMessagesPerMinute(20)
+        .tokensPerMinute(20)
+        .bucketCapacity(30)
+        .maxMessagesInWindow(10)
+        .slidingWindow(Duration.ofSeconds(30))
         .build())
     
     // Optional: message deduplication
@@ -283,7 +292,8 @@ BatchingConfig config = BatchingConfig.builder()
     // Optional: error handling with retry
     .errorHandlingStrategy(ErrorHandlingStrategy.builder()
         .maxRetries(3)
-        .initialDelay(Duration.ofSeconds(1))
+        .retryDelay(Duration.ofSeconds(1))
+        .exponentialBackoff(true)
         .build())
     
     .build();
@@ -313,14 +323,14 @@ The `HybridRateLimiter` combines two algorithms for robust rate limiting:
 ```java
 RateLimitConfig config = RateLimitConfig.builder()
     // Tokens per minute (token bucket)
-    .maxMessagesPerMinute(20)
+    .tokensPerMinute(20)
     
     // Sliding window: max per 10 seconds
-    .slidingWindowSize(Duration.ofSeconds(10))
+    .slidingWindow(Duration.ofSeconds(10))
     .maxMessagesPerWindow(5)
     
     // Burst allowance
-    .burstCapacity(5)
+    .bucketCapacity(5)
     
     .build();
 
@@ -436,21 +446,18 @@ if (store.hasHistory(userId)) {
 
 ```java
 // Redis-backed storage (production)
-RedisClient redis = RedisClient.create("redis://localhost:6379");
-
 ConversationHistoryStore store = RedisConversationHistoryStore.builder()
-    .redisClient(redis)
+    .redisOperations(redisOperations)
     .keyPrefix("chat:history:")  // Optional: custom prefix
     .maxMessagesPerUser(50)      // Optional: limit per user
-    .ttl(Duration.ofDays(7))     // Optional: auto-expire
+    .defaultTtl(Duration.ofDays(7))  // Optional: auto-expire
     .build();
 
 // Same API as in-memory store
 store.addMessage(userId, Message.user("Hello!"));
 List<ResponseInputItem> history = store.getHistory(userId, 20);
 
-// Periodic cleanup
-int removed = store.cleanupExpired(Duration.ofDays(7));
+// Expiration is handled by the configured TTL
 ```
 
 ---
@@ -462,9 +469,8 @@ int removed = store.cleanupExpired(Duration.ofDays(7));
 Verify that webhook requests are authentic:
 
 ```java
-WebhookSignatureValidator validator = WebhookSignatureValidator.builder()
-    .appSecret(System.getenv("WHATSAPP_APP_SECRET"))
-    .build();
+WebhookSignatureValidator validator =
+    WebhookSignatureValidator.create(System.getenv("WHATSAPP_APP_SECRET"));
 
 @PostMapping("/webhook")
 public ResponseEntity<Void> handleWebhook(
@@ -537,17 +543,17 @@ Add custom logic before or after message processing:
 // Custom logging hook
 ProcessingHook loggingHook = (context) -> {
     log.info("Processing {} messages for user {}", 
-        context.messageCount(), 
+        context.batchSize(), 
         context.userId());
 };
 
 // Metrics hook
 ProcessingHook metricsHook = (context) -> {
-    metrics.recordMessageBatch(
-        context.userId(),
-        context.messageCount(),
-        context.isRetry() ? context.retryCount() : 0
-    );
+        metrics.recordMessageBatch(
+            context.userId(),
+            context.batchSize(),
+            context.isRetry() ? context.retryCount() : 0
+        );
 };
 
 // Build service with hooks
@@ -569,7 +575,7 @@ public interface ProcessingHook {
 // Available context methods:
 context.userId()           // User identifier
 context.messages()         // List of messages being processed
-context.messageCount()     // Number of messages
+context.batchSize()        // Number of messages
 context.isRetry()          // Is this a retry?
 context.retryCount()       // How many retries so far
 context.metadata()         // Custom metadata map
@@ -584,8 +590,8 @@ ProcessingHook moderationHook = (context) -> {
     for (var message : context.messages()) {
         if (containsBannedWords(message.text().body())) {
             throw new HookInterruptedException(
-                "INAPPROPRIATE_CONTENT",
-                "Message contains banned words"
+                "Message contains banned words",
+                "INAPPROPRIATE_CONTENT"
             );
         }
     }
@@ -623,18 +629,20 @@ public class WhatsAppBotConfig {
 
     @Bean
     public WhatsAppMessagingProvider whatsappProvider() {
-        return WhatsAppMessagingProvider.builder()
-            .phoneNumberId(System.getenv("WHATSAPP_PHONE_NUMBER_ID"))
-            .accessToken(System.getenv("WHATSAPP_ACCESS_TOKEN"))
-            .build();
+        return new WhatsAppMessagingProvider(
+            WhatsAppConfig.builder()
+                .phoneNumberId(System.getenv("WHATSAPP_PHONE_NUMBER_ID"))
+                .accessToken(System.getenv("WHATSAPP_ACCESS_TOKEN"))
+                .build()
+        );
     }
 
     @Bean
-    public ConversationHistoryStore historyStore(RedisClient redis) {
+    public ConversationHistoryStore historyStore(RedisOperations redisOperations) {
         return RedisConversationHistoryStore.builder()
-            .redisClient(redis)
+            .redisOperations(redisOperations)
             .maxMessagesPerUser(50)
-            .ttl(Duration.ofDays(7))
+            .defaultTtl(Duration.ofDays(7))
             .build();
     }
 
@@ -663,11 +671,15 @@ public class WhatsAppBotConfig {
                 .maxBufferSize(10)
                 .backpressureStrategy(BackpressureStrategy.FLUSH_AND_ACCEPT)
                 .rateLimitConfig(RateLimitConfig.builder()
-                    .maxMessagesPerMinute(20)
+                    .tokensPerMinute(20)
+                    .bucketCapacity(30)
+                    .maxMessagesInWindow(10)
+                    .slidingWindow(Duration.ofMinutes(1))
                     .build())
                 .errorHandlingStrategy(ErrorHandlingStrategy.builder()
                     .maxRetries(3)
-                    .initialDelay(Duration.ofSeconds(1))
+                    .retryDelay(Duration.ofSeconds(1))
+                    .exponentialBackoff(true)
                     .build())
                 .build())
             .processor(processor)
@@ -681,7 +693,7 @@ public class WhatsAppBotConfig {
         return (context) -> {
             log.info("Processing batch: user={}, count={}, retry={}",
                 context.userId(),
-                context.messageCount(),
+                context.batchSize(),
                 context.isRetry());
         };
     }
@@ -703,9 +715,7 @@ public class WhatsAppBotConfig {
 
     @Bean
     public WebhookSignatureValidator webhookValidator() {
-        return WebhookSignatureValidator.builder()
-            .appSecret(System.getenv("WHATSAPP_APP_SECRET"))
-            .build();
+        return WebhookSignatureValidator.create(System.getenv("WHATSAPP_APP_SECRET"));
     }
 }
 ```
@@ -798,9 +808,8 @@ public TomcatProtocolHandlerCustomizer<?> protocolHandlerVirtualThreadExecutorCu
 ```java
 ErrorHandlingStrategy strategy = ErrorHandlingStrategy.builder()
     .maxRetries(3)
-    .initialDelay(Duration.ofSeconds(1))
-    .maxDelay(Duration.ofSeconds(30))
-    .backoffMultiplier(2.0)
+    .retryDelay(Duration.ofSeconds(1))
+    .exponentialBackoff(true)
     
     // Dead Letter Queue for permanent failures
     .deadLetterHandler((userId, messages) -> {
@@ -810,7 +819,7 @@ ErrorHandlingStrategy strategy = ErrorHandlingStrategy.builder()
     
     // Notify user on permanent failure
     .notifyUserOnFailure(true)
-    .notificationMessage("Sorry, we're experiencing issues. Please try again later.")
+    .userNotificationMessage("Sorry, we're experiencing issues. Please try again later.")
     
     .build();
 ```
@@ -858,67 +867,22 @@ public void shutdown() {
 
 ## Advanced Topics
 
-### Custom Message Converter
+### Customizing the Default Message Converter
 
 ```java
-public class WhatsAppMessageConverter implements MessageConverter {
-    @Override
-    public UserMessage convert(InboundMessage message) {
-        // Custom conversion logic
-        String text = extractText(message);
-        List<Content> contents = new ArrayList<>();
-        
-        // Add text
-        if (text != null) {
-            contents.add(Content.text(text));
-        }
-        
-        // Add media if present
-        if (message.image() != null) {
-            contents.add(Content.image(
-                Image.fromUrl(message.image().url())
-            ));
-        }
-        
-        return Message.builder()
-            .addContents(contents)
-            .asUser();
-    }
-}
+MessageConverter converter = DefaultMessageConverter.builder()
+    .batchSeparator(" ")
+    .build();
 
-// Use custom converter
 AIAgentProcessor<?> processor = AIAgentProcessor.forAgent(agent)
-    .messageConverter(new WhatsAppMessageConverter())
+    .messageConverter(converter)
     .build();
 ```
 
-### Multi-Platform Support
+### Provider Support
 
-```java
-// Create provider factory
-public interface MessagingProviderFactory {
-    MessagingProvider getProvider(String platform);
-}
-
-@Component
-public class MessagingProviderFactoryImpl implements MessagingProviderFactory {
-    
-    @Autowired
-    private WhatsAppMessagingProvider whatsapp;
-    
-    @Autowired
-    private TelegramMessagingProvider telegram;
-    
-    @Override
-    public MessagingProvider getProvider(String platform) {
-        return switch (platform) {
-            case "whatsapp" -> whatsapp;
-            case "telegram" -> telegram;
-            default -> throw new IllegalArgumentException("Unknown platform: " + platform);
-        };
-    }
-}
-```
+`MessagingProvider` is intentionally generic, but the only built-in `ProviderType` currently
+available in this module is `WHATSAPP`.
 
 ### Custom Processing Context
 
@@ -968,7 +932,8 @@ ProcessingHook personalizationHook = (context) -> {
 **Solutions**:
 ```java
 // Reduce rate limit
-.maxMessagesPerMinute(15)  // Lower limit
+.tokensPerMinute(15)
+.maxMessagesInWindow(8)
 
 // Monitor rate limiter
 if (!limiter.tryAcquire()) {
@@ -994,7 +959,9 @@ public void cleanup() {
 .maxBufferSize(5)  // Smaller buffers per user
 
 // Use Redis instead of in-memory
-ConversationHistoryStore store = RedisConversationHistoryStore.create(redis);
+ConversationHistoryStore store = RedisConversationHistoryStore.builder()
+    .redisOperations(redisOperations)
+    .build();
 ```
 
 ### Webhook Timeouts
@@ -1003,14 +970,11 @@ ConversationHistoryStore store = RedisConversationHistoryStore.create(redis);
 
 **Solutions**:
 ```java
-// Return immediately, process async
+// Return immediately, process on a virtual thread
 @PostMapping("/webhook")
-public CompletableFuture<ResponseEntity<Void>> handleWebhook(@RequestBody String payload) {
-    // Validate and queue immediately
-    CompletableFuture.runAsync(() -> processWebhook(payload));
-    
-    // Return success immediately
-    return CompletableFuture.completedFuture(ResponseEntity.ok().build());
+public ResponseEntity<Void> handleWebhook(@RequestBody String payload) {
+    Thread.startVirtualThread(() -> processWebhook(payload));
+    return ResponseEntity.ok().build();
 }
 
 // Use smaller timeouts
@@ -1023,29 +987,29 @@ public CompletableFuture<ResponseEntity<Void>> handleWebhook(@RequestBody String
 
 ### Core Interfaces
 
-- [`MessagingProvider`](../../src/main/java/com/paragon/messaging/core/MessagingProvider.java) - Platform abstraction
-- [`MessageProcessor`](../../src/main/java/com/paragon/messaging/core/MessageProcessor.java) - Message processing interface
-- [`ConversationHistoryStore`](../../src/main/java/com/paragon/messaging/store/history/ConversationHistoryStore.java) - History persistence
+- `MessagingProvider` - Platform abstraction
+- `MessageProcessor` - Message processing interface
+- `ConversationHistoryStore` - History persistence
 
 ### Main Classes
 
-- [`AIAgentProcessor`](../../src/main/java/com/paragon/messaging/processor/AIAgentProcessor.java) - AI-powered message processor
-- [`MessageBatchingService`](../../src/main/java/com/paragon/messaging/batching/MessageBatchingService.java) - Batching and rate limiting
-- [`WhatsAppMessagingProvider`](../../src/main/java/com/paragon/messaging/whatsapp/WhatsAppMessagingProvider.java) - WhatsApp Cloud API client
-- [`FloodDetector`](../../src/main/java/com/paragon/messaging/security/FloodDetector.java) - Flood prevention
-- [`HybridRateLimiter`](../../src/main/java/com/paragon/messaging/ratelimit/HybridRateLimiter.java) - Rate limiting
+- `AIAgentProcessor` - AI-powered message processor
+- `MessageBatchingService` - Batching and rate limiting
+- `WhatsAppMessagingProvider` - WhatsApp Cloud API client
+- `FloodDetector` - Flood prevention
+- `HybridRateLimiter` - Rate limiting
 
 ### Configuration Classes
 
-- [`BatchingConfig`](../../src/main/java/com/paragon/messaging/batching/BatchingConfig.java) - Batching configuration
-- [`SecurityConfig`](../../src/main/java/com/paragon/messaging/security/SecurityConfig.java) - Security configuration
-- [`RateLimitConfig`](../../src/main/java/com/paragon/messaging/ratelimit/RateLimitConfig.java) - Rate limit configuration
+- `BatchingConfig` - Batching configuration
+- `SecurityConfig` - Security configuration
+- `RateLimitConfig` - Rate limit configuration
 
 ---
 
 ## Examples
 
-See the [examples directory](../../examples/messaging) for complete working examples:
+See the `examples/` workspace content for complete working examples:
 
 - **Basic WhatsApp Bot** - Simple echo bot with AI responses
 - **Customer Support Bot** - Multi-turn conversations with history

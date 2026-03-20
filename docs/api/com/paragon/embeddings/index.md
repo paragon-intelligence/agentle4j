@@ -1,23 +1,5 @@
 # Package `com.paragon.embeddings`
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ---
 
 ## :material-code-braces: Classs

@@ -1,23 +1,5 @@
 # Package `com.paragon.responses.spec`
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ---
 
 ## :material-code-braces: Classs
@@ -131,6 +113,7 @@
 | [`McpToolFilter`](mcptoolfilter.md) | List of allowed tool names or a filter object |
 | [`MoveAction`](moveaction.md) | A mouse move action |
 | [`OpenPageAction`](openpageaction.md) | Action type "open_page" - Opens a specific URL from search results |
+| [`OpenRouterWebPlugin`](openrouterwebplugin.md) |  |
 | [`PendingSafetyCheck`](pendingsafetycheck.md) | The pending safety checks for the computer call |
 | [`Reasoning`](reasoning.md) | A description of the chain of thought used by a reasoning model while generating a response |
 | [`ReasoningSummaryText`](reasoningsummarytext.md) | Represents a summary of the reasoning output from the model so far |

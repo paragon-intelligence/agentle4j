@@ -1,23 +1,5 @@
 # :material-database: Reasoning
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.Reasoning` &nbsp;·&nbsp; **Record**
 
 ---

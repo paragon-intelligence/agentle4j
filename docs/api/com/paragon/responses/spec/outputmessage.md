@@ -1,23 +1,5 @@
 # :material-code-braces: OutputMessage
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.OutputMessage` &nbsp;·&nbsp; **Class**
 
 Extends `AssistantMessage` &nbsp;·&nbsp; Implements `Item`, `ResponseOutput`

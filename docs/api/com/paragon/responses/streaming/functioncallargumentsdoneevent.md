@@ -1,23 +1,5 @@
 # :material-database: FunctionCallArgumentsDoneEvent
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.streaming.FunctionCallArgumentsDoneEvent` &nbsp;·&nbsp; **Record**
 
 ---

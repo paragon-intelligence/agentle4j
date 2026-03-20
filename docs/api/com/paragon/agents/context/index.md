@@ -1,23 +1,5 @@
 # Package `com.paragon.agents.context`
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ---
 
 ## :material-code-braces: Classs

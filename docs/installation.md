@@ -33,7 +33,7 @@ Add the following dependency to your `pom.xml`:
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.8.3</version>
+    <version>0.10.0</version>
 </dependency>
 ```
 
@@ -42,13 +42,57 @@ Add the following dependency to your `pom.xml`:
 === "Groovy DSL"
 
     ```groovy
-    implementation 'io.github.paragon-intelligence:agentle4j:0.8.3'
+    implementation 'io.github.paragon-intelligence:agentle4j:0.10.0'
     ```
 
 === "Kotlin DSL"
 
     ```kotlin
-    implementation("io.github.paragon-intelligence:agentle4j:0.8.3")
+    implementation("io.github.paragon-intelligence:agentle4j:0.10.0")
+
+## Enable Preview Features
+
+Agentle4j uses Java 25 preview features. Your application must compile and run with
+`--enable-preview`.
+
+### Maven
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <release>25</release>
+        <compilerArgs>
+            <arg>--enable-preview</arg>
+        </compilerArgs>
+    </configuration>
+</plugin>
+
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <configuration>
+        <argLine>--enable-preview</argLine>
+    </configuration>
+</plugin>
+```
+
+### Gradle
+
+```kotlin
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("--enable-preview")
+}
+
+tasks.withType<Test>().configureEach {
+    jvmArgs("--enable-preview")
+}
+
+tasks.withType<JavaExec>().configureEach {
+    jvmArgs("--enable-preview")
+}
+```
     ```
 
 ## Verifying Installation

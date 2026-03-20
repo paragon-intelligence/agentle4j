@@ -1,23 +1,5 @@
 # :material-approximately-equal: MediaMessageInterface
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.core.MediaMessageInterface` &nbsp;·&nbsp; **Interface**
 
 Extends `OutboundMessage`

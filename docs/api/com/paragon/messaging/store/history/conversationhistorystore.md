@@ -1,23 +1,5 @@
 # :material-approximately-equal: ConversationHistoryStore
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.store.history.ConversationHistoryStore` &nbsp;·&nbsp; **Interface**
 
 ---
@@ -41,8 +23,11 @@ WhatsApp phone number).
 ```java
 // Create in-memory store
 ConversationHistoryStore store = InMemoryConversationHistoryStore.create(100);
-// Or create Redis-backed store
-ConversationHistoryStore store = RedisConversationHistoryStore.create(redisClient);
+// Or create a Redis-backed store
+ConversationHistoryStore store = RedisConversationHistoryStore.builder()
+    .redisOperations(redisOperations)
+    .defaultTtl(Duration.ofHours(24))
+    .build();
 // Add messages to history
 store.addMessage(userId, Message.user("Hello!"));
 store.addMessage(userId, Message.assistant("Hi! How can I help?"));
@@ -122,7 +107,7 @@ limits. Messages older than `maxAge` are excluded, then the most recent `maxMess
 
 **Returns**
 
-list of messages as ResponseInputItem (for AgentContext)
+list of messages as ResponseInputItem (for AgenticContext)
 
 ---
 

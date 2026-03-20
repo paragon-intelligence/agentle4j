@@ -16,7 +16,7 @@ import org.jspecify.annotations.NonNull;
 /**
  * Agentic file parser that uses LLM to convert documents to markdown.
  *
- * <p><b>Virtual Thread Design:</b> Uses synchronous API optimized for Java 21+ virtual threads.
+ * <p><b>Virtual Thread Design:</b> Uses a synchronous API optimized for Java 25+ virtual threads.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class AgenticFileParser {

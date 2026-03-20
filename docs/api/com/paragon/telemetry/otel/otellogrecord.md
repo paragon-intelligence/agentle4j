@@ -1,23 +1,5 @@
 # :material-database: OtelLogRecord
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.telemetry.otel.OtelLogRecord` &nbsp;·&nbsp; **Record**
 
 ---
@@ -26,7 +8,7 @@ Represents an OTLP log record.
 
 **See Also**
 
-- `<a href="https://opentelemetry.io/docs/specs/otel/logs/data-model/">OTEL Logs Data Model</a>`
+- `OTEL logs data model: https://opentelemetry.io/docs/specs/otel/logs/data-model/`
 
 ## Methods
 

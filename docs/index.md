@@ -34,13 +34,13 @@ hide:
 
 
 
-**The Modern Java Library for OpenAI Responses API**
+**Java 25+, virtual-thread-friendly, Responses API-native**
 
-[![Java](https://img.shields.io/badge/Java-21+-orange?logo=openjdk)](https://openjdk.org/)
+[![Java](https://img.shields.io/badge/Java-25+-orange?logo=openjdk)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/paragon-intelligence/agentle4j/blob/main/LICENSE)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.paragon-intelligence/agentle4j)](https://central.sonatype.com/artifact/io.github.paragon-intelligence/agentle4j)
 
-*Type-safe, streaming-enabled, production-ready AI integration for Java*
+*Type-safe agents, streaming, and structured output for Java*
 
 [Get Started](getting-started.md){ .md-button .md-button--primary }
 [API Reference](api.md){ .md-button }
@@ -93,40 +93,12 @@ hide:
 
 ---
 
-## ⚡ Performance
+## ⚙️ Runtime Model
 
-### Agent Instantiation Benchmark
-
-Measures **time to create an agent instance** (not API calls). Lower is better.
-
-```
-╔═══════════════════════════════════════════════════════════════════╗
-║           AGENT INSTANTIATION BENCHMARK (lower = better)          ║
-╚═══════════════════════════════════════════════════════════════════╝
-
-Framework        │  Time (μs) │  Memory (KiB) │ Language
-─────────────────┼────────────┼───────────────┼─────────────────────
-🚀 Agentle4j     │       0.8.3 │         0.39  │ Java 25+ (this lib)
-AGNO             │       3.00 │         6.60  │ Python
-PydanticAI       │     170.00 │        28.71  │ Python
-CrewAI           │     210.00 │        65.65  │ Python
-LangGraph        │   1,587.00 │       161.43  │ Python
-──────────────────────────────────────────────────────────────────────
-```
-
-!!! warning "Important Caveats"
-    - **Cross-language comparisons are inherently unfair.** Java's JVM provides different performance characteristics than Python's interpreter.
-    - This benchmark only measures **agent instantiation time**, not actual LLM inference or end-to-end latency.
-    - We haven't benchmarked against **LangChain4J** or **Spring AI** yet—contributions welcome!
-    - Real-world performance depends heavily on network latency, model choice, and payload size.
-
-### Java Alternatives
-
-| Library | Focus | Notes |
-|---------|-------|-------|
-| **Agentle4j** | Agents-first, OpenAI Responses API | This library |
-| **LangChain4J** | General-purpose, many integrations | Mature ecosystem |
-| **Spring AI** | Spring ecosystem integration | Production-ready |
+- Agentle4j requires **Java 25+ with preview features enabled**.
+- Core APIs are **synchronous-first** and designed to be used directly or dispatched onto virtual threads.
+- Streaming is exposed through **`ResponseStream`** and **`AgentStream`** callbacks.
+- The published artifact version documented here is **`0.10.0`**.
 
 ---
 
@@ -135,6 +107,7 @@ LangGraph        │   1,587.00 │       161.43  │ Python
 ```java
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.CreateResponsePayload;
+import com.paragon.responses.spec.Response;
 
 // Create a responder
 Responder responder = Responder.builder()
@@ -164,15 +137,17 @@ System.out.println(response.outputText());
     <dependency>
         <groupId>io.github.paragon-intelligence</groupId>
         <artifactId>agentle4j</artifactId>
-        <version>0.8.3</version>
+        <version>0.10.0</version>
     </dependency>
     ```
 
 === "Gradle"
 
     ```groovy
-    implementation 'io.github.paragon-intelligence:agentle4j:0.8.3'
+    implementation 'io.github.paragon-intelligence:agentle4j:0.10.0'
     ```
+
+Requires Java 25+ with preview features enabled.
 
 ---
 

@@ -1,23 +1,5 @@
 # :material-approximately-equal: TokenCounter
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.context.TokenCounter` &nbsp;·&nbsp; **Interface**
 
 ---
@@ -35,7 +17,7 @@ including text, images, and tool call results.
 ```java
 TokenCounter counter = new SimpleTokenCounter();
 int textTokens = counter.countText("Hello, how can I help you?");
-int imageTokens = counter.countImage(Image.fromUrl("https://example.com/image.jpg"));
+int imageTokens = counter.countImage(Image.fromUrl("[https://example.com/image.jpg"](https://example.com/image.jpg")));
 List history = context.getHistory();
 int totalTokens = counter.countTokens(history);
 ```

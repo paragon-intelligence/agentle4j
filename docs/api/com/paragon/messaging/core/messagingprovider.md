@@ -1,23 +1,5 @@
 # :material-approximately-equal: MessagingProvider
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.core.MessagingProvider` &nbsp;·&nbsp; **Interface**
 
 ---
@@ -44,15 +26,9 @@ Thread.startVirtualThread(() -> {
         e.printStackTrace();
     }
 });
-// Form 3: Structured Concurrency (Java 25)
-try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-    var task1 = scope.fork(() -> provider.sendMessage(recipient1, message));
-    var task2 = scope.fork(() -> provider.sendMessage(recipient2, message));
-    scope.join();
-    scope.throwIfFailed();
-    MessageResponse r1 = task1.get();
-    MessageResponse r2 = task2.get();
-}
+// Form 3: Fire-and-forget virtual thread
+Thread.startVirtualThread(() -> provider.sendMessage(recipient1, message));
+Thread.startVirtualThread(() -> provider.sendMessage(recipient2, message));
 ```
 
 *Since: 2.0*

@@ -1,23 +1,5 @@
 # :material-database: OutputTextDoneEvent
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.streaming.OutputTextDoneEvent` &nbsp;·&nbsp; **Record**
 
 ---

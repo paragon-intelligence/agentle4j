@@ -1,30 +1,12 @@
 # :material-code-braces: AgenticFileParser
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.parsing.AgenticFileParser` &nbsp;·&nbsp; **Class**
 
 ---
 
 Agentic file parser that uses LLM to convert documents to markdown.
 
-**Virtual Thread Design:** Uses synchronous API optimized for Java 21+ virtual threads.
+**Virtual Thread Design:** Uses a synchronous API optimized for Java 25+ virtual threads.
 
 ## Methods
 

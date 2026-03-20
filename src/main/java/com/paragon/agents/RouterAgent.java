@@ -18,8 +18,8 @@ import org.jspecify.annotations.Nullable;
  * <p>Unlike general agents with complex instructions, RouterAgent focuses purely on classification
  * and routing, avoiding the noise of full agent instructions.
  *
- * <p><b>Virtual Thread Design:</b> Uses synchronous API optimized for Java 21+ virtual threads.
- * Blocking calls are cheap and efficient with virtual threads.
+ * <p><b>Virtual Thread Design:</b> Uses a synchronous API optimized for Java 25+ virtual threads.
+ * Blocking calls are cheap and efficient when each request runs on its own virtual thread.
  *
  * <h2>Usage Example</h2>
  *
@@ -36,16 +36,21 @@ import org.jspecify.annotations.Nullable;
  *     .addRoute(salesAgent, "pricing, new features, demos, upgrades")
  *     .build();
  *
- * // Route and execute - blocking, uses virtual threads
- * AgentResult result = router.route("I have a question about my invoice");
- * System.out.println("Handled by: " + result.handoffTarget().name());
+ * // Route and execute using the last user message stored in the context
+ * AgenticContext context = AgenticContext.create()
+ *     .addMessage(Message.user("I have a question about my invoice"));
+ * AgentResult result = router.interact(context);
+ * System.out.println("Handled by: " + result.agentName());
  *
  * // Or just classify without executing
  * Optional<Agent> agent = router.classify("My app keeps crashing");
  * System.out.println("Would route to: " + agent.map(Agent::name).orElse("none"));
  *
  * // Streaming support
- * router.routeStream("Help me with billing")
+ * AgenticContext streamContext = AgenticContext.create()
+ *     .addMessage(Message.user("Help me with billing"));
+ *
+ * router.routeStream(streamContext)
  *     .onTextDelta(System.out::print)
  *     .onComplete(result -> System.out.println("\nDone!"))
  *     .start();
@@ -108,12 +113,6 @@ public final class RouterAgent implements Interactable {
         traceMetadata);
   }
 
-  /**
-   * Routes the input to the most appropriate agent and executes it.
-   *
-   * @param input the user input to route
-   * @return the result from the selected agent
-   */
   /**
    * Classifies the input and returns the selected route target without executing.
    *

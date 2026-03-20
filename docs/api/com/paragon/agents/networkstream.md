@@ -1,23 +1,5 @@
 # :material-code-braces: NetworkStream
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.NetworkStream` &nbsp;·&nbsp; **Class**
 
 ---
@@ -172,6 +154,70 @@ Called when an error occurs.
 | Name | Description |
 |------|-------------|
 | `callback` | receives the error |
+
+**Returns**
+
+this stream
+
+---
+
+### `onPeerToolExecuted`
+
+```java
+public @NonNull NetworkStream onPeerToolExecuted(
+      @NonNull BiConsumer<Interactable, ToolExecution> callback)
+```
+
+Called when a peer executes a tool.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `callback` | receives the peer and the tool execution result |
+
+**Returns**
+
+this stream
+
+---
+
+### `onPeerGuardrailFailed`
+
+```java
+public @NonNull NetworkStream onPeerGuardrailFailed(
+      @NonNull BiConsumer<Interactable, GuardrailResult.Failed> callback)
+```
+
+Called when a guardrail fails for a peer.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `callback` | receives the peer and the failed guardrail result |
+
+**Returns**
+
+this stream
+
+---
+
+### `onPeerError`
+
+```java
+public @NonNull NetworkStream onPeerError(
+      @NonNull BiConsumer<Interactable, AgentResult> callback)
+```
+
+Called when a peer's result is an error. Fires alongside `onPeerComplete` only when
+the peer result has `isError() == true`.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `callback` | receives the peer and its errored result |
 
 **Returns**
 

@@ -169,7 +169,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     UserMessage userMessage = messageConverter.toUserMessage(messages);
 
     // Build agent context with conversation history
-    AgenticContext agenticContext = buildAgentContext(userId, userMessage);
+    AgenticContext agenticContext = buildAgenticContext(userId, userMessage);
 
     // Get the last message ID for reply context
     String lastMessageId = messages.getLast().id();
@@ -334,7 +334,7 @@ public final class AIAgentProcessor<T> implements MessageProcessor {
     }
   }
 
-  private AgenticContext buildAgentContext(String userId, UserMessage currentMessage) {
+  private AgenticContext buildAgenticContext(String userId, UserMessage currentMessage) {
     if (historyStore == null) {
       // No history - just use current message
       return AgenticContext.create().addMessage(currentMessage);

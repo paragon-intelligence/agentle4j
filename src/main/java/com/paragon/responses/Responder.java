@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Core class for sending requests to the Responses API.
  *
- * <p>Uses a synchronous-first API design that is optimized for Java 21+ virtual threads. All
+ * <p>Uses a synchronous-first API design that is optimized for Java 25+ virtual threads. All
  * blocking I/O operations are virtual-thread-friendly, allowing thousands of concurrent requests
  * without consuming platform threads.
  *
@@ -565,8 +565,7 @@ public class Responder {
    *
    * ParsedResponse<Person> parsed = responder.respond(payload)
    *     .onTextDelta(System.out::print)
-   *     .toParsedFuture()
-   *     .get();
+   *     .getParsed();
    * }</pre>
    *
    * @param payload the structured streaming request payload

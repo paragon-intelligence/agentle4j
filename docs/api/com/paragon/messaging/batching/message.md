@@ -1,23 +1,5 @@
 # :material-database: Message
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.batching.Message` &nbsp;·&nbsp; **Record**
 
 ---

@@ -1,23 +1,5 @@
 # :material-code-braces: GrafanaProcessor
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.telemetry.grafana.GrafanaProcessor` &nbsp;·&nbsp; **Class**
 
 Extends `TelemetryProcessor`
@@ -34,7 +16,7 @@ observability requirements.
 
 **See Also**
 
-- `<a href="https://grafana.com/docs/grafana-cloud/send-data/otlp/">Grafana OTLP Docs</a>`
+- `Grafana OTLP documentation: https://grafana.com/docs/grafana-cloud/send-data/otlp/`
 
 ## Methods
 
@@ -155,7 +137,7 @@ Sets the HTTP client.
 public @NonNull Builder baseUrl(@NonNull String baseUrl)
 ```
 
-Sets the Grafana OTLP base URL (e.g., https://otlp-gateway-prod-us-east-0.grafana.net/otlp).
+Sets the Grafana OTLP base URL (e.g., [https://otlp-gateway-prod-us-east-0.grafana.net/otlp](https://otlp-gateway-prod-us-east-0.grafana.net/otlp)).
 
 ---
 

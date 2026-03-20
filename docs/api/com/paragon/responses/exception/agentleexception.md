@@ -1,23 +1,5 @@
 # :material-code-braces: AgentleException
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.exception.AgentleException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`
@@ -36,13 +18,14 @@ All exceptions in the Agentle hierarchy extend this class, providing:
 Example usage:
 
 ```java
-responder.respond(payload)
-    .exceptionally(error -> {
-        if (error.getCause() instanceof AgentleException e && e.isRetryable()) {
-            // Retry logic
-        }
-        return null;
-    });
+try {
+  responder.respond(payload);
+} catch (RuntimeException error) {
+  Throwable cause = error.getCause() != null ? error.getCause() : error;
+  if (cause instanceof AgentleException e && e.isRetryable()) {
+    // Retry logic
+  }
+}
 ```
 
 ## Methods

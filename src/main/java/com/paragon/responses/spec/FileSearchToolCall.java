@@ -6,9 +6,8 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The results of a file search tool call. See the <a
- * href="https://platform.openai.com/docs/guides/tools-file-search">file search guide</a> for more
- * information.
+ * The results of a file search tool call. See the file search guide for more information:
+ * https://platform.openai.com/docs/guides/tools-file-search
  */
 public final class FileSearchToolCall extends ToolCall implements Item, ResponseOutput {
   private final @NonNull List<String> queries;

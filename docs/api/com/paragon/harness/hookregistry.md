@@ -1,39 +1,37 @@
 # :material-code-braces: HookRegistry
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.harness.HookRegistry` &nbsp;·&nbsp; **Class**
 
 ---
 
-Ordered registry of `AgentHook` instances dispatched around agent lifecycle events.
+Ordered registry of `AgentHook` instances executed around agent lifecycle events.
 
-Hooks are invoked in registration order for `before` events and in reverse order for `after` events (stack semantics). Hook failures are caught and logged but never propagate — harness infrastructure cannot break agent functionality.
+Hooks are invoked in registration order for `before` events and in reverse order
+for `after` events (stack semantics).
+
+Hook failures are caught and logged but do not interrupt agent execution, ensuring
+that harness infrastructure never breaks agent functionality.
+
+Example:
+
+```java
+HookRegistry hooks = HookRegistry.create()
+    .add(new LoggingHook())
+    .add(new CostTrackingHook())
+    .add(new RateLimitingHook(100));
+// Wire into agent via Harness builder or directly:
+Agent agent = Agent.builder()
+    .hookRegistry(hooks)
+    .build();
+```
 
 **See Also**
 
 - `AgentHook`
-- `Harness`
 
 *Since: 1.0*
 
-## Factory Methods
+## Methods
 
 ### `create`
 
@@ -45,7 +43,7 @@ Creates an empty registry.
 
 ---
 
-### `of(AgentHook...)`
+### `of`
 
 ```java
 public static @NonNull HookRegistry of(@NonNull AgentHook... hooks)
@@ -53,7 +51,7 @@ public static @NonNull HookRegistry of(@NonNull AgentHook... hooks)
 
 Creates a registry pre-populated with the given hooks.
 
-## Methods
+---
 
 ### `add`
 
@@ -61,7 +59,37 @@ Creates a registry pre-populated with the given hooks.
 public @NonNull HookRegistry add(@NonNull AgentHook hook)
 ```
 
-Adds a hook to the registry. Returns `this` for chaining.
+Adds a hook to the registry.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `hook` | the hook to add |
+
+**Returns**
+
+this registry (for chaining)
+
+---
+
+### `size`
+
+```java
+public int size()
+```
+
+Returns the number of registered hooks.
+
+---
+
+### `isEmpty`
+
+```java
+public boolean isEmpty()
+```
+
+Returns true if no hooks are registered.
 
 ---
 
@@ -71,7 +99,7 @@ Adds a hook to the registry. Returns `this` for chaining.
 public void fireBeforeRun(@NonNull AgenticContext context)
 ```
 
-Dispatches `beforeRun` to all hooks in registration order.
+Dispatches `AgentHook.beforeRun` to all hooks in order.
 
 ---
 
@@ -81,7 +109,7 @@ Dispatches `beforeRun` to all hooks in registration order.
 public void fireAfterRun(@NonNull AgentResult result, @NonNull AgenticContext context)
 ```
 
-Dispatches `afterRun` to all hooks in reverse order.
+Dispatches `AgentHook.afterRun` to all hooks in reverse order.
 
 ---
 
@@ -91,7 +119,7 @@ Dispatches `afterRun` to all hooks in reverse order.
 public void fireBeforeToolCall(@NonNull FunctionToolCall call, @NonNull AgenticContext context)
 ```
 
-Dispatches `beforeToolCall` to all hooks in registration order.
+Dispatches `AgentHook.beforeToolCall` to all hooks in order.
 
 ---
 
@@ -99,28 +127,9 @@ Dispatches `beforeToolCall` to all hooks in registration order.
 
 ```java
 public void fireAfterToolCall(
-    @NonNull FunctionToolCall call,
-    @NonNull ToolExecution execution,
-    @NonNull AgenticContext context)
+      @NonNull FunctionToolCall call,
+      @NonNull ToolExecution execution,
+      @NonNull AgenticContext context)
 ```
 
-Dispatches `afterToolCall` to all hooks in reverse order.
-
-## Integration with Agent
-
-```java
-HookRegistry hooks = HookRegistry.create()
-    .add(new LoggingHook())
-    .add(new CostTrackingHook())
-    .add(new AlertingHook());
-
-Agent agent = Agent.builder()
-    .name("Assistant")
-    .hookRegistry(hooks)
-    .build();
-```
-
-`Agent.Builder.hookRegistry(HookRegistry)` wires the registry into the agent's agentic loop. Hooks fire at:
-
-- `beforeRun` / `afterRun` — around the entire interaction
-- `beforeToolCall` / `afterToolCall` — around each individual tool invocation
+Dispatches `AgentHook.afterToolCall` to all hooks in reverse order.

@@ -1,23 +1,5 @@
 # :material-code-braces: UserLocation
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.UserLocation` &nbsp;·&nbsp; **Class**
 
 ---
@@ -36,13 +18,12 @@ public UserLocation(
       @Nullable String timezone)
 ```
 
-@param city Free text input for the city of the user, e.g. `San Francisco`.
-
 **Parameters**
 
 | Name | Description |
 |------|-------------|
-| `country` | The two-letter ISO country code of the user, e.g. US. |
+| `city` | Free text input for the city of the user, e.g. `San Francisco`. |
+| `country` | The two-letter ISO country code of the user, e.g. US. See [https://en.wikipedia.org/wiki/ISO_3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) |
 | `region` | Free text input for the region of the user, e.g. `California`. |
-| `timezone` | The IANA timezone of the user, e.g. `America/Los_Angeles`. |
+| `timezone` | The IANA timezone of the user, e.g. `America/Los_Angeles`. See [https://timeapi.io/documentation/iana-timezones](https://timeapi.io/documentation/iana-timezones) |
 

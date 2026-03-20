@@ -1,23 +1,5 @@
 # :material-at: E164PhoneNumber
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.whatsapp.E164PhoneNumber` &nbsp;·&nbsp; **Annotation**
 
 ---

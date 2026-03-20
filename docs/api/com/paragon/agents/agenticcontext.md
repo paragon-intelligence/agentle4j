@@ -1,23 +1,5 @@
 # :material-code-braces: AgenticContext
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.AgenticContext` &nbsp;·&nbsp; **Class**
 
 ---
@@ -31,14 +13,14 @@ This is the "short-term memory" for an agent - it tracks:
 - Tool call results
 - Custom user-defined state via key-value store
 
-AgentContext is designed to be passed per-run, making the `Agent` thread-safe and
+AgenticContext is designed to be passed per-run, making the `Agent` thread-safe and
 reusable across multiple conversations.
 
 ### Usage Example
 
 ```java
 // Create a fresh context for a new conversation
-AgentContext context = AgentContext.create();
+AgenticContext context = AgenticContext.create();
 // First interaction
 agent.interact("Hi, I need help with my order", context);
 // Second interaction (remembers first)
@@ -62,11 +44,30 @@ String orderNum = (String) context.getState("orderNumber");
 public static @NonNull AgenticContext create()
 ```
 
-Creates a new, empty AgentContext.
+Creates a new, empty AgenticContext.
 
 **Returns**
 
 a fresh context with no history or state
+
+---
+
+### `fromJson`
+
+```java
+static AgenticContext fromJson(
+      @JsonProperty("history") @Nullable List<ResponseInputItem> history,
+      @JsonProperty("state") @Nullable Map<String, Object> state,
+      @JsonProperty("turn_count") int turnCount,
+      @JsonProperty("parent_trace_id") @Nullable String parentTraceId,
+      @JsonProperty("parent_span_id") @Nullable String parentSpanId,
+      @JsonProperty("request_id") @Nullable String requestId)
+```
+
+Jackson deserialization entry point.
+
+State map values are deserialized as standard Jackson types: JSON objects become `java.util.LinkedHashMap`, arrays become `java.util.ArrayList`, and primitives map to
+their Java equivalents. For full type fidelity with custom objects, use `mapper.convertValue(ctx.getState("key").orElseThrow(), MyType.class)`.
 
 ---
 
@@ -77,7 +78,7 @@ public static @NonNull AgenticContext withHistory(
       @NonNull List<ResponseInputItem> initialHistory)
 ```
 
-Creates an AgentContext pre-populated with conversation history.
+Creates an AgenticContext pre-populated with conversation history.
 
 Useful for resuming a previous conversation or providing initial context.
 

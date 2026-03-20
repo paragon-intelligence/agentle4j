@@ -1594,15 +1594,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         String userInput = message.getPayload();
-        
-        agent.chatAsync(userInput)
-            .thenAccept(result -> {
-                try {
-                    session.sendMessage(new TextMessage(result.output()));
-                } catch (Exception e) {
-                    // Log error
-                }
-            });
+
+        Thread.startVirtualThread(() -> {
+            try {
+                String response = agent.chat(userInput);
+                session.sendMessage(new TextMessage(response));
+            } catch (Exception e) {
+                // Log error
+            }
+        });
     }
 }
 ```
@@ -1620,16 +1620,16 @@ import org.springframework.http.ResponseEntity;
 @RestControllerAdvice
 public class AIExceptionHandler {
 
-    @ExceptionHandler(CompletionException.class)
-    public ResponseEntity<ErrorResponse> handleAIError(CompletionException e) {
-        Throwable cause = e.getCause();
-        
-        if (cause.getMessage().contains("429")) {
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleAIError(RuntimeException e) {
+        String message = e.getMessage() != null ? e.getMessage() : "";
+
+        if (message.contains("429")) {
             return ResponseEntity.status(429)
                 .body(new ErrorResponse("Rate limited. Please try again later."));
         }
-        
-        if (cause.getMessage().contains("401")) {
+
+        if (message.contains("401")) {
             return ResponseEntity.status(500)
                 .body(new ErrorResponse("AI service configuration error."));
         }
@@ -1769,7 +1769,7 @@ agentle4j:
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.8.3</version>
+    <version>0.10.0</version>
 </dependency>
 ```
 
@@ -1784,7 +1784,7 @@ agentle4j:
 | **Data Extraction** | Structured output endpoint |
 | **Document Analysis** | Async processing with queues |
 | **Multi-tenant SaaS** | Per-request Agent with tenant context |
-| **Batch Processing** | @Async + CompletableFuture |
+| **Batch Processing** | Virtual threads + queues |
 
 ---
 
@@ -2101,9 +2101,10 @@ public class AIJobConsumer {
         jobStore.save(new JobPublisherController.Job(
             jobId, JobPublisherController.JobStatus.RUNNING, null, null));
 
-        // Execute AI task - fully async
-        analysisAgent.interact(message.input())
-            .thenAccept(result -> {
+        Thread.startVirtualThread(() -> {
+            try {
+                AgentResult result = analysisAgent.interact(message.input());
+
                 JobPublisherController.Job completedJob;
                 if (result.isSuccess()) {
                     completedJob = new JobPublisherController.Job(
@@ -2116,24 +2117,21 @@ public class AIJobConsumer {
 
                 jobStore.save(completedJob);
 
-                // Notify via callback if provided
                 if (message.callbackUrl() != null && !message.callbackUrl().isEmpty()) {
                     notifyCallback(message.callbackUrl(), completedJob);
                 }
 
-                // Publish result to result queue
                 rabbitTemplate.convertAndSend(RabbitMQConfig.RESULT_QUEUE, completedJob);
-            })
-            .exceptionally(e -> {
+            } catch (Exception e) {
                 JobPublisherController.Job failedJob = new JobPublisherController.Job(
                     jobId, JobPublisherController.JobStatus.FAILED, null, e.getMessage());
                 jobStore.save(failedJob);
-                
+
                 if (message.callbackUrl() != null) {
                     notifyCallback(message.callbackUrl(), failedJob);
                 }
-                return null;
-            });
+            }
+        });
     }
 
     private void notifyCallback(String callbackUrl, JobPublisherController.Job job) {
@@ -2175,28 +2173,26 @@ public class WebhookJobController {
         jobStore.save(new Job(jobId, JobStatus.PENDING, null));
         jobStore.save(new Job(jobId, JobStatus.RUNNING, null));
 
-        // Fully async - no executor needed, CompletableFuture handles it
-        agent.interact(request.input())
-            .thenAccept(result -> {
+        Thread.startVirtualThread(() -> {
+            try {
+                AgentResult result = agent.interact(request.input());
                 Job completedJob = result.isSuccess()
                     ? new Job(jobId, JobStatus.COMPLETED, result.output())
                     : new Job(jobId, JobStatus.FAILED, result.error().getMessage());
-                
+
                 jobStore.save(completedJob);
 
-                // Send webhook notification
                 if (request.webhookUrl() != null) {
                     sendWebhook(request.webhookUrl(), completedJob, request.webhookSecret());
                 }
-            })
-            .exceptionally(e -> {
+            } catch (Exception e) {
                 Job failed = new Job(jobId, JobStatus.FAILED, e.getMessage());
                 jobStore.save(failed);
                 if (request.webhookUrl() != null) {
                     sendWebhook(request.webhookUrl(), failed, request.webhookSecret());
                 }
-                return null;
-            });
+            }
+        });
 
         return new JobResponse(jobId, JobStatus.PENDING);
     }
@@ -2372,9 +2368,9 @@ public class AIJobService {
         job.setStartedAt(Instant.now());
         jobRepository.save(job);
 
-        // Fully async processing
-        agent.interact(job.getInput())
-            .thenAccept(result -> {
+        Thread.startVirtualThread(() -> {
+            try {
+                AgentResult result = agent.interact(job.getInput());
                 if (result.isSuccess()) {
                     job.setStatus(AIJob.JobStatus.COMPLETED);
                     job.setResult(result.output());
@@ -2382,22 +2378,20 @@ public class AIJobService {
                     job.setStatus(AIJob.JobStatus.FAILED);
                     job.setError(result.error() != null ? result.error().getMessage() : "Unknown error");
                 }
-                
+
                 job.setCompletedAt(Instant.now());
                 jobRepository.save(job);
 
-                // Send webhook notification
                 if (job.getWebhookUrl() != null) {
                     sendWebhook(job);
                 }
-            })
-            .exceptionally(e -> {
+            } catch (Exception e) {
                 job.setStatus(AIJob.JobStatus.FAILED);
                 job.setError(e.getMessage());
                 job.setCompletedAt(Instant.now());
                 jobRepository.save(job);
-                return null;
-            });
+            }
+        });
     }
 
     private void sendWebhook(AIJob job) {
@@ -2445,11 +2439,10 @@ public class ApprovalJobService {
         job.setCreatedAt(Instant.now());
         jobRepository.save(job);
 
-        // Fully async - may pause for approval
-        agent.interact(input)
-            .thenAccept(result -> {
+        Thread.startVirtualThread(() -> {
+            try {
+                AgentResult result = agent.interact(input);
                 if (result.isPaused()) {
-                    // Store paused state for later resumption
                     job.setStatus(AIJob.JobStatus.AWAITING_APPROVAL);
                     job.setPausedState(serialize(result.pausedState()));
                     job.setPendingToolName(result.pausedState().pendingToolCall().name());
@@ -2462,13 +2455,12 @@ public class ApprovalJobService {
                     job.setError(result.error().getMessage());
                 }
                 jobRepository.save(job);
-            })
-            .exceptionally(e -> {
+            } catch (Exception e) {
                 job.setStatus(AIJob.JobStatus.FAILED);
                 job.setError(e.getMessage());
                 jobRepository.save(job);
-                return null;
-            });
+            }
+        });
 
         return job;  // Returns immediately with PENDING status
     }
@@ -2539,17 +2531,17 @@ public class ApprovalJobService {
     Set appropriate timeouts for AI operations to prevent hung jobs:
     
     ```java
-    agent.interact(input)
-        .orTimeout(5, TimeUnit.MINUTES)
-        .thenAccept(result -> {
+    try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+        Future<AgentResult> future = executor.submit(() -> agent.interact(input));
+
+        try {
+            AgentResult result = future.get(5, TimeUnit.MINUTES);
             // Handle success
-        })
-        .exceptionally(e -> {
-            if (e.getCause() instanceof TimeoutException) {
-                // Handle timeout specifically
-            }
-            return null;
-        });
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            // Handle timeout specifically
+        }
+    }
     ```
 
 !!! note "Scaling Workers"

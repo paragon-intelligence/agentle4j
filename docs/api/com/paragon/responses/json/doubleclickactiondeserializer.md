@@ -1,26 +1,8 @@
 # :material-code-braces: DoubleClickActionDeserializer
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.json.DoubleClickActionDeserializer` &nbsp;·&nbsp; **Class**
 
-Extends `JsonDeserializer<DoubleClickAction>`
+Extends `ValueDeserializer<DoubleClickAction>`
 
 ---
 

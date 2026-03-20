@@ -17,17 +17,14 @@ import org.jspecify.annotations.Nullable;
  * <p>Usage:
  *
  * <pre>{@code
- * // Pause when tool needs approval
- * AgentRunState state = agent.interact("Do something")
- *     .onToolCallPending((call, pause) -> {
- *         AgentRunState pausedState = pause.pauseForApproval(call);
- *         saveToDatabase(pausedState);  // Persist for later
- *     })
- *     .start().join();
+ * // Pause when a streamed run needs approval
+ * agent.asStreaming().interact("Do something")
+ *     .onPause(pausedState -> saveToDatabase(pausedState))
+ *     .start();
  *
  * // Resume days later
  * AgentRunState savedState = loadFromDatabase();
- * savedState.approveToolCall(toolCallOutput);  // Or rejectToolCall()
+ * savedState.approveToolCall("{\"approved\":true}");  // Or rejectToolCall()
  * AgentResult result = agent.resume(savedState);
  * }</pre>
  *

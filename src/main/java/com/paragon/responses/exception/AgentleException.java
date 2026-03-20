@@ -17,13 +17,14 @@ import org.jspecify.annotations.Nullable;
  * <p>Example usage:
  *
  * <pre>{@code
- * responder.respond(payload)
- *     .exceptionally(error -> {
- *         if (error.getCause() instanceof AgentleException e && e.isRetryable()) {
- *             // Retry logic
- *         }
- *         return null;
- *     });
+ * try {
+ *   responder.respond(payload);
+ * } catch (RuntimeException error) {
+ *   Throwable cause = error.getCause() != null ? error.getCause() : error;
+ *   if (cause instanceof AgentleException e && e.isRetryable()) {
+ *     // Retry logic
+ *   }
+ * }
  * }</pre>
  */
 public class AgentleException extends RuntimeException {

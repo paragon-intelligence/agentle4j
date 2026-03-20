@@ -1,23 +1,5 @@
 # :material-code-braces: StreamableHttpMcpClient
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.mcp.StreamableHttpMcpClient` &nbsp;·&nbsp; **Class**
 
 Extends `McpClient`
@@ -39,7 +21,7 @@ supports:
 
 ```java
 var mcp = StreamableHttpMcpClient.builder()
-    .serverUrl("https://mcp.example.com/api")
+    .serverUrl("[https://mcp.example.com/api"](https://mcp.example.com/api"))
     .headerProvider(McpHeaderProvider.bearer(() -> authService.getToken()))
     .build();
 mcp.connect();

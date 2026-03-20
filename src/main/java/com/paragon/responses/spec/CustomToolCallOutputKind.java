@@ -9,9 +9,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  *
  * <ul>
  *   <li>{@link Text} - A text input to the model.
- *   <li>{@link Image} - An image input to the model. Learn about <a
- *       href="https://platform.openai.com/docs/guides/images-vision?api-mode=responses">image
- *       inputs.</a>
+ *   <li>{@link Image} - An image input to the model. Learn about image inputs at
+ *       https://platform.openai.com/docs/guides/images-vision?api-mode=responses
  *   <li>{@link File} - A file input to the model.
  * </ul>
  */

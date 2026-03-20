@@ -1,23 +1,5 @@
 # :material-database: ErrorHandlingStrategy
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.error.ErrorHandlingStrategy` &nbsp;·&nbsp; **Record**
 
 ---

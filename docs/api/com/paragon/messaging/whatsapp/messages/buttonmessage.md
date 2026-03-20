@@ -1,23 +1,5 @@
 # :material-database: ButtonMessage
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.whatsapp.messages.ButtonMessage` &nbsp;·&nbsp; **Record**
 
 ---

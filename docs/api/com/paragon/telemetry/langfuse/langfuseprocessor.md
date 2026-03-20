@@ -1,23 +1,5 @@
 # :material-code-braces: LangfuseProcessor
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.telemetry.langfuse.LangfuseProcessor` &nbsp;·&nbsp; **Class**
 
 Extends `TelemetryProcessor`
@@ -33,7 +15,7 @@ Authentication uses HTTP Basic Auth with public key as username and secret key a
 
 **See Also**
 
-- `<a href="https://langfuse.com/docs/integrations/opentelemetry">Langfuse OpenTelemetry Docs</a>`
+- `Langfuse OpenTelemetry documentation: https://langfuse.com/docs/integrations/opentelemetry`
 
 ## Methods
 

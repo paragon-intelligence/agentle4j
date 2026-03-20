@@ -1,23 +1,5 @@
 # :material-code-braces: HierarchicalAgents
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.HierarchicalAgents` &nbsp;·&nbsp; **Class**
 
 Implements `Interactable`
@@ -38,7 +20,7 @@ Key characteristics:
 - Escalation when workers cannot complete tasks
 - Distributed decision-making within defined boundaries
 
-**Virtual Thread Design:** Uses synchronous API optimized for Java 21+ virtual threads.
+**Virtual Thread Design:** Uses a synchronous API optimized for Java 25+ virtual threads.
 Blocking calls are cheap and efficient with virtual threads.
 
 ### Usage Example
@@ -141,6 +123,20 @@ the department result
 | Type | Condition |
 |------|-----------|
 | `IllegalArgumentException` | if department doesn't exist |
+
+---
+
+### `asStreaming`
+
+```java
+public Interactable.@NonNull Streaming asStreaming()
+```
+
+Returns a streaming view of this hierarchy.
+
+**Returns**
+
+an `Interactable.Streaming` that delegates to the root supervisor's streaming
 
 ---
 
@@ -325,6 +321,20 @@ Builds the type-safe structured hierarchy.
 **Returns**
 
 the configured Structured hierarchy
+
+---
+
+### `asStreaming`
+
+```java
+public Interactable.@NonNull Streaming asStreaming()
+```
+
+Returns a streaming view of the underlying hierarchy.
+
+**Returns**
+
+an `Interactable.Streaming` that delegates to the hierarchy's streaming
 
 ---
 

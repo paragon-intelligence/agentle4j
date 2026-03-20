@@ -1,23 +1,5 @@
 # Package `com.paragon.messaging.whatsapp.payload`
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ---
 
 ## :material-code-braces: Classs
@@ -52,4 +34,4 @@
 | [`ErrorData`](errordata.md) | Represents error data in WhatsApp API responses |
 | [`MediaContent`](mediacontent.md) | Media content payload for images, videos, audio, documents, and stickers |
 | [`MessageContext`](messagecontext.md) | Context information about a message that is being replied to or quoted |
-| [`Pricing`](pricing.md) | @param category marketing, utility, authentication, service |
+| [`Pricing`](pricing.md) |  |

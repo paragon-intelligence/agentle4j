@@ -1,23 +1,5 @@
 # :material-code-braces: AgentStream
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.AgentStream` &nbsp;·&nbsp; **Class**
 
 ---
@@ -106,6 +88,16 @@ static @NonNull AgentStream completed(@NonNull AgentResult completedResult)
 ```
 
 Creates a pre-completed stream that immediately returns the given result.
+
+---
+
+### `withTrace`
+
+```java
+AgentStream withTrace(@Nullable TraceMetadata trace)
+```
+
+Sets the trace metadata. Package-private for Agent.
 
 ---
 
@@ -335,19 +327,84 @@ this for chaining
 
 ---
 
-### `start`
+### `onClientSideTool`
 
 ```java
-public @NonNull AgentResult start()
+public @NonNull AgentStream onClientSideTool(@NonNull Consumer<FunctionToolCall> handler)
 ```
 
-Starts the streaming agentic loop. Blocks until completion.
+Called when a client-side only tool (`stopsLoop = true`) is detected.
 
-On virtual threads, blocking is efficient and does not consume platform threads.
+The tool call is NOT persisted to history and NOT executed. The loop exits immediately
+after this callback fires, followed by `onComplete` with the `clientSideTool`
+result.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `handler` | receives the FunctionToolCall that triggered the exit |
 
 **Returns**
 
-the final AgentResult
+this for chaining
+
+---
+
+### `onPartialJson`
+
+```java
+public @NonNull AgentStream onPartialJson(@NonNull Consumer<Map<String, Object>> handler)
+```
+
+Called for each text delta with partially-parsed JSON fields (map form). Only fires when the
+agent has `outputType` configured. Enables real-time UI updates during structured output
+streaming.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `handler` | receives partially-parsed JSON as a Map |
+
+**Returns**
+
+this for chaining
+
+---
+
+### `onReasoningDelta`
+
+```java
+public @NonNull AgentStream onReasoningDelta(@NonNull Consumer<String> handler)
+```
+
+Called for each reasoning token delta streamed by the model (e.g., o-series / extended
+thinking models). Only fires when the model emits `response.reasoning_text.delta` SSE
+events.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `handler` | receives reasoning token chunks |
+
+**Returns**
+
+this for chaining
+
+---
+
+### `start`
+
+```java
+public void start()
+```
+
+Starts the streaming agentic loop on a virtual thread. Non-blocking — returns immediately.
+
+Callbacks (`onComplete`, `onError`, etc.) fire asynchronously on the virtual
+thread. Use `.startBlocking()` if you need to wait for the result inline.
 
 ---
 

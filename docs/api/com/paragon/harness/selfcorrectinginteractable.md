@@ -1,96 +1,181 @@
 # :material-code-braces: SelfCorrectingInteractable
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.harness.SelfCorrectingInteractable` &nbsp;·&nbsp; **Class**
 
 Implements `Interactable`
 
 ---
 
-Decorator that wraps any `Interactable` with a self-correction retry loop.
+Decorator that wraps any `Interactable` with a self-correction loop.
 
-When the wrapped agent produces a result that satisfies the `retryOn` predicate (e.g., an error or guardrail failure), this decorator:
+When the wrapped agent produces a result that satisfies the `retryOn` predicate
+(e.g., an error or guardrail failure), this decorator:
 
-1. Formats the error into the configured feedback template
-2. Injects the feedback as a user message into the conversation context
-3. Re-runs the agent (up to `maxRetries` times)
-4. Returns the final result (successful or last failure)
+  
+- Formats the error into the configured feedback template
+- Injects the feedback as a user message into the conversation context
+- Re-runs the agent (up to `maxRetries` times)
+- Returns the final result (successful or last failure)
 
-LangChain benchmarks show this pattern provides the largest accuracy improvement of any harness feature by closing the feedback loop within a single session.
+LangChain data shows this pattern gives the largest benchmark improvements of any
+harness feature, because it closes the feedback loop within a single session.
+
+Example:
+
+```java
+Interactable agent = Agent.builder()
+    .name("CodeWriter")
+    .addOutputGuardrail(syntaxChecker)
+    .build();
+SelfCorrectionConfig config = SelfCorrectionConfig.builder()
+    .maxRetries(3)
+    .retryOn(result -> result.isError())
+    .build();
+Interactable correcting = SelfCorrectingInteractable.wrap(agent, config);
+AgentResult result = correcting.interact("Write a Python function that sorts a list");
+```
 
 **See Also**
 
 - `SelfCorrectionConfig`
-- `Harness`
 
 *Since: 1.0*
 
-## Factory Methods
+## Methods
 
-### `wrap(Interactable, SelfCorrectionConfig)`
+### `wrap`
 
 ```java
 public static @NonNull SelfCorrectingInteractable wrap(
-    @NonNull Interactable agent,
-    @NonNull SelfCorrectionConfig config)
+      @NonNull Interactable agent, @NonNull SelfCorrectionConfig config)
 ```
 
 Wraps an interactable with the given self-correction configuration.
 
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `agent` | the agent to wrap |
+| `config` | the self-correction configuration |
+
+**Returns**
+
+a self-correcting interactable
+
 ---
 
-### `wrap(Interactable)`
+### `wrap`
 
 ```java
 public static @NonNull SelfCorrectingInteractable wrap(@NonNull Interactable agent)
 ```
 
-Wraps an interactable with default settings: 3 retries, retry on any error.
+Wraps an interactable with default self-correction configuration (3 retries, retry on error).
 
-## Usage
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `agent` | the agent to wrap |
+
+**Returns**
+
+a self-correcting interactable
+
+---
+
+### `onRetryStart`
 
 ```java
-Interactable agent = Agent.builder()
-    .name("CodeWriter")
-    .addOutputGuardrail((output, ctx) ->
-        output.contains("class ") ? GuardrailResult.passed() : GuardrailResult.failed("No class found"))
-    .build();
-
-SelfCorrectionConfig config = SelfCorrectionConfig.builder()
-    .maxRetries(3)
-    .retryOn(result -> result.isError())
-    .feedbackTemplate("""
-        Your previous attempt failed:
-
-        {error}
-
-        Please fix the issue and try again.
-        """)
-    .build();
-
-Interactable correcting = SelfCorrectingInteractable.wrap(agent, config);
-AgentResult result = correcting.interact("Write a Java class for binary search");
+public @NonNull SelfCorrectingInteractable onRetryStart(@NonNull RetryStartHandler handler)
 ```
 
-## Notes
+Called before each retry attempt, with the attempt number, error message, and failed result.
 
-- Streaming (`interactStream`) delegates directly to the wrapped agent — self-correction is a blocking concept
-- The name of the wrapped interactable is suffixed with `[SelfCorrecting]`
-- Each retry adds one user message to the conversation context; the agent sees the full correction history
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `handler` | receives (attempt, errorMessage, failedResult) |
+
+**Returns**
+
+this instance for chaining
+
+---
+
+### `onRetryComplete`
+
+```java
+public @NonNull SelfCorrectingInteractable onRetryComplete(
+      @NonNull BiConsumer<Integer, AgentResult> handler)
+```
+
+Called after each retry attempt completes, with the attempt number and new result.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `handler` | receives (attempt, newResult) |
+
+**Returns**
+
+this instance for chaining
+
+---
+
+### `onMaxRetriesExhausted`
+
+```java
+public @NonNull SelfCorrectingInteractable onMaxRetriesExhausted(
+      @NonNull Consumer<AgentResult> handler)
+```
+
+Called when all retries are exhausted and the result still fails the retry predicate.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `handler` | receives the final failed result |
+
+**Returns**
+
+this instance for chaining
+
+---
+
+### `asStreaming`
+
+```java
+public com.paragon.agents.Interactable.@NonNull Streaming asStreaming()
+```
+
+Returns a streaming view backed by the delegate's streaming.
+
+Self-correction is a blocking concept; streaming delegates directly to the wrapped agent.
+
+**Returns**
+
+an `com.paragon.agents.Interactable.Streaming` backed by the delegate
+
+---
+
+### `onRetry`
+
+```java
+void onRetry(int attempt, @NonNull String error, @NonNull AgentResult failed)
+```
+
+Called at the start of each retry attempt.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `attempt` | the 1-indexed attempt number |
+| `error` | the error message extracted from the failed result |
+| `failed` | the failed `AgentResult` that triggered the retry |
+

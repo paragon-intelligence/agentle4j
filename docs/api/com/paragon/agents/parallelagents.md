@@ -1,23 +1,5 @@
 # :material-code-braces: ParallelAgents
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.ParallelAgents` &nbsp;·&nbsp; **Class**
 
 Implements `Interactable`
@@ -29,7 +11,7 @@ Orchestrates parallel execution of multiple agents.
 From Chapter 7 (Multi-Agent Collaboration): "Multiple agents work on different parts of a
 problem simultaneously, and their results are later combined."
 
-**Virtual Thread Design:** Uses Java 21+ structured concurrency for parallel execution. All
+**Virtual Thread Design:** Uses Java 25 structured concurrency for parallel execution. All
 agents run on virtual threads, making parallel execution cheap and efficient.
 
 **Trace Correlation:** All parallel agents share the same parent traceId, enabling
@@ -243,7 +225,7 @@ Runs all agents concurrently using an existing context.
 Each agent receives a copy of the context to prevent interference. All parallel agents share
 the same parent traceId for trace correlation.
 
-Uses structured concurrency (Java 21+) to run all agents on virtual threads.
+Uses Java 25 structured concurrency to run all agents on virtual threads.
 
 This is the core method. All other runAll overloads delegate here.
 
@@ -696,23 +678,17 @@ public @NonNull AgentResult interact(
 
 ---
 
-### `interactStream`
+### `asStreaming`
 
 ```java
-public @NonNull AgentStream interactStream(@NonNull AgenticContext context)
+public Interactable.@NonNull Streaming asStreaming()
 ```
 
-{@inheritDoc}
+Returns a streaming view of this parallel orchestrator.
 
-Streams and returns when the first agent completes. For streaming all agents, use `.runAllStream(String)` with the explicit ParallelStream return type.
+Streams the first member; for streaming all agents, use `.runAllStream(String)`.
 
----
+**Returns**
 
-### `interactStream`
+an `Interactable.Streaming` backed by this orchestrator's streaming logic
 
-```java
-public @NonNull AgentStream interactStream(
-      @NonNull AgenticContext context, @Nullable TraceMetadata trace)
-```
-
-{@inheritDoc} Streams first member; trace propagated through peer interactions.

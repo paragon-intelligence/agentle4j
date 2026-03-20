@@ -1,23 +1,5 @@
 # Package `com.paragon.broadcasting`
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ---
 
 ## :material-approximately-equal: Interfaces

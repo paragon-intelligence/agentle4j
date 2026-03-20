@@ -1,23 +1,5 @@
 # :material-code-braces: RouterAgent
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.RouterAgent` &nbsp;·&nbsp; **Class**
 
 Implements `Interactable`
@@ -29,8 +11,8 @@ A specialized agent for routing inputs to appropriate target agents.
 Unlike general agents with complex instructions, RouterAgent focuses purely on classification
 and routing, avoiding the noise of full agent instructions.
 
-**Virtual Thread Design:** Uses synchronous API optimized for Java 21+ virtual threads.
-Blocking calls are cheap and efficient with virtual threads.
+**Virtual Thread Design:** Uses a synchronous API optimized for Java 25+ virtual threads.
+Blocking calls are cheap and efficient when each request runs on its own virtual thread.
 
 ### Usage Example
 
@@ -45,14 +27,18 @@ RouterAgent router = RouterAgent.builder()
     .addRoute(techSupport, "technical issues, bugs, errors, not working")
     .addRoute(salesAgent, "pricing, new features, demos, upgrades")
     .build();
-// Route and execute - blocking, uses virtual threads
-AgentResult result = router.route("I have a question about my invoice");
-System.out.println("Handled by: " + result.handoffTarget().name());
+// Route and execute using the last user message stored in the context
+AgenticContext context = AgenticContext.create()
+    .addMessage(Message.user("I have a question about my invoice"));
+AgentResult result = router.interact(context);
+System.out.println("Handled by: " + result.agentName());
 // Or just classify without executing
 Optional agent = router.classify("My app keeps crashing");
 System.out.println("Would route to: " + agent.map(Agent::name).orElse("none"));
 // Streaming support
-router.routeStream("Help me with billing")
+AgenticContext streamContext = AgenticContext.create()
+    .addMessage(Message.user("Help me with billing"));
+router.routeStream(streamContext)
     .onTextDelta(System.out::print)
     .onComplete(result -> System.out.println("\nDone!"))
     .start();
@@ -83,34 +69,6 @@ public @NonNull String name()
 ```
 
 {@inheritDoc}
-
----
-
-### `classify`
-
-```java
-/**
-   * Classifies the input and returns the selected route target without executing.
-   *
-   * <p>Useful when you need to know which target would handle the input before committing.
-   *
-   * @param input the user input to classify
-   * @return Optional containing the selected Interactable, or empty if no match and no fallback
-   */
-  public @NonNull Optional<Interactable> classify(@NonNull String input)
-```
-
-Routes the input to the most appropriate agent and executes it.
-
-**Parameters**
-
-| Name | Description |
-|------|-------------|
-| `input` | the user input to route |
-
-**Returns**
-
-the result from the selected agent
 
 ---
 
@@ -189,6 +147,20 @@ Creates a RouterStream for streaming route execution with callback support.
 **Returns**
 
 a RouterStream for processing streaming events
+
+---
+
+### `asStreaming`
+
+```java
+public Interactable.@NonNull Streaming asStreaming()
+```
+
+Returns a streaming view of this router.
+
+**Returns**
+
+an `Interactable.Streaming` that delegates to this router's streaming logic
 
 ---
 
@@ -382,6 +354,49 @@ Builds the type-safe structured router agent.
 **Returns**
 
 the configured Structured router
+
+---
+
+### `of`
+
+```java
+public static <T> RouterAgent.Structured<T> of(
+        @NonNull RouterAgent router,
+        @NonNull Class<T> outputType,
+        @NonNull ObjectMapper objectMapper)
+```
+
+Creates a `Structured` wrapper around an existing `RouterAgent`.
+
+When loading from a blueprint, prefer `InteractableBlueprint.toStructured` instead —
+it avoids the cast and works for any supported agent type.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `<T>` | the output type |
+| `router` | the router to wrap |
+| `outputType` | the class to parse the output into |
+| `objectMapper` | the ObjectMapper to use for JSON parsing |
+
+**Returns**
+
+a new `Structured` instance
+
+---
+
+### `asStreaming`
+
+```java
+public Interactable.@NonNull Streaming asStreaming()
+```
+
+Returns a streaming view of the underlying router.
+
+**Returns**
+
+an `Interactable.Streaming` that delegates to the router's streaming logic
 
 ---
 

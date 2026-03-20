@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * Extracts structured data from web pages using Playwright for rendering and an LLM for intelligent
  * data extraction.
  *
- * <p><b>Virtual Thread Design:</b> Uses synchronous API optimized for Java 21+ virtual threads.
+ * <p><b>Virtual Thread Design:</b> Uses a synchronous API optimized for Java 25+ virtual threads.
  *
  * <p>Example usage:
  *

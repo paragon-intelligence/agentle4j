@@ -24,27 +24,27 @@ import org.slf4j.LoggerFactory;
 /**
  * A streaming response wrapper for OpenAI Responses API Server-Sent Events (SSE).
  *
- * <p>Provides a fluent, callback-based API for processing streaming events. Uses Java 21+ virtual
+ * <p>Provides a fluent, callback-based API for processing streaming events. Uses Java 25+ virtual
  * threads for non-blocking async processing.
  *
  * <h2>Usage Examples:</h2>
  *
  * <pre>{@code
  * // Simple text streaming
- * responder.respondStream(payload)
+ * responder.respond(payload)
  *     .onTextDelta(System.out::print)
  *     .onComplete(response -> System.out.println("\nDone!"))
  *     .onError(Throwable::printStackTrace)
  *     .start();
  *
  * // Wait for completion (blocking)
- * Response response = responder.respondStream(payload).get();
+ * Response response = responder.respond(payload).get();
  *
  * // Collect all text (blocking)
- * String text = responder.respondStream(payload).getText();
+ * String text = responder.respond(payload).getText();
  *
  * // Structured output streaming (blocking)
- * ParsedResponse<MyClass> parsed = responder.respondStream(structuredPayload)
+ * ParsedResponse<MyClass> parsed = responder.respond(structuredPayload)
  *     .getParsed();
  * }</pre>
  *

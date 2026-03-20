@@ -72,6 +72,9 @@ _ARG_TAGS = {"param", "throws", "exception", "see", "uses", "provides"}
 _INLINE_TAG_RE = re.compile(r"\{@(\w+)\s+([^}]*)\}")
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
 _LEADING_STAR_RE = re.compile(r"^\s*\*\s?", re.MULTILINE)
+_ANCHOR_RE = re.compile(r"<a\s+[^>]*href\s*=\s*\"([^\"]+)\"[^>]*>(.*?)</a>", re.DOTALL | re.IGNORECASE)
+_BROKEN_HREF_RE = re.compile(r"(?<!<a\s)href\s*=\s*\"([^\"]+)\"\s*>", re.IGNORECASE)
+_BARE_URL_RE = re.compile(r"(?<![\[(])\bhttps?://[^\s)<]+")
 
 
 def _strip_javadoc_stars(raw: str) -> str:
@@ -110,6 +113,18 @@ def _html_to_md(text: str) -> str:
     Note: <pre> blocks are handled upstream in _convert_description before this
     function is called, so we do not process them here.
     """
+    # Normalize malformed href fragments and convert anchors before stripping tags.
+    text = _BROKEN_HREF_RE.sub(r'<a h' 'ref="\1">', text)
+
+    def anchor_repl(m: re.Match) -> str:
+        url = re.sub(r"\s+", "", m.group(1))
+        label = re.sub(r"\s+", " ", m.group(2)).strip()
+        if not label:
+            label = url
+        return f"[{label}]({url})"
+
+    text = _ANCHOR_RE.sub(anchor_repl, text)
+
     # Headings
     for i in range(6, 0, -1):
         text = re.sub(rf"<h{i}[^>]*>(.*?)</h{i}>", rf"\n{'#' * (i + 1)} \1\n", text, flags=re.DOTALL | re.IGNORECASE)
@@ -132,6 +147,8 @@ def _html_to_md(text: str) -> str:
     text = _HTML_TAG_RE.sub("", text)
     # Decode HTML entities
     text = html.unescape(text)
+    # Preserve bare URLs as clickable Markdown links.
+    text = _BARE_URL_RE.sub(lambda m: f"[{m.group(0)}]({m.group(0)})", text)
     return text
 
 
@@ -165,23 +182,36 @@ def _parse_javadoc_block(raw_comment: str) -> tuple[str, list[Tag]]:
     """
     body = _strip_javadoc_stars(raw_comment)
 
-    # Split on block tags (@param, @return …) — must be at start of a line
-    tag_split = re.split(r"\n\s*@", body)
-    description_raw = tag_split[0].strip()
+    description_lines: list[str] = []
+    tag_chunks: list[str] = []
+    current_tag: Optional[str] = None
+
+    for line in body.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("@"):
+            if current_tag is not None:
+                tag_chunks.append(current_tag)
+            current_tag = stripped[1:]
+        elif current_tag is not None:
+            continuation = stripped if stripped else ""
+            current_tag = (current_tag + ("\n" + continuation if continuation else "\n")).rstrip()
+        else:
+            description_lines.append(line)
+
+    if current_tag is not None:
+        tag_chunks.append(current_tag)
+
+    description_raw = "\n".join(description_lines).strip()
 
     tags: list[Tag] = []
-    for chunk in tag_split[1:]:
-        # chunk looks like "param foo the foo parameter\n   more text"
+    for chunk in tag_chunks:
         lines = chunk.splitlines()
         first = lines[0].strip()
-        rest = "\n".join(lines[1:]).strip()
-        full_text = (first + " " + rest).strip()
+        rest = "\n".join(line.strip() for line in lines[1:]).strip()
 
-        # Identify the tag name
         parts = first.split(None, 1)
         tag_name = parts[0].lower()
         remainder = parts[1] if len(parts) > 1 else ""
-        # Append continuation lines
         if rest:
             remainder = (remainder + " " + rest).strip()
 

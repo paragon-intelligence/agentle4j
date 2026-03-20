@@ -18,7 +18,8 @@
 
 
 
-Agentle4j provides real-time streaming using virtual threads for efficient, non-blocking I/O. This guide covers all streaming patterns.
+Agentle4j provides real-time streaming with callback-based APIs that work well with virtual
+threads. This guide covers the streaming patterns exposed by `ResponseStream` and `AgentStream`.
 
 ---
 
@@ -59,6 +60,9 @@ responder.respond(payload)
     })
     .start();
 ```
+
+`ResponseStream.start()` returns immediately and runs the stream on a virtual thread. Use
+`startBlocking()`, `get()`, `getText()`, or `getParsed()` when you need to wait inline.
 
 ### Callback Reference
 

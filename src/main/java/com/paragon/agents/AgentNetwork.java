@@ -26,7 +26,7 @@ import org.jspecify.annotations.Nullable;
  *   <li>Resilient - failure of one agent doesn't cripple the network
  * </ul>
  *
- * <p><b>Virtual Thread Design:</b> Uses synchronous API optimized for Java 21+ virtual threads.
+ * <p><b>Virtual Thread Design:</b> Uses a synchronous API optimized for Java 25+ virtual threads.
  * Blocking calls are cheap and efficient with virtual threads.
  *
  * <h2>Usage Example</h2>
@@ -214,7 +214,7 @@ public final class AgentNetwork implements Interactable {
    * <p>Unlike discuss(), broadcast() runs all agents in parallel without sequential visibility.
    * Each agent only sees the original message, not other agents' responses.
    *
-   * <p>Uses structured concurrency (Java 21+) for parallel execution.
+   * <p>Uses Java 25 structured concurrency for parallel execution.
    *
    * @param message the message to broadcast
    * @return list of contributions

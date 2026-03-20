@@ -1,47 +1,29 @@
 # :material-code-braces: ResponseStream
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.streaming.ResponseStream` &nbsp;·&nbsp; **Class**
 
 ---
 
 A streaming response wrapper for OpenAI Responses API Server-Sent Events (SSE).
 
-Provides a fluent, callback-based API for processing streaming events. Uses Java 21+ virtual
+Provides a fluent, callback-based API for processing streaming events. Uses Java 25+ virtual
 threads for non-blocking async processing.
 
 ### Usage Examples:
 
 ```java
 // Simple text streaming
-responder.respondStream(payload)
+responder.respond(payload)
     .onTextDelta(System.out::print)
     .onComplete(response -> System.out.println("\nDone!"))
     .onError(Throwable::printStackTrace)
     .start();
 // Wait for completion (blocking)
-Response response = responder.respondStream(payload).get();
+Response response = responder.respond(payload).get();
 // Collect all text (blocking)
-String text = responder.respondStream(payload).getText();
+String text = responder.respond(payload).getText();
 // Structured output streaming (blocking)
-ParsedResponse parsed = responder.respondStream(structuredPayload)
+ParsedResponse parsed = responder.respond(structuredPayload)
     .getParsed();
 ```
 
@@ -408,6 +390,30 @@ the final Response
 | Type | Condition |
 |------|-----------|
 | `RuntimeException` | if streaming fails |
+
+---
+
+### `startBlocking`
+
+```java
+public @NonNull Response startBlocking()
+```
+
+Executes streaming inline on the calling thread and returns the final Response. Unlike `.get()`, this does NOT spawn a virtual thread — the SSE loop runs directly on the caller.
+
+Use this inside loops (e.g., AgentStream's agentic loop) where spawning a thread just to
+block on it would be wasteful.
+
+**Returns**
+
+the final Response
+
+**Throws**
+
+| Type | Condition |
+|------|-----------|
+| `RuntimeException` | if streaming fails |
+| `IllegalStateException` | if already started |
 
 ---
 

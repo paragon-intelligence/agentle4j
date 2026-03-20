@@ -1,23 +1,5 @@
 # :material-database: CustomTool
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.CustomTool` &nbsp;·&nbsp; **Record**
 
 ---

@@ -1,23 +1,5 @@
 # :material-code-braces: AgentRunState
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.AgentRunState` &nbsp;·&nbsp; **Class**
 
 Implements `Serializable`
@@ -32,16 +14,13 @@ captures everything needed to resume the run later - even days later.
 Usage:
 
 ```java
-// Pause when tool needs approval
-AgentRunState state = agent.interact("Do something")
-    .onToolCallPending((call, pause) -> {
-        AgentRunState pausedState = pause.pauseForApproval(call);
-        saveToDatabase(pausedState);  // Persist for later
-    })
-    .start().join();
+// Pause when a streamed run needs approval
+agent.asStreaming().interact("Do something")
+    .onPause(pausedState -> saveToDatabase(pausedState))
+    .start();
 // Resume days later
 AgentRunState savedState = loadFromDatabase();
-savedState.approveToolCall(toolCallOutput);  // Or rejectToolCall()
+savedState.approveToolCall("{\"approved\":true}");  // Or rejectToolCall()
 AgentResult result = agent.resume(savedState);
 ```
 

@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * <p>Default configuration enables traces only. Enable metrics and logs as needed for your
  * observability requirements.
  *
- * @see <a href="https://grafana.com/docs/grafana-cloud/send-data/otlp/">Grafana OTLP Docs</a>
+ * @see Grafana OTLP documentation: https://grafana.com/docs/grafana-cloud/send-data/otlp/
  */
 public class GrafanaProcessor extends TelemetryProcessor {
 

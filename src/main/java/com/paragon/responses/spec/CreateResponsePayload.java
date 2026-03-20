@@ -55,8 +55,8 @@ public class CreateResponsePayload {
    * the model call your own custom code or use built-in tools like web search or file search to use
    * your own data as input for the model's response.
    *
-   * @param background Whether to run the model response in the
-   *     href="https://platform.openai.com/docs/guides/background">background</a>.
+   * @param background Whether to run the model response in the background. See
+   *     https://platform.openai.com/docs/guides/background
    * @param conversation The conversation that this response belongs to. Items from this
    *     conversation are prepended to input_items for this response request. Input items and output
    *     items from this response are automatically added to this conversation after this response
@@ -72,27 +72,18 @@ public class CreateResponsePayload {
    *     item outputs. This enables reasoning items to be used in multi-turn conversations when
    *     using the Responses API statelessly (like when the store parameter is set to false, or when
    *     an organization is enrolled in the zero data retention program).
-   * @param input Text, image, or file inputs to the model, used to generate a response.
-   *     <p>Learn more:
-   *     <p>
-   *     <ul>
-   *       <li><a href="https://platform.openai.com/docs/guides/text">Text inputs and outputs</a>
-   *       <li>href="https://platform.openai
-   *           .com/docs/guides/images-vision?api-mode=responses">Image inputs</a>
-   *       <li><a href="https://platform.openai.com/docs/guides/pdf-files?api-mode=responses">File
-   *           inputs</a>
-   *       <li><a href="https://platform.openai
-   *           .com/docs/guides/conversation-state?api-mode=responses">Conversation state</a>
-   *       <li><a href="https://platform.openai.com/docs/guides/function-calling">Function
-   *           calling</a>
-   *     </ul>
-   *
+   * @param input Text, image, or file inputs to the model, used to generate a response. Guides:
+   *     text https://platform.openai.com/docs/guides/text, images
+   *     https://platform.openai.com/docs/guides/images-vision?api-mode=responses, files
+   *     https://platform.openai.com/docs/guides/pdf-files?api-mode=responses, conversation state
+   *     https://platform.openai.com/docs/guides/conversation-state?api-mode=responses, function
+   *     calling https://platform.openai.com/docs/guides/function-calling
    * @param instructions When using along with previous_response_id, the instructions from a
    *     previous response will not be carried over to the next response. This makes it simple to
    *     swap out system (or developer) messages in new responses.
    * @param maxOutputTokens An upper bound for the number of tokens that can be generated for a
-   *     response, including visible output tokens and
-   *     href="https://platform.openai.com/docs/guides/reasoning">reasoning tokens.</a>
+   *     response, including visible output tokens and reasoning tokens. See
+   *     https://platform.openai.com/docs/guides/reasoning
    * @param maxToolCalls The maximum number of total calls to built-in tools that can be processed
    *     in a response. This maximum number applies across all built-in tool calls, not per
    *     individual tool. Any further attempts to call a tool by the model will be ignored.
@@ -103,25 +94,24 @@ public class CreateResponsePayload {
    *     maximum length of 512 characters.
    * @param model Model ID used to generate the response, like gpt-4o or o3. OpenAI offers a wide
    *     range of models with different capabilities, performance characteristics, and price points.
-   *     Refer to the <a href="https://openrouter.ai/models">model guide</a> to browse and compare
-   *     available models.
+   *     Refer to the model guide at https://openrouter.ai/models to browse and compare available
+   *     models.
    * @param parallelToolCalls Whether to allow the model to run tool calls in parallel.
-   * @param prompt Reference to a prompt template and its variables. <a
-   *     href="https://platform.openai
-   *     .com/docs/guides/text?api-mode=responses#reusable-prompts">Learn more</a>.
+   * @param prompt Reference to a prompt template and its variables. See
+   *     https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts
    * @param promptCacheKey Used by OpenAI to cache responses for similar requests to optimize your
-   *     cache hit rates. Replaces the user field.
-   *     href="https://platform.openai.com/docs/guides/prompt-caching">Learn more</a>.
+   *     cache hit rates. Replaces the user field. See
+   *     https://platform.openai.com/docs/guides/prompt-caching
    * @param promptCacheRetention The retention policy for the prompt cache. Set to 24h to enable
    *     extended prompt caching, which keeps cached prefixes active for longer, up to a maximum of
    *     24 hours.
-   * @param reasoning Configuration options for reasoning models. <a href="https://platform.openai
-   *     .com/docs/guides/prompt-caching#prompt-cache-retention">Learn more</a>.
+   * @param reasoning Configuration options for reasoning models. See
+   *     https://platform.openai.com/docs/guides/reasoning
    * @param safetyIdentifier A stable identifier used to help detect users of your application that
    *     may be violating OpenAI's usage policies. The IDs should be a string that uniquely
    *     identifies each user. We recommend hashing their username or email address, in order to
-   *     avoid sending us any identifying information. <a href="https://platform.openai
-   *     .com/docs/guides/safety-best-practices#safety-identifiers">Learn more</a>
+   *     avoid sending us any identifying information. See
+   *     https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers
    * @param serviceTier Specifies the processing type used for serving the request.
    *     <p>If set to 'auto', then the request will be processed with the service tier configured in
    *     the Project settings. Unless otherwise configured, the Project will use 'default'. If set
@@ -133,50 +123,35 @@ public class CreateResponsePayload {
    *     different from the value set in the parameter.
    * @param store Whether to store the generated model response for later retrieval via API.
    * @param stream If set to true, the model response data will be streamed to the client as it is
-   *     generated using <a href="https://developer.mozilla
-   *     .org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format
-   *     ">server-sent events</a>. See the
-   *     href="https://platform.openai.com/docs/api-reference/responses-streaming">Streaming section
-   *     </a> for more information.
+   *     generated using server-sent events. See
+   *     https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format
+   *     and https://platform.openai.com/docs/api-reference/responses-streaming
    * @param streamOptions Options for streaming responses. Only set this when you set stream: true.
    * @param temperature What sampling temperature to use, between 0 and 2. Higher values like 0.8
    *     will make the output more random, while lower values like 0.2 will make it more focused and
    *     deterministic. We generally recommend altering this or top_p but not both.
    * @param text Configuration options for a text response from the model. Can be plain text or
-   *     structured JSON data. Learn more:
-   *     <ul>
-   *       <li><a href="https://platform.openai.com/docs/guides/text">Text inputs and outputs</a>
-   *       <li><a href="https://platform.openai.com/docs/guides/structured-outputs">Structured
-   *           Outputs</a>
-   *     </ul>
-   *
+   *     structured JSON data. See https://platform.openai.com/docs/guides/text and
+   *     https://platform.openai.com/docs/guides/structured-outputs
    * @param toolChoice How the model should select which tool (or tools) to use when generating a
    *     response. See the tools parameter to see how to specify which tools the model can call.
    * @param tools An array of tools the model may call while generating a response. You can specify
    *     which tool to use by setting the tool_choice parameter.
-   *     <p>We support the following categories of tools:
-   *     <p>Built-in tools: Tools that are provided by OpenAI that extend the model's capabilities,
-   *     like href="https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses">web
-   *     search</a> or <a href="https://platform.openai.com/docs/guides/tools-file-search">file
-   *     search</a>. Learn more about href="https://platform.openai.com/docs/guides/tools">built-in
-   *     tools</a>. MCP Tools: Integrations with third-party systems via custom MCP servers or
-   *     predefined connectors such as Google Drive and SharePoint. Learn more about
-   *     href="https://platform.openai.com/docs/guides/tools-connectors-mcp">MCP Tools</a>. Function
-   *     calls (custom tools): Functions that are defined by you, enabling the model to call your
-   *     own code with strongly typed arguments and outputs. Learn more about
-   *     href="https://platform.openai.com/docs/guides/function-calling">function calling</a>. You
-   *     can also use custom tools to call your own code.
+   *     Supported categories include built-in tools, MCP tools, and function tools. References:
+   *     web search https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses,
+   *     file search https://platform.openai.com/docs/guides/tools-file-search, built-in tools
+   *     https://platform.openai.com/docs/guides/tools, MCP tools
+   *     https://platform.openai.com/docs/guides/tools-connectors-mcp, function calling
+   *     https://platform.openai.com/docs/guides/function-calling
    * @param topLogprobs An integer between 0 and 20 specifying the number of most likely tokens to
    *     return at each token position, each with an associated log probability.
    * @param topP An alternative to sampling with temperature, called nucleus sampling, where the
    *     model considers the results of the tokens with top_p probability mass. So 0.1 means only
    *     the tokens comprising the top 10% probability mass are considered.
    *     <p>We generally recommend altering this or temperature but not both.
-   * @param truncation The truncation strategy to use for the model response.
-   *     <p>auto: If the input to this Response exceeds the model's context window size, the model
-   *     will truncate the response to fit the context window by dropping items from the beginning
-   *     of the conversation. disabled (default): If the input size will exceed the context window
-   *     size for a model, the request will fail with a 400 error.
+   * @param truncation The truncation strategy to use for the model response. {@code auto} drops
+   *     items from the beginning of the conversation when needed to fit the context window;
+   *     {@code disabled} fails the request instead.
    * @param openRouterCustomPayload custom payload designed for OpenRouter Responses.
    */
   public CreateResponsePayload(

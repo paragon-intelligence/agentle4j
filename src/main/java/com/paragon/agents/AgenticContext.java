@@ -24,14 +24,14 @@ import org.jspecify.annotations.Nullable;
  *   <li>Custom user-defined state via key-value store
  * </ul>
  *
- * <p>AgentContext is designed to be passed per-run, making the {@link Agent} thread-safe and
+ * <p>AgenticContext is designed to be passed per-run, making the {@link Agent} thread-safe and
  * reusable across multiple conversations.
  *
  * <h2>Usage Example</h2>
  *
  * <pre>{@code
  * // Create a fresh context for a new conversation
- * AgentContext context = AgentContext.create();
+ * AgenticContext context = AgenticContext.create();
  *
  * // First interaction
  * agent.interact("Hi, I need help with my order", context);
@@ -83,7 +83,7 @@ public final class AgenticContext {
   }
 
   /**
-   * Creates a new, empty AgentContext.
+   * Creates a new, empty AgenticContext.
    *
    * @return a fresh context with no history or state
    */
@@ -133,7 +133,7 @@ public final class AgenticContext {
   }
 
   /**
-   * Creates an AgentContext pre-populated with conversation history.
+   * Creates an AgenticContext pre-populated with conversation history.
    *
    * <p>Useful for resuming a previous conversation or providing initial context.
    *

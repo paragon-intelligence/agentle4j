@@ -1,23 +1,5 @@
 # :material-code-braces: McpRemoteTool
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.mcp.McpRemoteTool` &nbsp;·&nbsp; **Class**
 
 Extends `FunctionTool<McpRemoteTool.McpParams>`

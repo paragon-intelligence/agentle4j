@@ -1,23 +1,5 @@
 # :material-code-braces: ParallelStream
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.ParallelStream` &nbsp;·&nbsp; **Class**
 
 ---
@@ -176,6 +158,150 @@ Called at the start of each turn for any member.
 **Returns**
 
 this stream
+
+---
+
+### `onAgentToolExecuted`
+
+```java
+public @NonNull ParallelStream onAgentToolExecuted(
+      @NonNull BiConsumer<Interactable, ToolExecution> callback)
+```
+
+Called when a tool is executed by any member agent.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `callback` | receives the member and the tool execution result |
+
+**Returns**
+
+this stream
+
+---
+
+### `onAgentGuardrailFailed`
+
+```java
+public @NonNull ParallelStream onAgentGuardrailFailed(
+      @NonNull BiConsumer<Interactable, GuardrailResult.Failed> callback)
+```
+
+Called when a guardrail fails for any member agent.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `callback` | receives the member and the failed guardrail result |
+
+**Returns**
+
+this stream
+
+---
+
+### `onAgentClientSideTool`
+
+```java
+public @NonNull ParallelStream onAgentClientSideTool(
+      @NonNull BiConsumer<Interactable, FunctionToolCall> callback)
+```
+
+Called when a client-side tool (`stopsLoop = true`) is detected in any member agent.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `callback` | receives the member and the tool call that triggered the exit |
+
+**Returns**
+
+this stream
+
+---
+
+### `onAgentCancelled`
+
+```java
+public @NonNull ParallelStream onAgentCancelled(@NonNull Consumer<Interactable> callback)
+```
+
+Called (FIRST mode only) for each agent whose result was discarded because another completed
+first.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `callback` | receives the agent that lost the race |
+
+**Returns**
+
+this stream
+
+---
+
+### `onAgentError`
+
+```java
+public @NonNull ParallelStream onAgentError(
+      @NonNull BiConsumer<Interactable, Throwable> callback)
+```
+
+Called when a member agent's virtual thread throws an exception before producing a result
+(ALL and SYNTHESIZE modes).
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `callback` | receives the member and the error |
+
+**Returns**
+
+this stream
+
+---
+
+### `onSynthesisStart`
+
+```java
+public @NonNull ParallelStream onSynthesisStart(
+      @NonNull Consumer<List<AgentResult>> callback)
+```
+
+Called (SYNTHESIZE mode only) just before the synthesizer agent starts, with all gathered
+member results.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `callback` | receives the list of all member results |
+
+**Returns**
+
+this stream
+
+---
+
+### `startBlocking`
+
+```java
+public @NonNull Object startBlocking()
+```
+
+Starts the streaming parallel execution. Blocks until completion.
+
+On virtual threads, blocking is efficient and does not consume platform threads.
+
+**Returns**
+
+results based on mode: List<AgentResult> for ALL, AgentResult for FIRST/SYNTHESIZE
 
 ---
 

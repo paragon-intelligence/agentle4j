@@ -21,8 +21,7 @@ import org.jspecify.annotations.Nullable;
  *     .build();
  * }</pre>
  *
- * @see <a href="https://openrouter.ai/docs/guides/features/broadcast/langfuse">OpenRouter Langfuse
- *     Documentation</a>
+ * @see OpenRouter Langfuse documentation: https://openrouter.ai/docs/guides/features/broadcast/langfuse
  * @since 1.0
  */
 public record TraceMetadata(

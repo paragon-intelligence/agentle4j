@@ -24,7 +24,7 @@ import java.util.Objects;
  *     .add(getWeatherTool);
  *
  * // Make API call
- * var response = responder.respond(payload).join();
+ * var response = responder.respond(payload);
  *
  * // Get callable function tool calls
  * var functionToolCalls = response.functionToolCalls(store);

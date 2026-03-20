@@ -1,23 +1,5 @@
 # :material-code-braces: FunctionToolStore
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.FunctionToolStore` &nbsp;·&nbsp; **Class**
 
 ---
@@ -35,7 +17,7 @@ var getWeatherTool = new GetWeatherTool();
 var store = FunctionToolStore.create()
     .add(getWeatherTool);
 // Make API call
-var response = responder.respond(payload).join();
+var response = responder.respond(payload);
 // Get callable function tool calls
 var functionToolCalls = response.functionToolCalls(store);
 FunctionToolCallOutput result = functionToolCalls.getFirst().call();
@@ -268,7 +250,7 @@ the ObjectMapper
 
 ```java
 public @NonNull FunctionToolCallOutput execute(@NonNull FunctionToolCall toolCall)
-      throws JsonProcessingException
+          throws JacksonException
 ```
 
 Executes a function tool call and returns the result.
@@ -289,7 +271,7 @@ the function tool call output
 
 | Type | Condition |
 |------|-----------|
-| `JsonProcessingException` | if the arguments cannot be deserialized |
+| `JacksonException` | if the arguments cannot be deserialized |
 | `IllegalArgumentException` | if no tool is stored for the function name |
 
 ---
@@ -298,7 +280,7 @@ the function tool call output
 
 ```java
 public @NonNull List<FunctionToolCallOutput> executeAll(@NonNull List<FunctionToolCall> toolCalls)
-      throws JsonProcessingException
+          throws JacksonException
 ```
 
 Executes all function tool calls and returns their results.
@@ -317,6 +299,6 @@ a list of function tool call outputs
 
 | Type | Condition |
 |------|-----------|
-| `JsonProcessingException` | if any arguments cannot be deserialized |
+| `JacksonException` | if any arguments cannot be deserialized |
 | `IllegalArgumentException` | if any tool call references a function not in the store |
 

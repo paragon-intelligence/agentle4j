@@ -1,23 +1,5 @@
 # :material-code-braces: OpenRouterEmbeddingProvider
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.embeddings.OpenRouterEmbeddingProvider` &nbsp;·&nbsp; **Class**
 
 Implements `EmbeddingProvider`
@@ -33,7 +15,7 @@ Automatically retries on:
 - 529 Provider Overloaded - Temporary overload, uses fallback providers when enabled
 - 5xx Server Errors - Transient server issues
 
-**Virtual Thread Design:** Uses synchronous API optimized for Java 21+ virtual threads.
+**Virtual Thread Design:** Uses a synchronous API optimized for Java 25+ virtual threads.
 
 Example usage:
 

@@ -8,13 +8,17 @@ nav:
   - agentrunstate.md
   - agentservice.md
   - agentstream.md
+  - blueprintregistry.md
+  - filesystemmemory.md
   - guardrailregistry.md
   - guardrailresult.md
   - handoff.md
   - hierarchicalagents.md
   - inmemorymemory.md
   - inputguardrail.md
+  - instructionsource.md
   - interactablesubagenttool.md
+  - jdbcmemory.md
   - memory.md
   - memoryentry.md
   - memorytool.md
@@ -32,3 +36,5 @@ nav:
   - supervisoragent.md
   - toolexecution.md
   - context
+  - toolplan
+  - toolsearch

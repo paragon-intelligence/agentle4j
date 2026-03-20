@@ -18,7 +18,7 @@
 
 
 
-The Java agent framework built on OpenAI's Responses API.
+A Java agent framework built on OpenAI's Responses API.
 
 ![Coverage](https://img.shields.io/badge/coverage-88%25-brightgreen)
 ![Java](https://img.shields.io/badge/java-25%2B-blue)
@@ -26,11 +26,9 @@ The Java agent framework built on OpenAI's Responses API.
 
 ## The problem
 
-Every Java AI framework — LangChain4j, Spring AI — is built on the Chat Completions API. That API was designed for chatbots. OpenAI replaced it with the [Responses API](https://platform.openai.com/docs/api-reference/responses): item-based conversation state, native tool calling, structured output as a first-class primitive, and a design built for agents, not chat.
+Agentle is built around the [Responses API](https://platform.openai.com/docs/api-reference/responses): item-based conversation state, native tool calling, structured output, streaming, and APIs that fit agent workflows.
 
-Agentle is the only Java framework built exclusively on the Responses API. No wrapping the old API. No compatibility layers. One clean abstraction over the API that was designed for what you're actually building.
-
-If LangChain4j or Spring AI work for your use case, keep using them. If you need tool planning, multi-agent orchestration, structured streaming, or human-in-the-loop workflows — read on.
+The library keeps a direct abstraction over the Responses API instead of layering on top of older chat-oriented request shapes. If you need tool planning, multi-agent orchestration, structured streaming, or human-in-the-loop workflows, that's the part of the codebase the framework optimizes for.
 
 ## Installation
 
@@ -39,16 +37,16 @@ Maven:
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.8.3</version>
+    <version>0.10.0</version>
 </dependency>
 ```
 
 Gradle:
 ```groovy
-implementation 'io.github.paragon-intelligence:agentle4j:0.8.3'
+implementation 'io.github.paragon-intelligence:agentle4j:0.10.0'
 ```
 
-Requires Java 25+ (uses preview features like `StructuredTaskScope`).
+Requires Java 25+ with preview features enabled. The Maven build compiles, tests, and generates Javadocs with `--enable-preview`.
 
 ## See it in action
 
@@ -381,35 +379,26 @@ Agentle ships with more than agents. Each feature has a dedicated guide.
 - **[Prompt Builder](docs/guides/prompt-management.md)** — Fluent API with chain-of-thought, few-shot examples, templates, and multi-language support.
 - **[Observability](docs/guides/observability.md)** — Built-in OpenTelemetry. Traces span across agent handoffs and parallel execution. One line: `.addTelemetryProcessor(LangfuseProcessor.fromEnv())`.
 - **[Vision](docs/guides/vision.md)** — Multi-modal input with `Image.fromUrl()`, base64, or file ID. Control detail level per image.
-- **[Messaging](docs/guides/messaging.md)** — WhatsApp/Telegram bots with adaptive batching, rate limiting, and conversation history.
+- **[Messaging](docs/guides/messaging.md)** — WhatsApp integrations with adaptive batching, rate limiting, and conversation history.
 - **[Embeddings](docs/guides/embeddings.md)** — Text embeddings with automatic retry on 429/5xx and provider fallbacks.
 - **[Streaming](docs/guides/streaming.md)** — Text deltas, tool call events, structured output — all via virtual-thread callbacks.
 - **[Tools](docs/guides/tools.md)** — Type-safe function tools using Java records. Auto-generated JSON schemas from generics.
 - **[Tool Planning](docs/guides/tool-planning.md)** — DAG-based parallel tool execution with reference resolution between steps.
 - **[Harness Engineering](docs/api/com/paragon/harness/index.md)** — Self-correction loops, lifecycle hooks, shell verification, durable memory, progress logs, artifact stores, and run reports.
 
-## How it compares
+## Design choices
 
-| | **Agentle** | **LangChain4j** | **Spring AI** |
-|---|---|---|---|
-| API | Responses API | Chat Completions | Chat Completions |
-| Java version | 25+ (virtual threads, records, sealed classes) | 17+ | 17+ |
-| Multi-agent patterns | 6 built-in | Limited | Limited |
-| Structured streaming | Partial JSON as it generates | No | No |
-| Tool planning | DAG with parallel execution | No | No |
-| Human-in-the-loop | Serializable pause/resume | No | Manual |
-| Dynamic tool selection | BM25 / semantic / custom | No | No |
-| Streaming model | Virtual thread callbacks | Callbacks | Reactor Flux |
-| Error model | `AgentResult` (never throws) | Exceptions | Exceptions |
-| MCP support | stdio + HTTP | No | Limited |
-| Observability | Built-in OpenTelemetry | Plugin | Plugin |
-| Self-correction loops | Built-in (`SelfCorrectingInteractable`) | No | No |
-| Lifecycle hooks | Built-in (`HookRegistry`) | No | No |
-| Durable memory | Filesystem + JDBC backends | No | No |
-| Verification tools | `ShellVerificationTool` (injection-safe) | No | No |
-| Artifact management | `ArtifactStore` + `ProgressLog` | No | No |
-
-LangChain4j and Spring AI have broader provider support through native integrations and offer Spring Boot / Quarkus starters. Agentle requires a Responses API-compatible provider (OpenAI, OpenRouter, or any compatible endpoint). Pick based on what your project needs.
+| Area | What the code does today |
+|---|---|
+| API layer | Targets the Responses API directly |
+| Java baseline | Requires Java 25+ with preview features enabled |
+| Concurrency model | Synchronous-first APIs designed to run well on virtual threads |
+| Agent errors | `Agent.interact(...)` returns `AgentResult` instead of throwing |
+| Streaming | `ResponseStream` and `AgentStream` expose callback-based streaming |
+| Tool execution | Function tools, DAG-based tool planning, and parallel waves |
+| Human approval | Serializable pause/resume via `AgentRunState` |
+| Messaging | `MessagingProvider` abstraction with WhatsApp implementation included |
+| Web extraction | Playwright rendering plus typed extraction through `WebExtractor` |
 
 ## Provider support
 
@@ -439,7 +428,7 @@ Responder.builder()
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.8.3</version>
+    <version>0.10.0</version>
 </dependency>
 ```
 

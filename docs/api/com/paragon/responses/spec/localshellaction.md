@@ -1,23 +1,5 @@
 # :material-approximately-equal: LocalShellAction
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.LocalShellAction` &nbsp;·&nbsp; **Interface**
 
 ---

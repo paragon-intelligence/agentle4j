@@ -1,23 +1,5 @@
 # :material-database: CustomToolCallInputDeltaEvent
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.streaming.CustomToolCallInputDeltaEvent` &nbsp;·&nbsp; **Record**
 
 ---

@@ -1,23 +1,5 @@
 # API Reference
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Auto-generated from Javadoc source comments. Run `make docs-gen` to regenerate.
 
 ---
@@ -26,12 +8,16 @@ Auto-generated from Javadoc source comments. Run `make docs-gen` to regenerate.
 
 | Package | Classes |
 |---------|---------|
-| [`com.paragon`](com/paragon/index.md) | 1 |
-| [`com.paragon.agents`](com/paragon/agents/index.md) | 31 |
+| [`com.paragon.agents`](com/paragon/agents/index.md) | 35 |
 | [`com.paragon.agents.context`](com/paragon/agents/context/index.md) | 6 |
+| [`com.paragon.agents.toolplan`](com/paragon/agents/toolplan/index.md) | 7 |
+| [`com.paragon.agents.toolsearch`](com/paragon/agents/toolsearch/index.md) | 5 |
 | [`com.paragon.broadcasting`](com/paragon/broadcasting/index.md) | 2 |
 | [`com.paragon.embeddings`](com/paragon/embeddings/index.md) | 2 |
+| [`com.paragon.harness`](com/paragon/harness/index.md) | 11 |
+| [`com.paragon.harness.tools`](com/paragon/harness/tools/index.md) | 4 |
 | [`com.paragon.http`](com/paragon/http/index.md) | 6 |
+| [`com.paragon.json`](com/paragon/json/index.md) | 1 |
 | [`com.paragon.mcp`](com/paragon/mcp/index.md) | 6 |
 | [`com.paragon.mcp.dto`](com/paragon/mcp/dto/index.md) | 8 |
 | [`com.paragon.messaging.batching`](com/paragon/messaging/batching/index.md) | 5 |
@@ -50,16 +36,16 @@ Auto-generated from Javadoc source comments. Run `make docs-gen` to regenerate.
 | [`com.paragon.messaging.whatsapp.payload`](com/paragon/messaging/whatsapp/payload/index.md) | 19 |
 | [`com.paragon.messaging.whatsapp.response`](com/paragon/messaging/whatsapp/response/index.md) | 5 |
 | [`com.paragon.parsing`](com/paragon/parsing/index.md) | 1 |
-| [`com.paragon.prompts`](com/paragon/prompts/index.md) | 8 |
+| [`com.paragon.prompts`](com/paragon/prompts/index.md) | 9 |
 | [`com.paragon.responses`](com/paragon/responses/index.md) | 4 |
 | [`com.paragon.responses.annotations`](com/paragon/responses/annotations/index.md) | 1 |
 | [`com.paragon.responses.exception`](com/paragon/responses/exception/index.md) | 11 |
-| [`com.paragon.responses.json`](com/paragon/responses/json/index.md) | 9 |
+| [`com.paragon.responses.json`](com/paragon/responses/json/index.md) | 24 |
 | [`com.paragon.responses.openrouter`](com/paragon/responses/openrouter/index.md) | 4 |
-| [`com.paragon.responses.spec`](com/paragon/responses/spec/index.md) | 135 |
+| [`com.paragon.responses.spec`](com/paragon/responses/spec/index.md) | 136 |
 | [`com.paragon.responses.streaming`](com/paragon/responses/streaming/index.md) | 51 |
 | [`com.paragon.responses.tools.memory`](com/paragon/responses/tools/memory/index.md) | 2 |
-| [`com.paragon.skills`](com/paragon/skills/index.md) | 8 |
+| [`com.paragon.skills`](com/paragon/skills/index.md) | 9 |
 | [`com.paragon.telemetry`](com/paragon/telemetry/index.md) | 1 |
 | [`com.paragon.telemetry.events`](com/paragon/telemetry/events/index.md) | 5 |
 | [`com.paragon.telemetry.grafana`](com/paragon/telemetry/grafana/index.md) | 1 |

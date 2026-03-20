@@ -1,30 +1,12 @@
 # :material-code-braces: Responder
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.Responder` &nbsp;·&nbsp; **Class**
 
 ---
 
 Core class for sending requests to the Responses API.
 
-Uses a synchronous-first API design that is optimized for Java 21+ virtual threads. All
+Uses a synchronous-first API design that is optimized for Java 25+ virtual threads. All
 blocking I/O operations are virtual-thread-friendly, allowing thousands of concurrent requests
 without consuming platform threads.
 
@@ -552,8 +534,7 @@ var payload = CreateResponsePayload.builder()
     .build();
 ParsedResponse parsed = responder.respond(payload)
     .onTextDelta(System.out::print)
-    .toParsedFuture()
-    .get();
+    .getParsed();
 ```
 
 **Parameters**

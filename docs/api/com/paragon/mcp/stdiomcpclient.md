@@ -1,23 +1,5 @@
 # :material-code-braces: StdioMcpClient
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.mcp.StdioMcpClient` &nbsp;·&nbsp; **Class**
 
 Extends `McpClient`

@@ -5,9 +5,8 @@ import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 
 /**
- * A tool call to a computer use tool. See the <a
- * href="https://platform.openai.com/docs/guides/tools-computer-use">computer use guide</a> for more
- * information.
+ * A tool call to a computer use tool. See the computer use guide for more information:
+ * https://platform.openai.com/docs/guides/tools-computer-use
  */
 public final class ComputerToolCall extends ToolCall implements Item, ResponseOutput {
   private final @NonNull ComputerUseAction action;

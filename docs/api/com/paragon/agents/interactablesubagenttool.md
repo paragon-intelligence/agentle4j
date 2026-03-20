@@ -1,23 +1,5 @@
 # :material-code-braces: InteractableSubAgentTool
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.InteractableSubAgentTool` &nbsp;·&nbsp; **Class**
 
 Extends `FunctionTool<InteractableSubAgentTool.InteractableParams>`

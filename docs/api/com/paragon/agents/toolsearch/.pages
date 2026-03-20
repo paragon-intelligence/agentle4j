@@ -1,0 +1,7 @@
+nav:
+  - index.md
+  - bm25toolsearchstrategy.md
+  - embeddingtoolsearchstrategy.md
+  - regextoolsearchstrategy.md
+  - toolregistry.md
+  - toolsearchstrategy.md

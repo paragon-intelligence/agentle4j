@@ -1,10 +1,10 @@
 nav:
-  - index.md
-  - main.md
   - agents
   - broadcasting
   - embeddings
+  - harness
   - http
+  - json
   - mcp
   - messaging
   - parsing

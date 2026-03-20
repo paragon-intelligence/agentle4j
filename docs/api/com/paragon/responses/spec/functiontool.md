@@ -1,30 +1,13 @@
 # :material-code-braces: FunctionTool
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.FunctionTool` &nbsp;·&nbsp; **Class**
 
 Extends `Record>` &nbsp;·&nbsp; Implements `Tool`
 
 ---
 
-Defines a function in your own code the model can choose to call. Learn more about function calling.
+Defines a function in your own code the model can choose to call. Learn more about function
+calling at [https://platform.openai.com/docs/guides/function-calling](https://platform.openai.com/docs/guides/function-calling)
 
 ## Methods
 
@@ -90,4 +73,21 @@ in AgentStream, allowing human-in-the-loop approval workflows.
 **Returns**
 
 true if confirmation is required, false otherwise
+
+---
+
+### `stopsLoop`
+
+```java
+public boolean stopsLoop()
+```
+
+Returns whether this tool is client-side only and terminates the agentic loop immediately.
+
+When true, the framework skips history persistence and tool execution, returning
+`AgentResult.clientSideTool()` instead.
+
+**Returns**
+
+true if this tool stops the loop, false otherwise
 

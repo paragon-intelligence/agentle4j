@@ -7,8 +7,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Represents an OTLP metric data point (gauge/counter value at a point in time).
  *
- * @see <a href="https://opentelemetry.io/docs/specs/otel/metrics/data-model/">OTEL Metrics Data
- *     Model</a>
+ * @see OTEL metrics data model: https://opentelemetry.io/docs/specs/otel/metrics/data-model/
  */
 public record OtelDataPoint(
     long startTimeUnixNano,

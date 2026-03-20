@@ -1354,29 +1354,25 @@ if (result.isError()) {
 | `PARSING` | Response parsing failed | No | Check response format |
 | `MAX_TURNS_EXCEEDED` | Turn limit exceeded | No | Increase maxTurns |
 
-### Accessing Underlying API Errors
+### Accessing Underlying Causes
 
-For `LLM_CALL` failures, the original API exception is preserved as the **cause**:
+For `LLM_CALL` failures, the underlying cause is preserved on the `AgentExecutionException`:
 
 ```java
 if (result.isError() && result.error() instanceof AgentExecutionException e) {
     if (e.phase() == AgentExecutionException.Phase.LLM_CALL) {
         Throwable cause = e.getCause();
         
-        if (cause instanceof RateLimitException rate) {
-            System.out.println("Rate limited. Retry after: " + rate.retryAfter());
-        } else if (cause instanceof AuthenticationException auth) {
-            System.out.println("Auth failed: " + auth.suggestion());
-        } else if (cause instanceof ServerException server) {
-            System.out.println("Server error: " + server.statusCode());
-        } else if (cause instanceof InvalidRequestException invalid) {
-            System.out.println("Invalid request: " + invalid.getMessage());
+        if (cause != null) {
+            System.out.println("Root cause type: " + cause.getClass().getSimpleName());
+            System.out.println("Root cause message: " + cause.getMessage());
         }
     }
 }
 ```
 
-This gives you full access to API-specific error details like retry timing, status codes, and suggestions.
+Today this is typically the lower-level `Responder` failure or a tool/runtime exception. Inspect the
+cause chain instead of assuming a specific HTTP exception subtype.
 
 ### Using Error Codes
 
@@ -1588,14 +1584,14 @@ public MyService(Responder responder) {
 // Don't create new agents for each request
 public String chat(String message) {
     Agent agent = Agent.builder()...build();  // Bad!
-    return agent.interact(message).join().output();
+    return agent.interact(message).output();
 }
 
 // Don't use vague instructions
 .instructions("Be helpful")  // Too vague!
 
-// Missing error handler
-agent.interact(input).join();  // Uncaught exceptions!
+// Don't ignore the AgentResult status
+agent.interact(input);  // Check result.isError(), result.isPaused(), etc.
 ```
 
 ---

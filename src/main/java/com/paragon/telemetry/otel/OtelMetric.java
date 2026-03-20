@@ -7,8 +7,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Represents an OTLP metric with its data points.
  *
- * @see <a href="https://opentelemetry.io/docs/specs/otel/metrics/data-model/">OTEL Metrics Data
- *     Model</a>
+ * @see OTEL metrics data model: https://opentelemetry.io/docs/specs/otel/metrics/data-model/
  */
 public record OtelMetric(
     @NonNull String name,

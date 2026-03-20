@@ -1,23 +1,5 @@
 # :material-database: AgentDefinition
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.AgentDefinition` &nbsp;·&nbsp; **Record**
 
 ---

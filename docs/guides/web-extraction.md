@@ -48,7 +48,7 @@ Add Playwright dependency to your project:
 <dependency>
     <groupId>com.microsoft.playwright</groupId>
     <artifactId>playwright</artifactId>
-    <version>1.41.0</version>
+    <version>1.57.0</version>
 </dependency>
 ```
 
@@ -298,12 +298,6 @@ WebExtractor extractor = WebExtractor.create(responder);
 // With specific model
 WebExtractor extractor = WebExtractor.create(responder, "openai/gpt-4o-mini");
 
-// With custom executor
-WebExtractor extractor = WebExtractor.create(
-    responder, 
-    "openai/gpt-4o", 
-    Executors.newVirtualThreadPerTaskExecutor()
-);
 ```
 
 ---

@@ -1,24 +1,8 @@
-# :material-database: StructuredAgentResult
+# :material-code-braces: StructuredAgentResult
 
-> This docs was updated at: 2026-03-20
+`com.paragon.agents.StructuredAgentResult` &nbsp;·&nbsp; **Class**
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-`com.paragon.agents.StructuredAgentResult` &nbsp;·&nbsp; **Record**
+Extends `AgentResult`
 
 ---
 
@@ -31,6 +15,26 @@ The output is automatically deserialized to the specified type.
 
 ## Methods
 
+### `parsed`
+
+```java
+public @NonNull T parsed()
+```
+
+Returns the parsed typed output from the agent.
+
+**Returns**
+
+the parsed output (never null on success)
+
+**Throws**
+
+| Type | Condition |
+|------|-----------|
+| `IllegalStateException` | if the result is an error or the parsed value is unexpectedly null |
+
+---
+
 ### `isSuccess`
 
 ```java
@@ -42,34 +46,6 @@ Whether the interaction was successful.
 **Returns**
 
 true if no error occurred and no handoff was triggered
-
----
-
-### `isHandoff`
-
-```java
-public boolean isHandoff()
-```
-
-Whether a handoff to another agent occurred.
-
-**Returns**
-
-true if handoff was triggered
-
----
-
-### `isError`
-
-```java
-public boolean isError()
-```
-
-Whether the interaction failed.
-
-**Returns**
-
-true if an error occurred
 
 ---
 
@@ -93,7 +69,7 @@ the error message or null
 public static <T> @NonNull StructuredAgentResult<T> success(
       @NonNull T output,
       @NonNull String rawOutput,
-      @NonNull Response response,
+      @Nullable Response response,
       @NonNull List<ResponseInputItem> history,
       @NonNull List<ToolExecution> toolExecutions,
       int turnsUsed)
@@ -174,10 +150,10 @@ an error result
 
 ---
 
-### `error`
+### `structuredError`
 
 ```java
-public static <T> @NonNull StructuredAgentResult<T> error(@NonNull Throwable error)
+public static <T> @NonNull StructuredAgentResult<T> structuredError(@NonNull Throwable error)
 ```
 
 Convenience method for creating a simple error result (for testing).

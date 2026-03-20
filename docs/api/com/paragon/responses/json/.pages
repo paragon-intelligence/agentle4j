@@ -1,11 +1,26 @@
 nav:
   - index.md
+  - applypatchtoolcallserializer.md
   - clickactiondeserializer.md
+  - codeinterpretertoolcallserializer.md
+  - computertoolcallserializer.md
   - concretemessagedeserializer.md
   - createresponsepayloaddeserializer.md
+  - customtoolcallserializer.md
   - doubleclickactiondeserializer.md
+  - filesearchtoolcallserializer.md
+  - functionshelltoolcallserializer.md
+  - functiontoolcalloutputdeserializer.md
+  - functiontoolcalloutputserializer.md
+  - functiontoolcallserializer.md
+  - imagegenerationcallserializer.md
   - jacksonjsonschemaproducer.md
+  - localshellcallserializer.md
+  - mcptoolcallserializer.md
+  - messagecontentdeserializer.md
   - messagedeserializer.md
+  - messageserializer.md
   - moveactiondeserializer.md
   - responsesapimodule.md
   - scrollactiondeserializer.md
+  - websearchtoolcallserializer.md

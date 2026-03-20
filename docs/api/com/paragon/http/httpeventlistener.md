@@ -1,23 +1,5 @@
 # :material-approximately-equal: HttpEventListener
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.http.HttpEventListener` &nbsp;·&nbsp; **Interface**
 
 ---

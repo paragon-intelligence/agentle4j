@@ -1,23 +1,5 @@
 # :material-approximately-equal: McpContent
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.mcp.dto.McpContent` &nbsp;·&nbsp; **Interface**
 
 ---

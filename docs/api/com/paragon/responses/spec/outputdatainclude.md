@@ -1,23 +1,5 @@
 # :material-format-list-bulleted-type: OutputDataInclude
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.OutputDataInclude` &nbsp;·&nbsp; **Enum**
 
 ---

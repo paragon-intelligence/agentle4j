@@ -11,25 +11,20 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  *       hierarchy. Instructions given with the developer or system role take precedence over
  *       instructions given with the user role .
  *   <li>{@link OutputMessage} - An output message from the model.
- *   <li>{@link FileSearchToolCall} - The results of a file search tool call. See the <a
- *       href="https://platform.openai.com/docs/guides/tools-file-search">file search guide</a> for
- *       more information.
- *   <li>{@link ComputerToolCall} - A tool call to a computer use tool. See the <a
- *       href="https://platform.openai.com/docs/guides/tools-computer-use">computer use guide</a>
- *       for more information.
+ *   <li>{@link FileSearchToolCall} - The results of a file search tool call. See the file search
+ *       guide: https://platform.openai.com/docs/guides/tools-file-search
+ *   <li>{@link ComputerToolCall} - A tool call to a computer use tool. See the computer use guide:
+ *       https://platform.openai.com/docs/guides/tools-computer-use
  *   <li>{@link ComputerToolCallOutput} - The output of a computer tool call.
- *   <li>{@link WebSearchToolCall} - The results of a web search tool call. See the <a
- *       href="https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses">web
- *       search guide</a> for more information.
- *   <li>{@link FunctionToolCall} - A tool call to run a function. See the <a
- *       href="https://platform.openai.com/docs/guides/function-calling">function calling guide</a>
- *       for more information.
+ *   <li>{@link WebSearchToolCall} - The results of a web search tool call. See the web search
+ *       guide: https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses
+ *   <li>{@link FunctionToolCall} - A tool call to run a function. See the function calling guide:
+ *       https://platform.openai.com/docs/guides/function-calling
  *   <li>{@link FunctionToolCallOutput} - The output of a function tool call.
  *   <li>{@link Reasoning} - A description of the chain of thought used by a reasoning model while
  *       generating a response. Be sure to include these items in your input to the Responses API
- *       for subsequent turns of a conversation if you are manually <a
- *       href="https://platform.openai.com/docs/guides/conversation-state?api-mode=responses">managing
- *       context.</a>
+ *       for subsequent turns of a conversation if you are manually managing context. See:
+ *       https://platform.openai.com/docs/guides/conversation-state?api-mode=responses
  *   <li>{@link ImageGenerationCall} - An image generation request made by the model.
  *   <li>{@link CodeInterpreterToolCall} - A tool call to run code.
  *   <li>{@link LocalShellCall} - A tool call to run a command on the local shell.

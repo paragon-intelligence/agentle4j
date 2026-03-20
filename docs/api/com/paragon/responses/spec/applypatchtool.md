@@ -1,23 +1,5 @@
 # :material-code-braces: ApplyPatchTool
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.ApplyPatchTool` &nbsp;·&nbsp; **Class**
 
 Extends `FunctionTool<ApplyPatchParams>`

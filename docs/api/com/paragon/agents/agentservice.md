@@ -1,23 +1,5 @@
 # :material-code-braces: AgentService
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.AgentService` &nbsp;·&nbsp; **Class**
 
 ---
@@ -476,144 +458,33 @@ the agent's result
 
 ---
 
-### `interactStream`
+### `asStreaming`
 
 ```java
-default AgentStream interactStream(@NonNull String input)
+default Streaming asStreaming()
 ```
 
-Interacts with the agent with streaming support.
+Returns a streaming view of this interactable.
 
-Default implementation creates a fresh context with the input as a user message.
-
-**Parameters**
-
-| Name | Description |
-|------|-------------|
-| `input` | the user's text input |
+The default implementation throws `UnsupportedOperationException`. Concrete
+implementations that support streaming override this method.
 
 **Returns**
 
-an AgentStream for processing streaming events
+an `Streaming` backed by this interactable's streaming logic
+
+**Throws**
+
+| Type | Condition |
+|------|-----------|
+| `UnsupportedOperationException` | if this interactable does not support streaming |
 
 ---
 
-### `interactStream`
+### `interact`
 
 ```java
-default AgentStream interactStream(@NonNull String input, @Nullable TraceMetadata trace)
-```
-
-Interacts with the agent with streaming support and trace metadata.
-
-Default implementation creates a fresh context with the input as a user message.
-
-**Parameters**
-
-| Name | Description |
-|------|-------------|
-| `input` | the user's text input |
-| `trace` | optional trace metadata (overrides agent-level configuration) |
-
-**Returns**
-
-an AgentStream for processing streaming events
-
----
-
-### `interactStream`
-
-```java
-default AgentStream interactStream(@NonNull Prompt prompt)
-```
-
-Interacts with the agent with streaming using a Prompt.
-
-The prompt's text content is extracted and used as the input.
-
-**Parameters**
-
-| Name | Description |
-|------|-------------|
-| `prompt` | the prompt input |
-
-**Returns**
-
-an AgentStream for processing streaming events
-
----
-
-### `interactStream`
-
-```java
-default AgentStream interactStream(@NonNull Prompt prompt, @Nullable TraceMetadata trace)
-```
-
-Interacts with the agent with streaming using a Prompt and trace metadata.
-
-The prompt's text content is extracted and used as the input.
-
-**Parameters**
-
-| Name | Description |
-|------|-------------|
-| `prompt` | the prompt input |
-| `trace` | optional trace metadata (overrides agent-level configuration) |
-
-**Returns**
-
-an AgentStream for processing streaming events
-
----
-
-### `interactStream`
-
-```java
-default AgentStream interactStream(@NonNull AgenticContext context)
-```
-
-Interacts with the agent with streaming using an existing context.
-
-**Parameters**
-
-| Name | Description |
-|------|-------------|
-| `context` | the conversation context containing history |
-
-**Returns**
-
-an AgentStream for processing streaming events
-
----
-
-### `interactStream`
-
-```java
-AgentStream interactStream(
-      @NonNull AgenticContext context, @Nullable TraceMetadata trace)
-```
-
-Interacts with the agent with streaming using an existing context and trace metadata.
-
-This is the main streaming method that all other streaming overloads delegate to.
-
-**Parameters**
-
-| Name | Description |
-|------|-------------|
-| `context` | the conversation context containing history |
-| `trace` | optional trace metadata (overrides agent-level configuration) |
-
-**Returns**
-
-an AgentStream for processing streaming events
-
----
-
-### `interactStructured`
-
-```java
-default StructuredAgentResult<T> interactStructured(@NonNull String input)
+default StructuredAgentResult<T> interact(@NonNull String input)
 ```
 
 Interacts with the agent and returns a structured result.
@@ -632,10 +503,10 @@ the structured result with parsed output
 
 ---
 
-### `interactStructured`
+### `interact`
 
 ```java
-default StructuredAgentResult<T> interactStructured(
+default StructuredAgentResult<T> interact(
         @NonNull String input, @Nullable TraceMetadata trace)
 ```
 
@@ -656,10 +527,10 @@ the structured result with parsed output
 
 ---
 
-### `interactStructured`
+### `interact`
 
 ```java
-default StructuredAgentResult<T> interactStructured(@NonNull Text text)
+default StructuredAgentResult<T> interact(@NonNull Text text)
 ```
 
 Interacts with the agent with Text content and returns a structured result.
@@ -678,10 +549,10 @@ the structured result with parsed output
 
 ---
 
-### `interactStructured`
+### `interact`
 
 ```java
-default StructuredAgentResult<T> interactStructured(
+default StructuredAgentResult<T> interact(
         @NonNull Text text, @Nullable TraceMetadata trace)
 ```
 
@@ -703,10 +574,10 @@ the structured result with parsed output
 
 ---
 
-### `interactStructured`
+### `interact`
 
 ```java
-default StructuredAgentResult<T> interactStructured(@NonNull Message message)
+default StructuredAgentResult<T> interact(@NonNull Message message)
 ```
 
 Interacts with the agent with a Message and returns a structured result.
@@ -725,10 +596,10 @@ the structured result with parsed output
 
 ---
 
-### `interactStructured`
+### `interact`
 
 ```java
-default StructuredAgentResult<T> interactStructured(
+default StructuredAgentResult<T> interact(
         @NonNull Message message, @Nullable TraceMetadata trace)
 ```
 
@@ -749,10 +620,10 @@ the structured result with parsed output
 
 ---
 
-### `interactStructured`
+### `interact`
 
 ```java
-default StructuredAgentResult<T> interactStructured(@NonNull Prompt prompt)
+default StructuredAgentResult<T> interact(@NonNull Prompt prompt)
 ```
 
 Interacts with the agent with a Prompt and returns a structured result.
@@ -771,10 +642,10 @@ the structured result with parsed output
 
 ---
 
-### `interactStructured`
+### `interact`
 
 ```java
-default StructuredAgentResult<T> interactStructured(
+default StructuredAgentResult<T> interact(
         @NonNull Prompt prompt, @Nullable TraceMetadata trace)
 ```
 
@@ -795,10 +666,10 @@ the structured result with parsed output
 
 ---
 
-### `interactStructured`
+### `interact`
 
 ```java
-default StructuredAgentResult<T> interactStructured(@NonNull AgenticContext context)
+default StructuredAgentResult<T> interact(@NonNull AgenticContext context)
 ```
 
 Interacts with the agent with an existing context and returns a structured result.
@@ -815,17 +686,17 @@ the structured result with parsed output
 
 ---
 
-### `interactStructured`
+### `interact`
 
 ```java
-StructuredAgentResult<T> interactStructured(
+StructuredAgentResult<T> interact(
         @NonNull AgenticContext context, @Nullable TraceMetadata trace)
 ```
 
 Interacts with the agent with an existing context and returns a structured result with trace
 metadata.
 
-This is the main structured method that all other structured overloads delegate to.
+This is the main structured method that all other overloads delegate to.
 
 **Parameters**
 
@@ -837,4 +708,137 @@ This is the main structured method that all other structured overloads delegate 
 **Returns**
 
 the structured result with parsed output
+
+---
+
+### `interact`
+
+```java
+default AgentStream interact(@NonNull String input)
+```
+
+Interacts with the agent with streaming support.
+
+Default implementation creates a fresh context with the input as a user message.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `input` | the user's text input |
+
+**Returns**
+
+an AgentStream for processing streaming events
+
+---
+
+### `interact`
+
+```java
+default AgentStream interact(@NonNull String input, @Nullable TraceMetadata trace)
+```
+
+Interacts with the agent with streaming support and trace metadata.
+
+Default implementation creates a fresh context with the input as a user message.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `input` | the user's text input |
+| `trace` | optional trace metadata (overrides agent-level configuration) |
+
+**Returns**
+
+an AgentStream for processing streaming events
+
+---
+
+### `interact`
+
+```java
+default AgentStream interact(@NonNull Prompt prompt)
+```
+
+Interacts with the agent with streaming using a Prompt.
+
+The prompt's text content is extracted and used as the input.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `prompt` | the prompt input |
+
+**Returns**
+
+an AgentStream for processing streaming events
+
+---
+
+### `interact`
+
+```java
+default AgentStream interact(@NonNull Prompt prompt, @Nullable TraceMetadata trace)
+```
+
+Interacts with the agent with streaming using a Prompt and trace metadata.
+
+The prompt's text content is extracted and used as the input.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `prompt` | the prompt input |
+| `trace` | optional trace metadata (overrides agent-level configuration) |
+
+**Returns**
+
+an AgentStream for processing streaming events
+
+---
+
+### `interact`
+
+```java
+default AgentStream interact(@NonNull AgenticContext context)
+```
+
+Interacts with the agent with streaming using an existing context.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `context` | the conversation context containing history |
+
+**Returns**
+
+an AgentStream for processing streaming events
+
+---
+
+### `interact`
+
+```java
+AgentStream interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace)
+```
+
+Interacts with the agent with streaming using an existing context and trace metadata.
+
+This is the main streaming method that all other streaming overloads delegate to.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `context` | the conversation context containing history |
+| `trace` | optional trace metadata (overrides agent-level configuration) |
+
+**Returns**
+
+an AgentStream for processing streaming events
 

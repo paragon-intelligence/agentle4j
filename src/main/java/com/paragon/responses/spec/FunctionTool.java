@@ -14,8 +14,8 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Defines a function in your own code the model can choose to call. Learn more about <a
- * href="https://platform.openai.com/docs/guides/function-calling">function calling</a>.
+ * Defines a function in your own code the model can choose to call. Learn more about function
+ * calling at https://platform.openai.com/docs/guides/function-calling
  *
  * @param <P> the parameters the function accept in a Java Record format.
  */

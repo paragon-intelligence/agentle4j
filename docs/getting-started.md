@@ -22,7 +22,7 @@ This comprehensive guide will help you master Agentle4j step by step.
 
 ## Prerequisites
 
-- **Java 25+** installed
+- **Java 25+** installed with preview features enabled
 - **Maven** or **Gradle** build tool
 - An API key from [OpenRouter](https://openrouter.ai/keys), [OpenAI](https://platform.openai.com/api-keys), or another supported provider
 
@@ -74,9 +74,9 @@ public class HelloAgentle {
 
 ---
 
-## Async & Streaming
+## Concurrency & Streaming
 
-Agentle4j uses **Java 25 Virtual Threads** for efficient blocking operations:
+Agentle4j uses a **synchronous-first API** designed for Java 25 virtual threads:
 
 ### Synchronous (Default)
 
@@ -84,6 +84,16 @@ Agentle4j uses **Java 25 Virtual Threads** for efficient blocking operations:
 // Simple blocking call - leverages virtual threads for efficiency
 Response response = responder.respond(payload);
 System.out.println(response.outputText());
+```
+
+### Background Work
+
+```java
+// Dispatch blocking work onto a virtual thread when you want background execution
+Thread.startVirtualThread(() -> {
+    Response response = responder.respond(payload);
+    saveResponse(response.outputText());
+});
 ```
 
 ### Streaming (Real-time)
@@ -105,8 +115,10 @@ responder.respond(streamingPayload)
     .onComplete(response -> {
         System.out.println("\n\nDone!");
     })
-    .start();  // Blocks until streaming completes
+    .start();  // Returns immediately; callbacks run on a virtual thread
 ```
+
+Use `.startBlocking()` or `.get()` when you need to wait for the final `Response` inline.
 
 ---
 
@@ -133,7 +145,7 @@ responder.respond(payload)
     .onError(error -> {
         System.err.println("Error: " + error.getMessage());
     })
-    .start();
+    .startBlocking();
 ```
 
 ### Streaming Callbacks Reference
@@ -396,10 +408,7 @@ public class ChatBot {
                 })
                 .onComplete(r -> System.out.println("\n"))
                 .onError(e -> System.err.println("\nError: " + e.getMessage()))
-                .start();
-            
-            // Small delay to ensure streaming completes before next prompt
-            try { Thread.sleep(100); } catch (InterruptedException e) {}
+                .startBlocking();
         }
         
         scanner.close();

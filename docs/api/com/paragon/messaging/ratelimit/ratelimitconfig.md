@@ -1,23 +1,5 @@
 # :material-database: RateLimitConfig
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.ratelimit.RateLimitConfig` &nbsp;·&nbsp; **Record**
 
 ---

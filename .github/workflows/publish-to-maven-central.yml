@@ -56,35 +56,58 @@ jobs:
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          mvn deploy -Dgpg.skip=false -Dgpg.passphrase=$GPG_PASSPHRASE
+          mvn -B -ntp deploy -Dgpg.skip=false
           
-      - name: Verify publication (even if status check failed)
-        if: steps.maven_publish.outcome == 'failure'
+      - name: Verify publication
+        if: always()
+        env:
+          MAVEN_PUBLISH_OUTCOME: ${{ steps.maven_publish.outcome }}
         run: |
-          echo "Maven publish step failed, but checking if artifact was actually published..."
-          
-          # Extract version from pom.xml
+          GROUP_ID=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout)
+          ARTIFACT_ID=$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "Checking for version: $VERSION"
-          
-          # Wait a bit for Maven Central to update
-          sleep 30
-          
-          # Check if artifact exists on Maven Central
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://repo1.maven.org/maven2/com/paragon/agentle4j/$VERSION/agentle4j-$VERSION.pom")
-          
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ Artifact successfully published to Maven Central!"
-            echo "The deployment succeeded, but the status API check failed (HTTP 500)."
-            echo "This is a known transient issue with Maven Central's infrastructure."
-            exit 0
-          else
-            echo "❌ Artifact not found on Maven Central (HTTP $HTTP_CODE)"
-            echo "The publish genuinely failed."
+          GROUP_PATH=${GROUP_ID//./\/}
+          POM_URL="https://repo1.maven.org/maven2/$GROUP_PATH/$ARTIFACT_ID/$VERSION/$ARTIFACT_ID-$VERSION.pom"
+          PORTAL_URL="https://central.sonatype.com/artifact/$GROUP_ID/$ARTIFACT_ID/$VERSION"
+          SEARCH_URL="https://search.maven.org/search?q=g:%22$GROUP_ID%22+AND+a:%22$ARTIFACT_ID%22+AND+v:%22$VERSION%22"
+
+          echo "Publish step outcome: $MAVEN_PUBLISH_OUTCOME"
+          echo "Verifying publication for $GROUP_ID:$ARTIFACT_ID:$VERSION"
+          echo "Expected repo1 URL: $POM_URL"
+
+          HTTP_CODE=""
+          for attempt in {1..20}; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$POM_URL")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "Artifact is available on repo1.maven.org after attempt $attempt."
+              break
+            fi
+
+            echo "Artifact not visible on repo1 yet (attempt $attempt/20, HTTP $HTTP_CODE). Waiting 15s..."
+            sleep 15
+          done
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Artifact never became available on repo1.maven.org."
+            echo "Portal URL: $PORTAL_URL"
             exit 1
+          fi
+
+          SEARCH_RESPONSE=$(curl -s "https://search.maven.org/solrsearch/select?q=g:%22$GROUP_ID%22+AND+a:%22$ARTIFACT_ID%22+AND+v:%22$VERSION%22&rows=20&wt=json")
+          SEARCH_FOUND=$(printf '%s' "$SEARCH_RESPONSE" | grep -o '"numFound":[0-9]*' | head -n1 | cut -d: -f2)
+
+          if [ "${SEARCH_FOUND:-0}" -gt 0 ]; then
+            echo "Artifact is indexed by search.maven.org."
+          else
+            echo "::warning::Artifact is published on repo1.maven.org, but search.maven.org has not indexed it yet."
+            echo "::warning::Portal URL: $PORTAL_URL"
+            echo "::warning::Search URL: $SEARCH_URL"
+          fi
+
+          if [ "$MAVEN_PUBLISH_OUTCOME" = "failure" ]; then
+            echo "Publish step reported failure, but publication was verified on repo1.maven.org."
           fi
           
       - name: Create GitHub Release

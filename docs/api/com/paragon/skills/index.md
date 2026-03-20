@@ -1,23 +1,5 @@
 # Package `com.paragon.skills`
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ---
 
 ## :material-code-braces: Classs
@@ -29,6 +11,7 @@
 | [`Skill`](skill.md) | Represents a modular expertise that augments an agent's capabilities |
 | [`SkillMarkdownParser`](skillmarkdownparser.md) | Parser for SKILL |
 | [`SkillProviderException`](skillproviderexception.md) | Exception thrown when a skill cannot be loaded or parsed |
+| [`SkillReaderTool`](skillreadertool.md) | A tool that lets the agent read the full instructions and resources for a specific skill |
 | [`SkillStore`](skillstore.md) | Registry for managing available skills |
 | [`UrlSkillProvider`](urlskillprovider.md) | Loads skills from remote URLs |
 

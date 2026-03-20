@@ -1,35 +1,24 @@
 # :material-approximately-equal: AgentHook
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.harness.AgentHook` &nbsp;·&nbsp; **Interface**
 
 ---
 
 Lifecycle hook that intercepts agent and tool execution events.
 
-Implement this interface to inject cross-cutting concerns — logging, rate limiting, cost tracking, circuit breakers — without modifying agent logic. All methods have no-op defaults, so you only override the events you care about.
+Implement this interface to inject cross-cutting concerns (logging, rate limiting,
+cost tracking, circuit breakers, etc.) without modifying agent logic.
+
+Hooks are executed in registration order. All default methods are no-ops, so
+you only override the lifecycle events you care about.
+
+Example — log every tool call:
+{@code
+AgentHook loggingHook = new AgentHook() {
 
 **See Also**
 
 - `HookRegistry`
-- `Harness`
 
 *Since: 1.0*
 
@@ -43,6 +32,12 @@ default void beforeRun(@NonNull AgenticContext context)
 
 Called before the agent's agentic loop starts.
 
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `context` | the conversation context at the start of this run |
+
 ---
 
 ### `afterRun`
@@ -53,6 +48,13 @@ default void afterRun(@NonNull AgentResult result, @NonNull AgenticContext conte
 
 Called after the agent's agentic loop completes (success or failure).
 
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `result` | the result of the run |
+| `context` | the conversation context at completion |
+
 ---
 
 ### `beforeToolCall`
@@ -61,7 +63,14 @@ Called after the agent's agentic loop completes (success or failure).
 default void beforeToolCall(@NonNull FunctionToolCall call, @NonNull AgenticContext context)
 ```
 
-Called before a tool is invoked.
+Called before a tool is invoked. Can be used to block or log tool calls.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `call` | the tool call that is about to be executed |
+| `context` | the current conversation context |
 
 ---
 
@@ -69,35 +78,18 @@ Called before a tool is invoked.
 
 ```java
 default void afterToolCall(
-    @NonNull FunctionToolCall call,
-    @NonNull ToolExecution execution,
-    @NonNull AgenticContext context)
+      @NonNull FunctionToolCall call,
+      @NonNull ToolExecution execution,
+      @NonNull AgenticContext context)
 ```
 
 Called after a tool has been invoked.
 
-## Usage
+**Parameters**
 
-```java
-// Log every tool call with its duration
-AgentHook timingHook = new AgentHook() {
-    private final Map<String, Instant> starts = new ConcurrentHashMap<>();
+| Name | Description |
+|------|-------------|
+| `call` | the tool call that was executed |
+| `execution` | the execution record containing output and timing |
+| `context` | the current conversation context |
 
-    @Override
-    public void beforeToolCall(FunctionToolCall call, AgenticContext ctx) {
-        starts.put(call.callId(), Instant.now());
-    }
-
-    @Override
-    public void afterToolCall(FunctionToolCall call, ToolExecution exec, AgenticContext ctx) {
-        Instant start = starts.remove(call.callId());
-        long ms = Duration.between(start, Instant.now()).toMillis();
-        System.out.printf("Tool %s took %dms (success=%s)%n",
-            call.name(), ms, exec.isSuccess());
-    }
-};
-
-Agent agent = Agent.builder()
-    .hookRegistry(HookRegistry.of(timingHook))
-    .build();
-```

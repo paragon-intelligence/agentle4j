@@ -1,23 +1,5 @@
 # :material-code-braces: ContextManagementConfig
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.context.ContextManagementConfig` &nbsp;·&nbsp; **Class**
 
 ---

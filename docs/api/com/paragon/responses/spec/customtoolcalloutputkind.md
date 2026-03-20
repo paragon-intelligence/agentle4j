@@ -1,23 +1,5 @@
 # :material-approximately-equal: CustomToolCallOutputKind
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.CustomToolCallOutputKind` &nbsp;·&nbsp; **Interface**
 
 ---
@@ -27,6 +9,6 @@ content. This is a sealed interface. Allowed implementations are:
 
   
 - `Text` - A text input to the model.
-- `Image` - An image input to the model. Learn about image
-      inputs.
+- `Image` - An image input to the model. Learn about image inputs at
+      [https://platform.openai.com/docs/guides/images-vision?api-mode=responses](https://platform.openai.com/docs/guides/images-vision?api-mode=responses)
 - `File` - A file input to the model.

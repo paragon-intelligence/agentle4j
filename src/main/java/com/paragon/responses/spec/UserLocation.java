@@ -12,11 +12,11 @@ public final class UserLocation {
 
   /**
    * @param city Free text input for the city of the user, e.g. {@code San Francisco}.
-   * @param country The two-letter <a href="https://en.wikipedia.org/wiki/ISO_3166-1">ISO country
-   *     code</a> of the user, e.g. US.
+   * @param country The two-letter ISO country code of the user, e.g. US. See
+   *     https://en.wikipedia.org/wiki/ISO_3166-1
    * @param region Free text input for the region of the user, e.g. {@code California}.
-   * @param timezone The <a href="https://timeapi.io/documentation/iana-timezones">IANA timezone</a>
-   *     of the user, e.g. {@code America/Los_Angeles}.
+   * @param timezone The IANA timezone of the user, e.g. {@code America/Los_Angeles}. See
+   *     https://timeapi.io/documentation/iana-timezones
    */
   public UserLocation(
       @Nullable String city,

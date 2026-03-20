@@ -1,23 +1,5 @@
 # :material-code-braces: Message
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.Message` &nbsp;·&nbsp; **Class**
 
 Implements `ResponseInputItem`, `Item`
@@ -70,7 +52,7 @@ AssistantMessage assistantMsg = Message.assistant("The weather is sunny and 72°
 // Message with text and image
 UserMessage multiContent = Message.user(List.of(
     Text.valueOf("Analyze this image:"),
-    Image.fromUrl("https://example.com/chart.jpg")
+    Image.fromUrl("[https://example.com/chart.jpg"](https://example.com/chart.jpg"))
 ));
 // Multiple text segments
 DeveloperMessage instructions = Message.developer(

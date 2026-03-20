@@ -1,23 +1,5 @@
 # :material-approximately-equal: LocationMessageInterface
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.core.LocationMessageInterface` &nbsp;·&nbsp; **Interface**
 
 Extends `OutboundMessage`
@@ -39,7 +21,9 @@ concrete location message classes.
 double latitude()
 ```
 
-@return latitude coordinate
+**Returns**
+
+latitude coordinate
 
 ---
 
@@ -49,7 +33,9 @@ double latitude()
 double longitude()
 ```
 
-@return longitude coordinate
+**Returns**
+
+longitude coordinate
 
 ---
 
@@ -59,7 +45,9 @@ double longitude()
 Optional<String> name()
 ```
 
-@return optional location name
+**Returns**
+
+optional location name
 
 ---
 
@@ -69,7 +57,9 @@ Optional<String> name()
 Optional<String> address()
 ```
 
-@return optional location address
+**Returns**
+
+optional location address
 
 ---
 
@@ -79,4 +69,7 @@ Optional<String> address()
 default @NonNull String toCoordinatesString()
 ```
 
-@return formatted coordinates string
+**Returns**
+
+formatted coordinates string
+

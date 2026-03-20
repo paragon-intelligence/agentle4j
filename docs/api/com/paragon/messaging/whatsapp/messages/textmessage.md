@@ -1,23 +1,5 @@
 # :material-database: TextMessage
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.whatsapp.messages.TextMessage` &nbsp;·&nbsp; **Record**
 
 ---
@@ -33,7 +15,7 @@ message meets API requirements before sending.
 // Simple text message
 TextMessage message = new TextMessage("Hello, World!");
 // With URL preview enabled
-TextMessage message = new TextMessage("Check out https://example.com", true);
+TextMessage message = new TextMessage("Check out [https://example.com",](https://example.com",) true);
 // As a reply to another message
 TextMessage reply = TextMessage.builder()
     .body("Thanks for your message!")

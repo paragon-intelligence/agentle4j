@@ -104,6 +104,7 @@ nav:
   - message.md
   - moveaction.md
   - openpageaction.md
+  - openrouterwebplugin.md
   - outputdatainclude.md
   - outputformat.md
   - outputmessage.md

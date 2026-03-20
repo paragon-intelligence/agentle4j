@@ -4,8 +4,8 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
- * An image input to the model. Learn about <a
- * href="https://platform.openai.com/docs/guides/images-vision?api-mode=responses">image inputs</a>
+ * An image input to the model. Learn about image inputs at
+ * https://platform.openai.com/docs/guides/images-vision?api-mode=responses
  *
  * @param detail The detail level of the image to be sent to the model. One of {@code high}, {@code
  *     low}, or {@code auto}. Defaults to auto.

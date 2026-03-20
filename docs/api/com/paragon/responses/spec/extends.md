@@ -1,23 +1,5 @@
 # :material-code-braces: extends
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.responses.spec.extends` &nbsp;·&nbsp; **Class**
 
 ---
@@ -58,7 +40,7 @@ Creates a bounded function call.
 ### `call`
 
 ```java
-public @NonNull FunctionToolCallOutput call() throws JsonProcessingException
+public @NonNull FunctionToolCallOutput call() throws JacksonException
 ```
 
 Invokes the bound function with the deserialized arguments.
@@ -74,7 +56,7 @@ the function tool call output
 
 | Type | Condition |
 |------|-----------|
-| `JsonProcessingException` | if the arguments cannot be deserialized |
+| `JacksonException` | if the arguments cannot be deserialized |
 | `IllegalStateException` | if this call is not bound to a function implementation |
 
 ---

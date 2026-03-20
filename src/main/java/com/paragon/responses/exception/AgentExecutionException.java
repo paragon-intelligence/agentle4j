@@ -17,7 +17,7 @@ import org.jspecify.annotations.Nullable;
  * <p>Example usage:
  *
  * <pre>{@code
- * AgentResult result = agent.interact("Hello").join();
+ * AgentResult result = agent.interact("Hello");
  * if (result.isError() && result.error() instanceof AgentExecutionException e) {
  *     System.err.println("Agent " + e.agentName() + " failed in " + e.phase());
  *     System.err.println("Completed " + e.turnsCompleted() + " turns before failure");

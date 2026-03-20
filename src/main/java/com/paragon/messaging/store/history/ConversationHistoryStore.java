@@ -28,8 +28,11 @@ import org.jspecify.annotations.NonNull;
  * // Create in-memory store
  * ConversationHistoryStore store = InMemoryConversationHistoryStore.create(100);
  *
- * // Or create Redis-backed store
- * ConversationHistoryStore store = RedisConversationHistoryStore.create(redisClient);
+ * // Or create a Redis-backed store
+ * ConversationHistoryStore store = RedisConversationHistoryStore.builder()
+ *     .redisOperations(redisOperations)
+ *     .defaultTtl(Duration.ofHours(24))
+ *     .build();
  *
  * // Add messages to history
  * store.addMessage(userId, Message.user("Hello!"));
@@ -84,7 +87,7 @@ public interface ConversationHistoryStore {
    * @param userId the user's unique identifier
    * @param maxMessages maximum number of messages to return
    * @param maxAge maximum age of messages to include
-   * @return list of messages as ResponseInputItem (for AgentContext)
+   * @return list of messages as ResponseInputItem (for AgenticContext)
    */
   @NonNull List<ResponseInputItem> getHistory(
       @NonNull String userId, int maxMessages, @NonNull Duration maxAge);

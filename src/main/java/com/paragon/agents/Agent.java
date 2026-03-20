@@ -71,7 +71,7 @@ import java.util.*;
  * <h3>With Context Persistence</h3>
  *
  * <pre>{@code
- * AgentContext context = AgentContext.create();
+ * AgenticContext context = AgenticContext.create();
  *
  * // First turn
  * agent.interact("Hi, I need help with my order", context);
@@ -709,7 +709,7 @@ public final class Agent implements Serializable, Interactable {
         int turn = context.getTurnCount();
         if (callbacks != null) callbacks.onTurnStart(turn);
 
-        // Build TelemetryContext from AgentContext for trace correlation
+        // Build TelemetryContext from AgenticContext for trace correlation
         TelemetryContext telemetryCtx = buildTelemetryContext(context);
 
         // Build payload and call LLM with trace context
@@ -1019,7 +1019,7 @@ public final class Agent implements Serializable, Interactable {
   // ===== Private Helper Methods =====
 
   /**
-   * Builds a TelemetryContext from AgentContext for trace correlation.
+   * Builds a TelemetryContext from AgenticContext for trace correlation.
    */
   private TelemetryContext buildTelemetryContext(AgenticContext context) {
     TelemetryContext.Builder builder =

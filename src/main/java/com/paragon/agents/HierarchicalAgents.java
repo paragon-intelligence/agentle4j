@@ -22,7 +22,7 @@ import org.jspecify.annotations.Nullable;
  *   <li>Distributed decision-making within defined boundaries
  * </ul>
  *
- * <p><b>Virtual Thread Design:</b> Uses synchronous API optimized for Java 21+ virtual threads.
+ * <p><b>Virtual Thread Design:</b> Uses a synchronous API optimized for Java 25+ virtual threads.
  * Blocking calls are cheap and efficient with virtual threads.
  *
  * <h2>Usage Example</h2>

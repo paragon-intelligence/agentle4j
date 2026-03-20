@@ -1,23 +1,5 @@
 # :material-code-braces: InMemoryConversationHistoryStore
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.store.history.InMemoryConversationHistoryStore` &nbsp;·&nbsp; **Class**
 
 Implements `ConversationHistoryStore`

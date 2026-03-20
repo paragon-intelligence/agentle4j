@@ -6,7 +6,7 @@ import org.jspecify.annotations.NonNull;
 /**
  * Interface for embedding providers.
  *
- * <p>Uses synchronous API optimized for Java 21+ virtual threads.
+ * <p>Uses a synchronous API optimized for Java 25+ virtual threads.
  */
 public interface EmbeddingProvider {
 

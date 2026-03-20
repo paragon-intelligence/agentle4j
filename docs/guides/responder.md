@@ -18,7 +18,8 @@
 
 
 
-The `Responder` is the core HTTP client for the OpenAI Responses API. It handles all API communication, streaming, telemetry, and provider configuration.
+The `Responder` is the core HTTP client for the OpenAI Responses API. It handles request
+execution, streaming, telemetry, and provider configuration.
 
 ---
 
@@ -383,48 +384,31 @@ List<ResponseOutput> items = response.output();
 
 ## Error Handling
 
-Agentle provides a **structured exception hierarchy** for type-safe error handling.
+`Responder` is synchronous and currently surfaces request failures as `RuntimeException` after the
+configured retries are exhausted. Streaming failures are delivered to `.onError(...)`, typically as
+`StreamingException`.
 
 ### Exception Types
 
-| Exception | When Thrown | Retryable? |
-|-----------|-------------|------------|
-| `RateLimitException` | API rate limited (429) | ✅ Yes |
-| `AuthenticationException` | Invalid API key (401/403) | ❌ No |
-| `ServerException` | Server error (5xx) | ✅ Yes |
-| `InvalidRequestException` | Bad request (4xx) | ❌ No |
-| `StreamingException` | Connection dropped during streaming | ✅ Usually |
-| `ConfigurationException` | Missing required config | ❌ No |
+| Error surface | When it happens |
+|-----------|-------------|
+| `RuntimeException` | Request failed after retries or structured parsing failed |
+| `IllegalArgumentException` | Structured payload is misconfigured before the request is sent |
+| `StreamingException` | Streaming connection dropped or timed out |
 
-### Type-Safe Error Handling
+### Request Error Handling
 
 ```java
 try {
     Response response = responder.respond(payload);
-} catch (RateLimitException e) {
-    System.err.println("Rate limited. Retry after: " + e.retryAfter());
-} catch (AuthenticationException e) {
-    System.err.println("Auth failed: " + e.suggestion());
-} catch (ServerException e) {
-    System.err.println("Server error " + e.statusCode());
-} catch (ApiException e) {
-    System.err.println("API error: " + e.getMessage());
-}
-```
-
-### Checking if Retryable
-
-All Agentle exceptions implement `isRetryable()`:
-
-```java
-if (error instanceof AgentleException e && e.isRetryable()) {
-    // Safe to retry - the built-in retry policy will have already tried
-    // This only fires after all retries are exhausted
+} catch (RuntimeException e) {
+    System.err.println("Request failed: " + e.getMessage());
 }
 ```
 
 > [!TIP]
-> The built-in retry policy automatically retries rate limits (429) and server errors (5xx) with exponential backoff. You only need to handle errors that remain after all retries.
+> The built-in retry policy automatically retries retryable HTTP failures before the exception
+> reaches your code. Handle the final failure path only.
 
 ### Streaming Error Recovery
 
@@ -466,7 +450,7 @@ String apiKey = System.getenv("OPENROUTER_API_KEY");
 // Handle errors appropriately
 try {
     Response response = responder.respond(payload);
-} catch (ApiException e) {
+} catch (RuntimeException e) {
     // handle
 }
 ```
@@ -477,7 +461,7 @@ try {
 // Don't create new Responder for each request
 public String chat(String message) {
     Responder r = Responder.builder()...build();  // Bad!
-    return r.respond(payload).join().outputText();
+    return r.respond(payload).outputText();
 }
 
 // Don't hardcode API keys

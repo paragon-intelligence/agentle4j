@@ -1,23 +1,5 @@
 # :material-approximately-equal: MessageStore
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.store.MessageStore` &nbsp;·&nbsp; **Interface**
 
 ---

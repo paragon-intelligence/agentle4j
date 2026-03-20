@@ -1,23 +1,5 @@
 # :material-approximately-equal: TextMessageInterface
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.messaging.core.TextMessageInterface` &nbsp;·&nbsp; **Interface**
 
 Extends `OutboundMessage`
@@ -39,7 +21,9 @@ concrete text message classes.
 String body()
 ```
 
-@return the message body text
+**Returns**
+
+the message body text
 
 ---
 
@@ -49,4 +33,7 @@ String body()
 boolean previewUrl()
 ```
 
-@return whether to generate URL previews
+**Returns**
+
+whether to generate URL previews
+

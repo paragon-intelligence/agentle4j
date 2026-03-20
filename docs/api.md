@@ -18,17 +18,19 @@
 
 
 
-The complete API documentation is generated from Javadoc.
+The API reference under [`docs/api/`](api/index.md) is generated from the Javadocs in
+`src/main/java`.
 
-!!! info "API Documentation Location"
-    When built with the full pipeline (including `mvn javadoc:javadoc`), the Javadoc will be available here.
-    
-    For local builds, run:
+!!! info "Generation Source Of Truth"
+    The source of truth is the code and its Javadocs. Regenerate the reference with:
     ```bash
-    mvn javadoc:javadoc
-    mkdir -p docs/api
-    cp -r target/site/apidocs/* docs/api/
+    make docs-gen
     ```
+    To validate the full MkDocs site locally, run:
+    ```bash
+    make docs-build
+    ```
+    Avoid editing `docs/api/**` by hand without also fixing the originating Javadocs or generator.
 
 ## Main Classes
 
@@ -46,16 +48,22 @@ The complete API documentation is generated from Javadoc.
 
 ```
 com.paragon
-├── responses          # Core Responder and Response classes
-├── responses.spec     # Request payload builders and DTOs
-├── responses.dto      # Additional data transfer objects
-├── agents             # Agent framework
-├── tools              # Function calling tools
-└── telemetry          # Observability integration
+├── responses              # Core Responder API
+├── responses.spec         # Request/response models and tool types
+├── responses.streaming    # Response streaming
+├── agents                 # Agent framework and multi-agent patterns
+├── messaging              # WhatsApp messaging module
+├── web                    # Web extraction
+├── telemetry              # Observability integration
+├── embeddings             # Embeddings providers
+├── mcp                    # MCP client support
+├── prompts                # Prompt management
+└── harness                # Harness engineering utilities
 ```
 
 ## Quick Links
 
+- [API Index](api/index.md)
 - [Responder Guide](guides/responder.md)
 - [Agents Guide](guides/agents.md)
 - [Function Tools Guide](guides/tools.md)

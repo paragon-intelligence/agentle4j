@@ -1,23 +1,5 @@
 # :material-approximately-equal: SkillProvider
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.skills.SkillProvider` &nbsp;·&nbsp; **Interface**
 
 ---
@@ -37,7 +19,7 @@ Skill skill = provider.provide("pdf-processor");
 SkillProvider urlProvider = UrlSkillProvider.builder()
     .httpClient(httpClient)
     .build();
-Skill skill = urlProvider.provide("https://example.com/skills/pdf-processor/SKILL.md");
+Skill skill = urlProvider.provide("[https://example.com/skills/pdf-processor/SKILL.md"](https://example.com/skills/pdf-processor/SKILL.md"));
 // In-memory provider
 SkillProvider memProvider = InMemorySkillProvider.of(skill1, skill2);
 ```

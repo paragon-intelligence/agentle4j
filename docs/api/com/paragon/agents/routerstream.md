@@ -1,23 +1,5 @@
 # :material-code-braces: RouterStream
 
-> This docs was updated at: 2026-03-20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 `com.paragon.agents.RouterStream` &nbsp;·&nbsp; **Class**
 
 ---
@@ -27,7 +9,9 @@ Streaming wrapper for RouterAgent that provides event callbacks during routing a
 RouterStream first classifies the input, then executes the selected agent with streaming.
 
 ```java
-router.routeStream("Help with billing")
+AgenticContext context = AgenticContext.create()
+    .addMessage(Message.user("Help with billing"));
+router.routeStream(context)
     .onRouteSelected(agent -> System.out.println("Routed to: " + agent.name()))
     .onTextDelta(System.out::print)
     .onComplete(result -> System.out.println("\nDone!"))
@@ -51,6 +35,26 @@ Called when a route is selected.
 | Name | Description |
 |------|-------------|
 | `callback` | receives the selected Interactable |
+
+**Returns**
+
+this stream
+
+---
+
+### `onRoutingFailed`
+
+```java
+public @NonNull RouterStream onRoutingFailed(@NonNull Consumer<String> callback)
+```
+
+Called when no route is found for the input (empty input or no matching route).
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `callback` | receives a description of the routing failure |
 
 **Returns**
 
@@ -175,6 +179,102 @@ Called when a handoff occurs within the selected agent.
 **Returns**
 
 this stream
+
+---
+
+### `onToolCallPending`
+
+```java
+public @NonNull RouterStream onToolCallPending(AgentStream.ToolConfirmationHandler handler)
+```
+
+Called when a tool call requires confirmation (human-in-the-loop), forwarded from the child agent.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `handler` | receives the pending tool call and approval callback |
+
+**Returns**
+
+this stream
+
+---
+
+### `onPause`
+
+```java
+public @NonNull RouterStream onPause(AgentStream.PauseHandler handler)
+```
+
+Called when the child agent should pause for async approval, forwarded from the child agent.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `handler` | receives the serializable run state |
+
+**Returns**
+
+this stream
+
+---
+
+### `onGuardrailFailed`
+
+```java
+public @NonNull RouterStream onGuardrailFailed(@NonNull Consumer<GuardrailResult.Failed> callback)
+```
+
+Called when an output guardrail fails in the child agent.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `callback` | receives the failed guardrail result |
+
+**Returns**
+
+this stream
+
+---
+
+### `onClientSideTool`
+
+```java
+public @NonNull RouterStream onClientSideTool(@NonNull Consumer<FunctionToolCall> callback)
+```
+
+Called when a client-side tool (`stopsLoop = true`) is detected in the child agent.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `callback` | receives the tool call that triggered the exit |
+
+**Returns**
+
+this stream
+
+---
+
+### `startBlocking`
+
+```java
+public @NonNull AgentResult startBlocking()
+```
+
+Starts the streaming router execution. Blocks until completion.
+
+On virtual threads, blocking is efficient and does not consume platform threads.
+
+**Returns**
+
+the final result
 
 ---
 
