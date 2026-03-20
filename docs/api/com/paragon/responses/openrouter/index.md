@@ -1,6 +1,7 @@
 # Package `com.paragon.responses.openrouter`
 
-> This docs was updated at: 2026-03-17
+> This docs was updated at: 2026-03-20
+
 
 
 

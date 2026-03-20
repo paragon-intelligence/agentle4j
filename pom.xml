@@ -6,7 +6,7 @@
 
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.9.2</version>
+    <version>0.10.0</version>
     <packaging>jar</packaging>
 
     <name>Agentle4j</name>

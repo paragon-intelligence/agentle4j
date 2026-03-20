@@ -1,5 +1,7 @@
 # Context Persistence
 
+> This docs was updated at: 2026-03-20
+
 `AgenticContext` is the short-term memory of an agent run — it holds conversation history,
 custom state, turn count, and trace metadata. Because it is fully Jackson-serializable, you can
 persist it to a database, message queue, or file system and resume the run later.
