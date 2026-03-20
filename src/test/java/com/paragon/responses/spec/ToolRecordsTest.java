@@ -2,8 +2,8 @@ package com.paragon.responses.spec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,7 +31,7 @@ class ToolRecordsTest {
 
     @Test
     @DisplayName("toToolChoice returns valid JSON")
-    void toToolChoiceFormat() throws JsonProcessingException {
+    void toToolChoiceFormat() throws JacksonException {
       WebSearchTool searchTool = new WebSearchTool(null, null, null);
       AllowedTools allowed = new AllowedTools(AllowedToolsMode.AUTO, List.of(searchTool));
 
@@ -87,7 +87,7 @@ class ToolRecordsTest {
 
     @Test
     @DisplayName("toToolChoice returns web_search type")
-    void toToolChoiceFormat() throws JsonProcessingException {
+    void toToolChoiceFormat() throws JacksonException {
       WebSearchTool tool = new WebSearchTool(null, null, null);
 
       String json = tool.toToolChoice(mapper);

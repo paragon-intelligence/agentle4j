@@ -1,6 +1,6 @@
 package com.paragon.agents.toolplan;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 import com.paragon.responses.spec.FunctionToolCall;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.FunctionToolStore;
@@ -284,7 +284,7 @@ public final class ToolPlanExecutor {
       Duration duration = Duration.between(stepStart, Instant.now());
       return new ToolPlanResult.StepResult(step.id(), step.tool(), outputText, duration, true);
 
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       String error = "Failed to deserialize arguments for tool '" + step.tool() + "': " + e.getMessage();
       errors.put(step.id(), error);
       return new ToolPlanResult.StepResult(

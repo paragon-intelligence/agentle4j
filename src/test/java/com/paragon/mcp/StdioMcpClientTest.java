@@ -3,7 +3,7 @@ package com.paragon.mcp;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.mcp.dto.JsonRpcResponse;
 import java.io.*;
 import java.nio.file.Path;

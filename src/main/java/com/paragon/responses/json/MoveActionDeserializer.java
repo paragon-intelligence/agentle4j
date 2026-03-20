@@ -1,13 +1,12 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.exc.MismatchedInputException;
 import com.paragon.responses.spec.Coordinate;
 import com.paragon.responses.spec.MoveAction;
-import java.io.IOException;
 
 /**
  * Custom deserializer for MoveAction to handle @JsonUnwrapped Coordinate.
@@ -15,11 +14,11 @@ import java.io.IOException;
  * <p>Jackson doesn't support @JsonUnwrapped with @JsonCreator (which records implicitly use), so we
  * need a custom deserializer to read the unwrapped x and y fields.
  */
-public class MoveActionDeserializer extends JsonDeserializer<MoveAction> {
+public class MoveActionDeserializer extends ValueDeserializer<MoveAction> {
 
   @Override
-  public MoveAction deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-    JsonNode node = p.getCodec().readTree(p);
+  public MoveAction deserialize(JsonParser p, DeserializationContext ctxt) throws tools.jackson.core.JacksonException {
+    JsonNode node = p.readValueAsTree();
 
     if (!node.has("x") || node.get("x").isNull()) {
       throw MismatchedInputException.from(

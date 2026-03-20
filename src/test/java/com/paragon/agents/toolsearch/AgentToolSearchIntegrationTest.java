@@ -2,7 +2,7 @@ package com.paragon.agents.toolsearch;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.agents.Agent;
 import com.paragon.agents.AgentResult;
 import com.paragon.responses.Responder;

@@ -1,7 +1,7 @@
 package com.paragon.agents;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.*;
 import com.paragon.responses.streaming.ReasoningTextDeltaEvent;
@@ -616,7 +616,7 @@ public final class AgentStream {
       FunctionToolCallOutput output = agent.toolStore().execute(call);
       Duration duration = Duration.between(start, Instant.now());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), output, duration);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       Duration duration = Duration.between(start, Instant.now());
       FunctionToolCallOutput errorOutput =
           FunctionToolCallOutput.error(
@@ -643,7 +643,7 @@ public final class AgentStream {
           Handoff.HandoffParams params =
               objectMapper.readValue(call.arguments(), Handoff.HandoffParams.class);
           return Optional.ofNullable(params.message());
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
           return Optional.empty();
         }
       }

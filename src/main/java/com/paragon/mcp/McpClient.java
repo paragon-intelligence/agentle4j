@@ -1,9 +1,9 @@
 package com.paragon.mcp;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.mcp.dto.JsonRpcError;
 import com.paragon.mcp.dto.JsonRpcRequest;
 import com.paragon.mcp.dto.JsonRpcResponse;
@@ -331,7 +331,7 @@ public abstract class McpClient implements AutoCloseable {
   protected @NonNull String toJson(@NonNull Object obj) throws McpException {
     try {
       return objectMapper.writeValueAsString(obj);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw McpException.protocolError("Failed to serialize to JSON: " + e.getMessage());
     }
   }
@@ -346,7 +346,7 @@ public abstract class McpClient implements AutoCloseable {
   protected @NonNull JsonRpcResponse parseResponse(@NonNull String json) throws McpException {
     try {
       return objectMapper.readValue(json, JsonRpcResponse.class);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw McpException.protocolError("Failed to parse JSON response: " + e.getMessage());
     }
   }

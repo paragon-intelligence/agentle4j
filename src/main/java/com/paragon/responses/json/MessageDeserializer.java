@@ -1,11 +1,9 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.JsonNode;
 import com.paragon.responses.spec.AssistantMessage;
 import com.paragon.responses.spec.DeveloperMessage;
 import com.paragon.responses.spec.InputMessageStatus;
@@ -14,26 +12,22 @@ import com.paragon.responses.spec.MessageContent;
 import com.paragon.responses.spec.OutputMessage;
 import com.paragon.responses.spec.Text;
 import com.paragon.responses.spec.UserMessage;
-import java.io.IOException;
 import java.util.List;
 
 /**
  * Custom deserializer for Message that uses the 'role' field to determine which concrete subclass
  * to instantiate. Also handles OutputMessage which has an 'id' field.
  */
-public class MessageDeserializer extends JsonDeserializer<Message> {
-
-  private static final TypeReference<List<MessageContent>> CONTENT_TYPE = new TypeReference<>() {};
+public class MessageDeserializer extends ValueDeserializer<Message> {
 
   @Override
-  public Message deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-    ObjectMapper mapper = (ObjectMapper) p.getCodec();
-    JsonNode node = mapper.readTree(p);
+  public Message deserialize(JsonParser p, DeserializationContext ctxt) throws tools.jackson.core.JacksonException {
+    JsonNode node = ctxt.readTree(p);
 
     String role = node.has("role") ? node.get("role").asText() : null;
 
     if (role == null) {
-      throw new IOException("Missing 'role' field in Message JSON");
+      return ctxt.reportInputMismatch(Message.class, "Missing 'role' field in Message JSON");
     }
 
     // Parse content - support both string (single text) and array/object formats.
@@ -42,7 +36,7 @@ public class MessageDeserializer extends JsonDeserializer<Message> {
     List<MessageContent> content;
     JsonNode contentNode = node.get("content");
     if (contentNode == null || contentNode.isNull()) {
-      throw new IOException("Missing 'content' field in Message JSON");
+      return ctxt.reportInputMismatch(Message.class, "Missing 'content' field in Message JSON");
     }
     if (contentNode.isTextual()) {
       // Backwards/forwards compatible: accept plain string and wrap as single Text item
@@ -50,12 +44,12 @@ public class MessageDeserializer extends JsonDeserializer<Message> {
     } else if (contentNode.isArray()) {
       List<MessageContent> tmp = new java.util.ArrayList<>();
       for (JsonNode item : contentNode) {
-        tmp.add(mapper.treeToValue(item, MessageContent.class));
+        tmp.add(ctxt.readTreeAsValue(item, MessageContent.class));
       }
       content = java.util.List.copyOf(tmp);
     } else {
       // Single object treated as one content item
-      content = List.of(mapper.treeToValue(contentNode, MessageContent.class));
+      content = List.of(ctxt.readTreeAsValue(contentNode, MessageContent.class));
     }
 
     // Parse status
@@ -77,7 +71,7 @@ public class MessageDeserializer extends JsonDeserializer<Message> {
       case "developer", "system" -> new DeveloperMessage(content, status);
       case "user" -> new UserMessage(content, status);
       case "assistant" -> new AssistantMessage(content, status);
-      default -> throw new IOException("Unknown role: " + role);
+      default -> ctxt.reportInputMismatch(Message.class, "Unknown role: %s", role);
     };
   }
 }

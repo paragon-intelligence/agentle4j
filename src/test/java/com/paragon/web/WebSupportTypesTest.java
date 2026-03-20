@@ -2,8 +2,8 @@ package com.paragon.web;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -33,7 +33,7 @@ class WebSupportTypesTest {
   }
 
   @Test
-  void viewport_serialization() throws JsonProcessingException {
+  void viewport_serialization() throws JacksonException {
     Viewport viewport = Viewport.of(800, 600);
 
     String json = objectMapper.writeValueAsString(viewport);
@@ -43,7 +43,7 @@ class WebSupportTypesTest {
   }
 
   @Test
-  void viewport_deserialization() throws JsonProcessingException {
+  void viewport_deserialization() throws JacksonException {
     String json = "{\"width\":1024,\"height\":768}";
 
     Viewport viewport = objectMapper.readValue(json, Viewport.class);
@@ -82,7 +82,7 @@ class WebSupportTypesTest {
   }
 
   @Test
-  void location_serialization() throws JsonProcessingException {
+  void location_serialization() throws JacksonException {
     Location location = Location.of("GB", "en");
 
     String json = objectMapper.writeValueAsString(location);
@@ -92,7 +92,7 @@ class WebSupportTypesTest {
   }
 
   @Test
-  void location_deserialization() throws JsonProcessingException {
+  void location_deserialization() throws JacksonException {
     String json = "{\"country\":\"DE\",\"language\":\"de\"}";
 
     Location location = objectMapper.readValue(json, Location.class);
@@ -132,14 +132,14 @@ class WebSupportTypesTest {
   }
 
   @Test
-  void proxyMode_serialization() throws JsonProcessingException {
+  void proxyMode_serialization() throws JacksonException {
     String json = objectMapper.writeValueAsString(ProxyMode.STEALTH);
 
     assertEquals("\"stealth\"", json);
   }
 
   @Test
-  void proxyMode_deserialization() throws JsonProcessingException {
+  void proxyMode_deserialization() throws JacksonException {
     ProxyMode mode = objectMapper.readValue("\"auto\"", ProxyMode.class);
 
     assertEquals(ProxyMode.AUTO, mode);
@@ -164,14 +164,14 @@ class WebSupportTypesTest {
   }
 
   @Test
-  void pdfFormat_serialization() throws JsonProcessingException {
+  void pdfFormat_serialization() throws JacksonException {
     String json = objectMapper.writeValueAsString(PdfFormat.A4);
 
     assertEquals("\"A4\"", json);
   }
 
   @Test
-  void pdfFormat_deserialization() throws JsonProcessingException {
+  void pdfFormat_deserialization() throws JacksonException {
     PdfFormat format = objectMapper.readValue("\"Letter\"", PdfFormat.class);
 
     assertEquals(PdfFormat.LETTER, format);
@@ -199,14 +199,14 @@ class WebSupportTypesTest {
   }
 
   @Test
-  void scrollDirection_serialization() throws JsonProcessingException {
+  void scrollDirection_serialization() throws JacksonException {
     String json = objectMapper.writeValueAsString(ScrollDirection.DOWN);
 
     assertEquals("\"down\"", json);
   }
 
   @Test
-  void scrollDirection_deserialization() throws JsonProcessingException {
+  void scrollDirection_deserialization() throws JacksonException {
     ScrollDirection direction = objectMapper.readValue("\"up\"", ScrollDirection.class);
 
     assertEquals(ScrollDirection.UP, direction);
@@ -224,7 +224,7 @@ class WebSupportTypesTest {
   }
 
   @Test
-  void scrapeResult_serialization() throws JsonProcessingException {
+  void scrapeResult_serialization() throws JacksonException {
     ScrapeResult result = new ScrapeResult("https://test.com", "<html></html>");
 
     String json = objectMapper.writeValueAsString(result);
@@ -234,7 +234,7 @@ class WebSupportTypesTest {
   }
 
   @Test
-  void scrapeResult_deserialization() throws JsonProcessingException {
+  void scrapeResult_deserialization() throws JacksonException {
     String json = "{\"url\":\"https://example.com\",\"html\":\"<html>content</html>\"}";
 
     ScrapeResult result = objectMapper.readValue(json, ScrapeResult.class);

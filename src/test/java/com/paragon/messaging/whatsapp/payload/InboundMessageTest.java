@@ -2,8 +2,8 @@ package com.paragon.messaging.whatsapp.payload;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -32,7 +32,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("deserializes text message from JSON")
-    void deserializesTextMessage() throws JsonProcessingException {
+    void deserializesTextMessage() throws JacksonException {
       String json =
           """
           {
@@ -57,7 +57,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("extracts text content from text message")
-    void extractsTextContent() throws JsonProcessingException {
+    void extractsTextContent() throws JacksonException {
       String json =
           """
           {
@@ -78,7 +78,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("deserializes text message with reply context")
-    void deserializesWithContext() throws JsonProcessingException {
+    void deserializesWithContext() throws JacksonException {
       String json =
           """
           {
@@ -108,7 +108,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("deserializes image message")
-    void deserializesImageMessage() throws JsonProcessingException {
+    void deserializesImageMessage() throws JacksonException {
       String json =
           """
           {
@@ -132,7 +132,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("deserializes image with caption")
-    void deserializesWithCaption() throws JsonProcessingException {
+    void deserializesWithCaption() throws JacksonException {
       String json =
           """
           {
@@ -158,7 +158,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("extracts placeholder for image without caption")
-    void extractsPlaceholder() throws JsonProcessingException {
+    void extractsPlaceholder() throws JacksonException {
       String json =
           """
           {
@@ -185,7 +185,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("deserializes button reply")
-    void deserializesButtonReply() throws JsonProcessingException {
+    void deserializesButtonReply() throws JacksonException {
       String json =
           """
           {
@@ -213,7 +213,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("deserializes list reply")
-    void deserializesListReply() throws JsonProcessingException {
+    void deserializesListReply() throws JacksonException {
       String json =
           """
           {
@@ -246,7 +246,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("deserializes location message")
-    void deserializesLocation() throws JsonProcessingException {
+    void deserializesLocation() throws JacksonException {
       String json =
           """
           {
@@ -273,7 +273,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("extracts location content")
-    void extractsLocationContent() throws JsonProcessingException {
+    void extractsLocationContent() throws JacksonException {
       String json =
           """
           {
@@ -303,7 +303,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("deserializes reaction message")
-    void deserializesReaction() throws JsonProcessingException {
+    void deserializesReaction() throws JacksonException {
       String json =
           """
           {
@@ -331,7 +331,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("deserializes audio message")
-    void deserializesAudio() throws JsonProcessingException {
+    void deserializesAudio() throws JacksonException {
       String json =
           """
           {
@@ -485,7 +485,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("handles customer inquiry")
-    void handlesCustomerInquiry() throws JsonProcessingException {
+    void handlesCustomerInquiry() throws JacksonException {
       String json =
           """
           {
@@ -508,7 +508,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("handles button selection in customer flow")
-    void handlesButtonSelection() throws JsonProcessingException {
+    void handlesButtonSelection() throws JacksonException {
       String json =
           """
           {
@@ -569,7 +569,7 @@ class InboundMessageTest {
 
     @Test
     @DisplayName("handles Unicode in text messages")
-    void handlesUnicode() throws JsonProcessingException {
+    void handlesUnicode() throws JacksonException {
       String json =
           """
           {

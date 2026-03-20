@@ -2,7 +2,7 @@ package com.paragon.embeddings;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.http.RetryPolicy;
 import java.time.Duration;
 import java.util.List;

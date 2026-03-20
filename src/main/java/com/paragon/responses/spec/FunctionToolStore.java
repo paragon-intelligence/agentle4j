@@ -1,7 +1,7 @@
 package com.paragon.responses.spec;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import org.jspecify.annotations.NonNull;
 
 import java.util.HashMap;
@@ -186,11 +186,11 @@ public final class FunctionToolStore {
    *
    * @param toolCall the function tool call to execute
    * @return the function tool call output
-   * @throws JsonProcessingException  if the arguments cannot be deserialized
+   * @throws JacksonException  if the arguments cannot be deserialized
    * @throws IllegalArgumentException if no tool is stored for the function name
    */
   public @NonNull FunctionToolCallOutput execute(@NonNull FunctionToolCall toolCall)
-          throws JsonProcessingException {
+          throws JacksonException {
     return bind(toolCall).call();
   }
 
@@ -199,11 +199,11 @@ public final class FunctionToolStore {
    *
    * @param toolCalls the function tool calls to execute
    * @return a list of function tool call outputs
-   * @throws JsonProcessingException  if any arguments cannot be deserialized
+   * @throws JacksonException  if any arguments cannot be deserialized
    * @throws IllegalArgumentException if any tool call references a function not in the store
    */
   public @NonNull List<FunctionToolCallOutput> executeAll(@NonNull List<FunctionToolCall> toolCalls)
-          throws JsonProcessingException {
+          throws JacksonException {
     var results = new java.util.ArrayList<FunctionToolCallOutput>();
     for (FunctionToolCall toolCall : toolCalls) {
       results.add(execute(toolCall));

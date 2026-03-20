@@ -2,8 +2,8 @@ package com.paragon.responses.spec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.annotations.FunctionMetadata;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
@@ -220,7 +220,7 @@ class FunctionToolTest {
 
     @Test
     @DisplayName("toToolChoice generates correct JSON")
-    void toToolChoiceGeneratesCorrectJson() throws JsonProcessingException {
+    void toToolChoiceGeneratesCorrectJson() throws JacksonException {
       GetWeatherTool tool = new GetWeatherTool();
       String choice = tool.toToolChoice(objectMapper);
 
@@ -231,7 +231,7 @@ class FunctionToolTest {
 
     @Test
     @DisplayName("toToolChoice contains name and type")
-    void toToolChoiceContainsNameAndType() throws JsonProcessingException {
+    void toToolChoiceContainsNameAndType() throws JacksonException {
       TestFunctionTool tool = new TestFunctionTool();
       String choice = tool.toToolChoice(objectMapper);
 

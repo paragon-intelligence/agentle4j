@@ -1,9 +1,9 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.jsontype.TypeSerializer;
+import tools.jackson.databind.ser.std.StdSerializer;
 import com.paragon.responses.spec.WebSearchToolCall;
 import java.io.IOException;
 
@@ -18,20 +18,20 @@ public class WebSearchToolCallSerializer extends StdSerializer<WebSearchToolCall
   public void serializeWithType(
       WebSearchToolCall value,
       JsonGenerator gen,
-      SerializerProvider provider,
+      SerializationContext provider,
       TypeSerializer typeSer)
-      throws IOException {
+      throws tools.jackson.core.JacksonException {
     serialize(value, gen, provider);
   }
 
   @Override
-  public void serialize(WebSearchToolCall value, JsonGenerator gen, SerializerProvider provider)
-      throws IOException {
+  public void serialize(WebSearchToolCall value, JsonGenerator gen, SerializationContext provider)
+      throws tools.jackson.core.JacksonException {
     gen.writeStartObject();
-    gen.writeStringField("type", "web_search_call");
-    gen.writeStringField("id", value.id());
-    gen.writeObjectField("action", value.action());
-    gen.writeStringField("status", value.status());
+    gen.writeStringProperty("type", "web_search_call");
+    gen.writeStringProperty("id", value.id());
+    gen.writePOJOProperty("action", value.action());
+    gen.writeStringProperty("status", value.status());
     gen.writeEndObject();
   }
 }

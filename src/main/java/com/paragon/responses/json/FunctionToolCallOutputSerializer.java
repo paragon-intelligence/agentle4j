@@ -1,9 +1,9 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.databind.jsontype.TypeSerializer;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import java.io.IOException;
 
@@ -37,26 +37,26 @@ public class FunctionToolCallOutputSerializer extends StdSerializer<FunctionTool
   public void serializeWithType(
       FunctionToolCallOutput value,
       JsonGenerator gen,
-      SerializerProvider provider,
+      SerializationContext provider,
       TypeSerializer typeSer)
-      throws IOException {
+      throws tools.jackson.core.JacksonException {
     serialize(value, gen, provider);
   }
 
   @Override
   public void serialize(
-      FunctionToolCallOutput value, JsonGenerator gen, SerializerProvider provider)
-      throws IOException {
+      FunctionToolCallOutput value, JsonGenerator gen, SerializationContext provider)
+      throws tools.jackson.core.JacksonException {
     gen.writeStartObject();
-    gen.writeStringField("type", "function_call_output");
-    gen.writeStringField("call_id", value.callId());
+    gen.writeStringProperty("type", "function_call_output");
+    gen.writeStringProperty("call_id", value.callId());
     // output() is FunctionToolCallOutputKind — Text.toString() returns the plain text
-    gen.writeStringField("output", value.output().toString());
+    gen.writeStringProperty("output", value.output().toString());
     if (value.id() != null) {
-      gen.writeStringField("id", value.id());
+      gen.writeStringProperty("id", value.id());
     }
     if (value.status() != null) {
-      gen.writeStringField("status", value.status().name().toLowerCase());
+      gen.writeStringProperty("status", value.status().name().toLowerCase());
     }
     gen.writeEndObject();
   }

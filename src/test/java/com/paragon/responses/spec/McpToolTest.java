@@ -2,8 +2,8 @@ package com.paragon.responses.spec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -136,7 +136,7 @@ class McpToolTest {
 
     @Test
     @DisplayName("toToolChoice without allowedTools returns server_label and type")
-    void toToolChoiceWithoutAllowedToolsReturnsServerLabelAndType() throws JsonProcessingException {
+    void toToolChoiceWithoutAllowedToolsReturnsServerLabelAndType() throws JacksonException {
       McpTool tool = new McpTool("my-server", null, null, null, null, null, null, null);
       String choice = tool.toToolChoice(objectMapper);
 
@@ -149,7 +149,7 @@ class McpToolTest {
 
     @Test
     @DisplayName("toToolChoice with allowedTools includes name")
-    void toToolChoiceWithAllowedToolsIncludesName() throws JsonProcessingException {
+    void toToolChoiceWithAllowedToolsIncludesName() throws JacksonException {
       McpToolFilter filter = new McpToolFilter(true, List.of("tool_one", "tool_two"));
       McpTool tool = new McpTool("my-server", filter, null, null, null, null, null, null);
       String choice = tool.toToolChoice(objectMapper);

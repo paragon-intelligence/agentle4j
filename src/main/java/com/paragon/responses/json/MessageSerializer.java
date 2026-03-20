@@ -1,13 +1,12 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.jsontype.TypeSerializer;
+import tools.jackson.databind.ser.std.StdSerializer;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.MessageContent;
 import com.paragon.responses.spec.Text;
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -37,38 +36,37 @@ public class MessageSerializer extends StdSerializer<Message> {
   public void serializeWithType(
       Message value,
       JsonGenerator gen,
-      SerializerProvider provider,
+      SerializationContext provider,
       TypeSerializer typeSer)
-      throws IOException {
+      throws tools.jackson.core.JacksonException {
     serialize(value, gen, provider);
   }
 
   @Override
-  public void serialize(Message value, JsonGenerator gen, SerializerProvider provider)
-      throws IOException {
+  public void serialize(Message value, JsonGenerator gen, SerializationContext provider)
+      throws tools.jackson.core.JacksonException {
     gen.writeStartObject();
-    gen.writeStringField("type", "message");
-    gen.writeStringField("role", value.role().name().toLowerCase());
+    gen.writeStringProperty("type", "message");
+    gen.writeStringProperty("role", value.role().name().toLowerCase());
     // OutputMessage carries an 'id' field required by the Responses API schema.
     if (value instanceof com.paragon.responses.spec.OutputMessage<?> om && om.id() != null) {
-      gen.writeStringField("id", om.id());
+      gen.writeStringProperty("id", om.id());
     }
     writeContent(value.content(), gen, provider);
     if (value.status() != null) {
-      gen.writeStringField("status", value.status().name().toLowerCase());
+      gen.writeStringProperty("status", value.status().name().toLowerCase());
     }
     gen.writeEndObject();
   }
 
   private void writeContent(
-      List<MessageContent> content, JsonGenerator gen, SerializerProvider provider)
-      throws IOException {
+      List<MessageContent> content, JsonGenerator gen, SerializationContext provider)
+      throws tools.jackson.core.JacksonException {
     // Write as a plain string when content is a single Text item — required by OpenRouter/OpenAI
     if (content.size() == 1 && content.get(0) instanceof Text t) {
-      gen.writeStringField("content", t.text());
+      gen.writeStringProperty("content", t.text());
     } else {
-      gen.writeFieldName("content");
-      provider.defaultSerializeValue(content, gen);
+      provider.defaultSerializeProperty("content", content, gen);
     }
   }
 }

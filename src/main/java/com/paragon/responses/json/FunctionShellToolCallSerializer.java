@@ -1,9 +1,9 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.jsontype.TypeSerializer;
+import tools.jackson.databind.ser.std.StdSerializer;
 import com.paragon.responses.spec.FunctionShellToolCall;
 import java.io.IOException;
 
@@ -18,26 +18,26 @@ public class FunctionShellToolCallSerializer extends StdSerializer<FunctionShell
   public void serializeWithType(
       FunctionShellToolCall value,
       JsonGenerator gen,
-      SerializerProvider provider,
+      SerializationContext provider,
       TypeSerializer typeSer)
-      throws IOException {
+      throws tools.jackson.core.JacksonException {
     serialize(value, gen, provider);
   }
 
   @Override
   public void serialize(
-      FunctionShellToolCall value, JsonGenerator gen, SerializerProvider provider)
-      throws IOException {
+      FunctionShellToolCall value, JsonGenerator gen, SerializationContext provider)
+      throws tools.jackson.core.JacksonException {
     gen.writeStartObject();
-    gen.writeStringField("type", "function_shell_call");
+    gen.writeStringProperty("type", "function_shell_call");
     // id may be null when the model first emits the call
     if (value.id() != null) {
-      gen.writeStringField("id", value.id());
+      gen.writeStringProperty("id", value.id());
     }
-    gen.writeStringField("call_id", value.callId());
-    gen.writeObjectField("action", value.action());
+    gen.writeStringProperty("call_id", value.callId());
+    gen.writePOJOProperty("action", value.action());
     if (value.status() != null) {
-      gen.writeStringField("status", value.status().name().toLowerCase());
+      gen.writeStringProperty("status", value.status().name().toLowerCase());
     }
     gen.writeEndObject();
   }

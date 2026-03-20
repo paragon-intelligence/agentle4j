@@ -1,17 +1,15 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.JsonNode;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.paragon.responses.spec.File;
 import com.paragon.responses.spec.Image;
 import com.paragon.responses.spec.MessageContent;
 import com.paragon.responses.spec.Text;
-import java.io.IOException;
 
 /**
  * Custom deserializer for {@link MessageContent} that is tolerant of plain string values.
@@ -25,7 +23,7 @@ import java.io.IOException;
  *   <li>If the node is an object with a {@code type} field, normal polymorphic resolution is used.
  * </ul>
  */
-public final class MessageContentDeserializer extends JsonDeserializer<MessageContent> {
+public final class MessageContentDeserializer extends ValueDeserializer<MessageContent> {
 
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME,
@@ -42,9 +40,8 @@ public final class MessageContentDeserializer extends JsonDeserializer<MessageCo
   interface Delegate {}
 
   @Override
-  public MessageContent deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-    ObjectMapper mapper = (ObjectMapper) p.getCodec();
-    JsonNode node = mapper.readTree(p);
+  public MessageContent deserialize(JsonParser p, DeserializationContext ctxt) throws tools.jackson.core.JacksonException {
+    JsonNode node = p.readValueAsTree();
 
     // Plain string → treat as simple text content
     if (node.isTextual()) {
@@ -62,7 +59,6 @@ public final class MessageContentDeserializer extends JsonDeserializer<MessageCo
     }
 
     // Delegate to standard polymorphic handling when 'type' is present
-    return (MessageContent) (Object) mapper.treeToValue(node, Delegate.class);
+    return (MessageContent) (Object) ctxt.readTreeAsValue(node, Delegate.class);
   }
 }
-

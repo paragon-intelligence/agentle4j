@@ -2,8 +2,8 @@ package com.paragon.messaging.whatsapp.payload;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,7 +26,7 @@ class StatusTest {
 
     @Test
     @DisplayName("deserializes sent status")
-    void deserializesSentStatus() throws JsonProcessingException {
+    void deserializesSentStatus() throws JacksonException {
       String json =
           """
           {
@@ -48,7 +48,7 @@ class StatusTest {
 
     @Test
     @DisplayName("deserializes delivered status")
-    void deserializesDeliveredStatus() throws JsonProcessingException {
+    void deserializesDeliveredStatus() throws JacksonException {
       String json =
           """
           {
@@ -66,7 +66,7 @@ class StatusTest {
 
     @Test
     @DisplayName("deserializes read status")
-    void deserializesReadStatus() throws JsonProcessingException {
+    void deserializesReadStatus() throws JacksonException {
       String json =
           """
           {
@@ -84,7 +84,7 @@ class StatusTest {
 
     @Test
     @DisplayName("deserializes failed status with errors")
-    void deserializesFailedStatus() throws JsonProcessingException {
+    void deserializesFailedStatus() throws JacksonException {
       String json =
           """
           {
@@ -110,7 +110,7 @@ class StatusTest {
 
     @Test
     @DisplayName("deserializes status with pricing")
-    void deserializesWithPricing() throws JsonProcessingException {
+    void deserializesWithPricing() throws JacksonException {
       String json =
           """
           {
@@ -133,7 +133,7 @@ class StatusTest {
 
     @Test
     @DisplayName("deserializes status with conversation")
-    void deserializesWithConversation() throws JsonProcessingException {
+    void deserializesWithConversation() throws JacksonException {
       String json =
           """
           {
@@ -162,7 +162,7 @@ class StatusTest {
 
     @Test
     @DisplayName("handles all standard status types")
-    void handlesAllStatusTypes() throws JsonProcessingException {
+    void handlesAllStatusTypes() throws JacksonException {
       String[] statuses = {"sent", "delivered", "read", "failed"};
 
       for (String statusType : statuses) {
@@ -190,7 +190,7 @@ class StatusTest {
 
     @Test
     @DisplayName("tracks message delivery progression")
-    void tracksDeliveryProgression() throws JsonProcessingException {
+    void tracksDeliveryProgression() throws JacksonException {
       String messageId = "wamid.TRACK123";
 
       // Sent
@@ -245,7 +245,7 @@ class StatusTest {
 
     @Test
     @DisplayName("handles business-initiated conversation")
-    void handlesBusinessInitiatedConversation() throws JsonProcessingException {
+    void handlesBusinessInitiatedConversation() throws JacksonException {
       String json =
           """
           {
@@ -281,7 +281,7 @@ class StatusTest {
 
     @Test
     @DisplayName("handles status with null optional fields")
-    void handlesNullOptionalFields() throws JsonProcessingException {
+    void handlesNullOptionalFields() throws JacksonException {
       String json =
           """
           {
@@ -302,7 +302,7 @@ class StatusTest {
 
     @Test
     @DisplayName("handles multiple errors")
-    void handlesMultipleErrors() throws JsonProcessingException {
+    void handlesMultipleErrors() throws JacksonException {
       String json =
           """
           {
@@ -333,7 +333,7 @@ class StatusTest {
 
     @Test
     @DisplayName("handles empty errors list")
-    void handlesEmptyErrorsList() throws JsonProcessingException {
+    void handlesEmptyErrorsList() throws JacksonException {
       String json =
           """
           {
@@ -358,7 +358,7 @@ class StatusTest {
 
     @Test
     @DisplayName("maps recipient_id to recipientId")
-    void mapsRecipientId() throws JsonProcessingException {
+    void mapsRecipientId() throws JacksonException {
       String json =
           """
           {
@@ -376,7 +376,7 @@ class StatusTest {
 
     @Test
     @DisplayName("round-trip serialization preserves snake_case")
-    void roundTripPreservesSnakeCase() throws JsonProcessingException {
+    void roundTripPreservesSnakeCase() throws JacksonException {
       Status original =
           new Status("wamid.123", "sent", "1707040000", "5511999999999", null, null, null);
 

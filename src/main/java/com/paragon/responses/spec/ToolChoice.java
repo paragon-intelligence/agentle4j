@@ -1,6 +1,6 @@
 package com.paragon.responses.spec;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * Represents which tool the AI need to run. Only contains tool names and not args. Args are present

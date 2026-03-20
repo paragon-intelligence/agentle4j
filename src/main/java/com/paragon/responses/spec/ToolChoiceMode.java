@@ -1,6 +1,6 @@
 package com.paragon.responses.spec;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 public enum ToolChoiceMode implements ToolChoice {
   NONE,

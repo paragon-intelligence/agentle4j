@@ -1,9 +1,8 @@
 package com.paragon.agents;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import com.paragon.json.ParagonJavaTimeModule;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -66,8 +65,9 @@ public final class FilesystemMemory implements Memory {
   public static @NonNull FilesystemMemory create(@NonNull Path baseDir) {
     ObjectMapper mapper =
         new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            .rebuild()
+            .addModule(new ParagonJavaTimeModule())
+            .build();
     return new FilesystemMemory(baseDir, mapper);
   }
 
@@ -212,7 +212,7 @@ public final class FilesystemMemory implements Memory {
     try {
       TypeReference<Map<String, MemoryEntry>> typeRef = new TypeReference<>() {};
       return objectMapper.readValue(file.toFile(), typeRef);
-    } catch (IOException e) {
+    } catch (tools.jackson.core.JacksonException e) {
       throw new IllegalStateException("Failed to load memory for user: " + userId, e);
     }
   }

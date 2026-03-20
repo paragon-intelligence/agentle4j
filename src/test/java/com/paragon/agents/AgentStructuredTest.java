@@ -148,7 +148,7 @@ class AgentStructuredTest {
               .instructions("Test")
               .responder(responder)
               .structured(TestPerson.class)
-              .objectMapper(new com.fasterxml.jackson.databind.ObjectMapper())
+              .objectMapper(new tools.jackson.databind.ObjectMapper())
               .build();
 
       assertNotNull(agent);

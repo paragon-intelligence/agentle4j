@@ -2,7 +2,8 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.agents.InstructionSource;
 import com.paragon.agents.InteractableBlueprint.*;
 import com.paragon.http.RetryPolicy;
@@ -24,9 +25,11 @@ class InteractableBlueprintTest {
 
   @BeforeEach
   void setUp() {
-    mapper = new ObjectMapper();
-    mapper.configure(
-        com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    mapper =
+        new ObjectMapper()
+            .rebuild()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .build();
     GuardrailRegistry.clear();
   }
 

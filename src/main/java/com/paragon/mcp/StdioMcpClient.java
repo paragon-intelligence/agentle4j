@@ -1,6 +1,6 @@
 package com.paragon.mcp;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.mcp.dto.JsonRpcRequest;
 import com.paragon.mcp.dto.JsonRpcResponse;
 import java.io.BufferedReader;

@@ -1,7 +1,7 @@
 package com.paragon.responses.streaming;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.FunctionToolStore;
 import com.paragon.responses.spec.ParsedResponse;
@@ -456,7 +456,7 @@ public final class ResponseStream<T> {
     Response response = get();
     try {
       return response.parse(responseType, objectMapper);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException("Failed to parse structured output", e);
     }
   }
@@ -629,7 +629,7 @@ public final class ResponseStream<T> {
                           "Streaming error [%s]: %s", errorEvent.code(), errorEvent.message()));
                 }
 
-              } catch (JsonProcessingException e) {
+              } catch (JacksonException e) {
                 logger.warn("Failed to parse SSE event: {}", data, e);
                 // Continue processing - some events might be unknown/new
               }
@@ -650,7 +650,7 @@ public final class ResponseStream<T> {
           try {
             ParsedResponse<T> parsed = finalResponse.parse(responseType, objectMapper);
             onParsedCompleteHandler.accept(parsed);
-          } catch (JsonProcessingException e) {
+          } catch (JacksonException e) {
             if (onErrorHandler != null) {
               onErrorHandler.accept(new RuntimeException("Failed to parse structured output", e));
             }

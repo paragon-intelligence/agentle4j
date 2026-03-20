@@ -1,9 +1,9 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.jsontype.TypeSerializer;
+import tools.jackson.databind.ser.std.StdSerializer;
 import com.paragon.responses.spec.FunctionToolCall;
 import java.io.IOException;
 
@@ -32,25 +32,25 @@ public class FunctionToolCallSerializer extends StdSerializer<FunctionToolCall> 
   public void serializeWithType(
       FunctionToolCall value,
       JsonGenerator gen,
-      SerializerProvider provider,
+      SerializationContext provider,
       TypeSerializer typeSer)
-      throws IOException {
+      throws tools.jackson.core.JacksonException {
     serialize(value, gen, provider);
   }
 
   @Override
-  public void serialize(FunctionToolCall value, JsonGenerator gen, SerializerProvider provider)
-      throws IOException {
+  public void serialize(FunctionToolCall value, JsonGenerator gen, SerializationContext provider)
+      throws tools.jackson.core.JacksonException {
     gen.writeStartObject();
-    gen.writeStringField("type", "function_call");
-    gen.writeStringField("call_id", value.callId());
-    gen.writeStringField("name", value.name());
-    gen.writeStringField("arguments", value.arguments());
+    gen.writeStringProperty("type", "function_call");
+    gen.writeStringProperty("call_id", value.callId());
+    gen.writeStringProperty("name", value.name());
+    gen.writeStringProperty("arguments", value.arguments());
     if (value.id() != null) {
-      gen.writeStringField("id", value.id());
+      gen.writeStringProperty("id", value.id());
     }
     if (value.status() != null) {
-      gen.writeStringField("status", value.status().name().toLowerCase());
+      gen.writeStringProperty("status", value.status().name().toLowerCase());
     }
     gen.writeEndObject();
   }

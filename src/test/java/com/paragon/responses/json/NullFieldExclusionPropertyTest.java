@@ -2,8 +2,8 @@ package com.paragon.responses.json;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.*;
 import java.util.Iterator;
@@ -67,7 +67,7 @@ public class NullFieldExclusionPropertyTest {
   /** Recursively checks that no field in a JsonNode has a null value. */
   private void assertNoNullValues(JsonNode node) {
     if (node.isObject()) {
-      Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
+      Iterator<Map.Entry<String, JsonNode>> fields = node.properties().iterator();
       while (fields.hasNext()) {
         Map.Entry<String, JsonNode> field = fields.next();
         JsonNode value = field.getValue();

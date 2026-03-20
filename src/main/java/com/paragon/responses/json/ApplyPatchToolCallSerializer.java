@@ -1,9 +1,9 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.jsontype.TypeSerializer;
+import tools.jackson.databind.ser.std.StdSerializer;
 import com.paragon.responses.spec.ApplyPatchToolCall;
 import java.io.IOException;
 
@@ -21,21 +21,21 @@ public class ApplyPatchToolCallSerializer extends StdSerializer<ApplyPatchToolCa
   public void serializeWithType(
       ApplyPatchToolCall value,
       JsonGenerator gen,
-      SerializerProvider provider,
+      SerializationContext provider,
       TypeSerializer typeSer)
-      throws IOException {
+      throws tools.jackson.core.JacksonException {
     serialize(value, gen, provider);
   }
 
   @Override
-  public void serialize(ApplyPatchToolCall value, JsonGenerator gen, SerializerProvider provider)
-      throws IOException {
+  public void serialize(ApplyPatchToolCall value, JsonGenerator gen, SerializationContext provider)
+      throws tools.jackson.core.JacksonException {
     gen.writeStartObject();
-    gen.writeStringField("type", "apply_patch_call");
-    gen.writeStringField("id", value.id());
-    gen.writeStringField("call_id", value.callId());
-    gen.writeObjectField("operation", value.operation());
-    gen.writeStringField("status", value.status());
+    gen.writeStringProperty("type", "apply_patch_call");
+    gen.writeStringProperty("id", value.id());
+    gen.writeStringProperty("call_id", value.callId());
+    gen.writePOJOProperty("operation", value.operation());
+    gen.writeStringProperty("status", value.status());
     gen.writeEndObject();
   }
 }

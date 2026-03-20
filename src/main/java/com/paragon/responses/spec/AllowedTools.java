@@ -1,7 +1,7 @@
 package com.paragon.responses.spec;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
 import org.jspecify.annotations.NonNull;
@@ -15,7 +15,7 @@ import org.jspecify.annotations.NonNull;
 public record AllowedTools(@NonNull AllowedToolsMode mode, @NonNull List<Tool> tools)
     implements ToolChoice {
   @Override
-  public String toToolChoice(ObjectMapper mapper) throws JsonProcessingException {
+  public String toToolChoice(ObjectMapper mapper) throws JacksonException {
     return mapper.writeValueAsString(Map.of("mode", mode, "tools", tools));
   }
 }

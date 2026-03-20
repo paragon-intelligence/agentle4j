@@ -2,7 +2,7 @@ package com.paragon.telemetry.grafana;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.telemetry.events.*;
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;

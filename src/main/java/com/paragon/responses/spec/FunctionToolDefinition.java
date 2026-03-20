@@ -2,8 +2,8 @@ package com.paragon.responses.spec;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -51,7 +51,7 @@ public record FunctionToolDefinition(
   }
 
   @Override
-  public @NonNull String toToolChoice(ObjectMapper mapper) throws JsonProcessingException {
+  public @NonNull String toToolChoice(ObjectMapper mapper) throws JacksonException {
     return mapper.writeValueAsString(Map.of("name", name, "type", "function"));
   }
 }

@@ -1,9 +1,7 @@
 package com.paragon.agents;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -76,10 +74,7 @@ public final class JdbcMemory implements Memory {
    * @return a new JdbcMemory instance
    */
   public static @NonNull JdbcMemory create(@NonNull DataSource dataSource) {
-    ObjectMapper mapper =
-        new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    ObjectMapper mapper = new ObjectMapper();
     return new JdbcMemory(dataSource, DEFAULT_TABLE, mapper);
   }
 
@@ -91,10 +86,7 @@ public final class JdbcMemory implements Memory {
    * @return a new JdbcMemory instance
    */
   public static @NonNull JdbcMemory create(@NonNull DataSource dataSource, @NonNull String tableName) {
-    ObjectMapper mapper =
-        new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    ObjectMapper mapper = new ObjectMapper();
     return new JdbcMemory(dataSource, tableName, mapper);
   }
 

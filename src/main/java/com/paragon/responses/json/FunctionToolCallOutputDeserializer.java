@@ -1,14 +1,12 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.JsonNode;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.FunctionToolCallOutputStatus;
 import com.paragon.responses.spec.Text;
-import java.io.IOException;
 
 /**
  * Custom deserializer for {@link FunctionToolCallOutput}.
@@ -22,13 +20,12 @@ import java.io.IOException;
  * reversible. Deserializing such outputs produces a {@link Text} wrapping the {@code toString()}
  * representation — structurally safe but semantically lossy.
  */
-public class FunctionToolCallOutputDeserializer extends JsonDeserializer<FunctionToolCallOutput> {
+public class FunctionToolCallOutputDeserializer extends ValueDeserializer<FunctionToolCallOutput> {
 
   @Override
   public FunctionToolCallOutput deserialize(JsonParser p, DeserializationContext ctxt)
-      throws IOException {
-    ObjectMapper mapper = (ObjectMapper) p.getCodec();
-    JsonNode node = mapper.readTree(p);
+      throws tools.jackson.core.JacksonException {
+    JsonNode node = p.readValueAsTree();
 
     String callId = node.get("call_id").asText();
 

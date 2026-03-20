@@ -1,7 +1,7 @@
 package com.paragon.prompts;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.http.RetryPolicy;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -83,7 +83,10 @@ public final class LangfusePromptProvider implements PromptProvider {
   }
 
   private static ObjectMapper createDefaultObjectMapper() {
-    return new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    return new ObjectMapper()
+        .rebuild()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .build();
   }
 
   /**

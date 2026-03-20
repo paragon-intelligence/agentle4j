@@ -1,7 +1,7 @@
 package com.paragon.responses.spec;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -57,10 +57,10 @@ public class BoundedFunctionCall extends FunctionToolCall {
    * function implementation is called with those parameters.
    *
    * @return the function tool call output
-   * @throws JsonProcessingException if the arguments cannot be deserialized
+   * @throws JacksonException if the arguments cannot be deserialized
    * @throws IllegalStateException if this call is not bound to a function implementation
    */
-  public @NonNull FunctionToolCallOutput call() throws JsonProcessingException {
+  public @NonNull FunctionToolCallOutput call() throws JacksonException {
     if (function == null || paramClass == null || objectMapper == null) {
       throw new IllegalStateException(
           "Cannot call unbound function tool call for function '"

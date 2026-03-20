@@ -1,9 +1,9 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.jsontype.TypeSerializer;
+import tools.jackson.databind.ser.std.StdSerializer;
 import com.paragon.responses.spec.CodeInterpreterToolCall;
 import java.io.IOException;
 
@@ -18,23 +18,23 @@ public class CodeInterpreterToolCallSerializer extends StdSerializer<CodeInterpr
   public void serializeWithType(
       CodeInterpreterToolCall value,
       JsonGenerator gen,
-      SerializerProvider provider,
+      SerializationContext provider,
       TypeSerializer typeSer)
-      throws IOException {
+      throws tools.jackson.core.JacksonException {
     serialize(value, gen, provider);
   }
 
   @Override
   public void serialize(
-      CodeInterpreterToolCall value, JsonGenerator gen, SerializerProvider provider)
-      throws IOException {
+      CodeInterpreterToolCall value, JsonGenerator gen, SerializationContext provider)
+      throws tools.jackson.core.JacksonException {
     gen.writeStartObject();
-    gen.writeStringField("type", "code_interpreter_call");
-    gen.writeStringField("id", value.id());
-    gen.writeStringField("code", value.code());
-    gen.writeStringField("container_id", value.containerId());
-    gen.writeObjectField("outputs", value.outputs());
-    gen.writeStringField("status", value.status().name().toLowerCase());
+    gen.writeStringProperty("type", "code_interpreter_call");
+    gen.writeStringProperty("id", value.id());
+    gen.writeStringProperty("code", value.code());
+    gen.writeStringProperty("container_id", value.containerId());
+    gen.writePOJOProperty("outputs", value.outputs());
+    gen.writeStringProperty("status", value.status().name().toLowerCase());
     gen.writeEndObject();
   }
 }

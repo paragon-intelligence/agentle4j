@@ -2,9 +2,9 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 import com.paragon.agents.InteractableBlueprint.*;
 import java.util.*;
 import org.junit.jupiter.api.*;
@@ -19,9 +19,14 @@ class InteractableBlueprintYamlTest {
   void setUp() {
     jsonMapper =
         new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    yamlMapper = new YAMLMapper();
-    yamlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            .rebuild()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .build();
+    yamlMapper =
+        new YAMLMapper()
+            .rebuild()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .build();
     GuardrailRegistry.clear();
   }
 

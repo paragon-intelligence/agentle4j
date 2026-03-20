@@ -3,7 +3,7 @@ package com.paragon.agents;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,9 +1,11 @@
 package com.paragon.responses;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.PropertyNamingStrategies;
+import com.paragon.json.ParagonJavaTimeModule;
 import com.paragon.responses.json.ResponsesApiModule;
 
 /**
@@ -17,29 +19,21 @@ import com.paragon.responses.json.ResponsesApiModule;
  *   <li>Custom serializers and deserializers for special types
  * </ul>
  */
-public class ResponsesApiObjectMapper extends ObjectMapper {
-  private ResponsesApiObjectMapper() {
-    // Configure snake_case naming strategy for JSON field names
-    // This converts camelCase Java field names to snake_case JSON field names
-    super.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+public final class ResponsesApiObjectMapper {
+  private ResponsesApiObjectMapper() {}
 
-    // Ignore unknown properties during deserialization
-    // This allows the system to handle API responses with additional fields
-    super.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-    // Accept case-insensitive enum values (e.g., "in_progress" → IN_PROGRESS)
-    // The API returns lowercase snake_case enum values
-    super.enable(com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
-
-    // Exclude null values from JSON output
-    // This ensures that null fields are not included in serialized JSON
-    super.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
-
-    // Register JDK8 module for Optional, LocalDate, etc.
-    super.findAndRegisterModules();
-
-    // Register custom ResponsesApiModule with enum and coordinate serializers
-    super.registerModule(new ResponsesApiModule());
+  private static ObjectMapper configure(ObjectMapper mapper) {
+    return mapper
+        .rebuild()
+        .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+        .changeDefaultPropertyInclusion(
+            ignored -> JsonInclude.Value.empty().withValueInclusion(JsonInclude.Include.NON_NULL))
+        .findAndAddModules()
+        .addModule(new ParagonJavaTimeModule())
+        .addModule(new ResponsesApiModule())
+        .build();
   }
 
   /**
@@ -49,6 +43,6 @@ public class ResponsesApiObjectMapper extends ObjectMapper {
    * @return A fully configured ObjectMapper instance
    */
   public static ObjectMapper create() {
-    return new ResponsesApiObjectMapper();
+    return configure(new ObjectMapper());
   }
 }

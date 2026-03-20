@@ -1,7 +1,7 @@
 package com.paragon.embeddings;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.http.RetryPolicy;
 import java.io.IOException;
 import java.time.Duration;

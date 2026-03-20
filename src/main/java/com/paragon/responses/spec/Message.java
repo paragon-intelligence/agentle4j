@@ -165,7 +165,7 @@ import org.jspecify.annotations.Nullable;
     isGetterVisibility = JsonAutoDetect.Visibility.NONE)
 @com.fasterxml.jackson.annotation.JsonTypeInfo(
     use = com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NONE)
-@com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+@tools.jackson.databind.annotation.JsonDeserialize(
     using = com.paragon.responses.json.MessageDeserializer.class)
 public abstract sealed class Message implements ResponseInputItem, Item
     permits DeveloperMessage, UserMessage, AssistantMessage {

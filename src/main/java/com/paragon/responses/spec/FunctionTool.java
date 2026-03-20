@@ -2,8 +2,8 @@ package com.paragon.responses.spec;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.annotations.FunctionMetadata;
 import com.paragon.responses.json.JacksonJsonSchemaProducer;
 import com.paragon.responses.json.JsonSchemaProducer;
@@ -143,7 +143,7 @@ public abstract non-sealed class FunctionTool<P extends Record> implements Tool 
   public abstract @Nullable FunctionToolCallOutput call(@Nullable P params);
 
   @Override
-  public @NonNull String toToolChoice(ObjectMapper mapper) throws JsonProcessingException {
+  public @NonNull String toToolChoice(ObjectMapper mapper) throws JacksonException {
     return mapper.writeValueAsString(Map.of("name", name, "type", "function"));
   }
 

@@ -3,7 +3,7 @@ package com.paragon.mcp;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.mcp.dto.McpTextContent;
 import com.paragon.mcp.dto.McpToolDefinition;
 import com.paragon.mcp.dto.McpToolResult;

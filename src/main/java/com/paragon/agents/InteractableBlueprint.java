@@ -3,15 +3,17 @@ package com.paragon.agents;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.exc.MismatchedInputException;
+import tools.jackson.databind.jsontype.TypeDeserializer;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 import com.paragon.agents.context.ContextManagementConfig;
 import com.paragon.agents.context.SlidingWindowStrategy;
 import com.paragon.agents.context.SummarizationStrategy;
@@ -147,13 +149,13 @@ public sealed interface InteractableBlueprint
    *
    * @param mapper the ObjectMapper to use for serialization
    * @return a JSON string representation of this blueprint
-   * @throws java.io.UncheckedIOException if serialization fails
+   * @throws IllegalStateException if serialization fails
    */
   default @NonNull String toJson(@NonNull ObjectMapper mapper) {
     try {
       return mapper.writeValueAsString(this);
-    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-      throw new java.io.UncheckedIOException(e);
+    } catch (tools.jackson.core.JacksonException e) {
+      throw new IllegalStateException("Failed to serialize blueprint to JSON", e);
     }
   }
 
@@ -172,13 +174,13 @@ public sealed interface InteractableBlueprint
    *
    * @param mapper the YAMLMapper to use for serialization
    * @return a YAML string representation of this blueprint
-   * @throws java.io.UncheckedIOException if serialization fails
+   * @throws IllegalStateException if serialization fails
    */
   default @NonNull String toYaml(@NonNull YAMLMapper mapper) {
     try {
       return mapper.writeValueAsString(this);
-    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-      throw new java.io.UncheckedIOException(e);
+    } catch (tools.jackson.core.JacksonException e) {
+      throw new IllegalStateException("Failed to serialize blueprint to YAML", e);
     }
   }
 
@@ -197,17 +199,17 @@ public sealed interface InteractableBlueprint
    *
    * @param yaml the YAML string
    * @return the deserialized blueprint
-   * @throws java.io.UncheckedIOException if deserialization fails
+   * @throws IllegalStateException if deserialization fails
    */
   static @NonNull InteractableBlueprint fromYaml(@NonNull String yaml) {
     try {
       return new YAMLMapper()
-          .configure(
-              com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-              false)
+          .rebuild()
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+          .build()
           .readValue(yaml, InteractableBlueprint.class);
-    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-      throw new java.io.UncheckedIOException(e);
+    } catch (tools.jackson.core.JacksonException e) {
+      throw new IllegalStateException("Failed to deserialize blueprint from YAML", e);
     }
   }
 
@@ -216,17 +218,17 @@ public sealed interface InteractableBlueprint
    *
    * @param json the JSON string
    * @return the deserialized blueprint
-   * @throws java.io.UncheckedIOException if deserialization fails
+   * @throws IllegalStateException if deserialization fails
    */
   static @NonNull InteractableBlueprint fromJson(@NonNull String json) {
     try {
       return new ObjectMapper()
-          .configure(
-              com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-              false)
+          .rebuild()
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+          .build()
           .readValue(json, InteractableBlueprint.class);
-    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-      throw new java.io.UncheckedIOException(e);
+    } catch (tools.jackson.core.JacksonException e) {
+      throw new IllegalStateException("Failed to deserialize blueprint from JSON", e);
     }
   }
 
@@ -747,7 +749,7 @@ public sealed interface InteractableBlueprint
    *
    * @since 1.0
    */
-  final class BlueprintDeserializer extends JsonDeserializer<InteractableBlueprint> {
+  final class BlueprintDeserializer extends ValueDeserializer<InteractableBlueprint> {
 
     /**
      * Called by Jackson when both {@code @JsonTypeInfo} and {@code @JsonDeserialize} are present on
@@ -764,7 +766,7 @@ public sealed interface InteractableBlueprint
     @Override
     public InteractableBlueprint deserializeWithType(
         JsonParser p, DeserializationContext ctxt, TypeDeserializer typeDeserializer)
-        throws IOException {
+        throws tools.jackson.core.JacksonException {
       // Fast path: if the format provides a native type id (e.g. YAML !<agent> tags),
       // delegate directly to the standard TypeDeserializer — no need to read the tree.
       if (p.canReadTypeId()) {
@@ -776,8 +778,7 @@ public sealed interface InteractableBlueprint
 
       // Slow path: read the full node so we can inspect it before type dispatch.
       // This handles $ref, source:, and property-based type ids (JSON).
-      ObjectMapper mapper = (ObjectMapper) p.getCodec();
-      JsonNode node = mapper.readTree(p);
+      JsonNode node = p.readValueAsTree();
 
       // $ref / source: — no type field required
       if (node.has("$ref")) {
@@ -790,16 +791,15 @@ public sealed interface InteractableBlueprint
       // Inline blueprint with property-based type id: convert to TreeTraversingParser
       // (avoids YAML-specific tokenizer quirks) and delegate to AsPropertyTypeDeserializer.
       // Concrete classes carry no @JsonDeserialize → plain record deserializer, no recursion.
-      JsonParser nodeParser = node.traverse(mapper);
+      JsonParser nodeParser = node.traverse(ctxt);
       nodeParser.nextToken(); // advance to START_OBJECT
       return (InteractableBlueprint) typeDeserializer.deserializeTypedFromObject(nodeParser, ctxt);
     }
 
     @Override
     public InteractableBlueprint deserialize(JsonParser p, DeserializationContext ctxt)
-        throws IOException {
-      ObjectMapper mapper = (ObjectMapper) p.getCodec();
-      JsonNode node = mapper.readTree(p);
+        throws tools.jackson.core.JacksonException {
+      JsonNode node = p.readValueAsTree();
 
       // $ref / source: — same logic shared with deserializeWithType()
       if (node.has("$ref")) {
@@ -810,7 +810,7 @@ public sealed interface InteractableBlueprint
       }
 
       // Inline blueprint — manually dispatch to the concrete class by type discriminator.
-      return dispatchByType(node, mapper, p);
+      return dispatchByType(node, ctxt, p);
     }
 
     /**
@@ -819,31 +819,34 @@ public sealed interface InteractableBlueprint
      * inherited {@link BlueprintDeserializer}, so {@code treeToValue(node, ConcreteClass.class)}
      * uses the default record deserializer — no recursion.
      */
-    private InteractableBlueprint dispatchByType(JsonNode node, ObjectMapper mapper, JsonParser p)
-        throws IOException {
+    private InteractableBlueprint dispatchByType(
+        JsonNode node, DeserializationContext ctxt, JsonParser p)
+        throws tools.jackson.core.JacksonException {
       JsonNode typeNode = node.get("type");
       if (typeNode == null || typeNode.isNull()) {
-        throw new com.fasterxml.jackson.core.JsonParseException(
+        throw MismatchedInputException.from(
             p,
+            InteractableBlueprint.class,
             "Blueprint is missing required 'type' field. "
                 + "Expected one of: agent, network, supervisor, parallel, router, hierarchical.");
       }
       return switch (typeNode.asText()) {
-        case "agent" -> mapper.treeToValue(node, AgentBlueprint.class);
-        case "network" -> mapper.treeToValue(node, AgentNetworkBlueprint.class);
-        case "supervisor" -> mapper.treeToValue(node, SupervisorAgentBlueprint.class);
-        case "parallel" -> mapper.treeToValue(node, ParallelAgentsBlueprint.class);
-        case "router" -> mapper.treeToValue(node, RouterAgentBlueprint.class);
-        case "hierarchical" -> mapper.treeToValue(node, HierarchicalAgentsBlueprint.class);
-        default -> throw new com.fasterxml.jackson.core.JsonParseException(
+        case "agent" -> ctxt.readTreeAsValue(node, AgentBlueprint.class);
+        case "network" -> ctxt.readTreeAsValue(node, AgentNetworkBlueprint.class);
+        case "supervisor" -> ctxt.readTreeAsValue(node, SupervisorAgentBlueprint.class);
+        case "parallel" -> ctxt.readTreeAsValue(node, ParallelAgentsBlueprint.class);
+        case "router" -> ctxt.readTreeAsValue(node, RouterAgentBlueprint.class);
+        case "hierarchical" -> ctxt.readTreeAsValue(node, HierarchicalAgentsBlueprint.class);
+        default -> throw MismatchedInputException.from(
             p,
+            InteractableBlueprint.class,
             "Unknown blueprint type: '"
                 + typeNode.asText()
                 + "'. Expected one of: agent, network, supervisor, parallel, router, hierarchical.");
       };
     }
 
-    private InteractableBlueprint resolveSource(JsonNode node, JsonParser p) throws IOException {
+    private InteractableBlueprint resolveSource(JsonNode node, JsonParser p) throws tools.jackson.core.JacksonException {
       String source = node.get("source").asText();
       return switch (source) {
         case "file" -> {
@@ -854,8 +857,9 @@ public sealed interface InteractableBlueprint
           String id = requireField(node, "id", "source: registry", p);
           InteractableBlueprint bp = BlueprintRegistry.get(id);
           if (bp == null) {
-            throw new com.fasterxml.jackson.core.JsonParseException(
+            throw MismatchedInputException.from(
                 p,
+                InteractableBlueprint.class,
                 "Blueprint not found in registry: '"
                     + id
                     + "'. Ensure BlueprintRegistry.register(\""
@@ -864,8 +868,11 @@ public sealed interface InteractableBlueprint
           }
           yield bp;
         }
-        default -> throw new com.fasterxml.jackson.core.JsonParseException(
-            p, "Unknown blueprint source: '" + source + "'. Valid values: 'file', 'registry'.");
+        default ->
+            throw MismatchedInputException.from(
+                p,
+                InteractableBlueprint.class,
+                "Unknown blueprint source: '" + source + "'. Valid values: 'file', 'registry'.");
       };
     }
 
@@ -877,13 +884,15 @@ public sealed interface InteractableBlueprint
      * @param context a human-readable description of the context (e.g. "source: file")
      * @param p the parser (for error location)
      * @return the field value as text
-     * @throws com.fasterxml.jackson.core.JsonParseException if the field is absent
+     * @throws tools.jackson.core.JacksonException if the field is absent
      */
     private String requireField(JsonNode node, String field, String context, JsonParser p)
-        throws IOException {
+        throws tools.jackson.core.JacksonException {
       if (!node.has(field) || node.get(field).isNull()) {
-        throw new com.fasterxml.jackson.core.JsonParseException(
-            p, "Missing required field '" + field + "' for " + context + " blueprint reference.");
+        throw MismatchedInputException.from(
+            p,
+            InteractableBlueprint.class,
+            "Missing required field '" + field + "' for " + context + " blueprint reference.");
       }
       return node.get(field).asText();
     }
@@ -894,17 +903,25 @@ public sealed interface InteractableBlueprint
      * @param refPath the file path (relative to CWD or absolute)
      * @param p the parser (for error messages)
      * @return the deserialized blueprint
-     * @throws IOException if the file cannot be read or parsed
+     * @throws tools.jackson.core.JacksonException if the file cannot be read or parsed
      */
-    private InteractableBlueprint resolveFileRef(String refPath, JsonParser p) throws IOException {
+    private InteractableBlueprint resolveFileRef(String refPath, JsonParser p) throws tools.jackson.core.JacksonException {
       Path path = Path.of(refPath);
       if (!Files.exists(path)) {
-        throw new IOException(
+        throw MismatchedInputException.from(
+            p,
+            InteractableBlueprint.class,
             "Blueprint file not found: "
                 + path.toAbsolutePath()
                 + ". Ensure the path is correct relative to the working directory.");
       }
-      String content = Files.readString(path, StandardCharsets.UTF_8);
+      final String content;
+      try {
+        content = Files.readString(path, StandardCharsets.UTF_8);
+      } catch (IOException e) {
+        throw DatabindException.from(
+            p, "Failed to read blueprint file: " + path.toAbsolutePath(), e);
+      }
 
       // Detect format by file extension
       String fileName = path.getFileName().toString().toLowerCase();

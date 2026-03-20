@@ -2,7 +2,7 @@ package com.paragon.responses;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.json.JacksonJsonSchemaProducer;
 import com.paragon.responses.json.JsonSchemaProducer;
 import com.paragon.responses.spec.*;
@@ -170,7 +170,7 @@ class ResponderTest {
   }
 
   @Test
-  void respond_handlesJsonProcessingException() throws Exception {
+  void respond_handlesJacksonException() throws Exception {
     // Enqueue invalid JSON response
     mockWebServer.enqueue(
         new MockResponse()

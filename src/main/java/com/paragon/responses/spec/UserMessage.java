@@ -22,7 +22,7 @@ import org.jspecify.annotations.Nullable;
  * @see DeveloperMessage
  * @see AssistantMessage
  */
-@com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+@tools.jackson.databind.annotation.JsonDeserialize(
     using = com.paragon.responses.json.MessageDeserializer.class)
 public final class UserMessage extends Message {
 

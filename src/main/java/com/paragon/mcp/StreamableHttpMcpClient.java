@@ -1,6 +1,6 @@
 package com.paragon.mcp;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.mcp.dto.JsonRpcRequest;
 import com.paragon.mcp.dto.JsonRpcResponse;
 import com.paragon.mcp.dto.McpToolDefinition;
@@ -209,7 +209,7 @@ public final class StreamableHttpMcpClient extends McpClient {
       var toolsNode = node.get("tools");
       return objectMapper.convertValue(
           toolsNode,
-          new com.fasterxml.jackson.core.type.TypeReference<List<McpToolDefinition>>() {});
+          new tools.jackson.core.type.TypeReference<List<McpToolDefinition>>() {});
     } catch (Exception e) {
       throw McpException.protocolError("Failed to parse tools list: " + e.getMessage());
     }

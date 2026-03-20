@@ -2,8 +2,8 @@ package com.paragon.telemetry.otel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -85,7 +85,7 @@ class OtelDtoTest {
 
     @Test
     @DisplayName("serializes to JSON correctly")
-    void serializesToJson() throws JsonProcessingException {
+    void serializesToJson() throws JacksonException {
       OtelAttribute attr = OtelAttribute.ofString("key", "value");
       String json = objectMapper.writeValueAsString(attr);
 
@@ -172,7 +172,7 @@ class OtelDtoTest {
 
     @Test
     @DisplayName("serializes to JSON correctly")
-    void serializesToJson() throws JsonProcessingException {
+    void serializesToJson() throws JacksonException {
       OtelSpan span =
           OtelSpan.builder()
               .traceId("trace123")
@@ -246,7 +246,7 @@ class OtelDtoTest {
 
     @Test
     @DisplayName("serializes to JSON correctly")
-    void serializesToJson() throws JsonProcessingException {
+    void serializesToJson() throws JacksonException {
       OtelResource resource =
           new OtelResource(List.of(OtelAttribute.ofString("service.name", "test-service")));
 
@@ -276,7 +276,7 @@ class OtelDtoTest {
 
     @Test
     @DisplayName("serializes to JSON correctly")
-    void serializesToJson() throws JsonProcessingException {
+    void serializesToJson() throws JacksonException {
       OtelScope scope = new OtelScope("agentle", "1.0.0", null);
 
       String json = objectMapper.writeValueAsString(scope);

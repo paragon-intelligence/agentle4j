@@ -3,12 +3,12 @@ package com.paragon.agents;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.annotation.JsonDeserialize;
 import com.paragon.prompts.FilesystemPromptProvider;
 import com.paragon.prompts.Prompt;
 import com.paragon.prompts.PromptProvider;
@@ -229,11 +229,11 @@ public sealed interface InstructionSource
    *       {@link FileRef}, or {@link ProviderRef}
    * </ul>
    */
-  final class Deserializer extends JsonDeserializer<InstructionSource> {
+  final class Deserializer extends ValueDeserializer<InstructionSource> {
 
     @Override
     public InstructionSource deserialize(JsonParser p, DeserializationContext ctxt)
-        throws IOException {
+        throws tools.jackson.core.JacksonException {
       JsonNode node = p.readValueAsTree();
 
       // Plain string → Inline
@@ -259,20 +259,22 @@ public sealed interface InstructionSource
             String promptId = node.has("promptId") ? node.get("promptId").asText() : "";
             Map<String, String> filters = null;
             if (node.has("filters") && !node.get("filters").isNull()) {
-              @SuppressWarnings("unchecked")
-              Map<String, String> parsed =
-                  ((ObjectMapper) p.getCodec()).convertValue(node.get("filters"),
-                      ((ObjectMapper) p.getCodec()).getTypeFactory()
+              filters =
+                  ctxt.readTreeAsValue(
+                      node.get("filters"),
+                      ctxt.getTypeFactory()
                           .constructMapType(java.util.HashMap.class, String.class, String.class));
-              filters = parsed;
             }
             yield new ProviderRef(providerId, promptId, filters);
           }
-          default -> throw new IOException("Unknown instruction source type: " + source);
+          default ->
+              throw DatabindException.from(
+                  p, "Unknown instruction source type: " + source);
         };
       }
 
-      throw new IOException(
+      throw DatabindException.from(
+          p,
           "Invalid instructions format: expected a string or an object, got " + node.getNodeType());
     }
   }

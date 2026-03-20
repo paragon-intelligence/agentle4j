@@ -1,7 +1,7 @@
 package com.paragon.mcp;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.mcp.dto.McpToolDefinition;
 import com.paragon.mcp.dto.McpToolResult;
 import com.paragon.responses.spec.FunctionTool;
@@ -109,7 +109,7 @@ public final class McpRemoteTool extends FunctionTool<McpRemoteTool.McpParams> {
         arguments = objectMapper.readValue(jsonArguments, Map.class);
       }
       return callWithMap(arguments);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       log.error("Failed to parse JSON arguments for MCP tool {}", toolName, e);
       return FunctionToolCallOutput.error("Invalid JSON arguments: " + e.getMessage());
     }

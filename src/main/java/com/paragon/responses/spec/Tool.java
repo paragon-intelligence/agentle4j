@@ -2,8 +2,8 @@ package com.paragon.responses.spec;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import org.jspecify.annotations.NonNull;
 
 /**
@@ -38,5 +38,5 @@ public sealed interface Tool extends ToolChoiceRepresentable
         LocalShellTool,
         ShellTool,
         CustomTool {
-  @NonNull String toToolChoice(ObjectMapper mapper) throws JsonProcessingException;
+  @NonNull String toToolChoice(ObjectMapper mapper) throws JacksonException;
 }

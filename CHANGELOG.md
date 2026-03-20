@@ -5,6 +5,64 @@ All notable changes to Agentle4j will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0]
+
+### Added
+
+- **Configurable handoff awareness messages** — `Handoff.Builder.withAwarenessMessage(...)` and
+  `withoutAwarenessMessage()` now let you control the developer-priority context injected into the
+  child agent during a handoff.
+
+### Changed
+
+- **Jackson upgraded to the Jackson 3 line** — `jackson-core`, `jackson-databind`,
+  `jackson-dataformat-yaml`, and `jackson-module-jsonSchema` now use `tools.jackson` 3.1.0, while
+  annotations remain on `com.fasterxml.jackson.annotation.*` via `jackson-annotations` 2.21.
+  This is a breaking change for consumers compiling against Agentle4j APIs that expose Jackson
+  types or exception classes.
+
+- **Public Jackson-facing APIs now use Jackson 3 types** — Agentle4j code that previously exposed
+  `com.fasterxml.jackson.*` types now uses `tools.jackson.*` equivalents such as
+  `tools.jackson.core.JacksonException`, `tools.jackson.databind.ObjectMapper`,
+  `tools.jackson.databind.ValueSerializer`, and `tools.jackson.databind.ValueDeserializer`.
+
+- **Mapper configuration migrated to Jackson 3 builders** — code paths that depended on Jackson 2
+  mutating APIs like `configure(...)`, `copy()`, `registerModule(...)`, and
+  `findAndRegisterModules()` now use Jackson 3 builder/rebuild configuration consistently across
+  Responses API mapping, blueprint parsing, streaming, prompt loading, and history stores.
+
+- **Java time support no longer depends on the published Jackson 3 jsr310 artifact** — added a
+  local `ParagonJavaTimeModule` for `Instant` and `Duration` because the currently published
+  `jackson-datatype-jsr310` artifact is not compatible with `jackson-databind` 3.1.x at runtime.
+
+### Fixed
+
+- **Handoffs now close the tool exchange correctly** — when a handoff tool call is selected,
+  Agentle4j appends a synthetic `FunctionToolCallOutput` before transferring control. This prevents
+  invalid assistant tool-call histories that the Responses API rejects.
+
+- **Streaming handoffs now preserve streaming behaviour** — child agents now run through the
+  streaming path during handoff, so text deltas, tool events, and other stream callbacks continue
+  to flow to the caller instead of silently falling back to a blocking interaction.
+
+- **Handoff results now preserve child failures** — if the target agent fails during a handoff, the
+  resulting `AgentResult` now propagates the child error instead of returning a misleading success.
+
+- **Responses API serialization/deserialization compatibility under Jackson 3** — fixed enum
+  handling, tool choice parsing, function/tool call payloads, message content coercion,
+  `FunctionToolCallOutput`, custom Responses serializers/deserializers, and ObjectMapper factory
+  configuration after the namespace and API migration.
+
+- **Blueprint JSON/YAML parsing under Jackson 3** — fixed `$ref` and `source:` resolution,
+  blueprint error reporting, YAML/JSON factory creation, and custom deserializer behaviour for
+  `InteractableBlueprint` and `InstructionSource`.
+
+### Security
+
+- **Vulnerable Jackson 2 runtime artifacts removed** — the release refreshes Jackson dependencies
+  to the current published line and removes the old Jackson 2.x runtime modules from the main
+  serialization stack.
+
 ## [0.9.2]
 
 ### Fixed
@@ -493,4 +551,8 @@ Virtual Threads and make the interface simpler.
 
 [0.4.0]: https://github.com/paragon-intelligence/agentle4j/compare/v0.3.0...v0.4.0
 
+[0.10.0]: https://github.com/paragon-intelligence/agentle4j/compare/v0.9.2...v0.10.0
+[0.9.2]: https://github.com/paragon-intelligence/agentle4j/compare/v0.9.1...v0.9.2
+[0.9.1]: https://github.com/paragon-intelligence/agentle4j/compare/v0.9.0...v0.9.1
+[0.9.0]: https://github.com/paragon-intelligence/agentle4j/compare/v0.8.11...v0.9.0
 [0.3.0]: https://github.com/paragon-intelligence/agentle4j/releases/tag/v0.3.0

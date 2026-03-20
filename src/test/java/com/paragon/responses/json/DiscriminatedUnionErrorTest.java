@@ -2,8 +2,8 @@ package com.paragon.responses.json;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.InvalidTypeIdException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.exc.InvalidTypeIdException;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.ComputerUseAction;
 import com.paragon.responses.spec.MessageContent;

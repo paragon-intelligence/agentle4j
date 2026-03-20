@@ -1,13 +1,12 @@
 package com.paragon.responses.spec;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.ResponsesApiObjectMapper;
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -20,14 +19,14 @@ import java.util.List;
  *   <li>An object with "mode" and "tools" fields (mapped to {@link AllowedTools})
  * </ul>
  */
-public class ToolChoiceDeserializer extends JsonDeserializer<ToolChoice> {
+public class ToolChoiceDeserializer extends ValueDeserializer<ToolChoice> {
 
   private static final ObjectMapper MAPPER = ResponsesApiObjectMapper.create();
 
   @Override
   public ToolChoice deserialize(JsonParser parser, DeserializationContext context)
-      throws IOException {
-    JsonNode node = parser.getCodec().readTree(parser);
+      throws tools.jackson.core.JacksonException {
+    JsonNode node = parser.readValueAsTree();
 
     // If it's a string value, parse as ToolChoiceMode
     if (node.isTextual()) {
@@ -35,11 +34,10 @@ public class ToolChoiceDeserializer extends JsonDeserializer<ToolChoice> {
       try {
         return ToolChoiceMode.valueOf(value);
       } catch (IllegalArgumentException e) {
-        throw new IOException(
-            "Invalid tool_choice string value: "
-                + node.asText()
-                + ". Expected one of: none, auto, required",
-            e);
+        return context.reportInputMismatch(
+            ToolChoice.class,
+            "Invalid tool_choice string value: %s. Expected one of: none, auto, required",
+            node.asText());
       }
     }
 
@@ -48,7 +46,8 @@ public class ToolChoiceDeserializer extends JsonDeserializer<ToolChoice> {
       // Parse the mode field
       JsonNode modeNode = node.get("mode");
       if (modeNode == null) {
-        throw new IOException("Missing 'mode' field in tool_choice object");
+        return context.reportInputMismatch(
+            ToolChoice.class, "Missing 'mode' field in tool_choice object");
       }
       String modeString = modeNode.asText().toUpperCase();
       AllowedToolsMode mode = AllowedToolsMode.valueOf(modeString);
@@ -57,15 +56,17 @@ public class ToolChoiceDeserializer extends JsonDeserializer<ToolChoice> {
       // deserialization
       JsonNode toolsNode = node.get("tools");
       if (toolsNode == null) {
-        throw new IOException("Missing 'tools' field in tool_choice object");
+        return context.reportInputMismatch(
+            ToolChoice.class, "Missing 'tools' field in tool_choice object");
       }
       List<Tool> tools = MAPPER.treeToValue(toolsNode, new TypeReference<List<Tool>>() {});
 
       return new AllowedTools(mode, tools);
     }
 
-    throw new IOException(
-        "Cannot deserialize tool_choice: expected a string or object, but got: "
-            + node.getNodeType());
+    return context.reportInputMismatch(
+        ToolChoice.class,
+        "Cannot deserialize tool_choice: expected a string or object, but got: %s",
+        node.getNodeType());
   }
 }

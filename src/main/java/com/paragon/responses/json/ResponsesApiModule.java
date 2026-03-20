@@ -1,13 +1,15 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.databind.BeanDescription;
-import com.fasterxml.jackson.databind.DeserializationConfig;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializationConfig;
-import com.fasterxml.jackson.databind.deser.Deserializers;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.Serializers;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import tools.jackson.databind.BeanDescription;
+import tools.jackson.databind.DeserializationConfig;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.ValueSerializer;
+import tools.jackson.databind.SerializationConfig;
+import tools.jackson.databind.deser.Deserializers;
+import tools.jackson.databind.module.SimpleModule;
+import tools.jackson.databind.ser.Serializers;
 import com.paragon.responses.spec.ApplyPatchToolCall;
 import com.paragon.responses.spec.AssistantMessage;
 import com.paragon.responses.spec.ClickAction;
@@ -110,10 +112,11 @@ public class ResponsesApiModule extends SimpleModule {
     context.addSerializers(
         new Serializers.Base() {
           @Override
-          public JsonSerializer<?> findSerializer(
+          public ValueSerializer<?> findEnumSerializer(
               SerializationConfig config,
-              com.fasterxml.jackson.databind.JavaType type,
-              BeanDescription beanDesc) {
+              JavaType type,
+              BeanDescription.Supplier beanDesc,
+              JsonFormat.Value formatOverrides) {
             Class<?> rawClass = type.getRawClass();
             if (rawClass.isEnum()) {
               return new LowercaseEnumSerializer();
@@ -126,9 +129,14 @@ public class ResponsesApiModule extends SimpleModule {
     context.addDeserializers(
         new Deserializers.Base() {
           @Override
-          public JsonDeserializer<?> findEnumDeserializer(
-              Class<?> type, DeserializationConfig config, BeanDescription beanDesc) {
-            return new LowercaseEnumDeserializer();
+          public boolean hasDeserializerFor(DeserializationConfig config, Class<?> valueClass) {
+            return valueClass.isEnum();
+          }
+
+          @Override
+          public ValueDeserializer<?> findEnumDeserializer(
+              JavaType type, DeserializationConfig config, BeanDescription.Supplier beanDesc) {
+            return type.getRawClass().isEnum() ? new LowercaseEnumDeserializer() : null;
           }
         });
 

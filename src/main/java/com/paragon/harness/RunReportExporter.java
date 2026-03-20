@@ -1,8 +1,6 @@
 package com.paragon.harness;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -55,11 +53,7 @@ public final class RunReportExporter {
    * @return a new exporter
    */
   public static @NonNull RunReportExporter create(@NonNull Path reportDir) {
-    ObjectMapper mapper =
-        new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .enable(SerializationFeature.INDENT_OUTPUT)
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    ObjectMapper mapper = new ObjectMapper();
     return new RunReportExporter(reportDir, mapper);
   }
 
@@ -75,7 +69,8 @@ public final class RunReportExporter {
     String filename = safeName + "_" + report.reportId() + ".json";
     Path reportFile = reportDir.resolve(filename);
     try {
-      String json = objectMapper.writeValueAsString(buildReportMap(report));
+      String json =
+          objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(buildReportMap(report));
       Files.writeString(reportFile, json, StandardCharsets.UTF_8,
           StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     } catch (IOException e) {

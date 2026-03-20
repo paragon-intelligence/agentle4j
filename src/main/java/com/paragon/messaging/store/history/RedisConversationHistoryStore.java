@@ -1,7 +1,7 @@
 package com.paragon.messaging.store.history;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
 import java.time.Duration;
@@ -134,7 +134,7 @@ public final class RedisConversationHistoryStore implements ConversationHistoryS
       // Refresh TTL
       redisOperations.expire(key, defaultTtl);
 
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new ConversationHistoryException("Failed to serialize message", e);
     }
   }
@@ -165,7 +165,7 @@ public final class RedisConversationHistoryStore implements ConversationHistoryS
       try {
         StoredMessage stored = objectMapper.readValue(json, StoredMessage.class);
         result.add(stored.message());
-      } catch (JsonProcessingException e) {
+      } catch (JacksonException e) {
         // Log and skip corrupted entries
         // In production, consider logging this
       }
@@ -390,7 +390,7 @@ public final class RedisConversationHistoryStore implements ConversationHistoryS
     private ObjectMapper createDefaultObjectMapper() {
       // Create ObjectMapper configured for Message polymorphism
       // The Message class already has Jackson annotations
-      return new ObjectMapper().findAndRegisterModules();
+      return new ObjectMapper().rebuild().findAndAddModules().build();
     }
   }
 }

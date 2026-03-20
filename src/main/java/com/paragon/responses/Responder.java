@@ -1,7 +1,7 @@
 package com.paragon.responses;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.http.RetryPolicy;
 import com.paragon.responses.json.JacksonJsonSchemaProducer;
 import com.paragon.responses.json.JsonSchemaProducer;
@@ -434,7 +434,7 @@ public class Responder {
 
     try {
       return response.parse(payload.responseType(), objectMapper);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException("Failed to parse structured response", e);
     }
   }

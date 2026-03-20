@@ -2,7 +2,7 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.exception.GuardrailException;
 import com.paragon.responses.spec.Message;

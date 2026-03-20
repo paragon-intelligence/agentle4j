@@ -1,7 +1,7 @@
 package com.paragon.agents;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.spec.FunctionToolCall;
 import com.paragon.responses.spec.Response;
 import com.paragon.responses.spec.ResponseInputItem;
@@ -478,7 +478,7 @@ public class AgentResult {
       T parsed = objectMapper.readValue(cleanOutput, outputType);
       return StructuredAgentResult.success(
           parsed, cleanOutput, finalResponse, history, toolExecutions, turnsUsed);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       return StructuredAgentResult.error(
           new RuntimeException("Failed to parse structured output: " + e.getMessage(), e),
           output,

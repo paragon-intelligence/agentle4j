@@ -2,8 +2,8 @@ package com.paragon.web;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +39,7 @@ class ActionTest {
   }
 
   @Test
-  void click_serialization_includesType() throws JsonProcessingException {
+  void click_serialization_includesType() throws JacksonException {
     Click click = Click.of("#submit");
 
     String json = objectMapper.writeValueAsString(click);
@@ -49,7 +49,7 @@ class ActionTest {
   }
 
   @Test
-  void click_deserialization_fromJson() throws JsonProcessingException {
+  void click_deserialization_fromJson() throws JacksonException {
     String json = "{\"type\":\"click\",\"selector\":\"#btn\",\"all\":true}";
 
     Action action = objectMapper.readValue(json, Action.class);
@@ -70,7 +70,7 @@ class ActionTest {
   }
 
   @Test
-  void executeJavascript_serialization_includesType() throws JsonProcessingException {
+  void executeJavascript_serialization_includesType() throws JacksonException {
     ExecuteJavascript js = ExecuteJavascript.of("console.log('test')");
 
     String json = objectMapper.writeValueAsString(js);
@@ -80,7 +80,7 @@ class ActionTest {
   }
 
   @Test
-  void executeJavascript_deserialization_fromJson() throws JsonProcessingException {
+  void executeJavascript_deserialization_fromJson() throws JacksonException {
     String json = "{\"type\":\"execute_javascript\",\"script\":\"return 42\"}";
 
     Action action = objectMapper.readValue(json, Action.class);
@@ -124,7 +124,7 @@ class ActionTest {
   }
 
   @Test
-  void generatePdf_deserialization_fromJson() throws JsonProcessingException {
+  void generatePdf_deserialization_fromJson() throws JacksonException {
     String json = "{\"type\":\"pdf\",\"format\":\"A4\",\"landscape\":true,\"scale\":1.5}";
 
     Action action = objectMapper.readValue(json, Action.class);
@@ -159,7 +159,7 @@ class ActionTest {
   }
 
   @Test
-  void pressAKey_deserialization_fromJson() throws JsonProcessingException {
+  void pressAKey_deserialization_fromJson() throws JacksonException {
     String json = "{\"type\":\"press\",\"key\":\"Tab\"}";
 
     Action action = objectMapper.readValue(json, Action.class);
@@ -179,7 +179,7 @@ class ActionTest {
   }
 
   @Test
-  void scrape_deserialization_fromJson() throws JsonProcessingException {
+  void scrape_deserialization_fromJson() throws JacksonException {
     String json = "{\"type\":\"scrape\"}";
 
     Action action = objectMapper.readValue(json, Action.class);
@@ -225,7 +225,7 @@ class ActionTest {
   }
 
   @Test
-  void screenshot_deserialization_fromJson() throws JsonProcessingException {
+  void screenshot_deserialization_fromJson() throws JacksonException {
     String json = "{\"type\":\"screenshot\",\"full_page\":true,\"quality\":85,\"viewport\":null}";
 
     Action action = objectMapper.readValue(json, Action.class);
@@ -263,7 +263,7 @@ class ActionTest {
   }
 
   @Test
-  void scroll_deserialization_fromJson() throws JsonProcessingException {
+  void scroll_deserialization_fromJson() throws JacksonException {
     String json =
         "{\"type\":\"scroll\",\"direction\":\"up\",\"amount\":200,\"selector\":\"#content\"}";
 
@@ -295,7 +295,7 @@ class ActionTest {
   }
 
   @Test
-  void wait_deserialization_fromJson() throws JsonProcessingException {
+  void wait_deserialization_fromJson() throws JacksonException {
     String json = "{\"type\":\"wait\",\"milliseconds\":10000,\"selector\":\"#modal\"}";
 
     Action action = objectMapper.readValue(json, Action.class);
@@ -316,7 +316,7 @@ class ActionTest {
   }
 
   @Test
-  void writeText_deserialization_fromJson() throws JsonProcessingException {
+  void writeText_deserialization_fromJson() throws JacksonException {
     String json = "{\"type\":\"write\",\"text\":\"Test input\"}";
 
     Action action = objectMapper.readValue(json, Action.class);
@@ -328,7 +328,7 @@ class ActionTest {
   // ===== Polymorphic Serialization Tests =====
 
   @Test
-  void polymorphicDeserialization_allTypes() throws JsonProcessingException {
+  void polymorphicDeserialization_allTypes() throws JacksonException {
     String[] jsons = {
       "{\"type\":\"click\",\"selector\":\"#btn\",\"all\":false}",
       "{\"type\":\"execute_javascript\",\"script\":\"test\"}",

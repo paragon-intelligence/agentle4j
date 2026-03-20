@@ -2,8 +2,8 @@ package com.paragon.responses;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.spec.Message;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -41,7 +41,7 @@ class ResponsesApiObjectMapperTest {
 
     @Test
     @DisplayName("serializes to snake_case")
-    void serializesToSnakeCase() throws JsonProcessingException {
+    void serializesToSnakeCase() throws JacksonException {
       ObjectMapper mapper = ResponsesApiObjectMapper.create();
       Message message = Message.user("Hello");
 
@@ -53,7 +53,7 @@ class ResponsesApiObjectMapperTest {
 
     @Test
     @DisplayName("excludes null fields")
-    void excludesNullFields() throws JsonProcessingException {
+    void excludesNullFields() throws JacksonException {
       ObjectMapper mapper = ResponsesApiObjectMapper.create();
       Message message = Message.user("Hello");
 
@@ -70,7 +70,7 @@ class ResponsesApiObjectMapperTest {
 
     @Test
     @DisplayName("ignores unknown properties")
-    void ignoresUnknownProperties() throws JsonProcessingException {
+    void ignoresUnknownProperties() throws JacksonException {
       ObjectMapper mapper = ResponsesApiObjectMapper.create();
       String json =
           "{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"Hi\"}],\"unknown_field\":\"value\"}";

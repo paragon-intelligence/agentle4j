@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -338,7 +338,7 @@ public class Response {
   }
 
   public <T> @NonNull ParsedResponse<T> parse(
-      @NonNull Class<T> textFormat, ObjectMapper objectMapper) throws JsonProcessingException {
+      @NonNull Class<T> textFormat, ObjectMapper objectMapper) throws JacksonException {
     for (ResponseOutput responseOutput : Objects.requireNonNull(output)) {
       if (responseOutput instanceof Message) {
         String outputText = ((Message) responseOutput).outputText();
@@ -381,7 +381,7 @@ public class Response {
           String.format(
               "The response could not be parsed. Response: %s",
               objectMapper.writeValueAsString(this)));
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException(e);
     }
   }

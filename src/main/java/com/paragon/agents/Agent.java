@@ -1,7 +1,7 @@
 package com.paragon.agents;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.agents.context.ContextManagementConfig;
 import com.paragon.agents.toolplan.ToolPlanTool;
 import com.paragon.agents.toolsearch.ToolRegistry;
@@ -886,7 +886,7 @@ public final class Agent implements Serializable, Interactable {
           Object parsed = lastResponse.parse(outputType, objectMapper);
           return AgentResult.successWithParsed(
                   output, parsed, lastResponse, context, allToolExecutions, context.getTurnCount());
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
           AgentExecutionException agentEx =
                   AgentExecutionException.parsingFailed(name, context.getTurnCount(), e);
           broadcastFailedEvent(agentEx, context);
@@ -1071,7 +1071,7 @@ public final class Agent implements Serializable, Interactable {
           Handoff.HandoffParams params =
                   objectMapper.readValue(call.arguments(), Handoff.HandoffParams.class);
           return Optional.ofNullable(params.message());
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
           return Optional.empty();
         }
       }
@@ -1104,7 +1104,7 @@ public final class Agent implements Serializable, Interactable {
                       () -> {
                         try {
                           return toolStore.execute(call);
-                        } catch (JsonProcessingException e) {
+                        } catch (JacksonException e) {
                           throw new RuntimeException(e); // Will be handled in outer catch
                         }
                       });
@@ -1114,8 +1114,8 @@ public final class Agent implements Serializable, Interactable {
     } catch (RuntimeException e) {
       Duration duration = Duration.between(start, Instant.now());
 
-      // Unwrap if it's our wrapped JsonProcessingException
-      if (e.getCause() instanceof JsonProcessingException jpe) {
+      // Unwrap if it's our wrapped JacksonException
+      if (e.getCause() instanceof JacksonException jpe) {
         ToolExecutionException toolEx =
                 new ToolExecutionException(
                         call.name(),
@@ -2183,7 +2183,7 @@ public final class Agent implements Serializable, Interactable {
                 result.history(),
                 result.toolExecutions(),
                 result.turnsUsed());
-      } catch (JsonProcessingException e) {
+      } catch (JacksonException e) {
         return StructuredAgentResult.error(
                 new IllegalStateException("Failed to parse structured output: " + e.getMessage(), e),
                 result.output(),

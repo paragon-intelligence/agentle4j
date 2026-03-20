@@ -3,8 +3,8 @@ package com.paragon.responses.spec;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.Messages;
 import com.paragon.responses.OpenRouterCustomPayload;
 import com.paragon.responses.json.JacksonJsonSchemaProducer;
@@ -253,7 +253,7 @@ public class CreateResponsePayload {
     String jsonPayload = null;
     try {
       jsonPayload = objectMapper.writeValueAsString(this);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException(e);
     }
     RequestBody body = RequestBody.create(jsonPayload, mediaType);

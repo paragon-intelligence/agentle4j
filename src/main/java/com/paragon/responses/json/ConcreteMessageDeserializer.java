@@ -1,16 +1,15 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
 import com.paragon.responses.spec.Message;
-import java.io.IOException;
 
 /**
  * Deserializer for concrete Message subclasses that delegates to MessageDeserializer and casts to
  * the expected type.
  */
-public class ConcreteMessageDeserializer<T extends Message> extends JsonDeserializer<T> {
+public class ConcreteMessageDeserializer<T extends Message> extends ValueDeserializer<T> {
 
   private final Class<T> targetClass;
   private final MessageDeserializer messageDeserializer = new MessageDeserializer();
@@ -21,14 +20,15 @@ public class ConcreteMessageDeserializer<T extends Message> extends JsonDeserial
 
   @Override
   @SuppressWarnings("unchecked")
-  public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+  public T deserialize(JsonParser p, DeserializationContext ctxt) throws tools.jackson.core.JacksonException {
     Message message = messageDeserializer.deserialize(p, ctxt);
 
     if (!targetClass.isInstance(message)) {
-      throw new IOException(
-          String.format(
-              "Expected %s but got %s (role mismatch)",
-              targetClass.getSimpleName(), message.getClass().getSimpleName()));
+      return ctxt.reportInputMismatch(
+          targetClass,
+          "Expected %s but got %s (role mismatch)",
+          targetClass.getSimpleName(),
+          message.getClass().getSimpleName());
     }
 
     return (T) message;

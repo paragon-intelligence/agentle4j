@@ -2,8 +2,8 @@ package com.paragon.messaging.whatsapp.payload;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -23,7 +23,7 @@ class WhatsAppWebhookPayloadTest {
 
   @BeforeEach
   void setUp() {
-    objectMapper = new ObjectMapper().findAndRegisterModules();
+    objectMapper = new ObjectMapper().rebuild().findAndAddModules().build();
     validator = Validation.buildDefaultValidatorFactory().getValidator();
   }
 
@@ -33,7 +33,7 @@ class WhatsAppWebhookPayloadTest {
 
     @Test
     @DisplayName("deserializes complete webhook payload")
-    void deserializesCompletePayload() throws JsonProcessingException {
+    void deserializesCompletePayload() throws JacksonException {
       String json =
           """
           {
@@ -147,7 +147,7 @@ class WhatsAppWebhookPayloadTest {
 
     @Test
     @DisplayName("deserializes text message webhook")
-    void deserializesTextMessage() throws JsonProcessingException {
+    void deserializesTextMessage() throws JacksonException {
       String json =
           """
           {
@@ -193,7 +193,7 @@ class WhatsAppWebhookPayloadTest {
 
     @Test
     @DisplayName("deserializes status update webhook")
-    void deserializesStatusUpdate() throws JsonProcessingException {
+    void deserializesStatusUpdate() throws JacksonException {
       String json =
           """
           {
@@ -229,7 +229,7 @@ class WhatsAppWebhookPayloadTest {
 
     @Test
     @DisplayName("deserializes multiple entries")
-    void deserializesMultipleEntries() throws JsonProcessingException {
+    void deserializesMultipleEntries() throws JacksonException {
       String json =
           """
           {
@@ -282,7 +282,7 @@ class WhatsAppWebhookPayloadTest {
 
     @Test
     @DisplayName("deserializes minimal valid payload")
-    void deserializesMinimalPayload() throws JsonProcessingException {
+    void deserializesMinimalPayload() throws JacksonException {
       String json =
           """
           {
@@ -304,7 +304,7 @@ class WhatsAppWebhookPayloadTest {
 
     @Test
     @DisplayName("handles Unicode in webhook data")
-    void handlesUnicode() throws JsonProcessingException {
+    void handlesUnicode() throws JacksonException {
       String json =
           """
           {
@@ -330,7 +330,7 @@ class WhatsAppWebhookPayloadTest {
 
     @Test
     @DisplayName("serializes and deserializes payload")
-    void roundTripSerialization() throws JsonProcessingException {
+    void roundTripSerialization() throws JacksonException {
       Entry entry = new Entry("test-id", List.of());
       WhatsappMetaWebhookPayload original =
           new WhatsappMetaWebhookPayload("whatsapp_business_account", List.of(entry));

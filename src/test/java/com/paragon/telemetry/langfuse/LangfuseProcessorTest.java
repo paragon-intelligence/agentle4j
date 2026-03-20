@@ -2,8 +2,8 @@ package com.paragon.telemetry.langfuse;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.telemetry.events.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;

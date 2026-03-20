@@ -1,6 +1,6 @@
 package com.paragon.responses.spec;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.json.JacksonJsonSchemaProducer;
 import com.paragon.responses.json.JsonSchemaProducer;
 import java.lang.reflect.Constructor;

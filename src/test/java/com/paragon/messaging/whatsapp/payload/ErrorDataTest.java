@@ -2,8 +2,8 @@ package com.paragon.messaging.whatsapp.payload;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,7 +26,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("deserializes error with all fields")
-    void deserializesWithAllFields() throws JsonProcessingException {
+    void deserializesWithAllFields() throws JacksonException {
       String json =
           """
           {
@@ -51,7 +51,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("deserializes error with minimal fields")
-    void deserializesMinimalError() throws JsonProcessingException {
+    void deserializesMinimalError() throws JacksonException {
       String json =
           """
           {
@@ -70,7 +70,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("deserializes error without error_data")
-    void deserializesWithoutErrorData() throws JsonProcessingException {
+    void deserializesWithoutErrorData() throws JacksonException {
       String json =
           """
           {
@@ -94,7 +94,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("handles authentication error (code 0)")
-    void handlesAuthenticationError() throws JsonProcessingException {
+    void handlesAuthenticationError() throws JacksonException {
       String json =
           """
           {
@@ -111,7 +111,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("handles parameter error (code 100)")
-    void handlesParameterError() throws JsonProcessingException {
+    void handlesParameterError() throws JacksonException {
       String json =
           """
           {
@@ -128,7 +128,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("handles rate limit error (code 131031)")
-    void handlesRateLimitError() throws JsonProcessingException {
+    void handlesRateLimitError() throws JacksonException {
       String json =
           """
           {
@@ -146,7 +146,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("handles re-engagement error (code 131047)")
-    void handlesReEngagementError() throws JsonProcessingException {
+    void handlesReEngagementError() throws JacksonException {
       String json =
           """
           {
@@ -167,7 +167,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("handles missing template error (code 132000)")
-    void handlesMissingTemplateError() throws JsonProcessingException {
+    void handlesMissingTemplateError() throws JacksonException {
       String json =
           """
           {
@@ -189,7 +189,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("deserializes error details")
-    void deserializesErrorDetails() throws JsonProcessingException {
+    void deserializesErrorDetails() throws JacksonException {
       String json =
           """
           {
@@ -218,7 +218,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("handles expired business account error")
-    void handlesExpiredBusinessAccount() throws JsonProcessingException {
+    void handlesExpiredBusinessAccount() throws JacksonException {
       String json =
           """
           {
@@ -240,7 +240,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("handles invalid recipient error")
-    void handlesInvalidRecipient() throws JsonProcessingException {
+    void handlesInvalidRecipient() throws JacksonException {
       String json =
           """
           {
@@ -258,7 +258,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("handles media upload error")
-    void handlesMediaUploadError() throws JsonProcessingException {
+    void handlesMediaUploadError() throws JacksonException {
       String json =
           """
           {
@@ -279,7 +279,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("handles template parameter mismatch")
-    void handlesTemplateParameterMismatch() throws JsonProcessingException {
+    void handlesTemplateParameterMismatch() throws JacksonException {
       String json =
           """
           {
@@ -305,7 +305,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("maps error_data to errorData")
-    void mapsErrorData() throws JsonProcessingException {
+    void mapsErrorData() throws JacksonException {
       String json =
           """
           {
@@ -324,7 +324,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("round-trip serialization preserves snake_case")
-    void roundTripPreservesSnakeCase() throws JsonProcessingException {
+    void roundTripPreservesSnakeCase() throws JacksonException {
       ErrorData.ErrorDetails details = new ErrorData.ErrorDetails("Test");
       ErrorData original = new ErrorData(100, "Title", "Message", details);
 
@@ -370,7 +370,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("handles Unicode in error messages")
-    void handlesUnicodeInMessages() throws JsonProcessingException {
+    void handlesUnicodeInMessages() throws JacksonException {
       String json =
           """
           {
@@ -388,7 +388,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("handles very long error messages")
-    void handlesLongMessages() throws JsonProcessingException {
+    void handlesLongMessages() throws JacksonException {
       String longMessage = "Error: " + "x".repeat(1000);
       String json =
           String.format(
@@ -412,7 +412,7 @@ class ErrorDataTest {
 
     @Test
     @DisplayName("uses code for programmatic handling")
-    void usesCodeForHandling() throws JsonProcessingException {
+    void usesCodeForHandling() throws JacksonException {
       String json =
           """
           {

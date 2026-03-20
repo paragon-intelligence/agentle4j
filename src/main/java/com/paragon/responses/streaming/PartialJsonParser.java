@@ -1,8 +1,8 @@
 package com.paragon.responses.streaming;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -39,11 +39,12 @@ public class PartialJsonParser<T> {
     // Create a copy configured for lenient parsing
     this.objectMapper =
         objectMapper
-            .copy()
+            .rebuild()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false)
             .configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, false)
-            .configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+            .configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
+            .build();
     this.targetType = targetType;
   }
 
@@ -93,7 +94,10 @@ public class PartialJsonParser<T> {
 
     try {
       ObjectMapper lenientMapper =
-          objectMapper.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+          objectMapper
+              .rebuild()
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .build();
       return lenientMapper.readValue(completedJson, new TypeReference<Map<String, Object>>() {});
     } catch (Exception e) {
       return null;

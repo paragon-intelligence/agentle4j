@@ -2,8 +2,8 @@ package com.paragon.responses.spec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -206,7 +206,7 @@ class FunctionToolStoreTest {
 
     @Test
     @DisplayName("bound call() deserializes and invokes function")
-    void boundCallDeserializesAndInvokesFunction() throws JsonProcessingException {
+    void boundCallDeserializesAndInvokesFunction() throws JacksonException {
       store.add(weatherTool);
       FunctionToolCall toolCall =
           new FunctionToolCall(
@@ -221,7 +221,7 @@ class FunctionToolStoreTest {
 
     @Test
     @DisplayName("execute() binds and calls in one step")
-    void executeBindsAndCallsInOneStep() throws JsonProcessingException {
+    void executeBindsAndCallsInOneStep() throws JacksonException {
       store.add(calculatorTool);
       FunctionToolCall toolCall =
           new FunctionToolCall(
@@ -239,7 +239,7 @@ class FunctionToolStoreTest {
 
     @Test
     @DisplayName("executeAll() executes multiple tool calls")
-    void executeAllExecutesMultipleToolCalls() throws JsonProcessingException {
+    void executeAllExecutesMultipleToolCalls() throws JacksonException {
       store.addAll(weatherTool, calculatorTool);
 
       List<FunctionToolCall> toolCalls =
@@ -261,14 +261,14 @@ class FunctionToolStoreTest {
     }
 
     @Test
-    @DisplayName("call() throws JsonProcessingException on invalid JSON")
+    @DisplayName("call() throws JacksonException on invalid JSON")
     void callThrowsOnInvalidJson() {
       store.add(weatherTool);
       FunctionToolCall toolCall =
           new FunctionToolCall("not valid json", "call_bad", "get_weather", null, null);
 
       BoundedFunctionCall bound = store.bind(toolCall);
-      assertThrows(JsonProcessingException.class, bound::call);
+      assertThrows(JacksonException.class, bound::call);
     }
   }
 

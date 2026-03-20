@@ -719,7 +719,7 @@ class AgentTest {
               .model("test-model")
               .instructions("Test")
               .responder(responder)
-              .objectMapper(new com.fasterxml.jackson.databind.ObjectMapper())
+              .objectMapper(new tools.jackson.databind.ObjectMapper())
               .build();
 
       assertNotNull(agent);

@@ -1,7 +1,7 @@
 package com.paragon.telemetry.grafana;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.telemetry.events.*;
 import com.paragon.telemetry.otel.*;
 import com.paragon.telemetry.processors.TelemetryProcessor;
@@ -102,7 +102,7 @@ public class GrafanaProcessor extends TelemetryProcessor {
     try {
       String json = objectMapper.writeValueAsString(request);
       sendToEndpoint(tracesEndpoint, json, "trace");
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       logger.error("Failed to serialize trace: {}", e.getMessage(), e);
     }
   }
@@ -155,7 +155,7 @@ public class GrafanaProcessor extends TelemetryProcessor {
     try {
       String json = objectMapper.writeValueAsString(request);
       sendToEndpoint(metricsEndpoint, json, "metrics");
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       logger.error("Failed to serialize metrics: {}", e.getMessage(), e);
     }
   }
@@ -236,7 +236,7 @@ public class GrafanaProcessor extends TelemetryProcessor {
     try {
       String json = objectMapper.writeValueAsString(request);
       sendToEndpoint(logsEndpoint, json, "log");
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       logger.error("Failed to serialize log: {}", e.getMessage(), e);
     }
   }

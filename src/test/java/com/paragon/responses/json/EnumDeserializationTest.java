@@ -2,8 +2,8 @@ package com.paragon.responses.json;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.AllowedToolsMode;
 import com.paragon.responses.spec.MessageRole;
@@ -23,9 +23,9 @@ class EnumDeserializationTest {
     // Test with an invalid MessageRole value
     String invalidJson = "\"invalid_role\"";
 
-    JsonMappingException exception =
+    DatabindException exception =
         assertThrows(
-            JsonMappingException.class,
+            DatabindException.class,
             () -> {
               mapper.readValue(invalidJson, MessageRole.class);
             });
@@ -46,9 +46,9 @@ class EnumDeserializationTest {
     // Test with an invalid AllowedToolsMode value
     String invalidJson = "\"invalid_mode\"";
 
-    JsonMappingException exception =
+    DatabindException exception =
         assertThrows(
-            JsonMappingException.class,
+            DatabindException.class,
             () -> {
               mapper.readValue(invalidJson, AllowedToolsMode.class);
             });

@@ -1,12 +1,11 @@
 package com.paragon.responses.json;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.BeanProperty;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
-import java.io.IOException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.BeanProperty;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.JavaType;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -17,23 +16,28 @@ import java.util.stream.Collectors;
  * <p>For example: - "user" -> MessageRole.USER - "assistant" -> MessageRole.ASSISTANT -
  * "in_progress" -> Status.IN_PROGRESS
  *
- * <p>Throws a descriptive JsonMappingException if the value doesn't match any enum constant.
+ * <p>Throws a descriptive DatabindException if the value doesn't match any enum constant.
  */
-public class LowercaseEnumDeserializer extends JsonDeserializer<Enum<?>>
-    implements ContextualDeserializer {
+public class LowercaseEnumDeserializer extends ValueDeserializer<Enum<?>>
+     {
 
-  private Class<? extends Enum> enumType;
+  private Class<? extends Enum<?>> enumType;
 
   public LowercaseEnumDeserializer() {
     // Default constructor for Jackson
   }
 
-  public LowercaseEnumDeserializer(Class<? extends Enum> enumType) {
+  public LowercaseEnumDeserializer(Class<? extends Enum<?>> enumType) {
     this.enumType = enumType;
   }
 
   @Override
-  public Enum<?> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+  public Enum<?> deserialize(JsonParser p, DeserializationContext ctxt) throws tools.jackson.core.JacksonException {
+    if (enumType == null) {
+      throw DatabindException.from(
+          p, "LowercaseEnumDeserializer requires an enum type from contextual deserialization");
+    }
+
     String value = p.getText();
 
     if (value == null || value.isEmpty()) {
@@ -45,8 +49,8 @@ public class LowercaseEnumDeserializer extends JsonDeserializer<Enum<?>>
 
     try {
       // Find the matching enum constant
-      @SuppressWarnings("unchecked")
-      Enum<?> result = Enum.valueOf(enumType, upperValue);
+      @SuppressWarnings({"rawtypes", "unchecked"})
+      Enum<?> result = Enum.valueOf((Class) enumType, upperValue);
       return result;
     } catch (IllegalArgumentException e) {
       // Provide a descriptive error message with valid values
@@ -55,22 +59,31 @@ public class LowercaseEnumDeserializer extends JsonDeserializer<Enum<?>>
               .map(constant -> constant.name().toLowerCase())
               .collect(Collectors.joining(", "));
 
-      throw new JsonMappingException(
+      throw DatabindException.from(
           p,
           String.format(
               "Invalid enum value '%s' for type %s. Valid values are: %s",
-              value, enumType.getSimpleName(), validValues));
+              value, enumType.getSimpleName(), validValues),
+          e);
     }
   }
 
   @Override
-  public JsonDeserializer<?> createContextual(DeserializationContext ctxt, BeanProperty property)
-      throws JsonMappingException {
-    Class<?> rawClass = ctxt.getContextualType().getRawClass();
+  public ValueDeserializer<?> createContextual(DeserializationContext ctxt, BeanProperty property)
+      throws DatabindException {
+    JavaType contextualType = ctxt.getContextualType();
+    if (contextualType == null && property != null) {
+      contextualType = property.getType();
+    }
+    if (contextualType == null) {
+      return this;
+    }
+
+    Class<?> rawClass = contextualType.getRawClass();
 
     if (rawClass.isEnum()) {
       @SuppressWarnings("unchecked")
-      Class<? extends Enum> enumClass = (Class<? extends Enum>) rawClass;
+      Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) rawClass;
       return new LowercaseEnumDeserializer(enumClass);
     }
 
