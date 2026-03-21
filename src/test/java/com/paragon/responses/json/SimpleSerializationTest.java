@@ -1,6 +1,5 @@
 package com.paragon.responses.json;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.CreateResponsePayload;
 import com.paragon.responses.spec.DeveloperMessage;
@@ -8,6 +7,7 @@ import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 public class SimpleSerializationTest {
 

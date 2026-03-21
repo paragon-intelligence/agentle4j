@@ -27,17 +27,17 @@ class SelfCorrectionConfigTest {
     @Test
     @DisplayName("rejects maxRetries <= 0")
     void rejectsNonPositiveMaxRetries() {
-      assertThrows(IllegalArgumentException.class,
+      assertThrows(
+          IllegalArgumentException.class,
           () -> SelfCorrectionConfig.builder().maxRetries(0).build());
     }
 
     @Test
     @DisplayName("rejects feedbackTemplate without {error} placeholder")
     void rejectsTemplateWithoutPlaceholder() {
-      assertThrows(IllegalArgumentException.class,
-          () -> SelfCorrectionConfig.builder()
-              .feedbackTemplate("no placeholder here")
-              .build());
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> SelfCorrectionConfig.builder().feedbackTemplate("no placeholder here").build());
     }
   }
 
@@ -48,9 +48,10 @@ class SelfCorrectionConfigTest {
     @Test
     @DisplayName("replaces {error} with actual error message")
     void replacesPlaceholder() {
-      SelfCorrectionConfig config = SelfCorrectionConfig.builder()
-          .feedbackTemplate("Error was: {error}. Please fix it.")
-          .build();
+      SelfCorrectionConfig config =
+          SelfCorrectionConfig.builder()
+              .feedbackTemplate("Error was: {error}. Please fix it.")
+              .build();
 
       String result = config.formatFeedback("NullPointerException at line 42");
       assertEquals("Error was: NullPointerException at line 42. Please fix it.", result);
@@ -73,9 +74,10 @@ class SelfCorrectionConfigTest {
     @Test
     @DisplayName("custom retryOn predicate is respected")
     void customRetryOnIsRespected() {
-      SelfCorrectionConfig config = SelfCorrectionConfig.builder()
-          .retryOn(result -> false) // never retry
-          .build();
+      SelfCorrectionConfig config =
+          SelfCorrectionConfig.builder()
+              .retryOn(result -> false) // never retry
+              .build();
       AgenticContext ctx = AgenticContext.create();
       AgentResult error = AgentResult.error(new RuntimeException("oops"), ctx, 1);
       assertFalse(config.retryOn().test(error));

@@ -1,7 +1,5 @@
 package com.paragon.responses.streaming;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.FunctionToolStore;
@@ -21,6 +19,8 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * A streaming response wrapper for OpenAI Responses API Server-Sent Events (SSE).

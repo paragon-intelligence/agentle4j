@@ -1,6 +1,5 @@
 package com.paragon.mcp;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.mcp.dto.JsonRpcRequest;
 import com.paragon.mcp.dto.JsonRpcResponse;
 import com.paragon.mcp.dto.McpToolDefinition;
@@ -23,6 +22,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * MCP client that communicates over HTTP with optional SSE streaming.
@@ -208,8 +208,7 @@ public final class StreamableHttpMcpClient extends McpClient {
 
       var toolsNode = node.get("tools");
       return objectMapper.convertValue(
-          toolsNode,
-          new tools.jackson.core.type.TypeReference<List<McpToolDefinition>>() {});
+          toolsNode, new tools.jackson.core.type.TypeReference<List<McpToolDefinition>>() {});
     } catch (Exception e) {
       throw McpException.protocolError("Failed to parse tools list: " + e.getMessage());
     }

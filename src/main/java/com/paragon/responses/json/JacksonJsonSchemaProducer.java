@@ -1,16 +1,10 @@
 package com.paragon.responses.json;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.JavaType;
-import tools.jackson.databind.ObjectMapper;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.RecordComponent;
-import tools.jackson.module.jsonSchema.JsonSchema;
-import tools.jackson.module.jsonSchema.JsonSchemaGenerator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,6 +15,12 @@ import java.util.Objects;
 import java.util.Set;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.module.jsonSchema.JsonSchema;
+import tools.jackson.module.jsonSchema.JsonSchemaGenerator;
 
 /**
  * Produces JSON schemas compatible with OpenAI's function calling API.
@@ -113,7 +113,8 @@ public record JacksonJsonSchemaProducer(@NonNull ObjectMapper mapper)
       Object itemsObj = schema.get("items");
       if (itemsObj instanceof Map<?, ?> rawItems && javaType.getContentType() != null) {
         Map<String, Object> items = (Map<String, Object>) rawItems;
-        schema.put("items", transformNestedSchema(javaType.getContentType(), items, resolvingTypes));
+        schema.put(
+            "items", transformNestedSchema(javaType.getContentType(), items, resolvingTypes));
       }
       return;
     }
@@ -189,7 +190,8 @@ public record JacksonJsonSchemaProducer(@NonNull ObjectMapper mapper)
     List<Map<String, Object>> branches = new ArrayList<>();
 
     for (PolymorphicTypeMetadata.Branch branch : metadata.branches()) {
-      Map<String, Object> branchSchema = generateResolvedSchema(mapper.constructType(branch.subtypeClass()));
+      Map<String, Object> branchSchema =
+          generateResolvedSchema(mapper.constructType(branch.subtypeClass()));
       transformSchemaForType(
           mapper.constructType(branch.subtypeClass()), branchSchema, new HashSet<>(resolvingTypes));
 
@@ -203,7 +205,8 @@ public record JacksonJsonSchemaProducer(@NonNull ObjectMapper mapper)
 
       @SuppressWarnings("unchecked")
       Map<String, Object> properties =
-          (Map<String, Object>) branchSchema.computeIfAbsent("properties", ignored -> new HashMap<>());
+          (Map<String, Object>)
+              branchSchema.computeIfAbsent("properties", ignored -> new HashMap<>());
       properties.put(metadata.propertyName(), discriminatorSchema(branch.typeId()));
       branches.add(branchSchema);
     }
@@ -252,7 +255,9 @@ public record JacksonJsonSchemaProducer(@NonNull ObjectMapper mapper)
       }
     }
 
-    for (Class<?> current = rawClass; current != null && current != Object.class; current = current.getSuperclass()) {
+    for (Class<?> current = rawClass;
+        current != null && current != Object.class;
+        current = current.getSuperclass()) {
       for (Field field : current.getDeclaredFields()) {
         if (Modifier.isStatic(field.getModifiers()) || field.isSynthetic()) {
           continue;

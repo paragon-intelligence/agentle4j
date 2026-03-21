@@ -1,11 +1,11 @@
 package com.paragon.responses.json;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.ClickAction;
 import com.paragon.responses.spec.ClickButton;
 import com.paragon.responses.spec.Coordinate;
 import com.paragon.responses.spec.MoveAction;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Manual test to verify Coordinate serialization behavior. Run this main method to see the JSON

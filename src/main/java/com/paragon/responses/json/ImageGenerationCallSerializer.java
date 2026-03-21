@@ -1,11 +1,10 @@
 package com.paragon.responses.json;
 
+import com.paragon.responses.spec.ImageGenerationCall;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.jsontype.TypeSerializer;
 import tools.jackson.databind.ser.std.StdSerializer;
-import com.paragon.responses.spec.ImageGenerationCall;
-import java.io.IOException;
 
 /** Serializer that enforces the correct wire format for {@link ImageGenerationCall}. */
 public class ImageGenerationCallSerializer extends StdSerializer<ImageGenerationCall> {
@@ -35,4 +34,3 @@ public class ImageGenerationCallSerializer extends StdSerializer<ImageGeneration
     gen.writeEndObject();
   }
 }
-

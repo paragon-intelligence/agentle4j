@@ -1,6 +1,5 @@
 package com.paragon.messaging.core;
 
-
 /**
  * Sealed sub-interface for text messages.
  *

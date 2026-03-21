@@ -1,18 +1,17 @@
 package com.paragon.responses.json;
 
+import com.paragon.responses.spec.FunctionToolCall;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.jsontype.TypeSerializer;
 import tools.jackson.databind.ser.std.StdSerializer;
-import com.paragon.responses.spec.FunctionToolCall;
-import java.io.IOException;
 
 /**
  * Custom Jackson serializer for {@link FunctionToolCall}.
  *
  * <p>When {@code FunctionToolCall} appears in a {@code List<ResponseInputItem>} (which uses
- * {@code @JsonTypeInfo(EXISTING_PROPERTY)}), the outer type resolver does NOT inject the
- * {@code "type"} field. Without this serializer, the serialized JSON lacks {@code "type":
+ * {@code @JsonTypeInfo(EXISTING_PROPERTY)}), the outer type resolver does NOT inject the {@code
+ * "type"} field. Without this serializer, the serialized JSON lacks {@code "type":
  * "function_call"}, causing OpenRouter to reject the payload.
  *
  * <p>This serializer explicitly writes {@code "type": "function_call"} along with all other fields.

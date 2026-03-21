@@ -10,8 +10,8 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
- * A {@link FunctionTool} that reads a batch of {@link com.paragon.harness.AgentRunReport}
- * files and returns a structured failure summary for analysis.
+ * A {@link FunctionTool} that reads a batch of {@link com.paragon.harness.AgentRunReport} files and
+ * returns a structured failure summary for analysis.
  *
  * <p>Feed this tool to a meta-agent to automate harness improvement recommendations:
  *
@@ -43,7 +43,7 @@ public final class FailureAnalysisTool extends FunctionTool<FailureAnalysisTool.
   /** Parameters for the failure analysis. */
   public record AnalysisRequest(
       @Nullable Integer maxReports // optional limit on how many reports to analyze
-  ) {}
+      ) {}
 
   private final RunReportExporter exporter;
 
@@ -63,16 +63,20 @@ public final class FailureAnalysisTool extends FunctionTool<FailureAnalysisTool.
       return FunctionToolCallOutput.success("No agent run reports found for analysis.");
     }
 
-    int limit = (params != null && params.maxReports() != null && params.maxReports() > 0)
-        ? params.maxReports()
-        : allReports.size();
+    int limit =
+        (params != null && params.maxReports() != null && params.maxReports() > 0)
+            ? params.maxReports()
+            : allReports.size();
 
-    List<String> reportsToAnalyze = allReports.subList(
-        Math.max(0, allReports.size() - limit), allReports.size());
+    List<String> reportsToAnalyze =
+        allReports.subList(Math.max(0, allReports.size() - limit), allReports.size());
 
     // Build a structured summary for the LLM to analyze
     StringBuilder summary = new StringBuilder();
-    summary.append("## Agent Run Reports (").append(reportsToAnalyze.size()).append(" reports)\n\n");
+    summary
+        .append("## Agent Run Reports (")
+        .append(reportsToAnalyze.size())
+        .append(" reports)\n\n");
 
     int successCount = 0;
     int failureCount = 0;
@@ -86,9 +90,14 @@ public final class FailureAnalysisTool extends FunctionTool<FailureAnalysisTool.
     }
 
     summary.append("---\n");
-    summary.append("Summary: ").append(successCount).append(" succeeded, ")
-        .append(failureCount).append(" failed out of ")
-        .append(reportsToAnalyze.size()).append(" analyzed.\n");
+    summary
+        .append("Summary: ")
+        .append(successCount)
+        .append(" succeeded, ")
+        .append(failureCount)
+        .append(" failed out of ")
+        .append(reportsToAnalyze.size())
+        .append(" analyzed.\n");
 
     return FunctionToolCallOutput.success(summary.toString());
   }

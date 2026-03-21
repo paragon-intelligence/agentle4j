@@ -1,16 +1,16 @@
 package com.paragon.responses.json;
 
-import tools.jackson.core.JsonParser;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.JsonNode;
 import com.paragon.responses.OpenRouterCustomPayload;
 import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.*;
 import java.util.List;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
 
 /**
  * Custom deserializer for CreateResponsePayload to handle @JsonUnwrapped OpenRouterCustomPayload.
@@ -58,8 +58,7 @@ public class CreateResponsePayloadDeserializer extends ValueDeserializer<CreateR
     @Nullable List<Tool> tools = getList(ctxt, node, "tools", new TypeReference<>() {});
     @Nullable Integer topLogprobs = getInteger(node, "top_logprobs");
     @Nullable Number topP = getNumber(node, "top_p");
-    @Nullable Truncation truncation =
-        getObject(ctxt, node, "truncation", new TypeReference<>() {});
+    @Nullable Truncation truncation = getObject(ctxt, node, "truncation", new TypeReference<>() {});
 
     // OpenRouter custom payload - unwrapped fields
     @Nullable List<OpenRouterPlugin> plugins =

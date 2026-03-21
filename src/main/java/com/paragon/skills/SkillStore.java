@@ -1,9 +1,8 @@
 package com.paragon.skills;
 
-import org.jspecify.annotations.NonNull;
-
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Registry for managing available skills.
@@ -45,11 +44,8 @@ public final class SkillStore {
 
   private final Map<String, Skill> skills = new ConcurrentHashMap<>();
 
-  /**
-   * Creates an empty SkillStore.
-   */
-  public SkillStore() {
-  }
+  /** Creates an empty SkillStore. */
+  public SkillStore() {}
 
   /**
    * Creates a SkillStore with initial skills.
@@ -182,9 +178,7 @@ public final class SkillStore {
     return Optional.ofNullable(skills.remove(name));
   }
 
-  /**
-   * Clears all skills from the store.
-   */
+  /** Clears all skills from the store. */
   public void clear() {
     skills.clear();
   }

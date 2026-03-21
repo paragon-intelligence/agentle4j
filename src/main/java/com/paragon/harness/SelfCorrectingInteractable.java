@@ -1,8 +1,7 @@
 package com.paragon.harness;
 
-import com.paragon.agents.AgentStream;
-import com.paragon.agents.AgenticContext;
 import com.paragon.agents.AgentResult;
+import com.paragon.agents.AgenticContext;
 import com.paragon.agents.Interactable;
 import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.spec.Message;
@@ -15,8 +14,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Decorator that wraps any {@link Interactable} with a self-correction loop.
  *
- * <p>When the wrapped agent produces a result that satisfies the {@code retryOn} predicate
- * (e.g., an error or guardrail failure), this decorator:
+ * <p>When the wrapped agent produces a result that satisfies the {@code retryOn} predicate (e.g.,
+ * an error or guardrail failure), this decorator:
  *
  * <ol>
  *   <li>Formats the error into the configured feedback template
@@ -25,8 +24,8 @@ import org.jspecify.annotations.Nullable;
  *   <li>Returns the final result (successful or last failure)
  * </ol>
  *
- * <p>LangChain data shows this pattern gives the largest benchmark improvements of any
- * harness feature, because it closes the feedback loop within a single session.
+ * <p>LangChain data shows this pattern gives the largest benchmark improvements of any harness
+ * feature, because it closes the feedback loop within a single session.
  *
  * <p>Example:
  *
@@ -180,8 +179,8 @@ public final class SelfCorrectingInteractable implements Interactable {
      * Called at the start of each retry attempt.
      *
      * @param attempt the 1-indexed attempt number
-     * @param error   the error message extracted from the failed result
-     * @param failed  the failed {@link AgentResult} that triggered the retry
+     * @param error the error message extracted from the failed result
+     * @param failed the failed {@link AgentResult} that triggered the retry
      */
     void onRetry(int attempt, @NonNull String error, @NonNull AgentResult failed);
   }

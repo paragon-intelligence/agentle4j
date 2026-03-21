@@ -1,8 +1,8 @@
 package com.paragon.responses.spec;
 
+import org.jspecify.annotations.NonNull;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
-import org.jspecify.annotations.NonNull;
 
 public interface ToolChoiceRepresentable {
   String toToolChoice(ObjectMapper mapper) throws JacksonException;

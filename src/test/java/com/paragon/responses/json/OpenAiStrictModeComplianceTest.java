@@ -2,13 +2,13 @@ package com.paragon.responses.json;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Tests verifying that {@link JacksonJsonSchemaProducer} generates schemas fully compliant with
@@ -39,7 +39,8 @@ class OpenAiStrictModeComplianceTest {
 
   record Address(String street, String city, String country) {}
 
-  record ContactInfo(String email, String phone, Address primaryAddress, Address secondaryAddress) {}
+  record ContactInfo(
+      String email, String phone, Address primaryAddress, Address secondaryAddress) {}
 
   record Person(String id, String firstName, String lastName, ContactInfo contactInfo) {}
 
@@ -97,9 +98,9 @@ class OpenAiStrictModeComplianceTest {
   }
 
   /**
-   * Returns true if any schema node in the tree has an {@code "id"} field whose value is a
-   * Jackson URN (starts with {@code "urn:"}). This distinguishes Jackson metadata from a
-   * legitimate data field named {@code id}.
+   * Returns true if any schema node in the tree has an {@code "id"} field whose value is a Jackson
+   * URN (starts with {@code "urn:"}). This distinguishes Jackson metadata from a legitimate data
+   * field named {@code id}.
    */
   @SuppressWarnings("unchecked")
   private boolean schemaTreeContainsUrnId(Object node) {
@@ -133,11 +134,13 @@ class OpenAiStrictModeComplianceTest {
 
     @Test
     void nestedObjectHasAdditionalPropertiesFalse() {
-      // ContactInfo contains Address — the Address schema node must also have additionalProperties: false
+      // ContactInfo contains Address — the Address schema node must also have additionalProperties:
+      // false
       Map<String, Object> schema = producer.produce(ContactInfo.class);
 
       List<Map<String, Object>> allObjects = collectAllObjectNodes(schema);
-      assertTrue(allObjects.size() >= 2, "Should find at least 2 object nodes (ContactInfo + Address)");
+      assertTrue(
+          allObjects.size() >= 2, "Should find at least 2 object nodes (ContactInfo + Address)");
 
       for (Map<String, Object> objectNode : allObjects) {
         assertEquals(
@@ -154,7 +157,9 @@ class OpenAiStrictModeComplianceTest {
       Map<String, Object> schema = producer.produce(Person.class);
 
       List<Map<String, Object>> allObjects = collectAllObjectNodes(schema);
-      assertTrue(allObjects.size() >= 3, "Should find at least 3 object nodes (Person, ContactInfo, Address)");
+      assertTrue(
+          allObjects.size() >= 3,
+          "Should find at least 3 object nodes (Person, ContactInfo, Address)");
 
       for (Map<String, Object> objectNode : allObjects) {
         assertEquals(
@@ -244,7 +249,9 @@ class OpenAiStrictModeComplianceTest {
         @SuppressWarnings("unchecked")
         List<String> required = (List<String>) objectNode.get("required");
 
-        assertNotNull(required, "Every deeply nested object must have 'required'. Node: " + objectNode.keySet());
+        assertNotNull(
+            required,
+            "Every deeply nested object must have 'required'. Node: " + objectNode.keySet());
         assertTrue(
             required.containsAll(props.keySet()),
             "Deeply nested 'required' must list ALL properties. Node: "
@@ -266,7 +273,8 @@ class OpenAiStrictModeComplianceTest {
         @SuppressWarnings("unchecked")
         List<String> required = (List<String>) objectNode.get("required");
 
-        assertNotNull(required, "Array item objects must also have 'required'. Node: " + objectNode.keySet());
+        assertNotNull(
+            required, "Array item objects must also have 'required'. Node: " + objectNode.keySet());
         assertTrue(
             required.containsAll(props.keySet()),
             "Array item 'required' must list all properties. Props: "
@@ -302,8 +310,7 @@ class OpenAiStrictModeComplianceTest {
     void deeplyNestedSchemaHasNoRef() {
       Map<String, Object> schema = producer.produce(Person.class);
       assertFalse(
-          schemaTreeContainsKey(schema, "$ref"),
-          "Deeply nested schema must not contain $ref");
+          schemaTreeContainsKey(schema, "$ref"), "Deeply nested schema must not contain $ref");
     }
 
     @Test
@@ -324,11 +331,13 @@ class OpenAiStrictModeComplianceTest {
 
     @Test
     void schemaHasNoUrnIdField() {
-      // jackson-module-jsonSchema adds "id": "urn:jsonschema:..." to each object — OpenAI rejects this
+      // jackson-module-jsonSchema adds "id": "urn:jsonschema:..." to each object — OpenAI rejects
+      // this
       Map<String, Object> schema = producer.produce(Address.class);
       assertFalse(
           schemaTreeContainsUrnId(schema),
-          "Schema must not contain 'id': 'urn:...' metadata fields — not supported by OpenAI strict mode");
+          "Schema must not contain 'id': 'urn:...' metadata fields — not supported by OpenAI strict"
+              + " mode");
     }
 
     @Test
@@ -355,9 +364,9 @@ class OpenAiStrictModeComplianceTest {
   class NoBooleanRequired {
 
     /**
-     * Jackson draft-3 schema puts {@code "required": true} on individual property schemas.
-     * OpenAI strict mode expects {@code "required"} to be an array on the parent object only.
-     * This helper returns true if any node in the tree has {@code "required"} set to a Boolean.
+     * Jackson draft-3 schema puts {@code "required": true} on individual property schemas. OpenAI
+     * strict mode expects {@code "required"} to be an array on the parent object only. This helper
+     * returns true if any node in the tree has {@code "required"} set to a Boolean.
      */
     @SuppressWarnings("unchecked")
     private boolean schemaTreeContainsBooleanRequired(Object node) {
@@ -380,7 +389,8 @@ class OpenAiStrictModeComplianceTest {
       Map<String, Object> schema = producer.produce(Address.class);
       assertFalse(
           schemaTreeContainsBooleanRequired(schema),
-          "Schema must not contain 'required: true' (boolean) on property schemas — OpenAI expects an array");
+          "Schema must not contain 'required: true' (boolean) on property schemas — OpenAI expects"
+              + " an array");
     }
 
     @Test
@@ -407,7 +417,8 @@ class OpenAiStrictModeComplianceTest {
           assertInstanceOf(
               List.class,
               req,
-              "'required' on an object node must be a List, not: " + req.getClass().getSimpleName());
+              "'required' on an object node must be a List, not: "
+                  + req.getClass().getSimpleName());
         }
       }
     }
@@ -431,7 +442,8 @@ class OpenAiStrictModeComplianceTest {
       Map<String, Object> schema = producer.produce(Node.class);
       assertFalse(
           schemaTreeContainsKey(schema, "$ref"),
-          "Circular schema must not contain $ref after resolution — all refs must be inlined or replaced");
+          "Circular schema must not contain $ref after resolution — all refs must be inlined or"
+              + " replaced");
     }
 
     @Test
@@ -439,7 +451,8 @@ class OpenAiStrictModeComplianceTest {
       Map<String, Object> schema = producer.produce(Node.class);
       assertFalse(schemaTreeContainsKey(schema, "$ref"), "No $ref allowed");
       assertFalse(schemaTreeContainsUrnId(schema), "No URN id metadata allowed");
-      assertEquals(false, schema.get("additionalProperties"), "Root must have additionalProperties:false");
+      assertEquals(
+          false, schema.get("additionalProperties"), "Root must have additionalProperties:false");
     }
   }
 
@@ -462,12 +475,20 @@ class OpenAiStrictModeComplianceTest {
       List<String> required = (List<String>) obj.get("required");
 
       if (!Boolean.FALSE.equals(obj.get("additionalProperties"))) {
-        violations.add("Missing additionalProperties:false on object with props: " + (props != null ? props.keySet() : "none"));
+        violations.add(
+            "Missing additionalProperties:false on object with props: "
+                + (props != null ? props.keySet() : "none"));
       }
       if (required == null) {
-        violations.add("Missing required[] on object with props: " + (props != null ? props.keySet() : "none"));
+        violations.add(
+            "Missing required[] on object with props: "
+                + (props != null ? props.keySet() : "none"));
       } else if (props != null && !required.containsAll(props.keySet())) {
-        violations.add("Incomplete required[] on object with props: " + props.keySet() + ", required has: " + required);
+        violations.add(
+            "Incomplete required[] on object with props: "
+                + props.keySet()
+                + ", required has: "
+                + required);
       }
     }
 
@@ -478,6 +499,8 @@ class OpenAiStrictModeComplianceTest {
       violations.add("Schema contains 'id': 'urn:...' metadata fields (Jackson URN style)");
     }
 
-    assertTrue(violations.isEmpty(), "OpenAI strict mode compliance violations:\n" + String.join("\n", violations));
+    assertTrue(
+        violations.isEmpty(),
+        "OpenAI strict mode compliance violations:\n" + String.join("\n", violations));
   }
 }

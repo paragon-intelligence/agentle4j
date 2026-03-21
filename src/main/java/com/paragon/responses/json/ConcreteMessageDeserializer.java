@@ -1,9 +1,9 @@
 package com.paragon.responses.json;
 
+import com.paragon.responses.spec.Message;
 import tools.jackson.core.JsonParser;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.ValueDeserializer;
-import com.paragon.responses.spec.Message;
 
 /**
  * Deserializer for concrete Message subclasses that delegates to MessageDeserializer and casts to
@@ -20,7 +20,8 @@ public class ConcreteMessageDeserializer<T extends Message> extends ValueDeseria
 
   @Override
   @SuppressWarnings("unchecked")
-  public T deserialize(JsonParser p, DeserializationContext ctxt) throws tools.jackson.core.JacksonException {
+  public T deserialize(JsonParser p, DeserializationContext ctxt)
+      throws tools.jackson.core.JacksonException {
     Message message = messageDeserializer.deserialize(p, ctxt);
 
     if (!targetClass.isInstance(message)) {

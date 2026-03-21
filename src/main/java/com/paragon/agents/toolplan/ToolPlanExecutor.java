@@ -1,6 +1,5 @@
 package com.paragon.agents.toolplan;
 
-import tools.jackson.core.JacksonException;
 import com.paragon.responses.spec.FunctionToolCall;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.FunctionToolStore;
@@ -9,6 +8,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.StructuredTaskScope;
 import org.jspecify.annotations.NonNull;
+import tools.jackson.core.JacksonException;
 
 /**
  * Executes a {@link ToolPlan} against a {@link FunctionToolStore}.
@@ -76,9 +76,7 @@ public final class ToolPlanExecutor {
     List<ToolPlanResult.StepResult> outputResults;
     if (plan.output_steps() != null && !plan.output_steps().isEmpty()) {
       outputResults =
-          allResults.stream()
-              .filter(r -> plan.output_steps().contains(r.stepId()))
-              .toList();
+          allResults.stream().filter(r -> plan.output_steps().contains(r.stepId())).toList();
     } else {
       outputResults = List.copyOf(allResults);
     }
@@ -188,9 +186,7 @@ public final class ToolPlanExecutor {
     return waves;
   }
 
-  /**
-   * Executes all steps in a wave in parallel using StructuredTaskScope.
-   */
+  /** Executes all steps in a wave in parallel using StructuredTaskScope. */
   private List<ToolPlanResult.StepResult> executeWave(
       List<ToolPlanStep> wave,
       Map<String, String> resolvedOutputs,
@@ -239,8 +235,7 @@ public final class ToolPlanExecutor {
           errors.put(step.id(), error);
           failedSteps.add(step.id());
           results.add(
-              new ToolPlanResult.StepResult(
-                  step.id(), step.tool(), error, Duration.ZERO, false));
+              new ToolPlanResult.StepResult(step.id(), step.tool(), error, Duration.ZERO, false));
         }
       }
     }
@@ -260,8 +255,7 @@ public final class ToolPlanExecutor {
     Set<String> deps = PlanReferenceResolver.extractDependencies(step.arguments());
     for (String dep : deps) {
       if (failedSteps.contains(dep)) {
-        String error =
-            "Skipped because dependency '" + dep + "' failed";
+        String error = "Skipped because dependency '" + dep + "' failed";
         errors.put(step.id(), error);
         return new ToolPlanResult.StepResult(
             step.id(), step.tool(), error, Duration.between(stepStart, Instant.now()), false);
@@ -285,14 +279,19 @@ public final class ToolPlanExecutor {
       return new ToolPlanResult.StepResult(step.id(), step.tool(), outputText, duration, true);
 
     } catch (JacksonException e) {
-      String error = "Failed to deserialize arguments for tool '" + step.tool() + "': " + e.getMessage();
+      String error =
+          "Failed to deserialize arguments for tool '" + step.tool() + "': " + e.getMessage();
       errors.put(step.id(), error);
       return new ToolPlanResult.StepResult(
           step.id(), step.tool(), error, Duration.between(stepStart, Instant.now()), false);
     } catch (ToolPlanException e) {
       errors.put(step.id(), e.getMessage());
       return new ToolPlanResult.StepResult(
-          step.id(), step.tool(), e.getMessage(), Duration.between(stepStart, Instant.now()), false);
+          step.id(),
+          step.tool(),
+          e.getMessage(),
+          Duration.between(stepStart, Instant.now()),
+          false);
     } catch (Exception e) {
       String error = "Tool execution failed: " + e.getMessage();
       errors.put(step.id(), error);

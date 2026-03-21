@@ -20,10 +20,8 @@ class ShellVerificationToolTest {
     @EnabledOnOs({OS.LINUX, OS.MAC})
     @DisplayName("passes for zero-exit command")
     void passesForZeroExitCode() {
-      ShellVerificationTool tool = ShellVerificationTool.builder()
-          .name("echo_test")
-          .command("echo", "hello")
-          .build();
+      ShellVerificationTool tool =
+          ShellVerificationTool.builder().name("echo_test").command("echo", "hello").build();
 
       VerificationResult result = tool.runCommand();
 
@@ -36,10 +34,11 @@ class ShellVerificationToolTest {
     @EnabledOnOs({OS.LINUX, OS.MAC})
     @DisplayName("fails for non-zero-exit command")
     void failsForNonZeroExitCode() {
-      ShellVerificationTool tool = ShellVerificationTool.builder()
-          .name("false_cmd")
-          .command("false") // always exits with code 1
-          .build();
+      ShellVerificationTool tool =
+          ShellVerificationTool.builder()
+              .name("false_cmd")
+              .command("false") // always exits with code 1
+              .build();
 
       VerificationResult result = tool.runCommand();
 
@@ -51,10 +50,11 @@ class ShellVerificationToolTest {
     @EnabledOnOs({OS.LINUX, OS.MAC})
     @DisplayName("captures output in result")
     void capturesOutput() {
-      ShellVerificationTool tool = ShellVerificationTool.builder()
-          .name("capture_test")
-          .command("echo", "captured output")
-          .build();
+      ShellVerificationTool tool =
+          ShellVerificationTool.builder()
+              .name("capture_test")
+              .command("echo", "captured output")
+              .build();
 
       VerificationResult result = tool.runCommand();
       assertTrue(result.output().contains("captured output"));
@@ -64,15 +64,14 @@ class ShellVerificationToolTest {
     @DisplayName("call() wraps runCommand output in FunctionToolCallOutput")
     @EnabledOnOs({OS.LINUX, OS.MAC})
     void callWrapsOutput() {
-      ShellVerificationTool tool = ShellVerificationTool.builder()
-          .name("call_test")
-          .command("echo", "wrapped")
-          .build();
+      ShellVerificationTool tool =
+          ShellVerificationTool.builder().name("call_test").command("echo", "wrapped").build();
 
       var output = tool.call(new ShellVerificationTool.TriggerRequest());
       assertNotNull(output);
-      assertTrue(output.output().toString().contains("wrapped") ||
-          output.output().toString().contains("PASSED"));
+      assertTrue(
+          output.output().toString().contains("wrapped")
+              || output.output().toString().contains("PASSED"));
     }
   }
 
@@ -83,20 +82,17 @@ class ShellVerificationToolTest {
     @Test
     @DisplayName("throws if name is not set")
     void throwsIfNameMissing() {
-      assertThrows(NullPointerException.class, () ->
-          ShellVerificationTool.builder()
-              .command("echo", "hi")
-              .build());
+      assertThrows(
+          NullPointerException.class,
+          () -> ShellVerificationTool.builder().command("echo", "hi").build());
     }
 
     @Test
     @DisplayName("throws if command is empty")
     void throwsIfCommandEmpty() {
-      assertThrows(IllegalArgumentException.class, () ->
-          ShellVerificationTool.builder()
-              .name("test")
-              .command(new String[0])
-              .build());
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> ShellVerificationTool.builder().name("test").command(new String[0]).build());
     }
   }
 }

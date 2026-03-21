@@ -59,7 +59,8 @@ class RegexToolSearchStrategyTest {
   }
 
   private final List<FunctionTool<?>> allTools =
-      List.of(new WeatherTool(), new DatabaseTool(), new EmailTool(), new TaxTool(), new TicketTool());
+      List.of(
+          new WeatherTool(), new DatabaseTool(), new EmailTool(), new TaxTool(), new TicketTool());
 
   @Nested
   @DisplayName("Constructor")

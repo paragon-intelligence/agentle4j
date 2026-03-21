@@ -7,7 +7,6 @@ import com.paragon.responses.annotations.FunctionMetadata;
 import com.paragon.responses.spec.FunctionTool;
 import com.paragon.responses.spec.FunctionToolCall;
 import com.paragon.responses.spec.FunctionToolCallOutput;
-import com.paragon.responses.spec.ResponseInputItem;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
@@ -17,8 +16,9 @@ import org.junit.jupiter.api.*;
 /**
  * Tests for {@code stopsLoop = true} client-side tool support.
  *
- * <p>Verifies that when a tool annotated with {@code @FunctionMetadata(stopsLoop = true)} is
- * called by the model:
+ * <p>Verifies that when a tool annotated with {@code @FunctionMetadata(stopsLoop = true)} is called
+ * by the model:
+ *
  * <ol>
  *   <li>The agentic loop exits immediately with {@code AgentResult.isClientSideTool() == true}
  *   <li>The {@code FunctionToolCall} is NOT persisted to conversation history
@@ -79,42 +79,42 @@ class StopsLoopToolTest {
 
   private String buildToolCallResponse(String toolName) {
     return """
+    {
+      "id": "resp_123",
+      "object": "response",
+      "status": "completed",
+      "output": [
         {
-          "id": "resp_123",
-          "object": "response",
-          "status": "completed",
-          "output": [
-            {
-              "type": "function_call",
-              "id": "fc_123",
-              "call_id": "call_123",
-              "name": "%s",
-              "arguments": "{\\"question\\": \\"What color do you prefer?\\"}"
-            }
-          ],
-          "usage": {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
+          "type": "function_call",
+          "id": "fc_123",
+          "call_id": "call_123",
+          "name": "%s",
+          "arguments": "{\\"question\\": \\"What color do you prefer?\\"}"
         }
-        """
+      ],
+      "usage": {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
+    }
+    """
         .formatted(toolName);
   }
 
   private String buildTextResponse(String text) {
     return """
+    {
+      "id": "resp_456",
+      "object": "response",
+      "status": "completed",
+      "output": [
         {
-          "id": "resp_456",
-          "object": "response",
-          "status": "completed",
-          "output": [
-            {
-              "type": "message",
-              "id": "msg_123",
-              "role": "assistant",
-              "content": [{"type": "output_text", "text": "%s"}]
-            }
-          ],
-          "usage": {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
+          "type": "message",
+          "id": "msg_123",
+          "role": "assistant",
+          "content": [{"type": "output_text", "text": "%s"}]
         }
-        """
+      ],
+      "usage": {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
+    }
+    """
         .formatted(text);
   }
 
@@ -255,7 +255,8 @@ class StopsLoopToolTest {
 
       boolean hasFunctionToolCall =
           result.history().stream().anyMatch(item -> item instanceof FunctionToolCall);
-      assertFalse(hasFunctionToolCall, "FunctionToolCall must NOT appear in history for stopsLoop tools");
+      assertFalse(
+          hasFunctionToolCall, "FunctionToolCall must NOT appear in history for stopsLoop tools");
     }
 
     @Test
@@ -312,7 +313,8 @@ class StopsLoopToolTest {
       AtomicReference<AgentResult> capturedResult = new AtomicReference<>();
 
       agent
-          .asStreaming().interact("Help me pick a color")
+          .asStreaming()
+          .interact("Help me pick a color")
           .onClientSideTool(capturedCall::set)
           .onComplete(capturedResult::set)
           .startBlocking();
@@ -345,13 +347,15 @@ class StopsLoopToolTest {
       AtomicReference<AgentResult> capturedResult = new AtomicReference<>();
 
       agent
-          .asStreaming().interact("Help me pick a color")
+          .asStreaming()
+          .interact("Help me pick a color")
           .onComplete(capturedResult::set)
           .startBlocking();
 
       assertNotNull(capturedResult.get());
       boolean hasFunctionToolCall =
-          capturedResult.get().history().stream().anyMatch(item -> item instanceof FunctionToolCall);
+          capturedResult.get().history().stream()
+              .anyMatch(item -> item instanceof FunctionToolCall);
       assertFalse(hasFunctionToolCall, "FunctionToolCall must NOT appear in streaming history");
     }
   }

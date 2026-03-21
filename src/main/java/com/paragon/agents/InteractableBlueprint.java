@@ -3,17 +3,6 @@ package com.paragon.agents;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.DatabindException;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.annotation.JsonDeserialize;
-import tools.jackson.databind.exc.MismatchedInputException;
-import tools.jackson.databind.jsontype.TypeDeserializer;
-import tools.jackson.dataformat.yaml.YAMLMapper;
 import com.paragon.agents.context.ContextManagementConfig;
 import com.paragon.agents.context.SlidingWindowStrategy;
 import com.paragon.agents.context.SummarizationStrategy;
@@ -35,6 +24,17 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.exc.MismatchedInputException;
+import tools.jackson.databind.jsontype.TypeDeserializer;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 /**
  * A sealed interface representing the serializable blueprint of any {@link Interactable}.
@@ -399,10 +399,8 @@ public sealed interface InteractableBlueprint
   record HandoffDescriptor(
       @JsonProperty("name") @NonNull String name,
       @JsonProperty("description") @NonNull String description,
-      @JsonProperty("target")
-          @JsonDeserialize(using = BlueprintDeserializer.class)
-          @NonNull
-          InteractableBlueprint target) {
+      @JsonProperty("target") @JsonDeserialize(using = BlueprintDeserializer.class)
+          @NonNull InteractableBlueprint target) {
 
     public static HandoffDescriptor from(@NonNull Handoff handoff) {
       return new HandoffDescriptor(
@@ -412,27 +410,21 @@ public sealed interface InteractableBlueprint
 
   /** Serializable descriptor for a {@link SupervisorAgent.Worker}. */
   record WorkerBlueprint(
-      @JsonProperty("worker")
-          @JsonDeserialize(using = BlueprintDeserializer.class)
-          @NonNull
-          InteractableBlueprint worker,
+      @JsonProperty("worker") @JsonDeserialize(using = BlueprintDeserializer.class)
+          @NonNull InteractableBlueprint worker,
       @JsonProperty("description") @NonNull String description) {}
 
   /** Serializable descriptor for a {@link RouterAgent.Route}. */
   record RouteBlueprint(
-      @JsonProperty("target")
-          @JsonDeserialize(using = BlueprintDeserializer.class)
-          @NonNull
-          InteractableBlueprint target,
+      @JsonProperty("target") @JsonDeserialize(using = BlueprintDeserializer.class)
+          @NonNull InteractableBlueprint target,
       @JsonProperty("description") @NonNull String description) {}
 
   /** Serializable descriptor for a {@link HierarchicalAgents.Department}. */
   record DepartmentBlueprint(
       @JsonProperty("manager") @NonNull AgentBlueprint manager,
-      @JsonProperty("workers")
-          @JsonDeserialize(contentUsing = BlueprintDeserializer.class)
-          @NonNull
-          List<InteractableBlueprint> workers) {}
+      @JsonProperty("workers") @JsonDeserialize(contentUsing = BlueprintDeserializer.class)
+          @NonNull List<InteractableBlueprint> workers) {}
 
   /** Serializable descriptor for {@link ContextManagementConfig}. */
   record ContextBlueprint(
@@ -478,7 +470,6 @@ public sealed interface InteractableBlueprint
   // ===== Sealed Hierarchy: Blueprint Variants =====
 
   /** Blueprint for an {@link Agent}. */
-
   record AgentBlueprint(
       @JsonProperty("name") @NonNull String name,
       @JsonProperty("model") @NonNull String model,
@@ -577,18 +568,13 @@ public sealed interface InteractableBlueprint
   }
 
   /** Blueprint for an {@link AgentNetwork}. */
-
   record AgentNetworkBlueprint(
       @JsonProperty("name") @NonNull String name,
-      @JsonProperty("peers")
-          @JsonDeserialize(contentUsing = BlueprintDeserializer.class)
-          @NonNull
-          List<InteractableBlueprint> peers,
+      @JsonProperty("peers") @JsonDeserialize(contentUsing = BlueprintDeserializer.class)
+          @NonNull List<InteractableBlueprint> peers,
       @JsonProperty("maxRounds") int maxRounds,
-      @JsonProperty("synthesizer")
-          @JsonDeserialize(using = BlueprintDeserializer.class)
-          @Nullable
-          InteractableBlueprint synthesizer,
+      @JsonProperty("synthesizer") @JsonDeserialize(using = BlueprintDeserializer.class)
+          @Nullable InteractableBlueprint synthesizer,
       @JsonProperty("traceMetadata") @Nullable TraceMetadata traceMetadata)
       implements InteractableBlueprint {
 
@@ -612,7 +598,6 @@ public sealed interface InteractableBlueprint
   }
 
   /** Blueprint for a {@link SupervisorAgent}. */
-
   record SupervisorAgentBlueprint(
       @JsonProperty("name") @NonNull String name,
       @JsonProperty("model") @NonNull String model,
@@ -645,11 +630,10 @@ public sealed interface InteractableBlueprint
   }
 
   /** Blueprint for {@link ParallelAgents}. */
-
   record ParallelAgentsBlueprint(
       @JsonProperty("name") @NonNull String name,
-      @JsonDeserialize(contentUsing = BlueprintDeserializer.class)
-      @JsonProperty("members") @NonNull List<InteractableBlueprint> members,
+      @JsonDeserialize(contentUsing = BlueprintDeserializer.class) @JsonProperty("members")
+          @NonNull List<InteractableBlueprint> members,
       @JsonProperty("traceMetadata") @Nullable TraceMetadata traceMetadata)
       implements InteractableBlueprint {
 
@@ -662,13 +646,12 @@ public sealed interface InteractableBlueprint
   }
 
   /** Blueprint for a {@link RouterAgent}. */
-
   record RouterAgentBlueprint(
       @JsonProperty("name") @NonNull String name,
       @JsonProperty("model") @NonNull String model,
       @JsonProperty("routes") @NonNull List<RouteBlueprint> routes,
-      @JsonDeserialize(using = BlueprintDeserializer.class)
-      @JsonProperty("fallback") @Nullable InteractableBlueprint fallback,
+      @JsonDeserialize(using = BlueprintDeserializer.class) @JsonProperty("fallback")
+          @Nullable InteractableBlueprint fallback,
       @JsonProperty("responder") @NonNull ResponderBlueprint responder,
       @JsonProperty("traceMetadata") @Nullable TraceMetadata traceMetadata)
       implements InteractableBlueprint {
@@ -692,7 +675,6 @@ public sealed interface InteractableBlueprint
   }
 
   /** Blueprint for {@link HierarchicalAgents}. */
-
   record HierarchicalAgentsBlueprint(
       @JsonProperty("executive") @NonNull AgentBlueprint executive,
       @JsonProperty("departments") @NonNull Map<String, DepartmentBlueprint> departments,
@@ -730,12 +712,12 @@ public sealed interface InteractableBlueprint
   /**
    * Custom deserializer that handles {@code $ref} file references.
    *
-   * <p>When a JSON/YAML node contains a {@code "$ref"} field, the deserializer reads the
-   * referenced file and parses it as an {@link InteractableBlueprint}. The path is resolved
-   * relative to the current working directory. Both absolute and relative paths are supported.
+   * <p>When a JSON/YAML node contains a {@code "$ref"} field, the deserializer reads the referenced
+   * file and parses it as an {@link InteractableBlueprint}. The path is resolved relative to the
+   * current working directory. Both absolute and relative paths are supported.
    *
-   * <p>For nodes without {@code $ref}, deserialization delegates to Jackson's standard
-   * polymorphic type resolution using the {@code "type"} discriminator field.
+   * <p>For nodes without {@code $ref}, deserialization delegates to Jackson's standard polymorphic
+   * type resolution using the {@code "type"} discriminator field.
    *
    * <h2>Usage in YAML</h2>
    *
@@ -837,16 +819,19 @@ public sealed interface InteractableBlueprint
         case "parallel" -> ctxt.readTreeAsValue(node, ParallelAgentsBlueprint.class);
         case "router" -> ctxt.readTreeAsValue(node, RouterAgentBlueprint.class);
         case "hierarchical" -> ctxt.readTreeAsValue(node, HierarchicalAgentsBlueprint.class);
-        default -> throw MismatchedInputException.from(
-            p,
-            InteractableBlueprint.class,
-            "Unknown blueprint type: '"
-                + typeNode.asText()
-                + "'. Expected one of: agent, network, supervisor, parallel, router, hierarchical.");
+        default ->
+            throw MismatchedInputException.from(
+                p,
+                InteractableBlueprint.class,
+                "Unknown blueprint type: '"
+                    + typeNode.asText()
+                    + "'. Expected one of: agent, network, supervisor, parallel, router,"
+                    + " hierarchical.");
       };
     }
 
-    private InteractableBlueprint resolveSource(JsonNode node, JsonParser p) throws tools.jackson.core.JacksonException {
+    private InteractableBlueprint resolveSource(JsonNode node, JsonParser p)
+        throws tools.jackson.core.JacksonException {
       String source = node.get("source").asText();
       return switch (source) {
         case "file" -> {
@@ -905,7 +890,8 @@ public sealed interface InteractableBlueprint
      * @return the deserialized blueprint
      * @throws tools.jackson.core.JacksonException if the file cannot be read or parsed
      */
-    private InteractableBlueprint resolveFileRef(String refPath, JsonParser p) throws tools.jackson.core.JacksonException {
+    private InteractableBlueprint resolveFileRef(String refPath, JsonParser p)
+        throws tools.jackson.core.JacksonException {
       Path path = Path.of(refPath);
       if (!Files.exists(path)) {
         throw MismatchedInputException.from(

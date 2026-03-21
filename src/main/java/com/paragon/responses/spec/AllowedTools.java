@@ -1,10 +1,10 @@
 package com.paragon.responses.spec;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
 import org.jspecify.annotations.NonNull;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Constrains the tools available to the model to a pre-defined set.

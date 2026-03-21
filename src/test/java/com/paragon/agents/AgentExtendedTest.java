@@ -2,7 +2,6 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.agents.context.ContextManagementConfig;
 import com.paragon.agents.context.SlidingWindowStrategy;
 import com.paragon.agents.context.TokenCounter;
@@ -17,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Extended tests for Agent.java covering advanced scenarios: - Tool execution and callbacks -

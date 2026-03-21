@@ -7,9 +7,9 @@ import org.jspecify.annotations.NonNull;
 /**
  * Interface for reading and writing named artifacts (documents, scripts, reports) with versioning.
  *
- * <p>Artifacts are identified by a name and optionally a version. If no version is specified,
- * the latest version is returned. Implementations may persist artifacts to the filesystem, a
- * database, or an object store.
+ * <p>Artifacts are identified by a name and optionally a version. If no version is specified, the
+ * latest version is returned. Implementations may persist artifacts to the filesystem, a database,
+ * or an object store.
  *
  * <p>Example usage:
  *

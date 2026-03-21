@@ -116,8 +116,7 @@ class PlanReferenceResolverTest {
 
       ToolPlanException ex =
           assertThrows(
-              ToolPlanException.class,
-              () -> PlanReferenceResolver.resolve(arguments, outputs));
+              ToolPlanException.class, () -> PlanReferenceResolver.resolve(arguments, outputs));
       assertEquals("missing_step", ex.stepId());
       assertTrue(ex.getMessage().contains("unresolved step"));
     }
@@ -138,8 +137,7 @@ class PlanReferenceResolverTest {
       Map<String, String> outputs = Map.of("step_1", "plain text");
 
       assertThrows(
-          ToolPlanException.class,
-          () -> PlanReferenceResolver.resolve(arguments, outputs));
+          ToolPlanException.class, () -> PlanReferenceResolver.resolve(arguments, outputs));
     }
 
     @Test
@@ -168,8 +166,7 @@ class PlanReferenceResolverTest {
     @Test
     @DisplayName("extracts single dependency")
     void singleDep() {
-      Set<String> deps =
-          PlanReferenceResolver.extractDependencies("{\"data\": \"$ref:step_1\"}");
+      Set<String> deps = PlanReferenceResolver.extractDependencies("{\"data\": \"$ref:step_1\"}");
       assertEquals(Set.of("step_1"), deps);
     }
 
@@ -177,8 +174,7 @@ class PlanReferenceResolverTest {
     @DisplayName("extracts multiple dependencies")
     void multipleDeps() {
       Set<String> deps =
-          PlanReferenceResolver.extractDependencies(
-              "{\"a\": \"$ref:s1\", \"b\": \"$ref:s2\"}");
+          PlanReferenceResolver.extractDependencies("{\"a\": \"$ref:s1\", \"b\": \"$ref:s2\"}");
       assertEquals(Set.of("s1", "s2"), deps);
     }
 
@@ -193,8 +189,7 @@ class PlanReferenceResolverTest {
     @Test
     @DisplayName("returns empty set when no references")
     void noDeps() {
-      Set<String> deps =
-          PlanReferenceResolver.extractDependencies("{\"location\": \"Tokyo\"}");
+      Set<String> deps = PlanReferenceResolver.extractDependencies("{\"location\": \"Tokyo\"}");
       assertTrue(deps.isEmpty());
     }
 

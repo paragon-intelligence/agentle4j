@@ -2,10 +2,10 @@ package com.paragon.responses.spec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Basic verification test for ResponseOutput discriminated union annotations. Tests that the

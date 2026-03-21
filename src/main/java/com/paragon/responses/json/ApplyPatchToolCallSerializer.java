@@ -1,11 +1,10 @@
 package com.paragon.responses.json;
 
+import com.paragon.responses.spec.ApplyPatchToolCall;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.jsontype.TypeSerializer;
 import tools.jackson.databind.ser.std.StdSerializer;
-import com.paragon.responses.spec.ApplyPatchToolCall;
-import java.io.IOException;
 
 /**
  * Custom serializer for {@link ApplyPatchToolCall} that ensures the {@code type} discriminator is
@@ -39,4 +38,3 @@ public class ApplyPatchToolCallSerializer extends StdSerializer<ApplyPatchToolCa
     gen.writeEndObject();
   }
 }
-

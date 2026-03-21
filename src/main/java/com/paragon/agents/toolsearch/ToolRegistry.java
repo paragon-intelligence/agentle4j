@@ -7,12 +7,12 @@ import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 
 /**
- * A container for tools that supports both eager (always included) and deferred (search-discoverable)
- * tools.
+ * A container for tools that supports both eager (always included) and deferred
+ * (search-discoverable) tools.
  *
- * <p>This mirrors Anthropic's {@code defer_loading} concept: eager tools are sent in every API call,
- * while deferred tools are only included when a {@link ToolSearchStrategy} determines they are
- * relevant to the user's input.
+ * <p>This mirrors Anthropic's {@code defer_loading} concept: eager tools are sent in every API
+ * call, while deferred tools are only included when a {@link ToolSearchStrategy} determines they
+ * are relevant to the user's input.
  *
  * <p>The registry is used by the Agent to build each API payload:
  *
@@ -63,9 +63,9 @@ public final class ToolRegistry {
   /**
    * Resolves which tools to include in the next API call.
    *
-   * <p>Returns all eager tools plus any deferred tools that the search strategy deems relevant
-   * to the query. Deduplication is handled — a tool will not appear twice even if it would be
-   * returned by both eager and search.
+   * <p>Returns all eager tools plus any deferred tools that the search strategy deems relevant to
+   * the query. Deduplication is handled — a tool will not appear twice even if it would be returned
+   * by both eager and search.
    *
    * @param query the user's input text
    * @return the combined list of relevant tools

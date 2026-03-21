@@ -276,7 +276,8 @@ class ParallelStreamTest {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user("Hello all"));
 
-      Object result = parallel.runAllStream(context).onComplete(collectedResults::addAll).startBlocking();
+      Object result =
+          parallel.runAllStream(context).onComplete(collectedResults::addAll).startBlocking();
 
       // In ALL mode, both agents should complete
       assertTrue(collectedResults.size() >= 1);
@@ -393,7 +394,10 @@ class ParallelStreamTest {
       context.addInput(Message.user("Hello"));
 
       Object result =
-          parallel.runAllStream(context).onAgentTurnStart((agent, turn) -> turns.add(turn)).startBlocking();
+          parallel
+              .runAllStream(context)
+              .onAgentTurnStart((agent, turn) -> turns.add(turn))
+              .startBlocking();
 
       // At least one turn should start
       assertFalse(turns.isEmpty());

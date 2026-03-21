@@ -2,13 +2,13 @@ package com.paragon.responses.json;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.*;
 import java.util.Iterator;
 import java.util.Map;
 import net.jqwik.api.*;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Property-based tests for null field exclusion in JSON serialization.

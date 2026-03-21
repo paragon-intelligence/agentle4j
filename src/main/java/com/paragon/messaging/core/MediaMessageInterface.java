@@ -1,6 +1,5 @@
 package com.paragon.messaging.core;
 
-
 /**
  * Sealed sub-interface for media messages (images, videos, audio, documents, stickers).
  *

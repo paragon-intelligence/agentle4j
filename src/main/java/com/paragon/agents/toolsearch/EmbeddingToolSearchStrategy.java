@@ -11,8 +11,8 @@ import org.jspecify.annotations.NonNull;
  *
  * <p>This strategy embeds both the query and tool metadata (name + description) using an {@link
  * EmbeddingProvider}, then ranks tools by cosine similarity to the query embedding. This enables
- * semantic matching — e.g., matching "temperature outside" to a tool named "get_weather" even though
- * they share no keywords.
+ * semantic matching — e.g., matching "temperature outside" to a tool named "get_weather" even
+ * though they share no keywords.
  *
  * <p><b>Note:</b> This strategy makes an API call to the embedding provider on each search, so it
  * has higher latency than {@link BM25ToolSearchStrategy} or {@link RegexToolSearchStrategy}. For
@@ -90,8 +90,7 @@ public final class EmbeddingToolSearchStrategy implements ToolSearchStrategy {
     ensureToolEmbeddings(allTools);
 
     // Embed the query
-    List<Embedding> queryEmbeddings =
-        embeddingProvider.createEmbeddings(List.of(query), model);
+    List<Embedding> queryEmbeddings = embeddingProvider.createEmbeddings(List.of(query), model);
     if (queryEmbeddings.isEmpty()) {
       return List.of();
     }

@@ -2,10 +2,10 @@ package com.paragon.responses.spec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /** Tests for FunctionToolCall and related DTOs with low coverage. */
 @DisplayName("Function Tool Call DTOs")

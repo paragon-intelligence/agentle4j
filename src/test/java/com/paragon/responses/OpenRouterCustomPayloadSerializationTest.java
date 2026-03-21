@@ -2,11 +2,11 @@ package com.paragon.responses;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.spec.*;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Tests for OpenRouterCustomPayload serialization and deserialization. Validates that:

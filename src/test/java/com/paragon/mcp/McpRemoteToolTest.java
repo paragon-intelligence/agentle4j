@@ -3,7 +3,6 @@ package com.paragon.mcp;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.mcp.dto.McpTextContent;
 import com.paragon.mcp.dto.McpToolDefinition;
 import com.paragon.mcp.dto.McpToolResult;
@@ -15,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import tools.jackson.databind.ObjectMapper;
 
 /** Tests for McpRemoteTool. */
 class McpRemoteToolTest {

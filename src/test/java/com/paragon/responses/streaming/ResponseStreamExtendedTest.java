@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.*;
@@ -12,6 +11,7 @@ import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Extended tests for ResponseStream.java covering: - toFuture() and toParsedFuture() execution

@@ -28,8 +28,9 @@ class RunReportExporterTest {
   void exportsReportToDisk() {
     AgenticContext ctx = AgenticContext.create();
     AgentResult result = AgentResult.error(new RuntimeException("oops"), ctx, 1);
-    AgentRunReport report = AgentRunReport.from("TestAgent", result,
-        Instant.now().minusSeconds(1), Instant.now(), 0, 0);
+    AgentRunReport report =
+        AgentRunReport.from(
+            "TestAgent", result, Instant.now().minusSeconds(1), Instant.now(), 0, 0);
 
     Path written = exporter.export(report);
 

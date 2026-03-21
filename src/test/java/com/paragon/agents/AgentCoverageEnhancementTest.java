@@ -457,7 +457,8 @@ class AgentCoverageEnhancementTest {
       enqueueSuccessResponse("Done after rejection");
 
       agent
-          .asStreaming().interact("Do something")
+          .asStreaming()
+          .interact("Do something")
           .onToolCallPending(
               (call, approve) -> {
                 toolCallCaptured.set(true);
@@ -868,7 +869,8 @@ class AgentCoverageEnhancementTest {
       enqueueSuccessResponse("Some response that will be blocked");
 
       agent
-          .asStreaming().interact("Test input")
+          .asStreaming()
+          .interact("Test input")
           .onGuardrailFailed(failed -> guardrailFailedCalled.set(true))
           .onComplete(
               result -> {
@@ -977,7 +979,8 @@ class AgentCoverageEnhancementTest {
       enqueueSuccessResponse("After rejection");
 
       agent
-          .asStreaming().interact("Do something")
+          .asStreaming()
+          .interact("Do something")
           .onToolCallPending(
               (call, approve) -> {
                 toolRejected.set(true);
@@ -1056,7 +1059,8 @@ class AgentCoverageEnhancementTest {
 
       // Should be error due to guardrail
       assertTrue(result.isError(), "Result should be error from guardrail");
-      assertThrows(IllegalStateException.class, result::parsed, "Parsed output should throw on error");
+      assertThrows(
+          IllegalStateException.class, result::parsed, "Parsed output should throw on error");
     }
 
     @Test

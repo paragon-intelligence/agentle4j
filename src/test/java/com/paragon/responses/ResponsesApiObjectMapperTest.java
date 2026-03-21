@@ -2,12 +2,12 @@ package com.paragon.responses;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.spec.Message;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /** Tests for ResponsesApiObjectMapper factory. */
 @DisplayName("ResponsesApiObjectMapper Tests")

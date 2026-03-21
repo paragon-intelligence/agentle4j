@@ -2,8 +2,6 @@ package com.paragon.messaging.whatsapp.payload;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -13,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /** Tests for {@link WhatsappMetaWebhookPayload} and related webhook structures. */
 @DisplayName("WhatsApp Webhook Payload")

@@ -13,11 +13,11 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Enriched summary of an {@link AgentResult} annotated with timing, retry counts,
- * tool error statistics, and guardrail trigger counts.
+ * Enriched summary of an {@link AgentResult} annotated with timing, retry counts, tool error
+ * statistics, and guardrail trigger counts.
  *
- * <p>Reports can be written to disk via {@link RunReportExporter} and later fed to a
- * meta-agent for harness improvement analysis.
+ * <p>Reports can be written to disk via {@link RunReportExporter} and later fed to a meta-agent for
+ * harness improvement analysis.
  *
  * @since 1.0
  */
@@ -78,15 +78,16 @@ public final class AgentRunReport {
     Objects.requireNonNull(agentName, "agentName cannot be null");
     Objects.requireNonNull(result, "result cannot be null");
 
-    Builder builder = new Builder()
-        .agentName(agentName)
-        .startedAt(startedAt)
-        .completedAt(completedAt)
-        .success(result.isSuccess() || result.isHandoff())
-        .turnsUsed(result.turnsUsed())
-        .retryCount(retryCount)
-        .guardrailTriggerCount(guardrailTriggerCount)
-        .finalOutput(result.output());
+    Builder builder =
+        new Builder()
+            .agentName(agentName)
+            .startedAt(startedAt)
+            .completedAt(completedAt)
+            .success(result.isSuccess() || result.isHandoff())
+            .turnsUsed(result.turnsUsed())
+            .retryCount(retryCount)
+            .guardrailTriggerCount(guardrailTriggerCount)
+            .finalOutput(result.output());
 
     if (result.error() != null) {
       builder.errorMessage(result.error().getMessage());
@@ -105,30 +106,72 @@ public final class AgentRunReport {
         errorCounts.merge(exec.toolName(), 1, Integer::sum);
       }
     }
-    builder.failedToolCalls(failedCount)
-        .toolCallCounts(callCounts)
-        .toolErrorCounts(errorCounts);
+    builder.failedToolCalls(failedCount).toolCallCounts(callCounts).toolErrorCounts(errorCounts);
 
     return builder.build();
   }
 
   // ===== Getters =====
 
-  public @NonNull String reportId() { return reportId; }
-  public @NonNull String agentName() { return agentName; }
-  public @NonNull Instant startedAt() { return startedAt; }
-  public @NonNull Instant completedAt() { return completedAt; }
-  public @NonNull Duration totalDuration() { return totalDuration; }
-  public boolean isSuccess() { return success; }
-  public @Nullable String errorMessage() { return errorMessage; }
-  public int turnsUsed() { return turnsUsed; }
-  public int retryCount() { return retryCount; }
-  public int totalToolCalls() { return totalToolCalls; }
-  public int failedToolCalls() { return failedToolCalls; }
-  public @NonNull Map<String, Integer> toolCallCounts() { return toolCallCounts; }
-  public @NonNull Map<String, Integer> toolErrorCounts() { return toolErrorCounts; }
-  public int guardrailTriggerCount() { return guardrailTriggerCount; }
-  public @Nullable String finalOutput() { return finalOutput; }
+  public @NonNull String reportId() {
+    return reportId;
+  }
+
+  public @NonNull String agentName() {
+    return agentName;
+  }
+
+  public @NonNull Instant startedAt() {
+    return startedAt;
+  }
+
+  public @NonNull Instant completedAt() {
+    return completedAt;
+  }
+
+  public @NonNull Duration totalDuration() {
+    return totalDuration;
+  }
+
+  public boolean isSuccess() {
+    return success;
+  }
+
+  public @Nullable String errorMessage() {
+    return errorMessage;
+  }
+
+  public int turnsUsed() {
+    return turnsUsed;
+  }
+
+  public int retryCount() {
+    return retryCount;
+  }
+
+  public int totalToolCalls() {
+    return totalToolCalls;
+  }
+
+  public int failedToolCalls() {
+    return failedToolCalls;
+  }
+
+  public @NonNull Map<String, Integer> toolCallCounts() {
+    return toolCallCounts;
+  }
+
+  public @NonNull Map<String, Integer> toolErrorCounts() {
+    return toolErrorCounts;
+  }
+
+  public int guardrailTriggerCount() {
+    return guardrailTriggerCount;
+  }
+
+  public @Nullable String finalOutput() {
+    return finalOutput;
+  }
 
   /** Returns a human-readable summary of this report. */
   public @NonNull String toSummary() {
@@ -174,21 +217,78 @@ public final class AgentRunReport {
     private int guardrailTriggerCount;
     private String finalOutput;
 
-    public Builder reportId(String id) { this.reportId = id; return this; }
-    public Builder agentName(String name) { this.agentName = name; return this; }
-    public Builder startedAt(Instant t) { this.startedAt = t; return this; }
-    public Builder completedAt(Instant t) { this.completedAt = t; return this; }
-    public Builder success(boolean s) { this.success = s; return this; }
-    public Builder errorMessage(String msg) { this.errorMessage = msg; return this; }
-    public Builder turnsUsed(int t) { this.turnsUsed = t; return this; }
-    public Builder retryCount(int r) { this.retryCount = r; return this; }
-    public Builder totalToolCalls(int t) { this.totalToolCalls = t; return this; }
-    public Builder failedToolCalls(int f) { this.failedToolCalls = f; return this; }
-    public Builder toolCallCounts(Map<String, Integer> m) { this.toolCallCounts = m; return this; }
-    public Builder toolErrorCounts(Map<String, Integer> m) { this.toolErrorCounts = m; return this; }
-    public Builder guardrailTriggerCount(int g) { this.guardrailTriggerCount = g; return this; }
-    public Builder finalOutput(String o) { this.finalOutput = o; return this; }
+    public Builder reportId(String id) {
+      this.reportId = id;
+      return this;
+    }
 
-    public AgentRunReport build() { return new AgentRunReport(this); }
+    public Builder agentName(String name) {
+      this.agentName = name;
+      return this;
+    }
+
+    public Builder startedAt(Instant t) {
+      this.startedAt = t;
+      return this;
+    }
+
+    public Builder completedAt(Instant t) {
+      this.completedAt = t;
+      return this;
+    }
+
+    public Builder success(boolean s) {
+      this.success = s;
+      return this;
+    }
+
+    public Builder errorMessage(String msg) {
+      this.errorMessage = msg;
+      return this;
+    }
+
+    public Builder turnsUsed(int t) {
+      this.turnsUsed = t;
+      return this;
+    }
+
+    public Builder retryCount(int r) {
+      this.retryCount = r;
+      return this;
+    }
+
+    public Builder totalToolCalls(int t) {
+      this.totalToolCalls = t;
+      return this;
+    }
+
+    public Builder failedToolCalls(int f) {
+      this.failedToolCalls = f;
+      return this;
+    }
+
+    public Builder toolCallCounts(Map<String, Integer> m) {
+      this.toolCallCounts = m;
+      return this;
+    }
+
+    public Builder toolErrorCounts(Map<String, Integer> m) {
+      this.toolErrorCounts = m;
+      return this;
+    }
+
+    public Builder guardrailTriggerCount(int g) {
+      this.guardrailTriggerCount = g;
+      return this;
+    }
+
+    public Builder finalOutput(String o) {
+      this.finalOutput = o;
+      return this;
+    }
+
+    public AgentRunReport build() {
+      return new AgentRunReport(this);
+    }
   }
 }

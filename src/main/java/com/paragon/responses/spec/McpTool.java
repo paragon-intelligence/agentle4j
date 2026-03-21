@@ -1,10 +1,10 @@
 package com.paragon.responses.spec;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Give the model access to additional tools via remote Model Context Protocol (MCP) servers. Learn

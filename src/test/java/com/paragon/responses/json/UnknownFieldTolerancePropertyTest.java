@@ -3,14 +3,14 @@ package com.paragon.responses.json;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ObjectNode;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.*;
 import java.util.List;
 import java.util.Map;
 import net.jqwik.api.*;
 import org.junit.jupiter.api.Disabled;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Property-based tests for unknown field tolerance in JSON deserialization.
@@ -106,7 +106,9 @@ public class UnknownFieldTolerancePropertyTest {
    * <p>Tests that unknown fields in nested objects are also tolerated.
    */
   @Property(tries = 100)
-  @Disabled("Disabled after relaxing MessageContent and Message handling; nested random structures can generate shapes not representative of real API responses.")
+  @Disabled(
+      "Disabled after relaxing MessageContent and Message handling; nested random structures can"
+          + " generate shapes not representative of real API responses.")
   void responseWithNestedUnknownFieldsDeserializesSuccessfully(
       @ForAll("responsesWithOutput") Response original,
       @ForAll("unknownFields") Map<String, Object> unknownFields)

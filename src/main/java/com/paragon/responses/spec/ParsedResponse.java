@@ -21,8 +21,8 @@ public class ParsedResponse<T> extends Response {
    *     <p>When using along with previous_response_id, the instructions from a previous response
    *     will not be carried over to the next response. This makes it simple to swap out system (or
    *     developer) messages in new responses.
-   * @param maxOutputTokens The configured upper bound for the number of generated tokens,
-   *     including reasoning tokens. See https://platform.openai.com/docs/guides/reasoning
+   * @param maxOutputTokens The configured upper bound for the number of generated tokens, including
+   *     reasoning tokens. See https://platform.openai.com/docs/guides/reasoning
    * @param maxToolCalls The maximum number of total calls to built-in tools that can be processed
    *     in a response. This maximum number applies across all built-in tool calls, not per
    *     individual tool. Any further attempts to call a tool by the model will be ignored.

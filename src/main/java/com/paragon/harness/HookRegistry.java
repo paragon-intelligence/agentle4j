@@ -1,7 +1,7 @@
 package com.paragon.harness;
 
-import com.paragon.agents.AgenticContext;
 import com.paragon.agents.AgentResult;
+import com.paragon.agents.AgenticContext;
 import com.paragon.agents.ToolExecution;
 import com.paragon.responses.spec.FunctionToolCall;
 import java.util.ArrayList;
@@ -12,11 +12,11 @@ import org.jspecify.annotations.NonNull;
 /**
  * Ordered registry of {@link AgentHook} instances executed around agent lifecycle events.
  *
- * <p>Hooks are invoked in registration order for {@code before} events and in reverse order
- * for {@code after} events (stack semantics).
+ * <p>Hooks are invoked in registration order for {@code before} events and in reverse order for
+ * {@code after} events (stack semantics).
  *
- * <p>Hook failures are caught and logged but do not interrupt agent execution, ensuring
- * that harness infrastructure never breaks agent functionality.
+ * <p>Hook failures are caught and logged but do not interrupt agent execution, ensuring that
+ * harness infrastructure never breaks agent functionality.
  *
  * <p>Example:
  *

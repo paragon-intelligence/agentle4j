@@ -45,5 +45,6 @@ public interface ToolSearchStrategy {
    * @param allTools all deferred tools available for selection
    * @return the subset of tools to include in the API call (may be empty)
    */
-  @NonNull List<FunctionTool<?>> search(@NonNull String query, @NonNull List<FunctionTool<?>> allTools);
+  @NonNull List<FunctionTool<?>> search(
+      @NonNull String query, @NonNull List<FunctionTool<?>> allTools);
 }

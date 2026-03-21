@@ -16,9 +16,9 @@ import org.jspecify.annotations.Nullable;
 /**
  * A {@link FunctionTool} that runs a fixed shell command and returns the result.
  *
- * <p><b>Security model:</b> The command is fixed at construction time by the developer.
- * The agent can only trigger execution — it cannot modify the command. This prevents
- * prompt injection attacks.
+ * <p><b>Security model:</b> The command is fixed at construction time by the developer. The agent
+ * can only trigger execution — it cannot modify the command. This prevents prompt injection
+ * attacks.
  *
  * <p>Example: let the agent run the project's test suite:
  *
@@ -39,11 +39,12 @@ import org.jspecify.annotations.Nullable;
  * @see VerificationResult
  * @since 1.0
  */
-public final class ShellVerificationTool extends FunctionTool<ShellVerificationTool.TriggerRequest> {
+public final class ShellVerificationTool
+    extends FunctionTool<ShellVerificationTool.TriggerRequest> {
 
   /**
-   * Empty record — the agent triggers the tool with no parameters.
-   * The command is fixed at construction time.
+   * Empty record — the agent triggers the tool with no parameters. The command is fixed at
+   * construction time.
    */
   public record TriggerRequest() {}
 
@@ -56,7 +57,8 @@ public final class ShellVerificationTool extends FunctionTool<ShellVerificationT
   private ShellVerificationTool(Builder builder) {
     super(buildSchema(), true);
     this.toolName = Objects.requireNonNull(builder.name, "name cannot be null");
-    this.toolDescription = builder.description != null ? builder.description : "Run verification command";
+    this.toolDescription =
+        builder.description != null ? builder.description : "Run verification command";
     this.command = List.copyOf(Objects.requireNonNull(builder.command, "command cannot be null"));
     if (this.command.isEmpty()) throw new IllegalArgumentException("command cannot be empty");
     this.workingDir = builder.workingDir;
@@ -66,10 +68,14 @@ public final class ShellVerificationTool extends FunctionTool<ShellVerificationT
   private static Map<String, Object> buildSchema() {
     // TriggerRequest is an empty record — minimal schema
     return Map.of(
-        "type", "object",
-        "properties", Map.of(),
-        "required", List.of(),
-        "additionalProperties", false);
+        "type",
+        "object",
+        "properties",
+        Map.of(),
+        "required",
+        List.of(),
+        "additionalProperties",
+        false);
   }
 
   @Override
@@ -113,7 +119,8 @@ public final class ShellVerificationTool extends FunctionTool<ShellVerificationT
             : VerificationResult.fail(output, exitCode);
       } else {
         process.destroyForcibly();
-        return VerificationResult.fail("Command timed out after " + timeoutSeconds + " seconds", -1);
+        return VerificationResult.fail(
+            "Command timed out after " + timeoutSeconds + " seconds", -1);
       }
     } catch (IOException | InterruptedException e) {
       if (e instanceof InterruptedException) {

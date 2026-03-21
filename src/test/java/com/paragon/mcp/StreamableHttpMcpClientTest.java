@@ -2,7 +2,6 @@ package com.paragon.mcp;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -10,6 +9,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /** Tests for StreamableHttpMcpClient using MockWebServer. */
 class StreamableHttpMcpClientTest {

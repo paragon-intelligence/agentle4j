@@ -1,15 +1,15 @@
 package com.paragon.responses.json;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.JavaType;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public final class StructuredOutputDefinition<T> {
   public static final String ROOT_WRAPPER_PROPERTY = "value";
@@ -22,7 +22,8 @@ public final class StructuredOutputDefinition<T> {
 
   private StructuredOutputDefinition(
       @NonNull JavaType responseJavaType, boolean wrapsRoot, @Nullable Map<String, Object> schema) {
-    this.responseJavaType = Objects.requireNonNull(responseJavaType, "responseJavaType cannot be null");
+    this.responseJavaType =
+        Objects.requireNonNull(responseJavaType, "responseJavaType cannot be null");
     Class<?> rawClass = responseJavaType.getRawClass();
     if (rawClass == null) {
       throw new IllegalArgumentException("Structured output JavaType must have a raw class");

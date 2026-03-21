@@ -1,8 +1,7 @@
 package com.paragon.harness;
 
-import com.paragon.agents.AgentStream;
-import com.paragon.agents.AgenticContext;
 import com.paragon.agents.AgentResult;
+import com.paragon.agents.AgenticContext;
 import com.paragon.agents.Interactable;
 import com.paragon.harness.tools.ArtifactStoreTool;
 import com.paragon.harness.tools.ProgressLogTool;
@@ -18,9 +17,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Cohesive builder that composes all harness features around any {@link Interactable}.
  *
- * <p>A Harness wires together self-correction, lifecycle hooks, progress logging,
- * artifact storage, and run reporting in a single fluent API — without requiring changes
- * to the underlying agent.
+ * <p>A Harness wires together self-correction, lifecycle hooks, progress logging, artifact storage,
+ * and run reporting in a single fluent API — without requiring changes to the underlying agent.
  *
  * <p>Example:
  *
@@ -85,9 +83,10 @@ public final class Harness {
     }
 
     // Build the wrapped interactable
-    Interactable wrapped = selfCorrectionConfig != null
-        ? SelfCorrectingInteractable.wrap(agent, selfCorrectionConfig)
-        : agent;
+    Interactable wrapped =
+        selfCorrectionConfig != null
+            ? SelfCorrectingInteractable.wrap(agent, selfCorrectionConfig)
+            : agent;
 
     return new HarnessedInteractable(wrapped, hookRegistry, reportExporter, extraTools);
   }
@@ -127,8 +126,8 @@ public final class Harness {
       hooks.fireAfterRun(result, context);
 
       if (reportExporter != null) {
-        AgentRunReport report = AgentRunReport.from(
-            delegate.name(), result, startedAt, Instant.now(), 0, 0);
+        AgentRunReport report =
+            AgentRunReport.from(delegate.name(), result, startedAt, Instant.now(), 0, 0);
         reportExporter.export(report);
       }
 
@@ -138,9 +137,9 @@ public final class Harness {
     /**
      * Returns a streaming view backed by the delegate's streaming, with harness hooks applied.
      *
-     * <p>Fires {@code beforeRun} before the stream starts and {@code afterRun} when
-     * {@code onComplete} or {@code onError} fires. Tool-level hooks are covered by the agent's
-     * own {@link HookRegistry} (wired in {@link com.paragon.agents.AgentStream}).
+     * <p>Fires {@code beforeRun} before the stream starts and {@code afterRun} when {@code
+     * onComplete} or {@code onError} fires. Tool-level hooks are covered by the agent's own {@link
+     * HookRegistry} (wired in {@link com.paragon.agents.AgentStream}).
      *
      * @return an {@link com.paragon.agents.Interactable.Streaming} backed by the delegate
      */
@@ -152,8 +151,7 @@ public final class Harness {
             .onComplete(result -> hooks.fireAfterRun(result, context))
             .onError(
                 e -> {
-                  AgentResult err =
-                      AgentResult.error(e, context, 0);
+                  AgentResult err = AgentResult.error(e, context, 0);
                   hooks.fireAfterRun(err, context);
                 });
       };
@@ -162,9 +160,7 @@ public final class Harness {
 
   // ===== Builder =====
 
-  /**
-   * Builder for composing a Harness.
-   */
+  /** Builder for composing a Harness. */
   public static final class Builder {
     private @Nullable SelfCorrectionConfig selfCorrectionConfig;
     private @Nullable HookRegistry hookRegistry;

@@ -4,13 +4,12 @@ import com.paragon.agents.AgentResult;
 import java.util.Objects;
 import java.util.function.Predicate;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Configuration for the self-correction loop in {@link SelfCorrectingInteractable}.
  *
- * <p>Self-correction automatically retries a failed agent run by injecting the error
- * back as user context, giving the agent a chance to fix its own mistakes.
+ * <p>Self-correction automatically retries a failed agent run by injecting the error back as user
+ * context, giving the agent a chance to fix its own mistakes.
  *
  * <p>Example:
  *
@@ -82,10 +81,11 @@ public final class SelfCorrectionConfig {
 
   /**
    * Returns a new builder with sensible defaults:
+   *
    * <ul>
-   *   <li>maxRetries = 3</li>
-   *   <li>retryOn = any error result</li>
-   *   <li>feedbackTemplate = {@link #DEFAULT_FEEDBACK_TEMPLATE}</li>
+   *   <li>maxRetries = 3
+   *   <li>retryOn = any error result
+   *   <li>feedbackTemplate = {@link #DEFAULT_FEEDBACK_TEMPLATE}
    * </ul>
    *
    * @return a new builder

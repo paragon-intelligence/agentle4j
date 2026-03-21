@@ -1,12 +1,12 @@
 package com.paragon.responses.json;
 
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.exc.MismatchedInputException;
 import com.paragon.responses.spec.Coordinate;
 import com.paragon.responses.spec.DoubleClickAction;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.exc.MismatchedInputException;
 
 /**
  * Custom deserializer for DoubleClickAction to handle @JsonUnwrapped Coordinate.

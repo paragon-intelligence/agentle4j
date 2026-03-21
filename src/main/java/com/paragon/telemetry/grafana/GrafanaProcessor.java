@@ -1,7 +1,5 @@
 package com.paragon.telemetry.grafana;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.telemetry.events.*;
 import com.paragon.telemetry.otel.*;
 import com.paragon.telemetry.processors.TelemetryProcessor;
@@ -15,6 +13,8 @@ import okhttp3.*;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Telemetry processor that sends telemetry to Grafana Cloud via OTLP/HTTP.

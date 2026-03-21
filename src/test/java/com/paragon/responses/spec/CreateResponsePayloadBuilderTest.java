@@ -2,9 +2,6 @@ package com.paragon.responses.spec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.JavaType;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.Messages;
 import com.paragon.responses.OpenRouterCustomPayload;
 import java.util.List;
@@ -12,6 +9,9 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Tests for CreateResponsePayload.Builder methods.
@@ -522,8 +522,7 @@ class CreateResponsePayloadBuilderTest {
       @SuppressWarnings("unchecked")
       Map<String, Object> properties = (Map<String, Object>) format.schema().get("properties");
       @SuppressWarnings("unchecked")
-      Map<String, Object> wrapped =
-          (Map<String, Object>) properties.get("value");
+      Map<String, Object> wrapped = (Map<String, Object>) properties.get("value");
 
       assertEquals("array", wrapped.get("type"));
     }

@@ -1,8 +1,5 @@
 package com.paragon.agents;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.JavaType;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.prompts.Prompt;
 import com.paragon.responses.Responder;
 import com.paragon.responses.TraceMetadata;
@@ -14,6 +11,9 @@ import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * A specialized agent for routing inputs to appropriate target agents.
@@ -161,8 +161,8 @@ public final class RouterAgent implements Interactable {
     }
     routingPrompt.append("\nUser input: \"").append(input).append("\"\n\n");
     routingPrompt.append(
-        "Respond with ONLY the handler number (e.g., \"1\" or \"2\"). "
-            + "If none of the handlers are appropriate for the input, respond with \"0\". Nothing else.");
+        "Respond with ONLY the handler number (e.g., \"1\" or \"2\"). If none of the handlers are"
+            + " appropriate for the input, respond with \"0\". Nothing else.");
 
     // Call LLM for classification
     CreateResponsePayload payload =
@@ -263,14 +263,15 @@ public final class RouterAgent implements Interactable {
       Objects.requireNonNull(ctx, "context cannot be null");
       Optional<String> inputTextOpt = ctx.extractLastUserMessageText();
       if (inputTextOpt.isEmpty() || inputTextOpt.get().isBlank()) {
-        return AgentStream.failed(AgentResult.error(
-            new IllegalStateException("No user message found in context for routing"),
-            ctx, 0));
+        return AgentStream.failed(
+            AgentResult.error(
+                new IllegalStateException("No user message found in context for routing"), ctx, 0));
       }
       Optional<Interactable> selected = classify(inputTextOpt.get());
       if (selected.isEmpty()) {
-        return AgentStream.failed(AgentResult.error(
-            new IllegalStateException("No suitable route found for input"), ctx, 0));
+        return AgentStream.failed(
+            AgentResult.error(
+                new IllegalStateException("No suitable route found for input"), ctx, 0));
       }
       return selected.get().asStreaming().interact(ctx, trace);
     };

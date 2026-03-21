@@ -2,7 +2,6 @@ package com.paragon.responses.openrouter;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -10,6 +9,7 @@ import java.util.Optional;
 import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
+import tools.jackson.databind.ObjectMapper;
 
 /** Unit tests for {@link OpenRouterModelRegistry}. */
 @DisplayName("OpenRouterModelRegistry")

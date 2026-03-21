@@ -22,8 +22,8 @@ import org.junit.jupiter.api.*;
 /**
  * Real end-to-end streaming tests against OpenRouter (no mocks).
  *
- * <p>Skipped automatically when {@code OPENROUTER_API_KEY} is not set, so they do not break CI.
- * Run locally by exporting the key before running:
+ * <p>Skipped automatically when {@code OPENROUTER_API_KEY} is not set, so they do not break CI. Run
+ * locally by exporting the key before running:
  *
  * <pre>{@code
  * export OPENROUTER_API_KEY=sk-or-...
@@ -52,30 +52,36 @@ class AgentStreamRealApiTest {
   @Test
   @DisplayName("onTextDelta uses SSE path and onComplete fires with valid output")
   void onTextDeltaUsesSsePath() {
-    Agent agent = Agent.builder()
-        .name("StreamTester")
-        .instructions("You are a helpful assistant. Reply concisely.")
-        .model(MODEL)
-        .responder(responder)
-        .build();
+    Agent agent =
+        Agent.builder()
+            .name("StreamTester")
+            .instructions("You are a helpful assistant. Reply concisely.")
+            .model(MODEL)
+            .responder(responder)
+            .build();
 
     List<String> chunks = new ArrayList<>();
     AtomicReference<AgentResult> resultRef = new AtomicReference<>();
 
-    agent.asStreaming().interact("Count from 1 to 5, one number per line.")
+    agent
+        .asStreaming()
+        .interact("Count from 1 to 5, one number per line.")
         .onTextDelta(chunks::add)
         .onComplete(resultRef::set)
         .startBlocking();
 
     // onComplete must fire and result must be valid — this proves the SSE pipeline ran end-to-end
     assertNotNull(resultRef.get(), "onComplete did not fire");
-    assertFalse(resultRef.get().isError(),
-        "Result should not be an error: " + (resultRef.get().error() != null ? resultRef.get().error().getMessage() : ""));
+    assertFalse(
+        resultRef.get().isError(),
+        "Result should not be an error: "
+            + (resultRef.get().error() != null ? resultRef.get().error().getMessage() : ""));
     assertNotNull(resultRef.get().output());
     assertFalse(resultRef.get().output().isBlank(), "Output should not be blank");
 
     // onTextDelta must fire at least once — either via real SSE chunks or the blocking fallback
-    assertFalse(chunks.isEmpty(),
+    assertFalse(
+        chunks.isEmpty(),
         "onTextDelta never fired. Result output was: " + resultRef.get().output());
   }
 
@@ -86,17 +92,21 @@ class AgentStreamRealApiTest {
   @Test
   @DisplayName("startBlocking() returns a completed AgentResult synchronously")
   void startBlockingReturnsSynchronously() {
-    Agent agent = Agent.builder()
-        .name("BlockingTester")
-        .instructions("You are a helpful assistant.")
-        .model(MODEL)
-        .responder(responder)
-        .build();
+    Agent agent =
+        Agent.builder()
+            .name("BlockingTester")
+            .instructions("You are a helpful assistant.")
+            .model(MODEL)
+            .responder(responder)
+            .build();
 
-    AgentResult result = agent.asStreaming().interact("Say 'hello' in exactly one word.").startBlocking();
+    AgentResult result =
+        agent.asStreaming().interact("Say 'hello' in exactly one word.").startBlocking();
 
     assertNotNull(result);
-    assertFalse(result.isError(), "Unexpected error: " + (result.error() != null ? result.error().getMessage() : ""));
+    assertFalse(
+        result.isError(),
+        "Unexpected error: " + (result.error() != null ? result.error().getMessage() : ""));
     assertNotNull(result.output());
     assertFalse(result.output().isBlank());
   }
@@ -112,18 +122,27 @@ class AgentStreamRealApiTest {
     AtomicInteger afterRunCount = new AtomicInteger(0);
 
     HookRegistry hooks = HookRegistry.create();
-    hooks.add(new AgentHook() {
-      @Override public void beforeRun(@NonNull AgenticContext context) { beforeRunCount.incrementAndGet(); }
-      @Override public void afterRun(@NonNull AgentResult result, @NonNull AgenticContext context) { afterRunCount.incrementAndGet(); }
-    });
+    hooks.add(
+        new AgentHook() {
+          @Override
+          public void beforeRun(@NonNull AgenticContext context) {
+            beforeRunCount.incrementAndGet();
+          }
 
-    Agent agent = Agent.builder()
-        .name("HookTester")
-        .instructions("You are a helpful assistant.")
-        .model(MODEL)
-        .responder(responder)
-        .hookRegistry(hooks)
-        .build();
+          @Override
+          public void afterRun(@NonNull AgentResult result, @NonNull AgenticContext context) {
+            afterRunCount.incrementAndGet();
+          }
+        });
+
+    Agent agent =
+        Agent.builder()
+            .name("HookTester")
+            .instructions("You are a helpful assistant.")
+            .model(MODEL)
+            .responder(responder)
+            .hookRegistry(hooks)
+            .build();
 
     agent.asStreaming().interact("Say 'ok' and nothing else.").startBlocking();
 
@@ -142,33 +161,38 @@ class AgentStreamRealApiTest {
     AtomicInteger afterToolCount = new AtomicInteger(0);
 
     HookRegistry hooks = HookRegistry.create();
-    hooks.add(new AgentHook() {
-      @Override
-      public void beforeToolCall(@NonNull FunctionToolCall call, @NonNull AgenticContext context) {
-        beforeToolCount.incrementAndGet();
-      }
+    hooks.add(
+        new AgentHook() {
+          @Override
+          public void beforeToolCall(
+              @NonNull FunctionToolCall call, @NonNull AgenticContext context) {
+            beforeToolCount.incrementAndGet();
+          }
 
-      @Override
-      public void afterToolCall(
-          @NonNull FunctionToolCall call,
-          @NonNull ToolExecution execution,
-          @NonNull AgenticContext context) {
-        afterToolCount.incrementAndGet();
-      }
-    });
+          @Override
+          public void afterToolCall(
+              @NonNull FunctionToolCall call,
+              @NonNull ToolExecution execution,
+              @NonNull AgenticContext context) {
+            afterToolCount.incrementAndGet();
+          }
+        });
 
-    Agent agent = Agent.builder()
-        .name("ToolHookTester")
-        .instructions("Use the get_time tool when asked what time it is.")
-        .model(MODEL)
-        .responder(responder)
-        .hookRegistry(hooks)
-        .addTool(new GetTimeTool())
-        .build();
+    Agent agent =
+        Agent.builder()
+            .name("ToolHookTester")
+            .instructions("Use the get_time tool when asked what time it is.")
+            .model(MODEL)
+            .responder(responder)
+            .hookRegistry(hooks)
+            .addTool(new GetTimeTool())
+            .build();
 
-    AgentResult result = agent.asStreaming().interact("What time is it? Use the tool.").startBlocking();
+    AgentResult result =
+        agent.asStreaming().interact("What time is it? Use the tool.").startBlocking();
 
-    assertFalse(result.isError(),
+    assertFalse(
+        result.isError(),
         "Tool call failed: " + (result.error() != null ? result.error().getMessage() : "unknown"));
 
     assertEquals(1, beforeToolCount.get(), "beforeToolCall should fire once");
@@ -182,20 +206,19 @@ class AgentStreamRealApiTest {
   @Test
   @DisplayName("TraceMetadata propagates without NPE or error")
   void traceMetadataPropagates() {
-    Agent agent = Agent.builder()
-        .name("TraceTester")
-        .instructions("You are a helpful assistant.")
-        .model(MODEL)
-        .responder(responder)
-        .build();
+    Agent agent =
+        Agent.builder()
+            .name("TraceTester")
+            .instructions("You are a helpful assistant.")
+            .model(MODEL)
+            .responder(responder)
+            .build();
 
     AgenticContext context = AgenticContext.create();
     context.addInput(com.paragon.responses.spec.Message.user("Say traced and nothing else."));
 
-    TraceMetadata trace = TraceMetadata.builder()
-        .traceId("test-trace-123")
-        .environment("test")
-        .build();
+    TraceMetadata trace =
+        TraceMetadata.builder().traceId("test-trace-123").environment("test").build();
 
     // Should not throw; trace is stored and future telemetry can use it
     AgentResult result = agent.asStreaming().interact(context, trace).startBlocking();

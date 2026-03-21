@@ -1,9 +1,5 @@
 package com.paragon.mcp;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.mcp.dto.JsonRpcError;
 import com.paragon.mcp.dto.JsonRpcRequest;
 import com.paragon.mcp.dto.JsonRpcResponse;
@@ -19,6 +15,10 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Abstract base class for MCP client implementations.

@@ -2,9 +2,6 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.JavaType;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.Reasoning;
@@ -15,6 +12,9 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.*;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Tests for Agent.Structured<T> functionality.

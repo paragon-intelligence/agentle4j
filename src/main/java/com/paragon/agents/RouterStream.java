@@ -140,7 +140,8 @@ public final class RouterStream {
   }
 
   /**
-   * Called when a tool call requires confirmation (human-in-the-loop), forwarded from the child agent.
+   * Called when a tool call requires confirmation (human-in-the-loop), forwarded from the child
+   * agent.
    *
    * @param handler receives the pending tool call and approval callback
    * @return this stream
@@ -167,7 +168,8 @@ public final class RouterStream {
    * @param callback receives the failed guardrail result
    * @return this stream
    */
-  public @NonNull RouterStream onGuardrailFailed(@NonNull Consumer<GuardrailResult.Failed> callback) {
+  public @NonNull RouterStream onGuardrailFailed(
+      @NonNull Consumer<GuardrailResult.Failed> callback) {
     this.onGuardrailFailed = Objects.requireNonNull(callback);
     return this;
   }

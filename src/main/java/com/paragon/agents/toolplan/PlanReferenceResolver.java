@@ -1,12 +1,12 @@
 package com.paragon.agents.toolplan;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jspecify.annotations.NonNull;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Resolves {@code $ref:step_id} and {@code $ref:step_id.field.nested} references in tool plan step
@@ -59,8 +59,11 @@ public final class PlanReferenceResolver {
       if (output == null) {
         throw new ToolPlanException(
             stepId,
-            "Reference to unresolved step '" + stepId + "'. "
-                + "Available steps: " + resolvedOutputs.keySet());
+            "Reference to unresolved step '"
+                + stepId
+                + "'. "
+                + "Available steps: "
+                + resolvedOutputs.keySet());
       }
 
       String replacement;

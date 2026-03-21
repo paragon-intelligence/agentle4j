@@ -1,13 +1,12 @@
 package com.paragon.responses.spec;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
-import org.jspecify.annotations.NonNull;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.NonNull;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * A store that maps function names to their implementations.
@@ -72,10 +71,10 @@ public final class FunctionToolStore {
     String name = tool.getName();
     if (tools.containsKey(name)) {
       throw new IllegalArgumentException(
-              "A tool with name '"
-                      + name
-                      + "' is already stored. "
-                      + "Each function tool must have a unique name.");
+          "A tool with name '"
+              + name
+              + "' is already stored. "
+              + "Each function tool must have a unique name.");
     }
     tools.put(name, tool);
     return this;
@@ -126,17 +125,17 @@ public final class FunctionToolStore {
     FunctionTool<?> tool = tools.get(name);
     if (tool == null) {
       throw new IllegalArgumentException(
-              "No tool stored for function name: '" + name + "'. " + "Stored tools: " + tools.keySet());
+          "No tool stored for function name: '" + name + "'. " + "Stored tools: " + tools.keySet());
     }
     return new BoundedFunctionCall(
-            toolCall.arguments(),
-            toolCall.callId(),
-            toolCall.name(),
-            toolCall.id(),
-            toolCall.status(),
-            (FunctionTool<Record>) tool,
-            (Class<? extends Record>) tool.getParamClass(),
-            objectMapper);
+        toolCall.arguments(),
+        toolCall.callId(),
+        toolCall.name(),
+        toolCall.id(),
+        toolCall.status(),
+        (FunctionTool<Record>) tool,
+        (Class<? extends Record>) tool.getParamClass(),
+        objectMapper);
   }
 
   /**
@@ -186,11 +185,11 @@ public final class FunctionToolStore {
    *
    * @param toolCall the function tool call to execute
    * @return the function tool call output
-   * @throws JacksonException  if the arguments cannot be deserialized
+   * @throws JacksonException if the arguments cannot be deserialized
    * @throws IllegalArgumentException if no tool is stored for the function name
    */
   public @NonNull FunctionToolCallOutput execute(@NonNull FunctionToolCall toolCall)
-          throws JacksonException {
+      throws JacksonException {
     return bind(toolCall).call();
   }
 
@@ -199,11 +198,11 @@ public final class FunctionToolStore {
    *
    * @param toolCalls the function tool calls to execute
    * @return a list of function tool call outputs
-   * @throws JacksonException  if any arguments cannot be deserialized
+   * @throws JacksonException if any arguments cannot be deserialized
    * @throws IllegalArgumentException if any tool call references a function not in the store
    */
   public @NonNull List<FunctionToolCallOutput> executeAll(@NonNull List<FunctionToolCall> toolCalls)
-          throws JacksonException {
+      throws JacksonException {
     var results = new java.util.ArrayList<FunctionToolCallOutput>();
     for (FunctionToolCall toolCall : toolCalls) {
       results.add(execute(toolCall));

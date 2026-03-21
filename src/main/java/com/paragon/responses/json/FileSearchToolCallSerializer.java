@@ -1,11 +1,10 @@
 package com.paragon.responses.json;
 
+import com.paragon.responses.spec.FileSearchToolCall;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.jsontype.TypeSerializer;
 import tools.jackson.databind.ser.std.StdSerializer;
-import com.paragon.responses.spec.FileSearchToolCall;
-import java.io.IOException;
 
 /** Serializer that enforces the correct wire format for {@link FileSearchToolCall}. */
 public class FileSearchToolCallSerializer extends StdSerializer<FileSearchToolCall> {
@@ -38,4 +37,3 @@ public class FileSearchToolCallSerializer extends StdSerializer<FileSearchToolCa
     gen.writeEndObject();
   }
 }
-

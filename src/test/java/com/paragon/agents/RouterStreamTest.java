@@ -291,7 +291,11 @@ class RouterStreamTest {
       AtomicReference<AgentResult> resultRef = new AtomicReference<>();
 
       AgentResult result =
-          router.routeStream(context).onError(errorRef::set).onComplete(resultRef::set).startBlocking();
+          router
+              .routeStream(context)
+              .onError(errorRef::set)
+              .onComplete(resultRef::set)
+              .startBlocking();
 
       assertTrue(result.isError());
       assertNotNull(errorRef);
@@ -341,7 +345,8 @@ class RouterStreamTest {
 
       AtomicBoolean completed = new AtomicBoolean(false);
 
-      AgentResult result = router.routeStream(context).onComplete(r -> completed.set(true)).startBlocking();
+      AgentResult result =
+          router.routeStream(context).onComplete(r -> completed.set(true)).startBlocking();
 
       // Test that we get some result
       assertNotNull(result);

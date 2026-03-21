@@ -1,13 +1,13 @@
 package com.paragon.agents;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.JavaType;
-import tools.jackson.databind.ObjectMapper;
-import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.responses.TraceMetadata;
+import com.paragon.responses.json.StructuredOutputDefinition;
 import java.util.*;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Implements the Hierarchical pattern: multi-layered supervisor structure.

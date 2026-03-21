@@ -1,12 +1,12 @@
 package com.paragon.responses.json;
 
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.JsonNode;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.FunctionToolCallOutputStatus;
 import com.paragon.responses.spec.Text;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
 
 /**
  * Custom deserializer for {@link FunctionToolCallOutput}.

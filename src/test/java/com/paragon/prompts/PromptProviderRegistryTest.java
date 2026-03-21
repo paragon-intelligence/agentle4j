@@ -93,26 +93,26 @@ class PromptProviderRegistryTest {
 
   @Test
   void registerNullIdThrows() {
-    assertThrows(NullPointerException.class,
+    assertThrows(
+        NullPointerException.class,
         () -> PromptProviderRegistry.register(null, createMockProvider("x")));
   }
 
   @Test
   void registerNullProviderThrows() {
-    assertThrows(NullPointerException.class,
-        () -> PromptProviderRegistry.register("test", null));
+    assertThrows(NullPointerException.class, () -> PromptProviderRegistry.register("test", null));
   }
 
   @Test
   void registerEmptyIdThrows() {
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(
+        IllegalArgumentException.class,
         () -> PromptProviderRegistry.register("", createMockProvider("x")));
   }
 
   @Test
   void getNullIdThrows() {
-    assertThrows(NullPointerException.class,
-        () -> PromptProviderRegistry.get(null));
+    assertThrows(NullPointerException.class, () -> PromptProviderRegistry.get(null));
   }
 
   private PromptProvider createMockProvider(String content) {

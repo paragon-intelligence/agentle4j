@@ -192,8 +192,8 @@ public final class ParallelStream {
   }
 
   /**
-   * Called when a member agent's virtual thread throws an exception before producing a result
-   * (ALL and SYNTHESIZE modes).
+   * Called when a member agent's virtual thread throws an exception before producing a result (ALL
+   * and SYNTHESIZE modes).
    *
    * @param callback receives the member and the error
    * @return this stream
@@ -211,8 +211,7 @@ public final class ParallelStream {
    * @param callback receives the list of all member results
    * @return this stream
    */
-  public @NonNull ParallelStream onSynthesisStart(
-      @NonNull Consumer<List<AgentResult>> callback) {
+  public @NonNull ParallelStream onSynthesisStart(@NonNull Consumer<List<AgentResult>> callback) {
     this.onSynthesisStart = Objects.requireNonNull(callback);
     return this;
   }

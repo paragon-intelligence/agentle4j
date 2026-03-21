@@ -1,11 +1,10 @@
 package com.paragon.responses.json;
 
+import com.paragon.responses.spec.CodeInterpreterToolCall;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.jsontype.TypeSerializer;
 import tools.jackson.databind.ser.std.StdSerializer;
-import com.paragon.responses.spec.CodeInterpreterToolCall;
-import java.io.IOException;
 
 /** Serializer that enforces the correct wire format for {@link CodeInterpreterToolCall}. */
 public class CodeInterpreterToolCallSerializer extends StdSerializer<CodeInterpreterToolCall> {
@@ -38,4 +37,3 @@ public class CodeInterpreterToolCallSerializer extends StdSerializer<CodeInterpr
     gen.writeEndObject();
   }
 }
-

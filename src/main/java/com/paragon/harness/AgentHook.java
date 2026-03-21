@@ -1,7 +1,7 @@
 package com.paragon.harness;
 
-import com.paragon.agents.AgenticContext;
 import com.paragon.agents.AgentResult;
+import com.paragon.agents.AgenticContext;
 import com.paragon.agents.ToolExecution;
 import com.paragon.responses.spec.FunctionToolCall;
 import org.jspecify.annotations.NonNull;
@@ -9,11 +9,11 @@ import org.jspecify.annotations.NonNull;
 /**
  * Lifecycle hook that intercepts agent and tool execution events.
  *
- * <p>Implement this interface to inject cross-cutting concerns (logging, rate limiting,
- * cost tracking, circuit breakers, etc.) without modifying agent logic.
+ * <p>Implement this interface to inject cross-cutting concerns (logging, rate limiting, cost
+ * tracking, circuit breakers, etc.) without modifying agent logic.
  *
- * <p>Hooks are executed in registration order. All default methods are no-ops, so
- * you only override the lifecycle events you care about.
+ * <p>Hooks are executed in registration order. All default methods are no-ops, so you only override
+ * the lifecycle events you care about.
  *
  * <p>Example — log every tool call:
  *

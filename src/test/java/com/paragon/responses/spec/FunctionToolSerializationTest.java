@@ -2,8 +2,6 @@ package com.paragon.responses.spec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.annotations.FunctionMetadata;
 import java.util.List;
@@ -12,6 +10,8 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Tests for verifying that {@link FunctionTool} objects annotated with {@link FunctionMetadata} are

@@ -1,12 +1,12 @@
 package com.paragon.responses.json;
 
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.exc.MismatchedInputException;
 import com.paragon.responses.spec.Coordinate;
 import com.paragon.responses.spec.ScrollAction;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.exc.MismatchedInputException;
 
 /**
  * Custom deserializer for ScrollAction to handle @JsonUnwrapped Coordinate.
@@ -17,7 +17,8 @@ import com.paragon.responses.spec.ScrollAction;
 public class ScrollActionDeserializer extends ValueDeserializer<ScrollAction> {
 
   @Override
-  public ScrollAction deserialize(JsonParser p, DeserializationContext ctxt) throws tools.jackson.core.JacksonException {
+  public ScrollAction deserialize(JsonParser p, DeserializationContext ctxt)
+      throws tools.jackson.core.JacksonException {
     JsonNode node = p.readValueAsTree();
 
     int scrollX = node.has("scroll_x") ? node.get("scroll_x").asInt() : 0;

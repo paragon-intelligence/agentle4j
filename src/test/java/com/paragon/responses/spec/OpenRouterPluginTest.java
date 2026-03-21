@@ -2,9 +2,9 @@ package com.paragon.responses.spec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /** Tests for OpenRouterPlugin serialization and deserialization */
 class OpenRouterPluginTest {

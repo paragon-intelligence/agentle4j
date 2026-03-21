@@ -2,7 +2,6 @@ package com.paragon.embeddings;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.http.RetryPolicy;
 import java.time.Duration;
 import java.util.List;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Comprehensive unit tests for {@link OpenRouterEmbeddingProvider}.

@@ -53,8 +53,7 @@ public final class SkillReaderTool extends FunctionTool<SkillReaderTool.Params> 
       @JsonProperty("skill_name")
           @JsonPropertyDescription(
               "The exact name of the skill to read, as listed in the skills catalog")
-          @NonNull
-          String skillName) {}
+          @NonNull String skillName) {}
 
   /**
    * Creates a SkillReaderTool backed by the given skill store.

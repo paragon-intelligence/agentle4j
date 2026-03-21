@@ -2,11 +2,11 @@ package com.paragon.responses.openrouter;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /** Unit tests for {@link OpenRouterModel}. */
 @DisplayName("OpenRouterModel")

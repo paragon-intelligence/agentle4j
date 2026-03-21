@@ -1025,28 +1025,28 @@ public final class Prompt {
     public static String toUseTool(Language lang) {
       return lang == Language.PT_BR
           ? "Para usar uma ferramenta, retorne um objeto JSON com os campos \"tool\" e"
-                + " \"parameters\"."
+              + " \"parameters\"."
           : "To use a tool, output a JSON object with \"tool\" and \"parameters\" fields.";
     }
 
     public static String reactPattern(Language lang) {
       return lang == Language.PT_BR
           ? "Siga este padrão para sua resposta:\n\n"
-                + "Pensamento: [Seu raciocínio sobre o que fazer a seguir]\n"
-                + "Ação: [A ferramenta a usar e seus parâmetros como JSON]\n"
-                + "Observação: [Aguarde o resultado - será fornecido]\n\n"
-                + "Repita o ciclo Pensamento/Ação/Observação conforme necessário.\n"
-                + "Quando tiver informação suficiente, forneça:\n\n"
-                + "Pensamento: [Raciocínio final]\n"
-                + "Resposta Final: [Sua resposta completa ao usuário]"
+              + "Pensamento: [Seu raciocínio sobre o que fazer a seguir]\n"
+              + "Ação: [A ferramenta a usar e seus parâmetros como JSON]\n"
+              + "Observação: [Aguarde o resultado - será fornecido]\n\n"
+              + "Repita o ciclo Pensamento/Ação/Observação conforme necessário.\n"
+              + "Quando tiver informação suficiente, forneça:\n\n"
+              + "Pensamento: [Raciocínio final]\n"
+              + "Resposta Final: [Sua resposta completa ao usuário]"
           : "Follow this pattern for your response:\n\n"
-                + "Thought: [Your reasoning about what to do next]\n"
-                + "Action: [The tool to use and its parameters as JSON]\n"
-                + "Observation: [Wait for the result - this will be provided]\n\n"
-                + "Repeat the Thought/Action/Observation cycle as needed.\n"
-                + "When you have enough information, provide:\n\n"
-                + "Thought: [Final reasoning]\n"
-                + "Final Answer: [Your complete response to the user]";
+              + "Thought: [Your reasoning about what to do next]\n"
+              + "Action: [The tool to use and its parameters as JSON]\n"
+              + "Observation: [Wait for the result - this will be provided]\n\n"
+              + "Repeat the Thought/Action/Observation cycle as needed.\n"
+              + "When you have enough information, provide:\n\n"
+              + "Thought: [Final reasoning]\n"
+              + "Final Answer: [Your complete response to the user]";
     }
 
     public static String targetAudience(Language lang) {
@@ -2551,9 +2551,9 @@ public final class Prompt {
       instruct(
           language == Language.PT_BR
               ? "Ao final, avalie a qualidade da sua resposta e indique áreas que poderiam ser"
-                    + " melhoradas"
+                  + " melhoradas"
               : "At the end, assess the quality of your response and indicate areas that could be"
-                    + " improved");
+                  + " improved");
       return this;
     }
 
@@ -2568,15 +2568,15 @@ public final class Prompt {
             case ASSUME_MOST_LIKELY ->
                 language == Language.PT_BR
                     ? "Se a entrada for ambígua, assuma a interpretação mais provável e indique sua"
-                          + " suposição"
+                        + " suposição"
                     : "If the input is ambiguous, assume the most likely interpretation and state"
-                          + " your assumption";
+                        + " your assumption";
             case PROVIDE_ALL_OPTIONS ->
                 language == Language.PT_BR
                     ? "Se a entrada for ambígua, forneça respostas para todas as interpretações"
-                          + " possíveis"
+                        + " possíveis"
                     : "If the input is ambiguous, provide responses for all possible"
-                          + " interpretations";
+                        + " interpretations";
             case STATE_ASSUMPTIONS ->
                 language == Language.PT_BR
                     ? "Declare claramente quaisquer suposições feitas na sua resposta"

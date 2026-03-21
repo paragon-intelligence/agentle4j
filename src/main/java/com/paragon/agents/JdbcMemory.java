@@ -1,7 +1,5 @@
 package com.paragon.agents;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,6 +15,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.jspecify.annotations.NonNull;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * JDBC-backed durable implementation of {@link Memory}.
@@ -85,7 +85,8 @@ public final class JdbcMemory implements Memory {
    * @param tableName the table name to use
    * @return a new JdbcMemory instance
    */
-  public static @NonNull JdbcMemory create(@NonNull DataSource dataSource, @NonNull String tableName) {
+  public static @NonNull JdbcMemory create(
+      @NonNull DataSource dataSource, @NonNull String tableName) {
     ObjectMapper mapper = new ObjectMapper();
     return new JdbcMemory(dataSource, tableName, mapper);
   }
@@ -143,8 +144,7 @@ public final class JdbcMemory implements Memory {
           "Memory with id '" + id + "' not found for user '" + userId + "'");
     }
 
-    String sql =
-        "DELETE FROM " + tableName + " WHERE id = ? AND user_id = ?";
+    String sql = "DELETE FROM " + tableName + " WHERE id = ? AND user_id = ?";
     try (Connection conn = dataSource.getConnection();
         PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setString(1, id);

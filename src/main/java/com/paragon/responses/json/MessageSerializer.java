@@ -1,25 +1,25 @@
 package com.paragon.responses.json;
 
-import tools.jackson.core.JsonGenerator;
-import tools.jackson.databind.SerializationContext;
-import tools.jackson.databind.jsontype.TypeSerializer;
-import tools.jackson.databind.ser.std.StdSerializer;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.MessageContent;
 import com.paragon.responses.spec.Text;
 import java.util.List;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.jsontype.TypeSerializer;
+import tools.jackson.databind.ser.std.StdSerializer;
 
 /**
  * Custom Jackson serializer for {@link Message} and its subclasses.
  *
- * <p>The OpenAI Responses API (and OpenRouter) requires {@code content} to be a plain string
- * rather than an array of content objects. Without this serializer, Jackson would serialize
- * {@code content} as {@code [{"type":"input_text","text":"..."}]} which is rejected with
- * {@code "Invalid input: expected string, received array"}.
+ * <p>The OpenAI Responses API (and OpenRouter) requires {@code content} to be a plain string rather
+ * than an array of content objects. Without this serializer, Jackson would serialize {@code
+ * content} as {@code [{"type":"input_text","text":"..."}]} which is rejected with {@code "Invalid
+ * input: expected string, received array"}.
  *
  * <p>This serializer writes {@code content} as a plain string when the message has exactly one
- * {@link Text} content item (the common case for conversation history), and falls back to the
- * array format otherwise (for multi-content messages with images, files, etc.).
+ * {@link Text} content item (the common case for conversation history), and falls back to the array
+ * format otherwise (for multi-content messages with images, files, etc.).
  */
 public class MessageSerializer extends StdSerializer<Message> {
 
@@ -29,15 +29,12 @@ public class MessageSerializer extends StdSerializer<Message> {
 
   /**
    * Called when serializing within a polymorphic context (e.g., {@code List<ResponseInputItem>}
-   * with {@code @JsonTypeInfo}). Since we embed {@code "type"} directly in the JSON object,
-   * we skip the external type wrapper and delegate to {@link #serialize}.
+   * with {@code @JsonTypeInfo}). Since we embed {@code "type"} directly in the JSON object, we skip
+   * the external type wrapper and delegate to {@link #serialize}.
    */
   @Override
   public void serializeWithType(
-      Message value,
-      JsonGenerator gen,
-      SerializationContext provider,
-      TypeSerializer typeSer)
+      Message value, JsonGenerator gen, SerializationContext provider, TypeSerializer typeSer)
       throws tools.jackson.core.JacksonException {
     serialize(value, gen, provider);
   }

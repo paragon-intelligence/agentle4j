@@ -2,9 +2,9 @@ package com.paragon.http;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /** Unit tests for {@link HttpRequest}. */
 class HttpRequestTest {

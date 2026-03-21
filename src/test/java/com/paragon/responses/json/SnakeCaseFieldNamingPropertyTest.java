@@ -2,14 +2,14 @@ package com.paragon.responses.json;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.*;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import net.jqwik.api.*;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Property-based tests for snake_case field naming in JSON serialization.

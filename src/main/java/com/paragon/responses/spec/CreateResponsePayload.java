@@ -3,10 +3,6 @@ package com.paragon.responses.spec;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.JavaType;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.Messages;
 import com.paragon.responses.OpenRouterCustomPayload;
 import com.paragon.responses.json.JacksonJsonSchemaProducer;
@@ -16,6 +12,10 @@ import java.util.*;
 import okhttp3.*;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Creates a model response. Provide text or image inputs to generate text or JSON outputs. Have the
@@ -139,10 +139,10 @@ public class CreateResponsePayload {
    * @param toolChoice How the model should select which tool (or tools) to use when generating a
    *     response. See the tools parameter to see how to specify which tools the model can call.
    * @param tools An array of tools the model may call while generating a response. You can specify
-   *     which tool to use by setting the tool_choice parameter.
-   *     Supported categories include built-in tools, MCP tools, and function tools. References:
-   *     web search https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses,
-   *     file search https://platform.openai.com/docs/guides/tools-file-search, built-in tools
+   *     which tool to use by setting the tool_choice parameter. Supported categories include
+   *     built-in tools, MCP tools, and function tools. References: web search
+   *     https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses, file search
+   *     https://platform.openai.com/docs/guides/tools-file-search, built-in tools
    *     https://platform.openai.com/docs/guides/tools, MCP tools
    *     https://platform.openai.com/docs/guides/tools-connectors-mcp, function calling
    *     https://platform.openai.com/docs/guides/function-calling
@@ -153,8 +153,8 @@ public class CreateResponsePayload {
    *     the tokens comprising the top 10% probability mass are considered.
    *     <p>We generally recommend altering this or temperature but not both.
    * @param truncation The truncation strategy to use for the model response. {@code auto} drops
-   *     items from the beginning of the conversation when needed to fit the context window;
-   *     {@code disabled} fails the request instead.
+   *     items from the beginning of the conversation when needed to fit the context window; {@code
+   *     disabled} fails the request instead.
    * @param openRouterCustomPayload custom payload designed for OpenRouter Responses.
    */
   public CreateResponsePayload(
@@ -720,7 +720,8 @@ public class CreateResponsePayload {
     }
 
     public Builder withStructuredOutput(
-        @NonNull TypeReference<?> structuredOutput, @Nullable ModelVerbosityConfig verbosityConfig) {
+        @NonNull TypeReference<?> structuredOutput,
+        @Nullable ModelVerbosityConfig verbosityConfig) {
       return withStructuredOutput(
           jsonSchemaProducer.structuredOutputDefinition(structuredOutput), verbosityConfig);
     }
@@ -751,8 +752,7 @@ public class CreateResponsePayload {
       String schemaName = sanitizeSchemaName(definition.responseJavaType());
       this.text =
           new TextConfigurationOptions(
-              new TextConfigurationOptionsJsonSchemaFormat(
-                  schemaName, definition.schema(), true),
+              new TextConfigurationOptionsJsonSchemaFormat(schemaName, definition.schema(), true),
               verbosityConfig);
     }
 

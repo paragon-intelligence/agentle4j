@@ -15,7 +15,9 @@ class BM25ToolSearchStrategyTest {
 
   public record EmptyArgs() {}
 
-  @FunctionMetadata(name = "get_weather", description = "Get the current weather forecast for a city")
+  @FunctionMetadata(
+      name = "get_weather",
+      description = "Get the current weather forecast for a city")
   static class WeatherTool extends FunctionTool<EmptyArgs> {
     @Override
     public FunctionToolCallOutput call(EmptyArgs params) {
@@ -49,7 +51,9 @@ class BM25ToolSearchStrategyTest {
     }
   }
 
-  @FunctionMetadata(name = "create_ticket", description = "Create a support ticket for customer issues")
+  @FunctionMetadata(
+      name = "create_ticket",
+      description = "Create a support ticket for customer issues")
   static class TicketTool extends FunctionTool<EmptyArgs> {
     @Override
     public FunctionToolCallOutput call(EmptyArgs params) {
@@ -57,7 +61,9 @@ class BM25ToolSearchStrategyTest {
     }
   }
 
-  @FunctionMetadata(name = "weather_forecast_detailed", description = "Get detailed weather forecast with temperature and humidity")
+  @FunctionMetadata(
+      name = "weather_forecast_detailed",
+      description = "Get detailed weather forecast with temperature and humidity")
   static class DetailedWeatherTool extends FunctionTool<EmptyArgs> {
     @Override
     public FunctionToolCallOutput call(EmptyArgs params) {

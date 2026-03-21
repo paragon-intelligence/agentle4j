@@ -1,12 +1,12 @@
 package com.paragon.responses;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.paragon.json.ParagonJavaTimeModule;
+import com.paragon.responses.json.ResponsesApiModule;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.PropertyNamingStrategies;
-import com.paragon.json.ParagonJavaTimeModule;
-import com.paragon.responses.json.ResponsesApiModule;
 
 /**
  * Factory class for creating a centrally configured Jackson ObjectMapper for the Responses API

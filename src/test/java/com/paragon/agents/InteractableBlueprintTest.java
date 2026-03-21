@@ -2,9 +2,6 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ObjectMapper;
-import com.paragon.agents.InstructionSource;
 import com.paragon.agents.InteractableBlueprint.*;
 import com.paragon.http.RetryPolicy;
 import com.paragon.responses.TraceMetadata;
@@ -13,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import org.junit.jupiter.api.*;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Tests for the InteractableBlueprint sealed hierarchy: - Jackson serialization/deserialization
@@ -119,7 +118,8 @@ class InteractableBlueprintTest {
 
     assertEquals("SupportAgent", agentBp.name());
     assertEquals("gpt-4o", agentBp.model());
-    assertEquals(new InstructionSource.Inline("You are a helpful support agent."), agentBp.instructions());
+    assertEquals(
+        new InstructionSource.Inline("You are a helpful support agent."), agentBp.instructions());
     assertEquals(10, agentBp.maxTurns());
     assertEquals(0.7, agentBp.temperature());
     assertNotNull(agentBp.responder());
@@ -270,8 +270,20 @@ class InteractableBlueprintTest {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
     var peer =
         new AgentBlueprint(
-            "Peer", "gpt-4o", new InstructionSource.Inline("Inst"), 5, null, null, null, responder, List.of(), List.of(),
-            List.of(), List.of(), null, null);
+            "Peer",
+            "gpt-4o",
+            new InstructionSource.Inline("Inst"),
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null,
+            null);
     var synth =
         new AgentBlueprint(
             "Synth",
@@ -783,8 +795,20 @@ class InteractableBlueprintTest {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
     var agent =
         new AgentBlueprint(
-            "A", "m", new InstructionSource.Inline("i"), 5, null, null, null, responder, List.of(), List.of(), List.of(),
-            List.of(), null, null);
+            "A",
+            "m",
+            new InstructionSource.Inline("i"),
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null,
+            null);
 
     // Each type serializes with the correct "type" discriminator
     Map<String, InteractableBlueprint> blueprints =

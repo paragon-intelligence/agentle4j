@@ -2,7 +2,6 @@ package com.paragon.responses;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.json.JacksonJsonSchemaProducer;
 import com.paragon.responses.json.JsonSchemaProducer;
 import com.paragon.responses.spec.*;
@@ -15,6 +14,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Comprehensive test suite for the Responder class.

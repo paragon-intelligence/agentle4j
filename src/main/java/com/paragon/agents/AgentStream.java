@@ -1,25 +1,25 @@
 package com.paragon.agents;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
+import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.responses.spec.*;
 import com.paragon.responses.streaming.ReasoningTextDeltaEvent;
 import com.paragon.responses.streaming.ResponseStream;
+import com.paragon.telemetry.processors.TraceIdGenerator;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import com.paragon.responses.TraceMetadata;
-import com.paragon.telemetry.processors.TraceIdGenerator;
-import java.util.Optional;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Streaming agent interaction with full agentic loop.
@@ -290,9 +290,8 @@ public final class AgentStream {
   /**
    * Called when a client-side only tool ({@code stopsLoop = true}) is detected.
    *
-   * <p>The tool call is NOT persisted to history and NOT executed. The loop exits immediately
-   * after this callback fires, followed by {@code onComplete} with the {@code clientSideTool}
-   * result.
+   * <p>The tool call is NOT persisted to history and NOT executed. The loop exits immediately after
+   * this callback fires, followed by {@code onComplete} with the {@code clientSideTool} result.
    *
    * @param handler receives the FunctionToolCall that triggered the exit
    * @return this for chaining
@@ -316,9 +315,8 @@ public final class AgentStream {
   }
 
   /**
-   * Called for each reasoning token delta streamed by the model (e.g., o-series / extended
-   * thinking models). Only fires when the model emits {@code response.reasoning_text.delta} SSE
-   * events.
+   * Called for each reasoning token delta streamed by the model (e.g., o-series / extended thinking
+   * models). Only fires when the model emits {@code response.reasoning_text.delta} SSE events.
    *
    * @param handler receives reasoning token chunks
    * @return this for chaining
@@ -385,7 +383,8 @@ public final class AgentStream {
             } else if (outputItem instanceof Message msg) {
               context.addMessage(msg);
             } else if (outputItem instanceof FunctionToolCall ftc) {
-              // stopsLoop tools must NOT be persisted to history (they are UI signals, not API items)
+              // stopsLoop tools must NOT be persisted to history (they are UI signals, not API
+              // items)
               FunctionTool<?> maybeTool = agent.toolStore().get(ftc.name());
               if (maybeTool == null || !maybeTool.stopsLoop()) {
                 // FunctionToolCall must be in history before the tool output (required by API)
@@ -410,8 +409,7 @@ public final class AgentStream {
               if (handoff.name().equals(call.name())) {
                 context.addToolResult(
                     FunctionToolCallOutput.success(
-                        call.callId(),
-                        "Transferring to " + handoff.targetAgent().name() + "."));
+                        call.callId(), "Transferring to " + handoff.targetAgent().name() + "."));
                 break;
               }
             }
@@ -432,17 +430,18 @@ public final class AgentStream {
             // propagate back to the caller — avoids the blocking interact() call.
             AgentStream childStream =
                 handoff.targetAgent().asStreaming().interact(childContext, trace);
-            if (onTextDelta != null)             childStream.onTextDelta(onTextDelta);
-            if (onTurnStart != null)             childStream.onTurnStart(onTurnStart);
-            if (onTurnComplete != null)          childStream.onTurnComplete(onTurnComplete);
-            if (onToolExecuted != null)          childStream.onToolExecuted(onToolExecuted);
-            if (onToolCallPending != null)       childStream.onToolCallPending(onToolCallPending);
-            if (onPause != null)                 childStream.onPause(onPause);
-            if (onGuardrailFailed != null)       childStream.onGuardrailFailed(onGuardrailFailed);
-            if (onHandoff != null)               childStream.onHandoff(onHandoff);
-            if (onClientSideTool != null)        childStream.onClientSideTool(onClientSideTool);
-            if (onPartialJson != null)           childStream.onPartialJson(onPartialJson);
-            if (onReasoningDeltaHandler != null) childStream.onReasoningDelta(onReasoningDeltaHandler);
+            if (onTextDelta != null) childStream.onTextDelta(onTextDelta);
+            if (onTurnStart != null) childStream.onTurnStart(onTurnStart);
+            if (onTurnComplete != null) childStream.onTurnComplete(onTurnComplete);
+            if (onToolExecuted != null) childStream.onToolExecuted(onToolExecuted);
+            if (onToolCallPending != null) childStream.onToolCallPending(onToolCallPending);
+            if (onPause != null) childStream.onPause(onPause);
+            if (onGuardrailFailed != null) childStream.onGuardrailFailed(onGuardrailFailed);
+            if (onHandoff != null) childStream.onHandoff(onHandoff);
+            if (onClientSideTool != null) childStream.onClientSideTool(onClientSideTool);
+            if (onPartialJson != null) childStream.onPartialJson(onPartialJson);
+            if (onReasoningDeltaHandler != null)
+              childStream.onReasoningDelta(onReasoningDeltaHandler);
             // onComplete / onError are intentionally NOT forwarded — the parent fires those
             AgentResult innerResult = childStream.startBlocking();
             AgentResult handoffResult =
@@ -584,18 +583,20 @@ public final class AgentStream {
     // ResponseCompletedEvent (e.g., OpenRouter sends Chat-Completions-format chunks instead of
     // Responses-API events).
     if (onTextDelta != null || onReasoningDeltaHandler != null) {
-      CreateResponsePayload.Streaming streamingPayload = new CreateResponsePayload.Streaming(payload);
+      CreateResponsePayload.Streaming streamingPayload =
+          new CreateResponsePayload.Streaming(payload);
       ResponseStream<Void> responseStream = responder.respond(streamingPayload);
       if (onTextDelta != null) {
         responseStream.onTextDelta(onTextDelta);
       }
       if (onReasoningDeltaHandler != null) {
         Consumer<String> handler = onReasoningDeltaHandler;
-        responseStream.onEvent(event -> {
-          if (event instanceof ReasoningTextDeltaEvent rde) {
-            handler.accept(rde.delta());
-          }
-        });
+        responseStream.onEvent(
+            event -> {
+              if (event instanceof ReasoningTextDeltaEvent rde) {
+                handler.accept(rde.delta());
+              }
+            });
       }
       Response sseResponse = responseStream.startBlocking();
       if (sseResponse != null) {

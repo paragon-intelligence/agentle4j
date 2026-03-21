@@ -2,8 +2,8 @@ package com.paragon.harness;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.paragon.agents.AgenticContext;
 import com.paragon.agents.AgentResult;
+import com.paragon.agents.AgenticContext;
 import com.paragon.agents.ToolExecution;
 import com.paragon.responses.spec.FunctionToolCall;
 import com.paragon.responses.spec.FunctionToolCallOutput;
@@ -25,13 +25,22 @@ class HookRegistryTest {
     @DisplayName("calls all hooks in registration order")
     void callsHooksInOrder() {
       List<String> callOrder = new ArrayList<>();
-      HookRegistry registry = HookRegistry.create()
-          .add(new AgentHook() {
-            @Override public void beforeRun(AgenticContext ctx) { callOrder.add("hook1"); }
-          })
-          .add(new AgentHook() {
-            @Override public void beforeRun(AgenticContext ctx) { callOrder.add("hook2"); }
-          });
+      HookRegistry registry =
+          HookRegistry.create()
+              .add(
+                  new AgentHook() {
+                    @Override
+                    public void beforeRun(AgenticContext ctx) {
+                      callOrder.add("hook1");
+                    }
+                  })
+              .add(
+                  new AgentHook() {
+                    @Override
+                    public void beforeRun(AgenticContext ctx) {
+                      callOrder.add("hook2");
+                    }
+                  });
 
       registry.fireBeforeRun(AgenticContext.create());
 
@@ -47,13 +56,22 @@ class HookRegistryTest {
     @DisplayName("calls hooks in reverse order (stack semantics)")
     void callsHooksInReverseOrder() {
       List<String> callOrder = new ArrayList<>();
-      HookRegistry registry = HookRegistry.create()
-          .add(new AgentHook() {
-            @Override public void afterRun(AgentResult r, AgenticContext ctx) { callOrder.add("hook1"); }
-          })
-          .add(new AgentHook() {
-            @Override public void afterRun(AgentResult r, AgenticContext ctx) { callOrder.add("hook2"); }
-          });
+      HookRegistry registry =
+          HookRegistry.create()
+              .add(
+                  new AgentHook() {
+                    @Override
+                    public void afterRun(AgentResult r, AgenticContext ctx) {
+                      callOrder.add("hook1");
+                    }
+                  })
+              .add(
+                  new AgentHook() {
+                    @Override
+                    public void afterRun(AgentResult r, AgenticContext ctx) {
+                      callOrder.add("hook2");
+                    }
+                  });
 
       AgenticContext ctx = AgenticContext.create();
       AgentResult result = AgentResult.error(new RuntimeException("test"), ctx, 0);
@@ -71,21 +89,26 @@ class HookRegistryTest {
     @DisplayName("fires beforeToolCall and afterToolCall")
     void firesToolCallHooks() {
       List<String> events = new ArrayList<>();
-      HookRegistry registry = HookRegistry.create()
-          .add(new AgentHook() {
-            @Override
-            public void beforeToolCall(FunctionToolCall call, AgenticContext ctx) {
-              events.add("before:" + call.name());
-            }
-            @Override
-            public void afterToolCall(FunctionToolCall call, ToolExecution exec, AgenticContext ctx) {
-              events.add("after:" + call.name());
-            }
-          });
+      HookRegistry registry =
+          HookRegistry.create()
+              .add(
+                  new AgentHook() {
+                    @Override
+                    public void beforeToolCall(FunctionToolCall call, AgenticContext ctx) {
+                      events.add("before:" + call.name());
+                    }
+
+                    @Override
+                    public void afterToolCall(
+                        FunctionToolCall call, ToolExecution exec, AgenticContext ctx) {
+                      events.add("after:" + call.name());
+                    }
+                  });
 
       FunctionToolCall call = new FunctionToolCall("{}", "call-1", "my_tool", null, null);
       FunctionToolCallOutput output = FunctionToolCallOutput.success("ok");
-      ToolExecution exec = new ToolExecution("my_tool", "call-1", "{}", output, Duration.ofMillis(10));
+      ToolExecution exec =
+          new ToolExecution("my_tool", "call-1", "{}", output, Duration.ofMillis(10));
 
       AgenticContext ctx = AgenticContext.create();
       registry.fireBeforeToolCall(call, ctx);
@@ -98,13 +121,15 @@ class HookRegistryTest {
   @Test
   @DisplayName("hook failures are swallowed and do not propagate")
   void hookFailuresAreSwallowed() {
-    HookRegistry registry = HookRegistry.create()
-        .add(new AgentHook() {
-          @Override
-          public void beforeRun(AgenticContext ctx) {
-            throw new RuntimeException("hook crashed!");
-          }
-        });
+    HookRegistry registry =
+        HookRegistry.create()
+            .add(
+                new AgentHook() {
+                  @Override
+                  public void beforeRun(AgenticContext ctx) {
+                    throw new RuntimeException("hook crashed!");
+                  }
+                });
 
     // Must not throw
     assertDoesNotThrow(() -> registry.fireBeforeRun(AgenticContext.create()));

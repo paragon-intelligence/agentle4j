@@ -1,9 +1,8 @@
 package com.paragon.responses.json;
 
 import tools.jackson.core.JsonGenerator;
-import tools.jackson.databind.ValueSerializer;
 import tools.jackson.databind.SerializationContext;
-import java.io.IOException;
+import tools.jackson.databind.ValueSerializer;
 
 /**
  * Custom Jackson serializer that converts enum values to lowercase strings. Multi-word enums with

@@ -13,8 +13,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Append-only log of work items for tracking agent progress across sessions.
  *
- * <p>Each entry records a work item with its status (DONE, FAILED, IN_PROGRESS) and optional
- * notes. The log is append-only to prevent accidental overwrites of completed work.
+ * <p>Each entry records a work item with its status (DONE, FAILED, IN_PROGRESS) and optional notes.
+ * The log is append-only to prevent accidental overwrites of completed work.
  *
  * <p>Use {@link FilesystemArtifactStore} or a custom store to persist the log across sessions.
  *
@@ -62,8 +62,7 @@ public final class ProgressLog {
     /** Creates an entry with an auto-generated ID and current timestamp. */
     public static @NonNull Entry of(
         @NonNull String description, @NonNull Status status, @Nullable String notes) {
-      return new Entry(
-          UUID.randomUUID().toString(), Instant.now(), description, status, notes);
+      return new Entry(UUID.randomUUID().toString(), Instant.now(), description, status, notes);
     }
   }
 

@@ -10,7 +10,8 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Exposes a {@link ProgressLog} as two {@link FunctionTool}s: one for reading and one for appending.
+ * Exposes a {@link ProgressLog} as two {@link FunctionTool}s: one for reading and one for
+ * appending.
  *
  * <p>Usage:
  *
@@ -43,7 +44,7 @@ public final class ProgressLogTool {
 
   public record ReadProgressLogRequest(
       @Nullable String statusFilter // "DONE", "FAILED", "IN_PROGRESS", or null for all
-  ) {}
+      ) {}
 
   public record AppendProgressLogRequest(
       @NonNull String description,
@@ -55,7 +56,8 @@ public final class ProgressLogTool {
   @FunctionMetadata(
       name = "read_progress_log",
       description =
-          "Read the current progress log. Optionally filter by status: DONE, FAILED, or IN_PROGRESS.")
+          "Read the current progress log. Optionally filter by status: DONE, FAILED, or"
+              + " IN_PROGRESS.")
   public static final class ReadProgressLogTool extends FunctionTool<ReadProgressLogRequest> {
     private final ProgressLog log;
 
@@ -91,7 +93,8 @@ public final class ProgressLogTool {
   @FunctionMetadata(
       name = "append_progress_log",
       description =
-          "Append a new entry to the progress log. Status must be one of: DONE, FAILED, IN_PROGRESS.")
+          "Append a new entry to the progress log. Status must be one of: DONE, FAILED,"
+              + " IN_PROGRESS.")
   public static final class AppendProgressLogTool extends FunctionTool<AppendProgressLogRequest> {
     private final ProgressLog log;
 
@@ -107,8 +110,7 @@ public final class ProgressLogTool {
       try {
         ProgressLog.Status status = ProgressLog.Status.valueOf(params.status().toUpperCase());
         ProgressLog.Entry entry = log.append(params.description(), status, params.notes());
-        return FunctionToolCallOutput.success(
-            "Progress log entry added with id: " + entry.id());
+        return FunctionToolCallOutput.success("Progress log entry added with id: " + entry.id());
       } catch (IllegalArgumentException e) {
         return FunctionToolCallOutput.error(
             "Invalid status '" + params.status() + "'. Use one of: DONE, FAILED, IN_PROGRESS");

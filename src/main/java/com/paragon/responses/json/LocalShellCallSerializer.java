@@ -1,11 +1,10 @@
 package com.paragon.responses.json;
 
+import com.paragon.responses.spec.LocalShellCall;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.jsontype.TypeSerializer;
 import tools.jackson.databind.ser.std.StdSerializer;
-import com.paragon.responses.spec.LocalShellCall;
-import java.io.IOException;
 
 /** Serializer that enforces the correct wire format for {@link LocalShellCall}. */
 public class LocalShellCallSerializer extends StdSerializer<LocalShellCall> {
@@ -36,4 +35,3 @@ public class LocalShellCallSerializer extends StdSerializer<LocalShellCall> {
     gen.writeEndObject();
   }
 }
-

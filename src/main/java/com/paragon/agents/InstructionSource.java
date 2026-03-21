@@ -1,15 +1,6 @@
 package com.paragon.agents;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.DatabindException;
-import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.annotation.JsonDeserialize;
-import com.paragon.prompts.FilesystemPromptProvider;
 import com.paragon.prompts.Prompt;
 import com.paragon.prompts.PromptProvider;
 import com.paragon.prompts.PromptProviderRegistry;
@@ -21,6 +12,12 @@ import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * A sealed interface representing the source of an agent's instructions.
@@ -78,16 +75,15 @@ public sealed interface InstructionSource
    * @throws IllegalStateException if resolution fails (file not found, provider not registered,
    *     etc.)
    */
-  @NonNull
-  String resolve();
+  @NonNull String resolve();
 
   // ===== Variants =====
 
   /**
    * Instructions embedded directly as text.
    *
-   * <p>This is the default and most common variant. When a plain string is provided for
-   * {@code instructions} in JSON/YAML, it is automatically wrapped in an {@code Inline} instance.
+   * <p>This is the default and most common variant. When a plain string is provided for {@code
+   * instructions} in JSON/YAML, it is automatically wrapped in an {@code Inline} instance.
    *
    * @param text the raw instruction text
    */
@@ -112,8 +108,8 @@ public sealed interface InstructionSource
   /**
    * Instructions loaded from a file on disk.
    *
-   * <p>The path is resolved relative to the current working directory at the time
-   * {@link #resolve()} is called. Supports absolute paths as well.
+   * <p>The path is resolved relative to the current working directory at the time {@link
+   * #resolve()} is called. Supports absolute paths as well.
    *
    * <pre>{@code
    * // JSON/YAML format:
@@ -145,8 +141,7 @@ public sealed interface InstructionSource
       try {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
       } catch (IOException e) {
-        throw new IllegalStateException(
-            "Failed to read instructions from file: " + path, e);
+        throw new IllegalStateException("Failed to read instructions from file: " + path, e);
       }
     }
   }
@@ -154,8 +149,8 @@ public sealed interface InstructionSource
   /**
    * Instructions fetched from a registered {@link PromptProvider}.
    *
-   * <p>The provider is looked up by {@code providerId} in the {@link PromptProviderRegistry}.
-   * The registry must be populated at application startup before calling {@link #resolve()}.
+   * <p>The provider is looked up by {@code providerId} in the {@link PromptProviderRegistry}. The
+   * registry must be populated at application startup before calling {@link #resolve()}.
    *
    * <pre>{@code
    * // Register at startup:
@@ -225,8 +220,8 @@ public sealed interface InstructionSource
    *
    * <ul>
    *   <li>Plain string {@code "You are a helpful assistant."} → {@link Inline}
-   *   <li>Object with {@code "source"} field → polymorphic dispatch to {@link Inline},
-   *       {@link FileRef}, or {@link ProviderRef}
+   *   <li>Object with {@code "source"} field → polymorphic dispatch to {@link Inline}, {@link
+   *       FileRef}, or {@link ProviderRef}
    * </ul>
    */
   final class Deserializer extends ValueDeserializer<InstructionSource> {
@@ -267,9 +262,7 @@ public sealed interface InstructionSource
             }
             yield new ProviderRef(providerId, promptId, filters);
           }
-          default ->
-              throw DatabindException.from(
-                  p, "Unknown instruction source type: " + source);
+          default -> throw DatabindException.from(p, "Unknown instruction source type: " + source);
         };
       }
 

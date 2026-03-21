@@ -54,8 +54,9 @@ class AgentRunReportTest {
   void toSummaryIncludesKeyFields() {
     AgenticContext ctx = AgenticContext.create();
     AgentResult result = AgentResult.error(new RuntimeException("bad"), ctx, 3);
-    AgentRunReport report = AgentRunReport.from("TestAgent", result,
-        Instant.now().minusSeconds(2), Instant.now(), 2, 1);
+    AgentRunReport report =
+        AgentRunReport.from(
+            "TestAgent", result, Instant.now().minusSeconds(2), Instant.now(), 2, 1);
 
     String summary = report.toSummary();
     assertTrue(summary.contains("TestAgent"));

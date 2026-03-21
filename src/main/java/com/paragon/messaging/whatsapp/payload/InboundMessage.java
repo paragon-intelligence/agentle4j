@@ -37,22 +37,22 @@ import org.jspecify.annotations.Nullable;
  * @since 2.1
  */
 @JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        property = "type",
-        visible = true)
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.EXISTING_PROPERTY,
+    property = "type",
+    visible = true)
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = TextMessage.class, name = "text"),
-        @JsonSubTypes.Type(value = ImageMessage.class, name = "image"),
-        @JsonSubTypes.Type(value = VideoMessage.class, name = "video"),
-        @JsonSubTypes.Type(value = AudioMessage.class, name = "audio"),
-        @JsonSubTypes.Type(value = DocumentMessage.class, name = "document"),
-        @JsonSubTypes.Type(value = StickerMessage.class, name = "sticker"),
-        @JsonSubTypes.Type(value = InteractiveMessage.class, name = "interactive"),
-        @JsonSubTypes.Type(value = LocationMessage.class, name = "location"),
-        @JsonSubTypes.Type(value = ReactionMessage.class, name = "reaction"),
-        @JsonSubTypes.Type(value = SystemMessage.class, name = "system"),
-        @JsonSubTypes.Type(value = OrderMessage.class, name = "order")
+  @JsonSubTypes.Type(value = TextMessage.class, name = "text"),
+  @JsonSubTypes.Type(value = ImageMessage.class, name = "image"),
+  @JsonSubTypes.Type(value = VideoMessage.class, name = "video"),
+  @JsonSubTypes.Type(value = AudioMessage.class, name = "audio"),
+  @JsonSubTypes.Type(value = DocumentMessage.class, name = "document"),
+  @JsonSubTypes.Type(value = StickerMessage.class, name = "sticker"),
+  @JsonSubTypes.Type(value = InteractiveMessage.class, name = "interactive"),
+  @JsonSubTypes.Type(value = LocationMessage.class, name = "location"),
+  @JsonSubTypes.Type(value = ReactionMessage.class, name = "reaction"),
+  @JsonSubTypes.Type(value = SystemMessage.class, name = "system"),
+  @JsonSubTypes.Type(value = OrderMessage.class, name = "order")
 })
 public sealed interface InboundMessage permits AbstractInboundMessage {
 
@@ -71,8 +71,7 @@ public sealed interface InboundMessage permits AbstractInboundMessage {
    *
    * @return the sender's WhatsApp ID
    */
-  @NonNull
-  String from();
+  @NonNull String from();
 
   /**
    * Returns the unique message ID assigned by WhatsApp.
@@ -88,16 +87,14 @@ public sealed interface InboundMessage permits AbstractInboundMessage {
    *
    * @return the unique message ID
    */
-  @NonNull
-  String id();
+  @NonNull String id();
 
   /**
    * Returns the message timestamp (Unix epoch seconds).
    *
    * @return the message timestamp
    */
-  @NonNull
-  String timestamp();
+  @NonNull String timestamp();
 
   /**
    * Returns the message type identifier.
@@ -107,8 +104,7 @@ public sealed interface InboundMessage permits AbstractInboundMessage {
    *
    * @return the message type
    */
-  @NonNull
-  String type();
+  @NonNull String type();
 
   /**
    * Returns the message context if this is a reply to another message.
@@ -118,8 +114,7 @@ public sealed interface InboundMessage permits AbstractInboundMessage {
    *
    * @return the message context, or null if not a reply
    */
-  @Nullable
-  MessageContext context();
+  @Nullable MessageContext context();
 
   /**
    * Extracts the primary text content from this inbound message.
@@ -142,9 +137,11 @@ public sealed interface InboundMessage permits AbstractInboundMessage {
       case ImageMessage img -> img.caption != null ? "[Image: " + img.caption + "]" : "[Image]";
       case VideoMessage vid -> vid.caption != null ? "[Video: " + vid.caption + "]" : "[Video]";
       case AudioMessage __ -> "[Audio message]";
-      case DocumentMessage doc -> doc.filename != null ? "[Document: " + doc.filename + "]" : "[Document]";
+      case DocumentMessage doc ->
+          doc.filename != null ? "[Document: " + doc.filename + "]" : "[Document]";
       case StickerMessage __ -> "[Sticker]";
-      case LocationMessage loc -> String.format("[Location: %.6f, %.6f]", loc.latitude, loc.longitude);
+      case LocationMessage loc ->
+          String.format("[Location: %.6f, %.6f]", loc.latitude, loc.longitude);
       case InteractiveMessage inter -> extractInteractiveContent(inter);
       case ReactionMessage react -> react.emoji != null ? react.emoji : "";
       case SystemMessage __ -> "[System message]";

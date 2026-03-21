@@ -1,12 +1,12 @@
 package com.paragon.responses.json;
 
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.exc.MismatchedInputException;
 import com.paragon.responses.spec.Coordinate;
 import com.paragon.responses.spec.MoveAction;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.exc.MismatchedInputException;
 
 /**
  * Custom deserializer for MoveAction to handle @JsonUnwrapped Coordinate.
@@ -17,7 +17,8 @@ import com.paragon.responses.spec.MoveAction;
 public class MoveActionDeserializer extends ValueDeserializer<MoveAction> {
 
   @Override
-  public MoveAction deserialize(JsonParser p, DeserializationContext ctxt) throws tools.jackson.core.JacksonException {
+  public MoveAction deserialize(JsonParser p, DeserializationContext ctxt)
+      throws tools.jackson.core.JacksonException {
     JsonNode node = p.readValueAsTree();
 
     if (!node.has("x") || node.get("x").isNull()) {

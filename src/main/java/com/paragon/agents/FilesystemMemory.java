@@ -1,7 +1,5 @@
 package com.paragon.agents;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.json.ParagonJavaTimeModule;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.NonNull;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Durable filesystem-backed implementation of {@link Memory}.
@@ -23,7 +23,8 @@ import org.jspecify.annotations.NonNull;
  * <p>Persists each user's memories as a JSON file at {@code baseDir/{userId}.json}. Survives JVM
  * restarts and enables long-running, multi-session agent workflows.
  *
- * <p>Thread-safe via per-user read/write locks. Writes are atomic (write to temp file, then rename).
+ * <p>Thread-safe via per-user read/write locks. Writes are atomic (write to temp file, then
+ * rename).
  *
  * <p>Example usage:
  *
@@ -64,10 +65,7 @@ public final class FilesystemMemory implements Memory {
    */
   public static @NonNull FilesystemMemory create(@NonNull Path baseDir) {
     ObjectMapper mapper =
-        new ObjectMapper()
-            .rebuild()
-            .addModule(new ParagonJavaTimeModule())
-            .build();
+        new ObjectMapper().rebuild().addModule(new ParagonJavaTimeModule()).build();
     return new FilesystemMemory(baseDir, mapper);
   }
 
@@ -87,11 +85,13 @@ public final class FilesystemMemory implements Memory {
   public void add(@NonNull String userId, @NonNull MemoryEntry entry) {
     Objects.requireNonNull(userId, "userId cannot be null");
     Objects.requireNonNull(entry, "entry cannot be null");
-    withWriteLock(userId, () -> {
-      Map<String, MemoryEntry> storage = loadUserStorage(userId);
-      storage.put(entry.id(), entry);
-      saveUserStorage(userId, storage);
-    });
+    withWriteLock(
+        userId,
+        () -> {
+          Map<String, MemoryEntry> storage = loadUserStorage(userId);
+          storage.put(entry.id(), entry);
+          saveUserStorage(userId, storage);
+        });
   }
 
   @Override
@@ -103,21 +103,23 @@ public final class FilesystemMemory implements Memory {
       return List.of();
     }
 
-    return withReadLock(userId, () -> {
-      Map<String, MemoryEntry> storage = loadUserStorage(userId);
-      if (storage.isEmpty()) {
-        return List.of();
-      }
+    return withReadLock(
+        userId,
+        () -> {
+          Map<String, MemoryEntry> storage = loadUserStorage(userId);
+          if (storage.isEmpty()) {
+            return List.of();
+          }
 
-      String queryLower = query.toLowerCase();
-      return storage.values().stream()
-          .map(e -> new ScoredEntry(e, scoreRelevance(e, queryLower)))
-          .filter(s -> s.score > 0)
-          .sorted(Comparator.comparingDouble(ScoredEntry::score).reversed())
-          .limit(limit)
-          .map(ScoredEntry::entry)
-          .collect(Collectors.toList());
-    });
+          String queryLower = query.toLowerCase();
+          return storage.values().stream()
+              .map(e -> new ScoredEntry(e, scoreRelevance(e, queryLower)))
+              .filter(s -> s.score > 0)
+              .sorted(Comparator.comparingDouble(ScoredEntry::score).reversed())
+              .limit(limit)
+              .map(ScoredEntry::entry)
+              .collect(Collectors.toList());
+        });
   }
 
   @Override
@@ -125,30 +127,34 @@ public final class FilesystemMemory implements Memory {
     Objects.requireNonNull(userId, "userId cannot be null");
     Objects.requireNonNull(id, "id cannot be null");
     Objects.requireNonNull(entry, "entry cannot be null");
-    withWriteLock(userId, () -> {
-      Map<String, MemoryEntry> storage = loadUserStorage(userId);
-      if (!storage.containsKey(id)) {
-        throw new IllegalArgumentException(
-            "Memory with id '" + id + "' not found for user '" + userId + "'");
-      }
-      storage.remove(id);
-      storage.put(entry.id(), entry);
-      saveUserStorage(userId, storage);
-    });
+    withWriteLock(
+        userId,
+        () -> {
+          Map<String, MemoryEntry> storage = loadUserStorage(userId);
+          if (!storage.containsKey(id)) {
+            throw new IllegalArgumentException(
+                "Memory with id '" + id + "' not found for user '" + userId + "'");
+          }
+          storage.remove(id);
+          storage.put(entry.id(), entry);
+          saveUserStorage(userId, storage);
+        });
   }
 
   @Override
   public boolean delete(@NonNull String userId, @NonNull String id) {
     Objects.requireNonNull(userId, "userId cannot be null");
     Objects.requireNonNull(id, "id cannot be null");
-    return withWriteLock(userId, () -> {
-      Map<String, MemoryEntry> storage = loadUserStorage(userId);
-      boolean removed = storage.remove(id) != null;
-      if (removed) {
-        saveUserStorage(userId, storage);
-      }
-      return removed;
-    });
+    return withWriteLock(
+        userId,
+        () -> {
+          Map<String, MemoryEntry> storage = loadUserStorage(userId);
+          boolean removed = storage.remove(id) != null;
+          if (removed) {
+            saveUserStorage(userId, storage);
+          }
+          return removed;
+        });
   }
 
   @Override
@@ -166,14 +172,16 @@ public final class FilesystemMemory implements Memory {
   @Override
   public void clear(@NonNull String userId) {
     Objects.requireNonNull(userId, "userId cannot be null");
-    withWriteLock(userId, () -> {
-      Path userFile = userFilePath(userId);
-      try {
-        Files.deleteIfExists(userFile);
-      } catch (IOException e) {
-        throw new IllegalStateException("Failed to clear memory for user: " + userId, e);
-      }
-    });
+    withWriteLock(
+        userId,
+        () -> {
+          Path userFile = userFilePath(userId);
+          try {
+            Files.deleteIfExists(userFile);
+          } catch (IOException e) {
+            throw new IllegalStateException("Failed to clear memory for user: " + userId, e);
+          }
+        });
   }
 
   @Override
@@ -181,13 +189,16 @@ public final class FilesystemMemory implements Memory {
     try {
       if (Files.exists(baseDir)) {
         try (var stream = Files.list(baseDir)) {
-          stream.filter(p -> p.toString().endsWith(".json")).forEach(p -> {
-            try {
-              Files.deleteIfExists(p);
-            } catch (IOException e) {
-              throw new IllegalStateException("Failed to delete memory file: " + p, e);
-            }
-          });
+          stream
+              .filter(p -> p.toString().endsWith(".json"))
+              .forEach(
+                  p -> {
+                    try {
+                      Files.deleteIfExists(p);
+                    } catch (IOException e) {
+                      throw new IllegalStateException("Failed to delete memory file: " + p, e);
+                    }
+                  });
         }
       }
     } catch (IOException e) {
@@ -222,12 +233,16 @@ public final class FilesystemMemory implements Memory {
     Path tempFile = file.getParent().resolve(file.getFileName() + ".tmp");
     try {
       objectMapper.writerWithDefaultPrettyPrinter().writeValue(tempFile.toFile(), storage);
-      Files.move(tempFile, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+      Files.move(
+          tempFile,
+          file,
+          java.nio.file.StandardCopyOption.REPLACE_EXISTING,
           java.nio.file.StandardCopyOption.ATOMIC_MOVE);
     } catch (IOException e) {
       try {
         Files.deleteIfExists(tempFile);
-      } catch (IOException ignored) {}
+      } catch (IOException ignored) {
+      }
       throw new IllegalStateException("Failed to save memory for user: " + userId, e);
     }
   }

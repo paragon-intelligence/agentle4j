@@ -1,7 +1,5 @@
 package com.paragon.prompts;
 
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.http.RetryPolicy;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -16,6 +14,8 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * A {@link PromptProvider} that retrieves prompts from the Langfuse API.

@@ -2,8 +2,6 @@ package com.paragon.responses.spec;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.annotations.FunctionMetadata;
 import com.paragon.responses.json.JacksonJsonSchemaProducer;
 import com.paragon.responses.json.JsonSchemaProducer;
@@ -12,6 +10,8 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Defines a function in your own code the model can choose to call. Learn more about function
@@ -195,8 +195,8 @@ public abstract non-sealed class FunctionTool<P extends Record> implements Tool 
   /**
    * Returns whether this tool is client-side only and terminates the agentic loop immediately.
    *
-   * <p>When true, the framework skips history persistence and tool execution, returning
-   * {@code AgentResult.clientSideTool()} instead.
+   * <p>When true, the framework skips history persistence and tool execution, returning {@code
+   * AgentResult.clientSideTool()} instead.
    *
    * @return true if this tool stops the loop, false otherwise
    */

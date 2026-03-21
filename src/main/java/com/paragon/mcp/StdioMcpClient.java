@@ -1,6 +1,5 @@
 package com.paragon.mcp;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.mcp.dto.JsonRpcRequest;
 import com.paragon.mcp.dto.JsonRpcResponse;
 import java.io.BufferedReader;
@@ -19,6 +18,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * MCP client that communicates with a subprocess via stdio.

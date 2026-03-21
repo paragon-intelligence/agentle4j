@@ -2,9 +2,9 @@ package com.paragon.web;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.Test;
 
 /**
  * Tests for supporting types in the web package: - Viewport - Location - ProxyMode - PdfFormat -

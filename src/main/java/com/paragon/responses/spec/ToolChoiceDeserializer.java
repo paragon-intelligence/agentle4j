@@ -1,13 +1,13 @@
 package com.paragon.responses.spec;
 
+import com.paragon.responses.ResponsesApiObjectMapper;
+import java.util.List;
 import tools.jackson.core.JsonParser;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.ValueDeserializer;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import com.paragon.responses.ResponsesApiObjectMapper;
-import java.util.List;
+import tools.jackson.databind.ValueDeserializer;
 
 /**
  * Custom deserializer for {@link ToolChoice} to handle polymorphic deserialization.

@@ -1,11 +1,10 @@
 package com.paragon.responses.json;
 
+import com.paragon.responses.spec.CustomToolCall;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.jsontype.TypeSerializer;
 import tools.jackson.databind.ser.std.StdSerializer;
-import com.paragon.responses.spec.CustomToolCall;
-import java.io.IOException;
 
 /** Serializer that enforces the correct wire format for {@link CustomToolCall}. */
 public class CustomToolCallSerializer extends StdSerializer<CustomToolCall> {
@@ -38,4 +37,3 @@ public class CustomToolCallSerializer extends StdSerializer<CustomToolCall> {
     gen.writeEndObject();
   }
 }
-

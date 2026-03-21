@@ -151,8 +151,8 @@ public final class NetworkStream {
   }
 
   /**
-   * Called when a peer's result is an error. Fires alongside {@code onPeerComplete} only when
-   * the peer result has {@code isError() == true}.
+   * Called when a peer's result is an error. Fires alongside {@code onPeerComplete} only when the
+   * peer result has {@code isError() == true}.
    *
    * @param callback receives the peer and its errored result
    * @return this stream

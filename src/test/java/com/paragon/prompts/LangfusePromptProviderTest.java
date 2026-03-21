@@ -2,7 +2,6 @@ package com.paragon.prompts;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.http.RetryPolicy;
 import java.time.Duration;
 import java.util.Map;
@@ -15,6 +14,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /** Tests for {@link LangfusePromptProvider}. */
 class LangfusePromptProviderTest {

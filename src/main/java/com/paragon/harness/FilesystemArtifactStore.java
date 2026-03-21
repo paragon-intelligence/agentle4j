@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -18,10 +17,11 @@ import org.jspecify.annotations.NonNull;
  * Filesystem-backed implementation of {@link ArtifactStore}.
  *
  * <p>Artifacts are stored as files in the pattern:
+ *
  * <pre>{@code baseDir/{name}/{version}.txt}</pre>
  *
- * <p>Versions are epoch-millisecond timestamps. The "latest" version is the file with the
- * highest timestamp. Atomic writes are used to prevent partial file reads.
+ * <p>Versions are epoch-millisecond timestamps. The "latest" version is the file with the highest
+ * timestamp. Atomic writes are used to prevent partial file reads.
  *
  * @see ArtifactStore
  * @since 1.0
@@ -61,9 +61,15 @@ public final class FilesystemArtifactStore implements ArtifactStore {
       Files.createDirectories(artifactDir);
       Path versionFile = artifactDir.resolve(version + ".txt");
       Path tempFile = artifactDir.resolve(version + ".tmp");
-      Files.writeString(tempFile, content, StandardCharsets.UTF_8,
-          StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-      Files.move(tempFile, versionFile,
+      Files.writeString(
+          tempFile,
+          content,
+          StandardCharsets.UTF_8,
+          StandardOpenOption.CREATE,
+          StandardOpenOption.TRUNCATE_EXISTING);
+      Files.move(
+          tempFile,
+          versionFile,
           java.nio.file.StandardCopyOption.REPLACE_EXISTING,
           java.nio.file.StandardCopyOption.ATOMIC_MOVE);
     } catch (IOException e) {
@@ -115,13 +121,20 @@ public final class FilesystemArtifactStore implements ArtifactStore {
     try (var stream = Files.list(artifactDir)) {
       return stream
           .filter(p -> p.toString().endsWith(".txt"))
-          .map(p -> {
-            String filename = p.getFileName().toString();
-            return filename.substring(0, filename.length() - 4); // strip .txt
-          })
-          .sorted(Comparator.comparingLong(v -> {
-            try { return Long.parseLong(v); } catch (NumberFormatException e) { return 0L; }
-          }))
+          .map(
+              p -> {
+                String filename = p.getFileName().toString();
+                return filename.substring(0, filename.length() - 4); // strip .txt
+              })
+          .sorted(
+              Comparator.comparingLong(
+                  v -> {
+                    try {
+                      return Long.parseLong(v);
+                    } catch (NumberFormatException e) {
+                      return 0L;
+                    }
+                  }))
           .collect(Collectors.toList());
     } catch (IOException e) {
       throw new IllegalStateException("Failed to list versions for artifact: " + name, e);

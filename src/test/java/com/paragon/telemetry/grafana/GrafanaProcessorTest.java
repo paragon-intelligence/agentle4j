@@ -2,7 +2,6 @@ package com.paragon.telemetry.grafana;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.telemetry.events.*;
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
@@ -14,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Tests for GrafanaProcessor builder and configuration.

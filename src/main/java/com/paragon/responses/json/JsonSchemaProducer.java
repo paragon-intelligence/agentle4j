@@ -1,10 +1,10 @@
 package com.paragon.responses.json;
 
+import java.util.Map;
+import org.jspecify.annotations.NonNull;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.ObjectMapper;
-import java.util.Map;
-import org.jspecify.annotations.NonNull;
 
 public interface JsonSchemaProducer {
   ObjectMapper TYPE_MAPPER = new ObjectMapper();

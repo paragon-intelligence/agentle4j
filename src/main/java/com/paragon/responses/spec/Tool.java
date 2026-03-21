@@ -2,9 +2,9 @@ package com.paragon.responses.spec;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.jspecify.annotations.NonNull;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
-import org.jspecify.annotations.NonNull;
 
 /**
  * Represents a tool that can be called by a Responder.

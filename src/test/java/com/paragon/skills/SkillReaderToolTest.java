@@ -22,7 +22,10 @@ class SkillReaderToolTest {
         Skill.builder()
             .name("pdf-processor")
             .description("Process PDF files, extract text, fill forms")
-            .instructions("You are a PDF processing expert.\n1. Analyze the document structure\n2. Extract or modify content")
+            .instructions(
+                "You are a PDF processing expert.\n"
+                    + "1. Analyze the document structure\n"
+                    + "2. Extract or modify content")
             .addResource("FORMS.md", "Form filling guide content here")
             .build());
     store.register(

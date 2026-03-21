@@ -22,13 +22,12 @@ import org.slf4j.LoggerFactory;
  * A richly annotated agent definition record designed for <b>LLM structured output</b>.
  *
  * <p>Every field carries a {@link JsonPropertyDescription} that produces a JSON Schema description.
- * When used as the output type of {@code interactStructured()}, the LLM sees these descriptions
- * and knows exactly what each field means.
+ * When used as the output type of {@code interactStructured()}, the LLM sees these descriptions and
+ * knows exactly what each field means.
  *
  * <p>This record contains <b>only behavioral fields</b> — things the LLM can reason about.
- * Infrastructure concerns (model, API provider, API keys, HTTP config) are provided externally
- * via {@link #toInteractable(Responder, String)} or
- * {@link #toInteractable(Responder, String, List)}.
+ * Infrastructure concerns (model, API provider, API keys, HTTP config) are provided externally via
+ * {@link #toInteractable(Responder, String)} or {@link #toInteractable(Responder, String, List)}.
  *
  * <h2>Meta-Agent Pattern</h2>
  *
@@ -68,8 +67,7 @@ public record AgentDefinition(
             "Unique name for this agent. Used for identification in logs, handoffs, and"
                 + " multi-agent systems. Should be descriptive and concise. Examples:"
                 + " 'CustomerSupport', 'CodeReviewer', 'TranslationAgent', 'DataAnalyst'.")
-        @NonNull
-        String name,
+        @NonNull String name,
     @JsonProperty(value = "instructions", required = true)
         @JsonPropertyDescription(
             "System prompt that defines the agent's personality, behavior, constraints, and"
@@ -77,8 +75,7 @@ public record AgentDefinition(
                 + " agent does. Write clear, specific, and detailed instructions. Use newlines"
                 + " to separate sections. Include guidelines, prohibited actions, output"
                 + " formatting rules, and domain-specific knowledge.")
-        @NonNull
-        String instructions,
+        @NonNull String instructions,
     @JsonProperty(value = "maxTurns", required = true)
         @JsonPropertyDescription(
             "Maximum number of LLM turns in the agentic loop. Each tool call consumes one"
@@ -92,8 +89,7 @@ public record AgentDefinition(
                 + " 0.7 = balanced (good default), 1.0 = creative, 2.0 = very random. Use low"
                 + " values (0.0-0.3) for factual/analytical tasks, medium (0.5-0.8) for general"
                 + " conversation, high (0.8-1.2) for creative writing.")
-        @Nullable
-        Double temperature,
+        @Nullable Double temperature,
     @JsonProperty("toolNames")
         @JsonPropertyDescription(
             "Names of tools this agent should have access to. These are human-readable names"
@@ -101,8 +97,7 @@ public record AgentDefinition(
                 + " 'search_knowledge_base', 'create_ticket', 'lookup_order'). The available"
                 + " tools and their descriptions should be listed in your instructions. Omit if"
                 + " the agent needs no tools.")
-        @Nullable
-        List<String> toolNames,
+        @Nullable List<String> toolNames,
     @JsonProperty("inputGuardrails")
         @JsonPropertyDescription(
             "Names of input guardrails to apply before user input reaches the LLM. These are"
@@ -110,24 +105,21 @@ public record AgentDefinition(
                 + " 'profanity_filter', 'max_length', 'topic_filter'). The available guardrails"
                 + " and their behaviors should be listed in your instructions. Omit if no input"
                 + " validation is needed.")
-        @Nullable
-        List<String> inputGuardrails,
+        @Nullable List<String> inputGuardrails,
     @JsonProperty("outputGuardrails")
         @JsonPropertyDescription(
             "Names of output guardrails to apply before returning LLM responses to the user."
                 + " Same format as input guardrails. Use these to filter PII, enforce"
                 + " formatting, or block inappropriate content. Omit if no output validation is"
                 + " needed.")
-        @Nullable
-        List<String> outputGuardrails,
+        @Nullable List<String> outputGuardrails,
     @JsonProperty("handoffs")
         @JsonPropertyDescription(
             "Other agents that this agent can delegate conversations to. When the agent"
                 + " detects that a user's request falls outside its expertise, it hands off to"
                 + " a specialized agent. Each handoff defines the target agent inline. Omit if"
                 + " the agent operates standalone.")
-        @Nullable
-        List<HandoffAgentDef> handoffs,
+        @Nullable List<HandoffAgentDef> handoffs,
     @JsonProperty("outputType")
         @JsonPropertyDescription(
             "Fully qualified class name (FQCN) of a Java record or class to use for structured"
@@ -136,8 +128,7 @@ public record AgentDefinition(
                 + " must be on the classpath and have Jackson-compatible fields. Examples:"
                 + " 'com.acme.models.Person', 'com.acme.models.AnalysisReport'. Omit for"
                 + " plain text responses.")
-        @Nullable
-        String outputType,
+        @Nullable String outputType,
     @JsonProperty("contextManagement")
         @JsonPropertyDescription(
             "Strategy for managing the conversation context window. When conversation history"
@@ -145,42 +136,34 @@ public record AgentDefinition(
                 + " 'sliding' to trim old messages (simple, fast) or 'summarization' to"
                 + " compress history into a summary (preserves more context). Omit to use no"
                 + " context management.")
-        @Nullable
-        ContextDef contextManagement) {
+        @Nullable ContextDef contextManagement) {
 
   private static final Logger log = LoggerFactory.getLogger(AgentDefinition.class);
 
   // ===== Nested Records =====
 
-  /**
-   * Definition of an agent that this agent can hand off to. Defines the target agent inline.
-   */
+  /** Definition of an agent that this agent can hand off to. Defines the target agent inline. */
   public record HandoffAgentDef(
       @JsonProperty(value = "name", required = true)
           @JsonPropertyDescription(
               "A short, unique name for this handoff. Used as the tool name the LLM calls to"
                   + " trigger the handoff. Should be snake_case. Examples:"
                   + " 'escalate_to_billing', 'transfer_to_specialist'.")
-          @NonNull
-          String name,
+          @NonNull String name,
       @JsonProperty(value = "description", required = true)
           @JsonPropertyDescription(
               "Description of WHEN this handoff should be triggered. The LLM reads this to"
                   + " decide whether to route the conversation. Be specific about the domains,"
                   + " topics, or signals. Example: 'Transfer to billing for invoices, refunds,"
                   + " and payment disputes'.")
-          @NonNull
-          String description,
+          @NonNull String description,
       @JsonProperty(value = "target", required = true)
           @JsonPropertyDescription(
               "The target agent definition that will handle the conversation after handoff."
                   + " This is a full AgentDefinition — define the specialist agent inline.")
-          @NonNull
-          AgentDefinition target) {}
+          @NonNull AgentDefinition target) {}
 
-  /**
-   * Context window management strategy configuration.
-   */
+  /** Context window management strategy configuration. */
   public record ContextDef(
       @JsonProperty(value = "strategyType", required = true)
           @JsonPropertyDescription(
@@ -188,8 +171,7 @@ public record AgentDefinition(
                   + " (simple, fast, recommended for most use cases), 'summarization' compresses"
                   + " old messages into a summary (preserves more context but costs an extra API"
                   + " call).")
-          @NonNull
-          String strategyType,
+          @NonNull String strategyType,
       @JsonProperty(value = "maxTokens", required = true)
           @JsonPropertyDescription(
               "Maximum number of tokens to keep in the context window. When exceeded, the"
@@ -200,26 +182,22 @@ public record AgentDefinition(
           @JsonPropertyDescription(
               "For 'sliding' strategy only: whether to keep system/developer messages when"
                   + " trimming old conversation history. Recommended: true.")
-          @Nullable
-          Boolean preserveDeveloperMessages,
+          @Nullable Boolean preserveDeveloperMessages,
       @JsonProperty("summarizationModel")
           @JsonPropertyDescription(
               "For 'summarization' strategy only: the model to use for summarizing old"
                   + " messages. Should be a fast, cheap model. Example: 'openai/gpt-4o-mini'.")
-          @Nullable
-          String summarizationModel,
+          @Nullable String summarizationModel,
       @JsonProperty("keepRecentMessages")
           @JsonPropertyDescription(
               "For 'summarization' strategy only: number of recent messages to keep verbatim"
                   + " (not summarized). Recommended: 3-10.")
-          @Nullable
-          Integer keepRecentMessages,
+          @Nullable Integer keepRecentMessages,
       @JsonProperty("summarizationPrompt")
           @JsonPropertyDescription(
               "For 'summarization' strategy only: custom prompt for the summarization. Omit"
                   + " to use the built-in default.")
-          @Nullable
-          String summarizationPrompt) {
+          @Nullable String summarizationPrompt) {
 
     /** Converts to the blueprint's {@link ContextBlueprint}. */
     public ContextBlueprint toContextBlueprint() {
@@ -240,8 +218,8 @@ public record AgentDefinition(
    * Reconstructs a fully functional {@link Interactable} agent.
    *
    * <p>The caller provides all infrastructure: the Responder (API client) and the model to use.
-   * Tool names from the definition are matched against the provided available tools by
-   * comparing each tool's {@code name()} (from {@code @FunctionMetadata}).
+   * Tool names from the definition are matched against the provided available tools by comparing
+   * each tool's {@code name()} (from {@code @FunctionMetadata}).
    *
    * <pre>{@code
    * List<FunctionTool<?>> tools = List.of(searchTool, ticketTool, refundTool);
@@ -250,8 +228,8 @@ public record AgentDefinition(
    *
    * @param responder the Responder for LLM API calls
    * @param model the LLM model identifier (e.g., "openai/gpt-4o")
-   * @param availableTools all tools the agent may use; only those matching {@link #toolNames()}
-   *     are attached
+   * @param availableTools all tools the agent may use; only those matching {@link #toolNames()} are
+   *     attached
    * @return a fully functional Agent
    */
   public @NonNull Interactable toInteractable(
@@ -281,14 +259,17 @@ public record AgentDefinition(
     // Resolve tools by name
     if (toolNames != null && !toolNames.isEmpty()) {
       Map<String, FunctionTool<?>> toolMap =
-          availableTools.stream().collect(Collectors.toMap(FunctionTool::getName, t -> t, (a, b) -> a));
+          availableTools.stream()
+              .collect(Collectors.toMap(FunctionTool::getName, t -> t, (a, b) -> a));
       for (String toolName : toolNames) {
         FunctionTool<?> tool = toolMap.get(toolName);
         if (tool != null) {
           builder.addTool(tool);
         } else {
-          log.warn("Tool '{}' requested by AgentDefinition '{}' not found in available tools",
-              toolName, name);
+          log.warn(
+              "Tool '{}' requested by AgentDefinition '{}' not found in available tools",
+              toolName,
+              name);
         }
       }
     }
@@ -340,21 +321,20 @@ public record AgentDefinition(
   /**
    * Reconstructs a fully functional {@link Interactable} agent without tools.
    *
-   * <p>Convenience overload for agents that don't use tools. Any tool names in the definition
-   * are ignored.
+   * <p>Convenience overload for agents that don't use tools. Any tool names in the definition are
+   * ignored.
    *
    * @param responder the Responder for LLM API calls
    * @param model the LLM model identifier
    * @return a fully functional Agent
    */
-  public @NonNull Interactable toInteractable(
-      @NonNull Responder responder, @NonNull String model) {
+  public @NonNull Interactable toInteractable(@NonNull Responder responder, @NonNull String model) {
     return toInteractable(responder, model, List.of());
   }
 
   /**
-   * Converts this definition to an {@link AgentBlueprint}, bridging to the blueprint
-   * serialization system.
+   * Converts this definition to an {@link AgentBlueprint}, bridging to the blueprint serialization
+   * system.
    *
    * <p>Requires a {@link ResponderBlueprint} and a model because blueprints are self-contained.
    *
@@ -370,7 +350,8 @@ public record AgentDefinition(
 
     // Resolve tool names → class names
     Map<String, FunctionTool<?>> toolMap =
-        availableTools.stream().collect(Collectors.toMap(FunctionTool::getName, t -> t, (a, b) -> a));
+        availableTools.stream()
+            .collect(Collectors.toMap(FunctionTool::getName, t -> t, (a, b) -> a));
     List<String> toolClassNames = new ArrayList<>();
     if (toolNames != null) {
       for (String toolName : toolNames) {
@@ -427,9 +408,9 @@ public record AgentDefinition(
   /**
    * Creates an {@link AgentDefinition} from an existing {@link AgentBlueprint}.
    *
-   * <p>Infrastructure fields (model, responder) are stripped; behavioral fields are preserved.
-   * Tool class names are reverse-looked-up against the provided tools to recover human-readable
-   * names. If a tool class name can't be resolved, it is skipped.
+   * <p>Infrastructure fields (model, responder) are stripped; behavioral fields are preserved. Tool
+   * class names are reverse-looked-up against the provided tools to recover human-readable names.
+   * If a tool class name can't be resolved, it is skipped.
    *
    * @param blueprint the source blueprint
    * @param availableTools tools for reverse name lookup
@@ -441,7 +422,8 @@ public record AgentDefinition(
     // Reverse-lookup: class name → tool name
     Map<String, String> classToName =
         availableTools.stream()
-            .collect(Collectors.toMap(t -> t.getClass().getName(), FunctionTool::getName, (a, b) -> a));
+            .collect(
+                Collectors.toMap(t -> t.getClass().getName(), FunctionTool::getName, (a, b) -> a));
 
     List<String> toolNamesList = new ArrayList<>();
     for (String fqcn : blueprint.toolClassNames()) {
@@ -503,8 +485,8 @@ public record AgentDefinition(
   }
 
   /**
-   * Creates an {@link AgentDefinition} from an existing {@link AgentBlueprint} without tool
-   * name resolution.
+   * Creates an {@link AgentDefinition} from an existing {@link AgentBlueprint} without tool name
+   * resolution.
    *
    * @param blueprint the source blueprint
    * @return an AgentDefinition (tool names will be empty since they can't be resolved)

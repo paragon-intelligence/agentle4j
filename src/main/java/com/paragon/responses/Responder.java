@@ -1,7 +1,5 @@
 package com.paragon.responses;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.http.RetryPolicy;
 import com.paragon.responses.json.JacksonJsonSchemaProducer;
 import com.paragon.responses.json.JsonSchemaProducer;
@@ -28,6 +26,8 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Core class for sending requests to the Responses API.

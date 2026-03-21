@@ -1,8 +1,5 @@
 package com.paragon.agents;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.JavaType;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.TraceMetadata;
 import com.paragon.responses.json.StructuredOutputDefinition;
@@ -17,6 +14,9 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Implements the Supervisor pattern: a central agent that coordinates multiple worker agents.
@@ -230,17 +230,18 @@ public final class SupervisorAgent implements Interactable {
       return stream;
     }
     Map<String, Worker> workersByToolName = buildWorkerToolNameMap();
-    return stream.onToolExecuted(exec -> {
-      Worker worker = workersByToolName.get(exec.toolName());
-      if (worker != null) {
-        if (onWorkerInvoked != null) {
-          onWorkerInvoked.accept(worker, exec);
-        }
-        if (onWorkerComplete != null) {
-          onWorkerComplete.accept(worker, exec);
-        }
-      }
-    });
+    return stream.onToolExecuted(
+        exec -> {
+          Worker worker = workersByToolName.get(exec.toolName());
+          if (worker != null) {
+            if (onWorkerInvoked != null) {
+              onWorkerInvoked.accept(worker, exec);
+            }
+            if (onWorkerComplete != null) {
+              onWorkerComplete.accept(worker, exec);
+            }
+          }
+        });
   }
 
   private @NonNull Map<String, Worker> buildWorkerToolNameMap() {

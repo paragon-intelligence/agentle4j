@@ -1,13 +1,13 @@
 package com.paragon.responses.json;
 
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.BeanProperty;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.DatabindException;
-import tools.jackson.databind.JavaType;
 import java.util.Arrays;
 import java.util.stream.Collectors;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.BeanProperty;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ValueDeserializer;
 
 /**
  * Custom Jackson deserializer that converts lowercase strings to enum values. Multi-word enums with
@@ -18,8 +18,7 @@ import java.util.stream.Collectors;
  *
  * <p>Throws a descriptive DatabindException if the value doesn't match any enum constant.
  */
-public class LowercaseEnumDeserializer extends ValueDeserializer<Enum<?>>
-     {
+public class LowercaseEnumDeserializer extends ValueDeserializer<Enum<?>> {
 
   private Class<? extends Enum<?>> enumType;
 
@@ -32,7 +31,8 @@ public class LowercaseEnumDeserializer extends ValueDeserializer<Enum<?>>
   }
 
   @Override
-  public Enum<?> deserialize(JsonParser p, DeserializationContext ctxt) throws tools.jackson.core.JacksonException {
+  public Enum<?> deserialize(JsonParser p, DeserializationContext ctxt)
+      throws tools.jackson.core.JacksonException {
     if (enumType == null) {
       throw DatabindException.from(
           p, "LowercaseEnumDeserializer requires an enum type from contextual deserialization");

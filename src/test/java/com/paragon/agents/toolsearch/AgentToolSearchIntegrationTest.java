@@ -2,9 +2,7 @@ package com.paragon.agents.toolsearch;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.agents.Agent;
-import com.paragon.agents.AgentResult;
 import com.paragon.responses.Responder;
 import com.paragon.responses.annotations.FunctionMetadata;
 import com.paragon.responses.spec.FunctionTool;
@@ -14,6 +12,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.*;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Integration tests verifying that Agent correctly uses ToolRegistry for dynamic tool selection.
@@ -51,7 +50,9 @@ class AgentToolSearchIntegrationTest {
     }
   }
 
-  @FunctionMetadata(name = "always_present", description = "A critical tool that must always be present")
+  @FunctionMetadata(
+      name = "always_present",
+      description = "A critical tool that must always be present")
   public static class AlwaysPresentTool extends FunctionTool<EmptyArgs> {
     @Override
     public FunctionToolCallOutput call(EmptyArgs params) {
@@ -277,9 +278,8 @@ class AgentToolSearchIntegrationTest {
               .build();
 
       // All tools should be registered via the tool registry
-      List<String> allToolNames = agent.toolRegistry().allTools().stream()
-          .map(FunctionTool::getName)
-          .toList();
+      List<String> allToolNames =
+          agent.toolRegistry().allTools().stream().map(FunctionTool::getName).toList();
       assertTrue(allToolNames.contains("always_present"));
       assertTrue(allToolNames.contains("get_weather"));
       assertTrue(allToolNames.contains("send_email"));

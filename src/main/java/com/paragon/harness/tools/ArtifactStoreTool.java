@@ -38,9 +38,7 @@ public final class ArtifactStoreTool {
   public static @NonNull List<FunctionTool<?>> all(@NonNull ArtifactStore store) {
     Objects.requireNonNull(store, "store cannot be null");
     return List.of(
-        new WriteArtifactTool(store),
-        new ReadArtifactTool(store),
-        new ListArtifactsTool(store));
+        new WriteArtifactTool(store), new ReadArtifactTool(store), new ListArtifactsTool(store));
   }
 
   // ===== Request Records =====
@@ -93,9 +91,10 @@ public final class ArtifactStoreTool {
     public @Nullable FunctionToolCallOutput call(@Nullable ReadArtifactRequest params) {
       if (params == null) return FunctionToolCallOutput.error("No parameters provided");
       try {
-        Optional<String> content = params.version() != null
-            ? store.read(params.name(), params.version())
-            : store.read(params.name());
+        Optional<String> content =
+            params.version() != null
+                ? store.read(params.name(), params.version())
+                : store.read(params.name());
         return content.isPresent()
             ? FunctionToolCallOutput.success(content.get())
             : FunctionToolCallOutput.error("Artifact not found: " + params.name());
@@ -105,9 +104,7 @@ public final class ArtifactStoreTool {
     }
   }
 
-  @FunctionMetadata(
-      name = "list_artifacts",
-      description = "List all artifact names in the store.")
+  @FunctionMetadata(name = "list_artifacts", description = "List all artifact names in the store.")
   public static final class ListArtifactsTool extends FunctionTool<ListArtifactsRequest> {
     private final ArtifactStore store;
 

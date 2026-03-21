@@ -2,12 +2,12 @@ package com.paragon.responses.json;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.exc.InvalidTypeIdException;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.ComputerUseAction;
 import com.paragon.responses.spec.MessageContent;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.exc.InvalidTypeIdException;
 
 /**
  * Unit tests for discriminated union error cases.

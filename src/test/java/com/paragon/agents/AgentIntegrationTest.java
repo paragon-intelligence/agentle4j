@@ -2,7 +2,6 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.exception.GuardrailException;
 import com.paragon.responses.spec.Message;
@@ -16,6 +15,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Integration tests for Agent.java covering builder validation, guardrails, error handling, and

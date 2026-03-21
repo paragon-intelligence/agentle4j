@@ -2,8 +2,6 @@ package com.paragon.telemetry.langfuse;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.telemetry.events.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -17,6 +15,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Comprehensive tests for {@link LangfuseProcessor}.

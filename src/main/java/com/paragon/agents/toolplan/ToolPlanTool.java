@@ -40,13 +40,13 @@ import org.jspecify.annotations.Nullable;
 @FunctionMetadata(
     name = "execute_tool_plan",
     description =
-        "Execute a plan of multiple tool calls with data flow between them. "
-            + "Use this when you need to call multiple tools where some depend on results of others, "
-            + "or when you want to run independent tool calls in parallel for efficiency. "
-            + "Each step has an id, a tool name, and arguments (a JSON string). "
-            + "Use \"$ref:step_id\" in arguments to reference the full output of a previous step. "
-            + "Use \"$ref:step_id.field\" to extract a specific JSON field from a previous step's output. "
-            + "List which step IDs you need in output_steps (or omit for all results).")
+        "Execute a plan of multiple tool calls with data flow between them. Use this when you need"
+            + " to call multiple tools where some depend on results of others, or when you want to"
+            + " run independent tool calls in parallel for efficiency. Each step has an id, a tool"
+            + " name, and arguments (a JSON string). Use \"$ref:step_id\" in arguments to reference"
+            + " the full output of a previous step. Use \"$ref:step_id.field\" to extract a"
+            + " specific JSON field from a previous step's output. List which step IDs you need in"
+            + " output_steps (or omit for all results).")
 public final class ToolPlanTool extends FunctionTool<ToolPlan> {
 
   private final @NonNull FunctionToolStore toolStore;
@@ -97,9 +97,9 @@ public final class ToolPlanTool extends FunctionTool<ToolPlan> {
                                 "type",
                                 "string",
                                 "description",
-                                "JSON string of arguments for the tool. May contain \"$ref:step_id\" "
-                                    + "to reference previous step output or \"$ref:step_id.field\" "
-                                    + "to extract a specific JSON field")),
+                                "JSON string of arguments for the tool. May contain"
+                                    + " \"$ref:step_id\" to reference previous step output or"
+                                    + " \"$ref:step_id.field\" to extract a specific JSON field")),
                         "required",
                         List.of("id", "tool", "arguments"),
                         "additionalProperties",
@@ -109,7 +109,8 @@ public final class ToolPlanTool extends FunctionTool<ToolPlan> {
                     "type",
                     "array",
                     "description",
-                    "IDs of steps whose results should be returned. Omit or leave empty to return all results.",
+                    "IDs of steps whose results should be returned. Omit or leave empty to return"
+                        + " all results.",
                     "items",
                     Map.of("type", "string"))),
             "required",
@@ -147,7 +148,8 @@ public final class ToolPlanTool extends FunctionTool<ToolPlan> {
     } catch (ToolPlanException e) {
       return FunctionToolCallOutput.error("Plan execution failed: " + e.getMessage());
     } catch (Exception e) {
-      return FunctionToolCallOutput.error("Unexpected error during plan execution: " + e.getMessage());
+      return FunctionToolCallOutput.error(
+          "Unexpected error during plan execution: " + e.getMessage());
     }
   }
 }

@@ -2,8 +2,6 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.prompts.Prompt;
 import com.paragon.prompts.PromptProvider;
 import com.paragon.prompts.PromptProviderRegistry;
@@ -14,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Tests for {@link InstructionSource} — all three variants, Jackson serialization, and backward
@@ -71,7 +71,8 @@ class InstructionSourceTest {
 
   @Test
   void inlineObjectDeserialization() throws Exception {
-    String json = """
+    String json =
+        """
         { "source": "inline", "text": "Custom text" }
         """;
     InstructionSource source = mapper.readValue(json, InstructionSource.class);
@@ -124,9 +125,11 @@ class InstructionSourceTest {
     Path file = tempDir.resolve("agent.txt");
     Files.writeString(file, "From file");
 
-    String json = """
+    String json =
+        """
         { "source": "file", "path": "%s" }
-        """.formatted(file.toString().replace("\\", "\\\\"));
+        """
+            .formatted(file.toString().replace("\\", "\\\\"));
     InstructionSource source = mapper.readValue(json, InstructionSource.class);
 
     assertInstanceOf(InstructionSource.FileRef.class, source);
@@ -137,23 +140,25 @@ class InstructionSourceTest {
 
   @Test
   void providerRefResolve() {
-    PromptProviderRegistry.register("test", new PromptProvider() {
-      @Override
-      public Prompt providePrompt(String promptId, Map<String, String> filters) {
-        assertEquals("my-prompt", promptId);
-        return Prompt.of("Provider content");
-      }
+    PromptProviderRegistry.register(
+        "test",
+        new PromptProvider() {
+          @Override
+          public Prompt providePrompt(String promptId, Map<String, String> filters) {
+            assertEquals("my-prompt", promptId);
+            return Prompt.of("Provider content");
+          }
 
-      @Override
-      public boolean exists(String promptId) {
-        return "my-prompt".equals(promptId);
-      }
+          @Override
+          public boolean exists(String promptId) {
+            return "my-prompt".equals(promptId);
+          }
 
-      @Override
-      public Set<String> listPromptIds() {
-        return Set.of("my-prompt");
-      }
-    });
+          @Override
+          public Set<String> listPromptIds() {
+            return Set.of("my-prompt");
+          }
+        });
 
     var source = new InstructionSource.ProviderRef("test", "my-prompt", null);
     assertEquals("Provider content", source.resolve());
@@ -161,28 +166,30 @@ class InstructionSourceTest {
 
   @Test
   void providerRefWithFilters() {
-    PromptProviderRegistry.register("langfuse", new PromptProvider() {
-      @Override
-      public Prompt providePrompt(String promptId, Map<String, String> filters) {
-        assertEquals("agent-v2", promptId);
-        assertNotNull(filters);
-        assertEquals("production", filters.get("label"));
-        return Prompt.of("Filtered content");
-      }
+    PromptProviderRegistry.register(
+        "langfuse",
+        new PromptProvider() {
+          @Override
+          public Prompt providePrompt(String promptId, Map<String, String> filters) {
+            assertEquals("agent-v2", promptId);
+            assertNotNull(filters);
+            assertEquals("production", filters.get("label"));
+            return Prompt.of("Filtered content");
+          }
 
-      @Override
-      public boolean exists(String promptId) {
-        return true;
-      }
+          @Override
+          public boolean exists(String promptId) {
+            return true;
+          }
 
-      @Override
-      public Set<String> listPromptIds() {
-        return Set.of("agent-v2");
-      }
-    });
+          @Override
+          public Set<String> listPromptIds() {
+            return Set.of("agent-v2");
+          }
+        });
 
-    var source = new InstructionSource.ProviderRef(
-        "langfuse", "agent-v2", Map.of("label", "production"));
+    var source =
+        new InstructionSource.ProviderRef("langfuse", "agent-v2", Map.of("label", "production"));
     assertEquals("Filtered content", source.resolve());
   }
 
@@ -196,19 +203,21 @@ class InstructionSourceTest {
 
   @Test
   void providerRefEmptyProviderIdThrows() {
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(
+        IllegalArgumentException.class,
         () -> new InstructionSource.ProviderRef("", "prompt", null));
   }
 
   @Test
   void providerRefEmptyPromptIdThrows() {
-    assertThrows(IllegalArgumentException.class,
-        () -> new InstructionSource.ProviderRef("test", "", null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new InstructionSource.ProviderRef("test", "", null));
   }
 
   @Test
   void providerRefJsonRoundtrip() throws Exception {
-    String json = """
+    String json =
+        """
         {
           "source": "provider",
           "providerId": "langfuse",
@@ -230,7 +239,8 @@ class InstructionSourceTest {
 
   @Test
   void agentBlueprintWithInlineInstructionsJsonRoundtrip() throws Exception {
-    String json = """
+    String json =
+        """
         {
           "type": "agent",
           "name": "TestAgent",
@@ -257,7 +267,8 @@ class InstructionSourceTest {
     Path file = tempDir.resolve("instructions.txt");
     Files.writeString(file, "Instructions from a file");
 
-    String json = """
+    String json =
+        """
         {
           "type": "agent",
           "name": "FileAgent",
@@ -273,7 +284,8 @@ class InstructionSourceTest {
           "inputGuardrails": [],
           "outputGuardrails": []
         }
-        """.formatted(file.toString().replace("\\", "\\\\"));
+        """
+            .formatted(file.toString().replace("\\", "\\\\"));
 
     InteractableBlueprint bp = mapper.readValue(json, InteractableBlueprint.class);
     InteractableBlueprint.AgentBlueprint agent = (InteractableBlueprint.AgentBlueprint) bp;

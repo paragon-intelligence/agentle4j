@@ -1,11 +1,10 @@
 package com.paragon.responses.json;
 
+import com.paragon.responses.spec.McpToolCall;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.jsontype.TypeSerializer;
 import tools.jackson.databind.ser.std.StdSerializer;
-import com.paragon.responses.spec.McpToolCall;
-import java.io.IOException;
 
 /** Serializer that enforces the correct wire format for {@link McpToolCall}. */
 public class McpToolCallSerializer extends StdSerializer<McpToolCall> {
@@ -16,10 +15,7 @@ public class McpToolCallSerializer extends StdSerializer<McpToolCall> {
 
   @Override
   public void serializeWithType(
-      McpToolCall value,
-      JsonGenerator gen,
-      SerializationContext provider,
-      TypeSerializer typeSer)
+      McpToolCall value, JsonGenerator gen, SerializationContext provider, TypeSerializer typeSer)
       throws tools.jackson.core.JacksonException {
     serialize(value, gen, provider);
   }
@@ -48,4 +44,3 @@ public class McpToolCallSerializer extends StdSerializer<McpToolCall> {
     gen.writeEndObject();
   }
 }
-

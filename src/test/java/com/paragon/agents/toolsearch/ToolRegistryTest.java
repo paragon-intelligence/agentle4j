@@ -54,8 +54,7 @@ class ToolRegistryTest {
     @Test
     @DisplayName("builds with eager tools only")
     void buildsWithEagerOnly() {
-      ToolRegistry registry =
-          ToolRegistry.builder().eagerTool(new CriticalTool()).build();
+      ToolRegistry registry = ToolRegistry.builder().eagerTool(new CriticalTool()).build();
 
       assertEquals(1, registry.eagerTools().size());
       assertTrue(registry.deferredTools().isEmpty());
@@ -107,7 +106,8 @@ class ToolRegistryTest {
       ToolRegistry registry =
           ToolRegistry.builder()
               .strategy(new BM25ToolSearchStrategy(5))
-              .deferredTools(List.of(new RareWeatherTool(), new RareEmailTool(), new RareDatabaseTool()))
+              .deferredTools(
+                  List.of(new RareWeatherTool(), new RareEmailTool(), new RareDatabaseTool()))
               .build();
 
       assertEquals(3, registry.deferredTools().size());
@@ -197,8 +197,7 @@ class ToolRegistryTest {
     @Test
     @DisplayName("returns eager tools when no deferred tools configured")
     void returnsEagerOnlyWhenNoDeferredConfigured() {
-      ToolRegistry registry =
-          ToolRegistry.builder().eagerTool(new CriticalTool()).build();
+      ToolRegistry registry = ToolRegistry.builder().eagerTool(new CriticalTool()).build();
 
       List<FunctionTool<?>> resolved = registry.resolveTools("anything");
 
@@ -244,7 +243,8 @@ class ToolRegistryTest {
     void allToolsIsUnmodifiable() {
       ToolRegistry registry = ToolRegistry.builder().eagerTool(new CriticalTool()).build();
 
-      assertThrows(UnsupportedOperationException.class,
+      assertThrows(
+          UnsupportedOperationException.class,
           () -> registry.allTools().add(new RareWeatherTool()));
     }
   }

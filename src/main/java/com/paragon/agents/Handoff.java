@@ -42,6 +42,7 @@ public final class Handoff {
   private final @NonNull String name;
   private final @NonNull String description;
   private final @NonNull Agent targetAgent;
+
   /** null = use default message; empty string = disabled */
   private final @Nullable String awarenessMessage;
 
@@ -102,9 +103,13 @@ public final class Handoff {
    */
   public @Nullable String buildAwarenessMessage(@NonNull String parentAgentName) {
     if (awarenessMessage != null && awarenessMessage.isEmpty()) return null; // disabled
-    if (awarenessMessage != null) return awarenessMessage;                   // custom
-    return "You have been transferred from agent '" + parentAgentName + "'."
-        + " You were selected because: " + description + "."
+    if (awarenessMessage != null) return awarenessMessage; // custom
+    return "You have been transferred from agent '"
+        + parentAgentName
+        + "'."
+        + " You were selected because: "
+        + description
+        + "."
         + " The conversation history above contains the full context from the previous agent."
         + " Continue from where the previous agent left off, applying your own specialization.";
   }
@@ -173,6 +178,7 @@ public final class Handoff {
     private final @NonNull Agent targetAgent;
     private @Nullable String name;
     private @Nullable String description;
+
     /** null = default; empty = disabled */
     private @Nullable String awarenessMessage = null;
 

@@ -10,7 +10,8 @@ import org.jspecify.annotations.NonNull;
  * <p>Events are emitted as Server-Sent Events (SSE) when streaming is enabled. Each event has a
  * type discriminator and sequence number for ordering.
  *
- * @see Streaming events reference: https://platform.openai.com/docs/api-reference/responses-streaming
+ * @see Streaming events reference:
+ *     https://platform.openai.com/docs/api-reference/responses-streaming
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = true)
 @JsonSubTypes({

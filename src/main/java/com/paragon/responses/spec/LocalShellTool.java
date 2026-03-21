@@ -1,9 +1,9 @@
 package com.paragon.responses.spec;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 import org.jspecify.annotations.NonNull;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /** A tool that allows the model to execute shell commands in a local environment. */
 public record LocalShellTool() implements Tool {

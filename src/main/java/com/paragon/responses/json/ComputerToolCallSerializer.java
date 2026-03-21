@@ -1,11 +1,10 @@
 package com.paragon.responses.json;
 
+import com.paragon.responses.spec.ComputerToolCall;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.jsontype.TypeSerializer;
 import tools.jackson.databind.ser.std.StdSerializer;
-import com.paragon.responses.spec.ComputerToolCall;
-import java.io.IOException;
 
 /** Serializer that enforces the correct wire format for {@link ComputerToolCall}. */
 public class ComputerToolCallSerializer extends StdSerializer<ComputerToolCall> {
@@ -37,4 +36,3 @@ public class ComputerToolCallSerializer extends StdSerializer<ComputerToolCall> 
     gen.writeEndObject();
   }
 }
-

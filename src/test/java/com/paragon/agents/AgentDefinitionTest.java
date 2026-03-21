@@ -2,16 +2,15 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.SerializationFeature;
-import com.paragon.agents.InstructionSource;
 import com.paragon.agents.InteractableBlueprint.AgentBlueprint;
 import com.paragon.agents.InteractableBlueprint.GuardrailReference;
 import com.paragon.agents.InteractableBlueprint.ResponderBlueprint;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
 
 /**
  * Tests for {@link AgentDefinition} — JSON round-trip, blueprint conversion, and structural
@@ -112,7 +111,8 @@ class AgentDefinitionTest {
   @Test
   void jsonContainsFieldWithoutModel() throws Exception {
     AgentDefinition def =
-        new AgentDefinition("TestAgent", "Instructions.", 5, null, null, null, null, null, null, null);
+        new AgentDefinition(
+            "TestAgent", "Instructions.", 5, null, null, null, null, null, null, null);
 
     String json = mapper.writeValueAsString(def);
 
@@ -126,8 +126,7 @@ class AgentDefinitionTest {
 
   @Test
   void jsonContainsPropertyDescriptions() throws Exception {
-    var schemaGen =
-        new tools.jackson.module.jsonSchema.JsonSchemaGenerator(mapper);
+    var schemaGen = new tools.jackson.module.jsonSchema.JsonSchemaGenerator(mapper);
     var schema = schemaGen.generateSchema(AgentDefinition.class);
     String schemaJson = mapper.writeValueAsString(schema);
 

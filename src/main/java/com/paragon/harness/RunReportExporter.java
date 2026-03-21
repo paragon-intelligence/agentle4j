@@ -1,24 +1,23 @@
 package com.paragon.harness;
 
-import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.NonNull;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Writes {@link AgentRunReport} instances to a filesystem directory for later analysis.
  *
- * <p>Reports are written as pretty-printed JSON files named
- * {@code {agentName}_{reportId}.json}. They can be read back via {@link #loadAll()} and
- * fed to a meta-agent via {@link com.paragon.harness.tools.FailureAnalysisTool}.
+ * <p>Reports are written as pretty-printed JSON files named {@code {agentName}_{reportId}.json}.
+ * They can be read back via {@link #loadAll()} and fed to a meta-agent via {@link
+ * com.paragon.harness.tools.FailureAnalysisTool}.
  *
  * <p>Example:
  *
@@ -71,8 +70,12 @@ public final class RunReportExporter {
     try {
       String json =
           objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(buildReportMap(report));
-      Files.writeString(reportFile, json, StandardCharsets.UTF_8,
-          StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+      Files.writeString(
+          reportFile,
+          json,
+          StandardCharsets.UTF_8,
+          StandardOpenOption.CREATE,
+          StandardOpenOption.TRUNCATE_EXISTING);
     } catch (IOException e) {
       throw new IllegalStateException("Failed to write report: " + reportFile, e);
     }
@@ -87,10 +90,8 @@ public final class RunReportExporter {
   public @NonNull List<String> loadAll() {
     if (!Files.exists(reportDir)) return List.of();
     try (var stream = Files.list(reportDir)) {
-      List<Path> jsonFiles = stream
-          .filter(p -> p.toString().endsWith(".json"))
-          .sorted()
-          .collect(Collectors.toList());
+      List<Path> jsonFiles =
+          stream.filter(p -> p.toString().endsWith(".json")).sorted().collect(Collectors.toList());
       List<String> reports = new ArrayList<>();
       for (Path file : jsonFiles) {
         try {

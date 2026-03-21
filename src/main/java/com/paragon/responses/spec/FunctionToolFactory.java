@@ -1,12 +1,12 @@
 package com.paragon.responses.spec;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.json.JacksonJsonSchemaProducer;
 import com.paragon.responses.json.JsonSchemaProducer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 import org.jspecify.annotations.NonNull;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * A factory for creating {@link FunctionTool} instances with a shared {@link JsonSchemaProducer}.

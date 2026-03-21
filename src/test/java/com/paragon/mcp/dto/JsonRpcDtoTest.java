@@ -2,10 +2,10 @@ package com.paragon.mcp.dto;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /** Tests for JSON-RPC DTO serialization and deserialization. */
 class JsonRpcDtoTest {

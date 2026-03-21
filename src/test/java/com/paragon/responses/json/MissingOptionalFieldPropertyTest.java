@@ -3,14 +3,14 @@ package com.paragon.responses.json;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ObjectNode;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.jqwik.api.*;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Property-based tests for missing optional field handling in JSON deserialization.

@@ -2,12 +2,12 @@ package com.paragon.responses.json;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.AllowedToolsMode;
 import com.paragon.responses.spec.ImageDetail;
 import com.paragon.responses.spec.MessageRole;
 import net.jqwik.api.*;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Property-based tests for enum serialization.

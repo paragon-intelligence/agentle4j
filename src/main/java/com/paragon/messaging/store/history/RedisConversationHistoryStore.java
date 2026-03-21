@@ -1,7 +1,5 @@
 package com.paragon.messaging.store.history;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.ResponseInputItem;
 import java.time.Duration;
@@ -9,6 +7,8 @@ import java.time.Instant;
 import java.util.*;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Redis-backed implementation of {@link ConversationHistoryStore}.

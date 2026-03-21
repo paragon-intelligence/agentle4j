@@ -25,10 +25,9 @@ import org.jspecify.annotations.Nullable;
  * }
  * }</pre>
  *
- * @param steps the list of steps to execute. Steps can reference each other via {@code $ref:step_id}
- *     syntax in their arguments.
+ * @param steps the list of steps to execute. Steps can reference each other via {@code
+ *     $ref:step_id} syntax in their arguments.
  * @param output_steps IDs of steps whose results should be returned to the LLM. If null or empty,
  *     all step results are returned.
  */
-public record ToolPlan(
-    @NonNull List<ToolPlanStep> steps, @Nullable List<String> output_steps) {}
+public record ToolPlan(@NonNull List<ToolPlanStep> steps, @Nullable List<String> output_steps) {}

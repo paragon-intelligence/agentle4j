@@ -121,8 +121,7 @@ class ToolPlanExecutorTest {
                   new ToolPlanStep("s1", "echo", "{\"message\": \"b\"}")),
               null);
 
-      ToolPlanException ex =
-          assertThrows(ToolPlanException.class, () -> executor.execute(plan));
+      ToolPlanException ex = assertThrows(ToolPlanException.class, () -> executor.execute(plan));
       assertEquals("s1", ex.stepId());
       assertTrue(ex.getMessage().contains("Duplicate"));
     }
@@ -130,12 +129,9 @@ class ToolPlanExecutorTest {
     @Test
     @DisplayName("throws for unknown tool name")
     void unknownTool() {
-      ToolPlan plan =
-          new ToolPlan(
-              List.of(new ToolPlanStep("s1", "nonexistent_tool", "{}")), null);
+      ToolPlan plan = new ToolPlan(List.of(new ToolPlanStep("s1", "nonexistent_tool", "{}")), null);
 
-      ToolPlanException ex =
-          assertThrows(ToolPlanException.class, () -> executor.execute(plan));
+      ToolPlanException ex = assertThrows(ToolPlanException.class, () -> executor.execute(plan));
       assertEquals("s1", ex.stepId());
       assertTrue(ex.getMessage().contains("Unknown tool"));
     }
@@ -144,11 +140,9 @@ class ToolPlanExecutorTest {
     @DisplayName("throws for recursive plan tool reference")
     void recursivePlan() {
       ToolPlan plan =
-          new ToolPlan(
-              List.of(new ToolPlanStep("s1", "execute_tool_plan", "{}")), null);
+          new ToolPlan(List.of(new ToolPlanStep("s1", "execute_tool_plan", "{}")), null);
 
-      ToolPlanException ex =
-          assertThrows(ToolPlanException.class, () -> executor.execute(plan));
+      ToolPlanException ex = assertThrows(ToolPlanException.class, () -> executor.execute(plan));
       assertTrue(ex.getMessage().contains("recursive"));
     }
   }
@@ -161,8 +155,7 @@ class ToolPlanExecutorTest {
     @DisplayName("executes a single step successfully")
     void singleStep() {
       ToolPlan plan =
-          new ToolPlan(
-              List.of(new ToolPlanStep("s1", "echo", "{\"message\": \"hello\"}")), null);
+          new ToolPlan(List.of(new ToolPlanStep("s1", "echo", "{\"message\": \"hello\"}")), null);
 
       ToolPlanResult result = executor.execute(plan);
 
@@ -178,8 +171,7 @@ class ToolPlanExecutorTest {
     void jsonOutput() {
       ToolPlan plan =
           new ToolPlan(
-              List.of(new ToolPlanStep("s1", "get_weather", "{\"location\": \"Tokyo\"}")),
-              null);
+              List.of(new ToolPlanStep("s1", "get_weather", "{\"location\": \"Tokyo\"}")), null);
 
       ToolPlanResult result = executor.execute(plan);
 
@@ -199,8 +191,7 @@ class ToolPlanExecutorTest {
           new ToolPlan(
               List.of(
                   new ToolPlanStep("s1", "echo", "{\"message\": \"hello\"}"),
-                  new ToolPlanStep(
-                      "s2", "concat", "{\"a\": \"$ref:s1\", \"b\": \"world\"}")),
+                  new ToolPlanStep("s2", "concat", "{\"a\": \"$ref:s1\", \"b\": \"world\"}")),
               null);
 
       ToolPlanResult result = executor.execute(plan);
@@ -217,8 +208,7 @@ class ToolPlanExecutorTest {
           new ToolPlan(
               List.of(
                   new ToolPlanStep("s1", "get_weather", "{\"location\": \"Tokyo\"}"),
-                  new ToolPlanStep(
-                      "s2", "echo", "{\"message\": \"$ref:s1.city\"}")),
+                  new ToolPlanStep("s2", "echo", "{\"message\": \"$ref:s1.city\"}")),
               null);
 
       ToolPlanResult result = executor.execute(plan);
@@ -234,10 +224,8 @@ class ToolPlanExecutorTest {
           new ToolPlan(
               List.of(
                   new ToolPlanStep("s1", "echo", "{\"message\": \"A\"}"),
-                  new ToolPlanStep(
-                      "s2", "concat", "{\"a\": \"$ref:s1\", \"b\": \"B\"}"),
-                  new ToolPlanStep(
-                      "s3", "concat", "{\"a\": \"$ref:s2\", \"b\": \"C\"}")),
+                  new ToolPlanStep("s2", "concat", "{\"a\": \"$ref:s1\", \"b\": \"B\"}"),
+                  new ToolPlanStep("s3", "concat", "{\"a\": \"$ref:s2\", \"b\": \"C\"}")),
               null);
 
       ToolPlanResult result = executor.execute(plan);
@@ -285,8 +273,7 @@ class ToolPlanExecutorTest {
               List.of(
                   new ToolPlanStep("a", "echo", "{\"message\": \"alpha\"}"),
                   new ToolPlanStep("b", "echo", "{\"message\": \"beta\"}"),
-                  new ToolPlanStep(
-                      "c", "concat", "{\"a\": \"$ref:a\", \"b\": \"$ref:b\"}")),
+                  new ToolPlanStep("c", "concat", "{\"a\": \"$ref:a\", \"b\": \"$ref:b\"}")),
               List.of("c"));
 
       ToolPlanResult result = executor.execute(plan);
@@ -312,8 +299,7 @@ class ToolPlanExecutorTest {
                   new ToolPlanStep("s2", "concat", "{\"a\": \"$ref:s1\", \"b\": \"y\"}")),
               null);
 
-      ToolPlanException ex =
-          assertThrows(ToolPlanException.class, () -> executor.execute(plan));
+      ToolPlanException ex = assertThrows(ToolPlanException.class, () -> executor.execute(plan));
       assertTrue(ex.getMessage().contains("Cycle"));
     }
 
@@ -321,13 +307,9 @@ class ToolPlanExecutorTest {
     @DisplayName("detects self-referencing step")
     void selfReference() {
       ToolPlan plan =
-          new ToolPlan(
-              List.of(
-                  new ToolPlanStep("s1", "echo", "{\"message\": \"$ref:s1\"}")),
-              null);
+          new ToolPlan(List.of(new ToolPlanStep("s1", "echo", "{\"message\": \"$ref:s1\"}")), null);
 
-      ToolPlanException ex =
-          assertThrows(ToolPlanException.class, () -> executor.execute(plan));
+      ToolPlanException ex = assertThrows(ToolPlanException.class, () -> executor.execute(plan));
       assertTrue(ex.getMessage().contains("Cycle"));
     }
   }
@@ -421,8 +403,7 @@ class ToolPlanExecutorTest {
           new ToolPlan(
               List.of(
                   new ToolPlanStep("s1", "fail_tool", "{}"),
-                  new ToolPlanStep(
-                      "s2", "echo", "{\"message\": \"$ref:s1\"}")),
+                  new ToolPlanStep("s2", "echo", "{\"message\": \"$ref:s1\"}")),
               null);
 
       ToolPlanResult result = executor.execute(plan);
@@ -518,8 +499,7 @@ class ToolPlanExecutorTest {
     @DisplayName("totalDuration is non-negative")
     void durationNonNegative() {
       ToolPlan plan =
-          new ToolPlan(
-              List.of(new ToolPlanStep("s1", "echo", "{\"message\": \"hi\"}")), null);
+          new ToolPlan(List.of(new ToolPlanStep("s1", "echo", "{\"message\": \"hi\"}")), null);
 
       ToolPlanResult result = executor.execute(plan);
 

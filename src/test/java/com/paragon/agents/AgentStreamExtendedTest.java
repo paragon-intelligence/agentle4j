@@ -56,8 +56,8 @@ class AgentStreamExtendedTest {
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
-   * Enqueues a proper SSE response for use when onTextDelta is registered.
-   * onTextDelta now triggers true SSE mode, so the mock must return SSE-formatted events.
+   * Enqueues a proper SSE response for use when onTextDelta is registered. onTextDelta now triggers
+   * true SSE mode, so the mock must return SSE-formatted events.
    */
   private void enqueueSSESuccessResponse(String text) {
     String escapedText = text.replace("\"", "\\\"");
@@ -276,7 +276,8 @@ class AgentStreamExtendedTest {
 
       AtomicReference<AgentResult> resultRef = new AtomicReference<>();
 
-      AgentResult result = agent.asStreaming().interact("Hello").onComplete(resultRef::set).startBlocking();
+      AgentResult result =
+          agent.asStreaming().interact("Hello").onComplete(resultRef::set).startBlocking();
 
       assertNotNull(result);
       assertTrue(result.isSuccess());
@@ -391,7 +392,8 @@ class AgentStreamExtendedTest {
 
       AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
-      AgentResult result = agent.asStreaming().interact("Hello").onError(errorRef::set).startBlocking();
+      AgentResult result =
+          agent.asStreaming().interact("Hello").onError(errorRef::set).startBlocking();
 
       // Either error callback was called or result is error
       assertTrue(errorRef != null || result.isError());
@@ -480,7 +482,8 @@ class AgentStreamExtendedTest {
       AtomicReference<FunctionToolCall> pendingCall = new AtomicReference<>();
 
       agent
-          .asStreaming().interact("Run dangerous tool")
+          .asStreaming()
+          .interact("Run dangerous tool")
           .onToolCallPending(
               (call, approve) -> {
                 callbackCalled.set(true);
@@ -514,7 +517,8 @@ class AgentStreamExtendedTest {
       AtomicBoolean toolExecuted = new AtomicBoolean(false);
 
       agent
-          .asStreaming().interact("Run dangerous tool")
+          .asStreaming()
+          .interact("Run dangerous tool")
           .onToolCallPending((call, approve) -> approve.accept(false)) // Reject
           .onToolExecuted(exec -> toolExecuted.set(true))
           .startBlocking();
@@ -544,7 +548,8 @@ class AgentStreamExtendedTest {
       AtomicBoolean toolExecuted = new AtomicBoolean(false);
 
       agent
-          .asStreaming().interact("Run safe tool")
+          .asStreaming()
+          .interact("Run safe tool")
           .onToolCallPending((call, approve) -> confirmationCalled.set(true))
           .onToolExecuted(exec -> toolExecuted.set(true))
           .startBlocking();
@@ -583,7 +588,11 @@ class AgentStreamExtendedTest {
       AtomicReference<AgentRunState> pauseStateRef = new AtomicReference<>();
 
       AgentResult result =
-          agent.asStreaming().interact("Run dangerous tool").onPause(pauseStateRef::set).startBlocking();
+          agent
+              .asStreaming()
+              .interact("Run dangerous tool")
+              .onPause(pauseStateRef::set)
+              .startBlocking();
 
       assertNotNull(pauseStateRef);
       assertTrue(pauseStateRef.get().isPendingApproval());
@@ -619,7 +628,11 @@ class AgentStreamExtendedTest {
       AtomicReference<GuardrailResult.Failed> failedRef = new AtomicReference<>();
 
       AgentResult result =
-          agent.asStreaming().interact("Generate response").onGuardrailFailed(failedRef::set).startBlocking();
+          agent
+              .asStreaming()
+              .interact("Generate response")
+              .onGuardrailFailed(failedRef::set)
+              .startBlocking();
 
       assertNotNull(failedRef);
       assertTrue(failedRef.get().reason().contains("forbidden"));
@@ -639,7 +652,8 @@ class AgentStreamExtendedTest {
 
       AtomicReference<AgentResult> completedRef = new AtomicReference<>();
 
-      AgentResult result = AgentStream.failed(failedResult).onComplete(completedRef::set).startBlocking();
+      AgentResult result =
+          AgentStream.failed(failedResult).onComplete(completedRef::set).startBlocking();
 
       assertNotNull(result);
       assertTrue(result.isError());

@@ -2,12 +2,12 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.dataformat.yaml.YAMLMapper;
 import com.paragon.agents.InteractableBlueprint.*;
 import java.util.*;
 import org.junit.jupiter.api.*;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 /** Tests for YAML serialization/deserialization of {@link InteractableBlueprint}. */
 class InteractableBlueprintYamlTest {
@@ -101,24 +101,47 @@ class InteractableBlueprintYamlTest {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
     var sales =
         new AgentBlueprint(
-            "Sales", "gpt-4o",
+            "Sales",
+            "gpt-4o",
             new InstructionSource.Inline("Sales agent"),
-            5, null, null, null, responder,
-            List.of(), List.of(), List.of(), List.of(), null, null);
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null,
+            null);
     var support =
         new AgentBlueprint(
-            "Support", "gpt-4o",
+            "Support",
+            "gpt-4o",
             new InstructionSource.Inline("Support agent"),
-            5, null, null, null, responder,
-            List.of(), List.of(), List.of(), List.of(), null, null);
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null,
+            null);
 
     var router =
         new RouterAgentBlueprint(
-            "Router", "gpt-4o",
+            "Router",
+            "gpt-4o",
             List.of(
                 new RouteBlueprint(sales, "Sales inquiries"),
                 new RouteBlueprint(support, "Support tickets")),
-            null, responder, null);
+            null,
+            responder,
+            null);
 
     String yaml = router.toYaml();
     assertTrue(yaml.contains("Router"));
@@ -137,16 +160,30 @@ class InteractableBlueprintYamlTest {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, null, null, null);
     var worker =
         new AgentBlueprint(
-            "Researcher", "gpt-4o",
+            "Researcher",
+            "gpt-4o",
             new InstructionSource.Inline("Do research"),
-            5, null, null, null, responder,
-            List.of(), List.of(), List.of(), List.of(), null, null);
+            5,
+            null,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null,
+            null);
 
     var supervisor =
         new SupervisorAgentBlueprint(
-            "Manager", "gpt-4o", "Manage the team", 10,
+            "Manager",
+            "gpt-4o",
+            "Manage the team",
+            10,
             List.of(new WorkerBlueprint(worker, "Research specialist")),
-            responder, null);
+            responder,
+            null);
 
     String yaml = supervisor.toYaml();
     assertTrue(yaml.contains("Manager"));
@@ -165,10 +202,20 @@ class InteractableBlueprintYamlTest {
     var responder = new ResponderBlueprint("OPEN_ROUTER", null, "KEY", null, null);
     var blueprint =
         new AgentBlueprint(
-            "Agent", "gpt-4o",
+            "Agent",
+            "gpt-4o",
             new InstructionSource.Inline("Instructions"),
-            10, 0.5, null, null, responder,
-            List.of(), List.of(), List.of(), List.of(), null, null);
+            10,
+            0.5,
+            null,
+            null,
+            responder,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            null,
+            null);
 
     String json = blueprint.toJson();
     String yaml = blueprint.toYaml();
@@ -189,7 +236,8 @@ class InteractableBlueprintYamlTest {
 
   @Test
   void handWrittenYamlDeserialization() {
-    String yaml = """
+    String yaml =
+        """
         type: agent
         name: CustomerService
         model: gpt-4o
@@ -218,7 +266,8 @@ class InteractableBlueprintYamlTest {
 
   @Test
   void handWrittenYamlWithFileInstructions() {
-    String yaml = """
+    String yaml =
+        """
         type: agent
         name: FileAgent
         model: gpt-4o
@@ -238,13 +287,14 @@ class InteractableBlueprintYamlTest {
     InteractableBlueprint bp = InteractableBlueprint.fromYaml(yaml);
     AgentBlueprint agent = (AgentBlueprint) bp;
     assertInstanceOf(InstructionSource.FileRef.class, agent.instructions());
-    assertEquals("/tmp/nonexistent-prompt.txt",
-        ((InstructionSource.FileRef) agent.instructions()).path());
+    assertEquals(
+        "/tmp/nonexistent-prompt.txt", ((InstructionSource.FileRef) agent.instructions()).path());
   }
 
   @Test
   void handWrittenYamlWithProviderInstructions() {
-    String yaml = """
+    String yaml =
+        """
         type: agent
         name: LangfuseAgent
         model: gpt-4o

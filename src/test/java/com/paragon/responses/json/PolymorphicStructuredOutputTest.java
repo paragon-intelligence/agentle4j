@@ -239,7 +239,10 @@ class PolymorphicStructuredOutputTest {
   }
 
   private void assertBranchIds(
-      List<Map<String, Object>> branches, String discriminatorField, String firstId, String secondId) {
+      List<Map<String, Object>> branches,
+      String discriminatorField,
+      String firstId,
+      String secondId) {
     assertEquals(firstId, discriminatorValue(branches.get(0), discriminatorField));
     assertEquals(secondId, discriminatorValue(branches.get(1), discriminatorField));
   }

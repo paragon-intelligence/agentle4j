@@ -4,11 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import tools.jackson.databind.ObjectMapper;
 import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Verifies that every schema produced by {@link JacksonJsonSchemaProducer} satisfies the *complete*
@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
  *
  * <p>Rules from <a href="https://platform.openai.com/docs/guides/structured-outputs">OpenAI
  * Structured Outputs docs</a>:
+ *
  * <ol>
  *   <li>Every object at every level has {@code "additionalProperties": false}
  *   <li>Every object at every level lists ALL its properties in {@code "required"}
@@ -26,8 +27,8 @@ import org.junit.jupiter.api.Test;
  *   <li>No Jackson URN {@code "id"} metadata
  *   <li>Root schema must have {@code "type": "object"} (not string, enum, etc.)
  *   <li>No unsupported draft-3/4 keywords: {@code disallow}, {@code extends}, {@code format},
- *       {@code default}, {@code pattern}, {@code minimum}, {@code maximum}, {@code allOf},
- *       {@code not}, etc.
+ *       {@code default}, {@code pattern}, {@code minimum}, {@code maximum}, {@code allOf}, {@code
+ *       not}, etc.
  *   <li>Enum fields must have {@code "type": "string"} alongside {@code "enum": [...]}
  *   <li>Array fields must have an {@code "items"} schema
  * </ol>
@@ -37,12 +38,25 @@ class OpenAiStrictModeSchemaContractTest {
   /** Keywords OpenAI strict mode does not allow. */
   private static final List<String> FORBIDDEN_KEYWORDS =
       List.of(
-          "disallow", "extends", "default", "pattern",
-          "minLength", "maxLength", "minimum", "maximum",
-          "exclusiveMinimum", "exclusiveMaximum", "multipleOf",
-          "minItems", "maxItems", "uniqueItems",
-          "minProperties", "maxProperties",
-          "allOf", "not", "$schema");
+          "disallow",
+          "extends",
+          "default",
+          "pattern",
+          "minLength",
+          "maxLength",
+          "minimum",
+          "maximum",
+          "exclusiveMinimum",
+          "exclusiveMaximum",
+          "multipleOf",
+          "minItems",
+          "maxItems",
+          "uniqueItems",
+          "minProperties",
+          "maxProperties",
+          "allOf",
+          "not",
+          "$schema");
 
   private JacksonJsonSchemaProducer producer;
 
@@ -53,14 +67,23 @@ class OpenAiStrictModeSchemaContractTest {
 
   // ===== Test data =====
 
-  enum Status { ACTIVE, INACTIVE, PENDING }
+  enum Status {
+    ACTIVE,
+    INACTIVE,
+    PENDING
+  }
 
   record Address(String street, String city, String country) {}
 
   record ContactInfo(String email, String phone, Address primary, Address secondary) {}
 
-  record Person(String id, int age, boolean active, Status status,
-                ContactInfo contact, List<Address> previousAddresses) {}
+  record Person(
+      String id,
+      int age,
+      boolean active,
+      Status status,
+      ContactInfo contact,
+      List<Address> previousAddresses) {}
 
   record Wrapper(String label, List<Person> people, Map<String, String> metadata) {}
 
@@ -104,18 +127,23 @@ class OpenAiStrictModeSchemaContractTest {
     if (map.containsKey(key)) return true;
     for (Object v : map.values()) {
       if (treeContains(v, key)) return true;
-      if (v instanceof List<?> l) { for (Object i : l) if (treeContains(i, key)) return true; }
+      if (v instanceof List<?> l) {
+        for (Object i : l) if (treeContains(i, key)) return true;
+      }
     }
     return false;
   }
 
   private boolean treeContainsUrnId(Object node) {
     if (!(node instanceof Map<?, ?> raw)) return false;
-    @SuppressWarnings("unchecked") Map<String, Object> map = (Map<String, Object>) raw;
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = (Map<String, Object>) raw;
     if (map.get("id") instanceof String v && v.startsWith("urn:")) return true;
     for (Object val : map.values()) {
       if (treeContainsUrnId(val)) return true;
-      if (val instanceof List<?> l) { for (Object i : l) if (treeContainsUrnId(i)) return true; }
+      if (val instanceof List<?> l) {
+        for (Object i : l) if (treeContainsUrnId(i)) return true;
+      }
     }
     return false;
   }
@@ -132,7 +160,9 @@ class OpenAiStrictModeSchemaContractTest {
       List<String> required = (List<String>) obj.get("required");
 
       if (!Boolean.FALSE.equals(obj.get("additionalProperties")))
-        v.add("Object missing additionalProperties:false — props: " + (props != null ? props.keySet() : "none"));
+        v.add(
+            "Object missing additionalProperties:false — props: "
+                + (props != null ? props.keySet() : "none"));
 
       if (required == null)
         v.add("Object missing required[] — props: " + (props != null ? props.keySet() : "none"));
@@ -145,8 +175,7 @@ class OpenAiStrictModeSchemaContractTest {
       v.add("Schema contains $ref references (must be fully inlined)");
 
     // Rule 4: no Jackson URN id metadata
-    if (treeContainsUrnId(schema))
-      v.add("Schema contains 'id': 'urn:...' Jackson metadata");
+    if (treeContainsUrnId(schema)) v.add("Schema contains 'id': 'urn:...' Jackson metadata");
 
     // Rule 5: root must be type:object
     if (!"object".equals(schema.get("type")))
@@ -154,8 +183,7 @@ class OpenAiStrictModeSchemaContractTest {
 
     // Rule 6: no forbidden keywords anywhere
     for (String kw : FORBIDDEN_KEYWORDS) {
-      if (treeContains(schema, kw))
-        v.add("Forbidden keyword present: '" + kw + "'");
+      if (treeContains(schema, kw)) v.add("Forbidden keyword present: '" + kw + "'");
     }
 
     return v;
@@ -169,7 +197,9 @@ class OpenAiStrictModeSchemaContractTest {
     @Test
     void simpleRecordRootIsObject() {
       var schema = producer.produce(Address.class);
-      assertEquals("object", schema.get("type"),
+      assertEquals(
+          "object",
+          schema.get("type"),
           "Root must be type:object for OpenAI strict mode to engage");
     }
 
@@ -189,8 +219,8 @@ class OpenAiStrictModeSchemaContractTest {
     void simpleRecordHasNoForbiddenKeywords() {
       var schema = producer.produce(Address.class);
       for (String kw : FORBIDDEN_KEYWORDS) {
-        assertFalse(treeContains(schema, kw),
-            "Schema must not contain forbidden keyword: '" + kw + "'");
+        assertFalse(
+            treeContains(schema, kw), "Schema must not contain forbidden keyword: '" + kw + "'");
       }
     }
 
@@ -198,7 +228,8 @@ class OpenAiStrictModeSchemaContractTest {
     void complexRecordHasNoForbiddenKeywords() {
       var schema = producer.produce(Person.class);
       for (String kw : FORBIDDEN_KEYWORDS) {
-        assertFalse(treeContains(schema, kw),
+        assertFalse(
+            treeContains(schema, kw),
             "Complex schema must not contain forbidden keyword: '" + kw + "'");
       }
     }
@@ -207,10 +238,8 @@ class OpenAiStrictModeSchemaContractTest {
     void schemaWithEnumsHasNoForbiddenKeywords() {
       // Enums are common — make sure Jackson doesn't add draft-3 "disallow" or "extends"
       var schema = producer.produce(Person.class);
-      assertFalse(treeContains(schema, "disallow"),
-          "Jackson draft-3 'disallow' must not appear");
-      assertFalse(treeContains(schema, "extends"),
-          "Jackson draft-3 'extends' must not appear");
+      assertFalse(treeContains(schema, "disallow"), "Jackson draft-3 'disallow' must not appear");
+      assertFalse(treeContains(schema, "extends"), "Jackson draft-3 'extends' must not appear");
     }
   }
 
@@ -228,10 +257,11 @@ class OpenAiStrictModeSchemaContractTest {
       Map<String, Object> statusProp = (Map<String, Object>) props.get("status");
 
       assertNotNull(statusProp, "status property must exist");
-      assertEquals("string", statusProp.get("type"),
+      assertEquals(
+          "string",
+          statusProp.get("type"),
           "Enum property must have type:string for OpenAI strict mode");
-      assertNotNull(statusProp.get("enum"),
-          "Enum property must have enum values");
+      assertNotNull(statusProp.get("enum"), "Enum property must have enum values");
     }
 
     @Test
@@ -244,7 +274,8 @@ class OpenAiStrictModeSchemaContractTest {
       @SuppressWarnings("unchecked")
       List<String> values = (List<String>) statusProp.get("enum");
 
-      assertTrue(values.containsAll(List.of("ACTIVE", "INACTIVE", "PENDING")),
+      assertTrue(
+          values.containsAll(List.of("ACTIVE", "INACTIVE", "PENDING")),
           "All enum values must be present: " + values);
     }
   }
@@ -263,8 +294,7 @@ class OpenAiStrictModeSchemaContractTest {
       Map<String, Object> addressesProp = (Map<String, Object>) props.get("previousAddresses");
 
       assertEquals("array", addressesProp.get("type"));
-      assertNotNull(addressesProp.get("items"),
-          "Array property must have an 'items' schema");
+      assertNotNull(addressesProp.get("items"), "Array property must have an 'items' schema");
     }
 
     @Test
@@ -278,12 +308,10 @@ class OpenAiStrictModeSchemaContractTest {
       @SuppressWarnings("unchecked")
       Map<String, Object> items = (Map<String, Object>) addressesProp.get("items");
 
-      assertFalse(items.containsKey("$ref"),
-          "Array items must be inlined, not a $ref");
-      assertEquals("object", items.get("type"),
-          "Array items for List<Address> must have type:object");
-      assertNotNull(items.get("properties"),
-          "Array items must have their properties inlined");
+      assertFalse(items.containsKey("$ref"), "Array items must be inlined, not a $ref");
+      assertEquals(
+          "object", items.get("type"), "Array items for List<Address> must have type:object");
+      assertNotNull(items.get("properties"), "Array items must have their properties inlined");
     }
 
     @Test
@@ -296,7 +324,9 @@ class OpenAiStrictModeSchemaContractTest {
       @SuppressWarnings("unchecked")
       Map<String, Object> items = (Map<String, Object>) addressesProp.get("items");
 
-      assertEquals(false, items.get("additionalProperties"),
+      assertEquals(
+          false,
+          items.get("additionalProperties"),
           "Array items object must also have additionalProperties:false");
     }
 
@@ -315,7 +345,8 @@ class OpenAiStrictModeSchemaContractTest {
       assertNotNull(required, "Array items object must have a required[] array");
       @SuppressWarnings("unchecked")
       Map<String, Object> itemProps = (Map<String, Object>) items.get("properties");
-      assertTrue(required.containsAll(itemProps.keySet()),
+      assertTrue(
+          required.containsAll(itemProps.keySet()),
           "Array items required[] must list all properties: " + itemProps.keySet());
     }
   }
@@ -330,7 +361,8 @@ class OpenAiStrictModeSchemaContractTest {
       // ContactInfo has Address primary AND Address secondary — Jackson uses $ref for the second
       var schema = producer.produce(ContactInfo.class);
 
-      assertFalse(treeContains(schema, "$ref"),
+      assertFalse(
+          treeContains(schema, "$ref"),
           "Both occurrences of Address must be inlined; no $ref allowed");
     }
 
@@ -345,9 +377,11 @@ class OpenAiStrictModeSchemaContractTest {
       @SuppressWarnings("unchecked")
       Map<String, Object> secondary = (Map<String, Object>) props.get("secondary");
 
-      assertNotNull(primary.get("properties"),
+      assertNotNull(
+          primary.get("properties"),
           "primary (first Address occurrence) must have inlined properties");
-      assertNotNull(secondary.get("properties"),
+      assertNotNull(
+          secondary.get("properties"),
           "secondary (second Address occurrence, was $ref) must have inlined properties");
     }
 
@@ -360,14 +394,17 @@ class OpenAiStrictModeSchemaContractTest {
       for (String field : List.of("primary", "secondary")) {
         @SuppressWarnings("unchecked")
         Map<String, Object> addrSchema = (Map<String, Object>) props.get(field);
-        assertEquals(false, addrSchema.get("additionalProperties"),
+        assertEquals(
+            false,
+            addrSchema.get("additionalProperties"),
             field + " must have additionalProperties:false");
         @SuppressWarnings("unchecked")
         List<String> required = (List<String>) addrSchema.get("required");
         assertNotNull(required, field + " must have required[]");
         @SuppressWarnings("unchecked")
         Map<String, Object> addrProps = (Map<String, Object>) addrSchema.get("properties");
-        assertTrue(required.containsAll(addrProps.keySet()),
+        assertTrue(
+            required.containsAll(addrProps.keySet()),
             field + " required[] must list all properties");
       }
     }
@@ -379,7 +416,8 @@ class OpenAiStrictModeSchemaContractTest {
   void fullContractCompliance_simpleRecord() {
     var schema = producer.produce(Address.class);
     var violations = collectViolations(schema);
-    assertTrue(violations.isEmpty(),
+    assertTrue(
+        violations.isEmpty(),
         "Address schema has strict mode violations:\n" + String.join("\n", violations));
   }
 
@@ -387,7 +425,8 @@ class OpenAiStrictModeSchemaContractTest {
   void fullContractCompliance_recordWithEnum() {
     var schema = producer.produce(Person.class);
     var violations = collectViolations(schema);
-    assertTrue(violations.isEmpty(),
+    assertTrue(
+        violations.isEmpty(),
         "Person schema has strict mode violations:\n" + String.join("\n", violations));
   }
 
@@ -395,7 +434,8 @@ class OpenAiStrictModeSchemaContractTest {
   void fullContractCompliance_repeatedNestedType() {
     var schema = producer.produce(ContactInfo.class);
     var violations = collectViolations(schema);
-    assertTrue(violations.isEmpty(),
+    assertTrue(
+        violations.isEmpty(),
         "ContactInfo schema (repeated Address) has strict mode violations:\n"
             + String.join("\n", violations));
   }
@@ -405,16 +445,17 @@ class OpenAiStrictModeSchemaContractTest {
     // Person -> ContactInfo -> Address (x2), List<Address>
     var schema = producer.produce(Person.class);
     var violations = collectViolations(schema);
-    assertTrue(violations.isEmpty(),
-        "Person (deeply nested) has strict mode violations:\n"
-            + String.join("\n", violations));
+    assertTrue(
+        violations.isEmpty(),
+        "Person (deeply nested) has strict mode violations:\n" + String.join("\n", violations));
   }
 
   @Test
   void fullContractCompliance_wrapperWithListOfComplexType() {
     var schema = producer.produce(Wrapper.class);
     var violations = collectViolations(schema);
-    assertTrue(violations.isEmpty(),
+    assertTrue(
+        violations.isEmpty(),
         "Wrapper schema (List<Person>) has strict mode violations:\n"
             + String.join("\n", violations));
   }
@@ -423,8 +464,8 @@ class OpenAiStrictModeSchemaContractTest {
   void fullContractCompliance_rootPolymorphicWrapper() {
     var schema = producer.produce(Animal.class);
     var violations = collectViolations(schema);
-    assertTrue(violations.isEmpty(),
-        "Root polymorphic schema has strict mode violations:\n"
-            + String.join("\n", violations));
+    assertTrue(
+        violations.isEmpty(),
+        "Root polymorphic schema has strict mode violations:\n" + String.join("\n", violations));
   }
 }

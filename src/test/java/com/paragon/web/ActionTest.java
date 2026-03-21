@@ -2,10 +2,10 @@ package com.paragon.web;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Tests for Action interface and all action implementations. Tests focus on factory methods,

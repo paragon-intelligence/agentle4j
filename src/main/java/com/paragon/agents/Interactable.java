@@ -60,8 +60,8 @@ import org.jspecify.annotations.Nullable;
  *
  * <h2>Streaming</h2>
  *
- * <p>For streaming support, call {@code asStreaming()} on any concrete implementation that
- * supports it, or use the {@link Streaming} interface:
+ * <p>For streaming support, call {@code asStreaming()} on any concrete implementation that supports
+ * it, or use the {@link Streaming} interface:
  *
  * <pre>{@code
  * agent.asStreaming().interact("Hello")
@@ -388,8 +388,8 @@ public interface Interactable {
    * Extended interface for agents that return structured (typed) output.
    *
    * <p>Use this interface when you need type-safe parsed output from agents configured with
-   * structured output schemas. The declared return type of {@code interact()} is covariant —
-   * it returns {@link StructuredAgentResult}{@code <T>} instead of {@link AgentResult}.
+   * structured output schemas. The declared return type of {@code interact()} is covariant — it
+   * returns {@link StructuredAgentResult}{@code <T>} instead of {@link AgentResult}.
    *
    * <h2>Example</h2>
    *
@@ -467,8 +467,7 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interact(
-        @NonNull Text text, @Nullable TraceMetadata trace) {
+    default StructuredAgentResult<T> interact(@NonNull Text text, @Nullable TraceMetadata trace) {
       AgenticContext context = AgenticContext.create();
       context.addInput(Message.user(text));
       return interact(context, trace);

@@ -1,9 +1,5 @@
 package com.paragon.responses.json;
 
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.JsonNode;
 import com.paragon.responses.spec.AssistantMessage;
 import com.paragon.responses.spec.DeveloperMessage;
 import com.paragon.responses.spec.InputMessageStatus;
@@ -13,6 +9,10 @@ import com.paragon.responses.spec.OutputMessage;
 import com.paragon.responses.spec.Text;
 import com.paragon.responses.spec.UserMessage;
 import java.util.List;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
 
 /**
  * Custom deserializer for Message that uses the 'role' field to determine which concrete subclass
@@ -21,7 +21,8 @@ import java.util.List;
 public class MessageDeserializer extends ValueDeserializer<Message> {
 
   @Override
-  public Message deserialize(JsonParser p, DeserializationContext ctxt) throws tools.jackson.core.JacksonException {
+  public Message deserialize(JsonParser p, DeserializationContext ctxt)
+      throws tools.jackson.core.JacksonException {
     JsonNode node = ctxt.readTree(p);
 
     String role = node.has("role") ? node.get("role").asText() : null;

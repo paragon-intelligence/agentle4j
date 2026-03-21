@@ -1,5 +1,7 @@
 package com.paragon.json;
 
+import java.time.Duration;
+import java.time.Instant;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.core.JsonParser;
 import tools.jackson.databind.DeserializationContext;
@@ -7,8 +9,6 @@ import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.deser.std.StdScalarDeserializer;
 import tools.jackson.databind.module.SimpleModule;
 import tools.jackson.databind.ser.std.StdScalarSerializer;
-import java.time.Duration;
-import java.time.Instant;
 
 /**
  * Minimal Java time module for the temporal types persisted by this project.

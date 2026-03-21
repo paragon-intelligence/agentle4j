@@ -2,7 +2,6 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.annotations.FunctionMetadata;
 import com.paragon.responses.json.JacksonJsonSchemaProducer;
@@ -20,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Integration tests for Agent with function tools.

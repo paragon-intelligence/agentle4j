@@ -43,6 +43,7 @@ public @interface FunctionMetadata {
    * Whether this tool is client-side only and terminates the agentic loop immediately when called.
    *
    * <p>When true, the framework will:
+   *
    * <ol>
    *   <li>Detect the tool call in the output
    *   <li>Skip persisting the call to conversation history
@@ -50,8 +51,8 @@ public @interface FunctionMetadata {
    *   <li>Return {@code AgentResult.clientSideTool()} as a clean, non-error exit
    * </ol>
    *
-   * <p>This mirrors the {@code ask_user_input_v0} pattern used by Claude.ai, where a tool call
-   * acts as a UI signal to the frontend rather than server-side logic.
+   * <p>This mirrors the {@code ask_user_input_v0} pattern used by Claude.ai, where a tool call acts
+   * as a UI signal to the frontend rather than server-side logic.
    *
    * <p>Example:
    *

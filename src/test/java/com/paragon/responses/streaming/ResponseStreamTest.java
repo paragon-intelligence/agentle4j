@@ -2,8 +2,6 @@ package com.paragon.responses.streaming;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.spec.*;
@@ -18,6 +16,8 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /** Tests for streaming functionality. */
 class ResponseStreamTest {
@@ -427,7 +427,8 @@ class ResponseStreamTest {
 
   @Test
   void onParsedComplete_unwrapsTypeReferenceListRoot() throws Exception {
-    String wrappedJson = "{\"value\":[{\"name\":\"Bob\",\"age\":30},{\"name\":\"Alice\",\"age\":28}]}";
+    String wrappedJson =
+        "{\"value\":[{\"name\":\"Bob\",\"age\":30},{\"name\":\"Alice\",\"age\":28}]}";
     String escapedJson = wrappedJson.replace("\"", "\\\"");
     String sseResponse =
         """

@@ -3,7 +3,6 @@ package com.paragon.mcp;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.mcp.dto.JsonRpcResponse;
 import java.io.*;
 import java.nio.file.Path;
@@ -11,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /** Tests for StdioMcpClient. */
 class StdioMcpClientTest {

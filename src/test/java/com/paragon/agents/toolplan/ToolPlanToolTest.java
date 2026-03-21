@@ -82,9 +82,7 @@ class ToolPlanToolTest {
     @DisplayName("returns success for valid plan")
     void validPlan() {
       ToolPlan plan =
-          new ToolPlan(
-              List.of(new ToolPlanStep("s1", "echo", "{\"message\": \"hello\"}")),
-              null);
+          new ToolPlan(List.of(new ToolPlanStep("s1", "echo", "{\"message\": \"hello\"}")), null);
 
       FunctionToolCallOutput result = planTool.call(plan);
 
@@ -115,9 +113,7 @@ class ToolPlanToolTest {
     @Test
     @DisplayName("returns error for unknown tool in plan")
     void unknownTool() {
-      ToolPlan plan =
-          new ToolPlan(
-              List.of(new ToolPlanStep("s1", "nonexistent", "{}")), null);
+      ToolPlan plan = new ToolPlan(List.of(new ToolPlanStep("s1", "nonexistent", "{}")), null);
 
       FunctionToolCallOutput result = planTool.call(plan);
 
@@ -132,8 +128,7 @@ class ToolPlanToolTest {
           new ToolPlan(
               List.of(
                   new ToolPlanStep("s1", "echo", "{\"message\": \"data\"}"),
-                  new ToolPlanStep(
-                      "s2", "echo", "{\"message\": \"$ref:s1\"}")),
+                  new ToolPlanStep("s2", "echo", "{\"message\": \"$ref:s1\"}")),
               List.of("s2"));
 
       FunctionToolCallOutput result = planTool.call(plan);

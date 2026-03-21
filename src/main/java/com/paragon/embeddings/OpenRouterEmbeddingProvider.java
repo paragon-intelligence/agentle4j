@@ -1,7 +1,6 @@
 package com.paragon.embeddings;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.http.RetryPolicy;
 import java.io.IOException;
 import java.time.Duration;
@@ -10,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import okhttp3.*;
 import org.jspecify.annotations.NonNull;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Embedding provider for OpenRouter's embedding API with built-in retry support.

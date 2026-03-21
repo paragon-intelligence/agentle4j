@@ -3,19 +3,19 @@ package com.paragon.agents;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.*;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Real end-to-end test: streaming + handoffs + structured output, against OpenRouter (no mocks).
  *
- * <p>Scenario: a TriageAgent routes a billing query to BillingAgent (structured output
- * {@link BillingTicket}) and a technical query to TechnicalAgent (structured output
- * {@link TechTicket}). Both handoffs run on the streaming path.
+ * <p>Scenario: a TriageAgent routes a billing query to BillingAgent (structured output {@link
+ * BillingTicket}) and a technical query to TechnicalAgent (structured output {@link TechTicket}).
+ * Both handoffs run on the streaming path.
  *
  * <pre>{@code
  * export OPENROUTER_API_KEY=sk-or-...
@@ -92,7 +92,8 @@ class HandoffStreamingRealApiTest {
                 .build())
         .addHandoff(
             Handoff.to(technical)
-                .withDescription("Transfer technical or software questions to the technical specialist")
+                .withDescription(
+                    "Transfer technical or software questions to the technical specialist")
                 .build())
         .build();
   }
@@ -122,9 +123,7 @@ class HandoffStreamingRealApiTest {
 
     AgentResult result = resultRef.get();
     assertNotNull(result, "onComplete did not fire");
-    assertFalse(
-        result.isError(),
-        "Result is an error: " + errorDetails(result.error()));
+    assertFalse(result.isError(), "Result is an error: " + errorDetails(result.error()));
 
     // onHandoff callback should have fired
     assertNotNull(handoffRef.get(), "onHandoff never fired — triage did not route");
@@ -167,9 +166,7 @@ class HandoffStreamingRealApiTest {
 
     AgentResult result = resultRef.get();
     assertNotNull(result, "onComplete did not fire");
-    assertFalse(
-        result.isError(),
-        "Result is an error: " + errorDetails(result.error()));
+    assertFalse(result.isError(), "Result is an error: " + errorDetails(result.error()));
 
     // onHandoff callback should have fired
     assertNotNull(handoffRef.get(), "onHandoff never fired — triage did not route");

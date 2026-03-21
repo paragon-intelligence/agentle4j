@@ -1,10 +1,9 @@
 package com.paragon.messaging.whatsapp.response;
 
 import com.paragon.messaging.core.OutboundMessage;
+import java.util.List;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-
-import java.util.List;
 
 /**
  * Interface for structured AI responses that can be converted to WhatsApp messages.
@@ -108,8 +107,7 @@ public interface WhatsAppResponse {
    *
    * @return list of outbound messages to send
    */
-  @NonNull
-  List<OutboundMessage> toMessages();
+  @NonNull List<OutboundMessage> toMessages();
 
   /**
    * Returns the primary text content of this response.
@@ -124,8 +122,7 @@ public interface WhatsAppResponse {
    *
    * @return the text content, or empty string if no text
    */
-  @NonNull
-  String getTextContent();
+  @NonNull String getTextContent();
 
   /**
    * Returns the emoji to react with, if any.
