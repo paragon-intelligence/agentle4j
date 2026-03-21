@@ -43,13 +43,15 @@ class ReturnContractTest {
   public sealed interface MainFinalOutput
       permits DirectAnswer, DirectEscalation, ActivityOutput, RatOutput {}
 
-  public record DirectAnswer(@JsonProperty("kind") String kind, @JsonProperty("message") String message)
+  public record DirectAnswer(
+      @JsonProperty("kind") String kind, @JsonProperty("message") String message)
       implements MainDirectOutput, MainFinalOutput {
     @JsonCreator
     public DirectAnswer {}
   }
 
-  public record DirectEscalation(@JsonProperty("kind") String kind, @JsonProperty("queue") String queue)
+  public record DirectEscalation(
+      @JsonProperty("kind") String kind, @JsonProperty("queue") String queue)
       implements MainDirectOutput, MainFinalOutput {
     @JsonCreator
     public DirectEscalation {}
@@ -91,7 +93,8 @@ class ReturnContractTest {
         {"value":{"kind":"local_direct","message":"resolved locally"}}
         """);
 
-    StructuredAgentResult<MainFinalOutput> result = mainAgent.returns(MainFinalOutput.class).interact("help");
+    StructuredAgentResult<MainFinalOutput> result =
+        mainAgent.returns(MainFinalOutput.class).interact("help");
 
     assertInstanceOf(DirectAnswer.class, result.parsed());
     assertEquals(OutputOrigin.LOCAL, result.outputOrigin());
@@ -111,10 +114,7 @@ class ReturnContractTest {
   void handoffParsesPropagatedOutputAndMarksResultAsDelegated() {
     Agent activitiesAgent = createPlainAgent("ActivitiesAgent");
     Agent mainAgent =
-        createMainAgent(
-            Handoff.to(activitiesAgent)
-                .propagatedOutput(ActivityOutput.class)
-                .build());
+        createMainAgent(Handoff.to(activitiesAgent).propagatedOutput(ActivityOutput.class).build());
 
     enqueueHandoffResponse("transfer_to_activities_agent", "{\"message\":\"route to activities\"}");
     enqueueMessageResponse("{\"kind\":\"delegated_activity\",\"activityId\":\"act_123\"}");
@@ -165,7 +165,8 @@ class ReturnContractTest {
     enqueueMessageResponse("1");
     enqueueMessageResponse("{\"kind\":\"delegated_activity\",\"activityId\":\"act_router\"}");
 
-    StructuredAgentResult<MainFinalOutput> result = router.returns(MainFinalOutput.class).interact("route this");
+    StructuredAgentResult<MainFinalOutput> result =
+        router.returns(MainFinalOutput.class).interact("route this");
 
     assertFalse(result.isError());
     assertInstanceOf(ActivityOutput.class, result.parsed());

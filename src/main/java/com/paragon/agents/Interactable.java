@@ -322,8 +322,8 @@ public interface Interactable {
   /**
    * Interacts with the agent using multiple {@link Message} items. Creates a fresh context.
    *
-   * <p>This overload accepts {@code List<Message>} call sites without conflicting with the
-   * existing {@code List<ResponseInputItem>} overload.
+   * <p>This overload accepts {@code List<Message>} call sites without conflicting with the existing
+   * {@code List<ResponseInputItem>} overload.
    *
    * @param messages the message items
    * @return the agent's result
@@ -427,7 +427,8 @@ public interface Interactable {
     return returns(StructuredOutputDefinition.create(outputType));
   }
 
-  private <T> @NonNull ReturnContract<T> returns(@NonNull StructuredOutputDefinition<T> definition) {
+  private <T> @NonNull ReturnContract<T> returns(
+      @NonNull StructuredOutputDefinition<T> definition) {
     return new ReturnContract<>(this, definition, ResponsesApiObjectMapper.create());
   }
 
@@ -601,13 +602,14 @@ public interface Interactable {
      * @return the structured result with parsed output
      */
     @NonNull
-    default StructuredAgentResult<T> interact(java.lang.@NonNull Iterable<? extends Message> messages) {
+    default StructuredAgentResult<T> interact(
+        java.lang.@NonNull Iterable<? extends Message> messages) {
       return interact(messages, null);
     }
 
     /**
-     * Interacts with the agent using multiple {@link Message} items and returns a structured
-     * result with trace metadata.
+     * Interacts with the agent using multiple {@link Message} items and returns a structured result
+     * with trace metadata.
      *
      * @param messages the message items
      * @param trace optional trace metadata (overrides agent-level configuration)
@@ -615,8 +617,7 @@ public interface Interactable {
      */
     @NonNull
     default StructuredAgentResult<T> interact(
-        java.lang.@NonNull Iterable<? extends Message> messages,
-        @Nullable TraceMetadata trace) {
+        java.lang.@NonNull Iterable<? extends Message> messages, @Nullable TraceMetadata trace) {
       AgenticContext context = AgenticContext.create();
       context.addMessages(messages);
       return interact(context, trace);

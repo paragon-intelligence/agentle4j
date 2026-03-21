@@ -226,8 +226,8 @@ public final class RouterAgent implements Interactable {
     return responder;
   }
 
-  @NonNull
-  AgentResult wrapDelegatedResult(@NonNull Interactable selected, @NonNull AgentResult result) {
+  @NonNull AgentResult wrapDelegatedResult(
+      @NonNull Interactable selected, @NonNull AgentResult result) {
     return AgentResult.delegated(name, selected.name(), result);
   }
 

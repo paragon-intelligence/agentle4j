@@ -539,7 +539,9 @@ public sealed interface InteractableBlueprint
           if (hd.propagatedOutputType() != null) {
             try {
               handoffBuilder.propagatedOutput(
-                  new ObjectMapper().getTypeFactory().constructFromCanonical(hd.propagatedOutputType()));
+                  new ObjectMapper()
+                      .getTypeFactory()
+                      .constructFromCanonical(hd.propagatedOutputType()));
             } catch (IllegalArgumentException e) {
               log.warn(
                   "Could not load propagated handoff output type: {}",

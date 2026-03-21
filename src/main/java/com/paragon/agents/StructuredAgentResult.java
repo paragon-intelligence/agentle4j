@@ -120,10 +120,7 @@ public class StructuredAgentResult<T> extends AgentResult {
   public static <T> @NonNull StructuredAgentResult<T> success(
       @NonNull T output, @NonNull String rawOutput) {
     AgentResult.Builder base =
-        new AgentResult.Builder()
-            .output(rawOutput)
-            .parsed(output)
-            .outputOrigin(OutputOrigin.LOCAL);
+        new AgentResult.Builder().output(rawOutput).parsed(output).outputOrigin(OutputOrigin.LOCAL);
     return new StructuredAgentResult<>(base, output);
   }
 
@@ -180,7 +177,8 @@ public class StructuredAgentResult<T> extends AgentResult {
    */
   @SuppressWarnings("unchecked")
   public static <T> @NonNull StructuredAgentResult<T> structuredError(@NonNull Throwable error) {
-    AgentResult.Builder base = new AgentResult.Builder().error(error).outputOrigin(OutputOrigin.LOCAL);
+    AgentResult.Builder base =
+        new AgentResult.Builder().error(error).outputOrigin(OutputOrigin.LOCAL);
     return new StructuredAgentResult<>(base, (T) null);
   }
 

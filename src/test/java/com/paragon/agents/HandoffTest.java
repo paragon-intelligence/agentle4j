@@ -99,7 +99,8 @@ class HandoffTest {
     @DisplayName("propagatedOutput(JavaType) keeps canonical type information")
     void propagatedOutput_javaTypeKeepsCanonicalTypeInformation() {
       Agent target = createTestAgent("Target");
-      var listType = new ObjectMapper().getTypeFactory().constructCollectionType(List.class, String.class);
+      var listType =
+          new ObjectMapper().getTypeFactory().constructCollectionType(List.class, String.class);
 
       Handoff handoff = Handoff.to(target).propagatedOutput(listType).build();
 

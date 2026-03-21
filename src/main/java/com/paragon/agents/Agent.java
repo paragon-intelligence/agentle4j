@@ -22,17 +22,16 @@ import com.paragon.telemetry.events.AgentFailedEvent;
 import com.paragon.telemetry.processors.ProcessorRegistry;
 import com.paragon.telemetry.processors.TelemetryProcessor;
 import com.paragon.telemetry.processors.TraceIdGenerator;
+import java.io.Serializable;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.ObjectMapper;
-
-import java.io.Serializable;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.*;
 
 /**
  * A stateful AI agent that can perceive, plan, and act using tools.
@@ -162,17 +161,17 @@ public final class Agent implements Serializable, Interactable {
     this.maxTurns = builder.maxTurns > 0 ? builder.maxTurns : 10;
     this.structuredOutputDefinition = builder.structuredOutputDefinition;
     this.outputType =
-            structuredOutputDefinition != null ? structuredOutputDefinition.responseType() : null;
+        structuredOutputDefinition != null ? structuredOutputDefinition.responseType() : null;
     this.temperature = builder.temperature;
     this.telemetryContext =
-            builder.telemetryContext != null ? builder.telemetryContext : TelemetryContext.empty();
+        builder.telemetryContext != null ? builder.telemetryContext : TelemetryContext.empty();
     this.traceMetadata = builder.traceMetadata;
     this.reasoning = builder.reasoning;
     this.openRouterCustomPayload = builder.openRouterCustomPayload;
     this.telemetryProcessors =
-            builder.telemetryProcessors.isEmpty()
-                    ? ProcessorRegistry.empty()
-                    : ProcessorRegistry.of(builder.telemetryProcessors);
+        builder.telemetryProcessors.isEmpty()
+            ? ProcessorRegistry.empty()
+            : ProcessorRegistry.of(builder.telemetryProcessors);
 
     // Context management
     this.contextManagementConfig = builder.contextManagementConfig;
@@ -185,7 +184,7 @@ public final class Agent implements Serializable, Interactable {
 
     // Build augmented instructions with skills and tool planning
     Prompt baseInstructions =
-            Objects.requireNonNull(builder.instructions, "instructions are required");
+        Objects.requireNonNull(builder.instructions, "instructions are required");
     StringBuilder instructionAugmentation = new StringBuilder(baseInstructions.text());
     boolean augmented = false;
 
@@ -194,8 +193,8 @@ public final class Agent implements Serializable, Interactable {
     if (!builder.pendingSkills.isEmpty()) {
       instructionAugmentation.append("\n\n# Skills\n");
       instructionAugmentation.append(
-              "You have the following skills available. "
-                      + "Use the `read_skill` tool to load a skill's full instructions when needed:\n");
+          "You have the following skills available. "
+              + "Use the `read_skill` tool to load a skill's full instructions when needed:\n");
       for (Skill skill : builder.pendingSkills) {
         instructionAugmentation.append(skill.toCatalogEntry());
       }
@@ -207,28 +206,28 @@ public final class Agent implements Serializable, Interactable {
 
     if (builder.toolPlanningEnabled && !builder.tools.isEmpty()) {
       instructionAugmentation.append(
-              """
-                      
-                      \n# Tool Planning
-                      You have access to an `execute_tool_plan` tool that lets you batch multiple tool \
-                      calls into a single execution plan. Use it when:
-                      - Multiple tools need to be called and some depend on others' results
-                      - You want to run independent tool calls in parallel for efficiency
-                      - You want to reduce context usage by processing intermediate results locally
-                      
-                      Plan format:
-                      - Each step has an `id` (unique identifier), `tool` (function name), and `arguments` \
-                      (a JSON string of the tool's arguments)
-                      - Use `"$ref:step_id"` in arguments to reference the full output of a previous step
-                      - Use `"$ref:step_id.field_name"` to extract a specific JSON field from a step's output
-                      - List which step IDs' results you need in `output_steps` (omit for all results)
-                      - Steps with no `$ref` dependencies execute in parallel automatically
-                      """);
+          """
+
+          \n# Tool Planning
+          You have access to an `execute_tool_plan` tool that lets you batch multiple tool \
+          calls into a single execution plan. Use it when:
+          - Multiple tools need to be called and some depend on others' results
+          - You want to run independent tool calls in parallel for efficiency
+          - You want to reduce context usage by processing intermediate results locally
+
+          Plan format:
+          - Each step has an `id` (unique identifier), `tool` (function name), and `arguments` \
+          (a JSON string of the tool's arguments)
+          - Use `"$ref:step_id"` in arguments to reference the full output of a previous step
+          - Use `"$ref:step_id.field_name"` to extract a specific JSON field from a step's output
+          - List which step IDs' results you need in `output_steps` (omit for all results)
+          - Steps with no `$ref` dependencies execute in parallel automatically
+          """);
       augmented = true;
     }
 
     this.instructions =
-            augmented ? Prompt.of(instructionAugmentation.toString()) : baseInstructions;
+        augmented ? Prompt.of(instructionAugmentation.toString()) : baseInstructions;
 
     // Build tool store and tools list
     this.objectMapper = builder.objectMapper != null ? builder.objectMapper : new ObjectMapper();
@@ -301,31 +300,31 @@ public final class Agent implements Serializable, Interactable {
   public @NonNull InteractableBlueprint toBlueprint() {
     // Extract tool class names (skip internal tools like InteractableSubAgentTool)
     List<String> toolClassNames =
-            tools.stream()
-                    .filter(t -> !t.getClass().isAnonymousClass() && !t.getClass().isSynthetic())
-                    .filter(
-                            t -> {
-                              try {
-                                t.getClass().getDeclaredConstructor(); // must have no-arg constructor
-                                return true;
-                              } catch (NoSuchMethodException e) {
-                                return false;
-                              }
-                            })
-                    .map(t -> t.getClass().getName())
-                    .toList();
+        tools.stream()
+            .filter(t -> !t.getClass().isAnonymousClass() && !t.getClass().isSynthetic())
+            .filter(
+                t -> {
+                  try {
+                    t.getClass().getDeclaredConstructor(); // must have no-arg constructor
+                    return true;
+                  } catch (NoSuchMethodException e) {
+                    return false;
+                  }
+                })
+            .map(t -> t.getClass().getName())
+            .toList();
 
     // Extract guardrail references
     List<InteractableBlueprint.GuardrailReference> inputRefs =
-            inputGuardrails.stream().map(InteractableBlueprint.GuardrailReference::fromInput).toList();
+        inputGuardrails.stream().map(InteractableBlueprint.GuardrailReference::fromInput).toList();
     List<InteractableBlueprint.GuardrailReference> outputRefs =
-            outputGuardrails.stream()
-                    .map(InteractableBlueprint.GuardrailReference::fromOutput)
-                    .toList();
+        outputGuardrails.stream()
+            .map(InteractableBlueprint.GuardrailReference::fromOutput)
+            .toList();
 
     // Extract handoff descriptors
     List<InteractableBlueprint.HandoffDescriptor> handoffDescs =
-            handoffs.stream().map(InteractableBlueprint.HandoffDescriptor::from).toList();
+        handoffs.stream().map(InteractableBlueprint.HandoffDescriptor::from).toList();
 
     // Extract context management
     InteractableBlueprint.ContextBlueprint ctxBlueprint = null;
@@ -340,7 +339,7 @@ public final class Agent implements Serializable, Interactable {
       if (strategy instanceof com.paragon.agents.context.SlidingWindowStrategy sliding) {
         preserveDevMsgs = sliding.preservesDeveloperMessage();
       } else if (strategy
-              instanceof com.paragon.agents.context.SummarizationStrategy summarization) {
+          instanceof com.paragon.agents.context.SummarizationStrategy summarization) {
         strategyType = "summarization";
         summModel = summarization.model();
         keepRecent = summarization.keepRecentMessages();
@@ -350,31 +349,31 @@ public final class Agent implements Serializable, Interactable {
       tokenCounterClass = contextManagementConfig.tokenCounter().getClass().getName();
 
       ctxBlueprint =
-              new InteractableBlueprint.ContextBlueprint(
-                      strategyType,
-                      preserveDevMsgs,
-                      summModel,
-                      keepRecent,
-                      summPrompt,
-                      contextManagementConfig.maxTokens(),
-                      tokenCounterClass);
+          new InteractableBlueprint.ContextBlueprint(
+              strategyType,
+              preserveDevMsgs,
+              summModel,
+              keepRecent,
+              summPrompt,
+              contextManagementConfig.maxTokens(),
+              tokenCounterClass);
     }
 
     return new InteractableBlueprint.AgentBlueprint(
-            name,
-            model,
-            new InstructionSource.Inline(instructions.text()),
-            maxTurns,
-            temperature,
-            outputType != null ? outputType.getName() : null,
-            traceMetadata,
-            InteractableBlueprint.ResponderBlueprint.from(responder),
-            toolClassNames,
-            handoffDescs,
-            inputRefs,
-            outputRefs,
-            ctxBlueprint,
-            reasoning);
+        name,
+        model,
+        new InstructionSource.Inline(instructions.text()),
+        maxTurns,
+        temperature,
+        outputType != null ? outputType.getName() : null,
+        traceMetadata,
+        InteractableBlueprint.ResponderBlueprint.from(responder),
+        toolClassNames,
+        handoffDescs,
+        inputRefs,
+        outputRefs,
+        ctxBlueprint,
+        reasoning);
   }
 
   /**
@@ -467,13 +466,11 @@ public final class Agent implements Serializable, Interactable {
     return outputType;
   }
 
-  @Nullable
-  StructuredOutputDefinition<?> structuredOutputDefinition() {
+  @Nullable StructuredOutputDefinition<?> structuredOutputDefinition() {
     return structuredOutputDefinition;
   }
 
-  @NonNull
-  ObjectMapper objectMapper() {
+  @NonNull ObjectMapper objectMapper() {
     return objectMapper;
   }
 
@@ -486,19 +483,13 @@ public final class Agent implements Serializable, Interactable {
     return reasoning;
   }
 
-  /**
-   * Returns the tool store. Package-private for AgentStream.
-   */
-  @NonNull
-  FunctionToolStore toolStore() {
+  /** Returns the tool store. Package-private for AgentStream. */
+  @NonNull FunctionToolStore toolStore() {
     return toolStore;
   }
 
-  /**
-   * Builds a payload from context. Package-private for AgentStream.
-   */
-  @NonNull
-  CreateResponsePayload buildPayloadInternal(@NonNull AgenticContext context) {
+  /** Builds a payload from context. Package-private for AgentStream. */
+  @NonNull CreateResponsePayload buildPayloadInternal(@NonNull AgenticContext context) {
     return buildPayload(context);
   }
 
@@ -514,9 +505,9 @@ public final class Agent implements Serializable, Interactable {
 
       @Override
       public @NonNull AgentStream interact(
-              @NonNull AgenticContext ctx, @Nullable TraceMetadata trace) {
+          @NonNull AgenticContext ctx, @Nullable TraceMetadata trace) {
         return new AgentStream(Agent.this, List.of(), ctx, responder, objectMapper)
-                .withTrace(trace);
+            .withTrace(trace);
       }
 
       @Override
@@ -571,7 +562,7 @@ public final class Agent implements Serializable, Interactable {
     AgentRunState.ToolApprovalResult approval = state.approvalResult();
     if (approval == null) {
       throw new IllegalStateException(
-              "Cannot resume: call approveToolCall() or rejectToolCall() first");
+          "Cannot resume: call approveToolCall() or rejectToolCall() first");
     }
 
     // Add the tool result to context
@@ -581,16 +572,16 @@ public final class Agent implements Serializable, Interactable {
       output = FunctionToolCallOutput.success(pendingCall.callId(), approval.outputOrReason());
     } else {
       String reason =
-              approval.outputOrReason() != null
-                      ? approval.outputOrReason()
-                      : "Tool execution was rejected by user";
+          approval.outputOrReason() != null
+              ? approval.outputOrReason()
+              : "Tool execution was rejected by user";
       output = FunctionToolCallOutput.error(pendingCall.callId(), reason);
     }
     state.context().addToolResult(output);
 
     // Continue the agentic loop from where we left off
     return continueAgenticLoop(
-            state.context(), state.lastResponse(), state.toolExecutions(), state.currentTurn());
+        state.context(), state.lastResponse(), state.toolExecutions(), state.currentTurn());
   }
 
   // ===== Resume Methods =====
@@ -611,7 +602,7 @@ public final class Agent implements Serializable, Interactable {
     AgentRunState.ToolApprovalResult approval = state.approvalResult();
     if (approval == null) {
       throw new IllegalStateException(
-              "Cannot resume: call approveToolCall() or rejectToolCall() first");
+          "Cannot resume: call approveToolCall() or rejectToolCall() first");
     }
 
     // Add the tool result to context
@@ -621,22 +612,22 @@ public final class Agent implements Serializable, Interactable {
       output = FunctionToolCallOutput.success(pendingCall.callId(), approval.outputOrReason());
     } else {
       String reason =
-              approval.outputOrReason() != null
-                      ? approval.outputOrReason()
-                      : "Tool execution was rejected by user";
+          approval.outputOrReason() != null
+              ? approval.outputOrReason()
+              : "Tool execution was rejected by user";
       output = FunctionToolCallOutput.error(pendingCall.callId(), reason);
     }
     state.context().addToolResult(output);
 
     // Return stream that continues from saved state
     return new AgentStream(
-            this,
-            List.of(), // No new input - resuming
-            state.context(),
-            responder,
-            objectMapper,
-            state.toolExecutions(),
-            state.currentTurn());
+        this,
+        List.of(), // No new input - resuming
+        state.context(),
+        responder,
+        objectMapper,
+        state.toolExecutions(),
+        state.currentTurn());
   }
 
   /**
@@ -649,12 +640,12 @@ public final class Agent implements Serializable, Interactable {
    * blocking is cheap and does not consume platform threads.
    *
    * @param context the conversation context containing all history
-   * @param trace   optional trace metadata (overrides agent-level configuration)
+   * @param trace optional trace metadata (overrides agent-level configuration)
    * @return the agent's result
    */
   @Override
   public @NonNull AgentResult interact(
-          @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+      @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
     // Merge trace: method parameter > instance field
     TraceMetadata finalTrace = trace != null ? trace : this.traceMetadata;
     return interactBlocking(context, null, finalTrace);
@@ -665,16 +656,15 @@ public final class Agent implements Serializable, Interactable {
   /**
    * Core blocking interact method with callbacks. Package-private for AgentStream.
    *
-   * @param context   the conversation context containing all history
+   * @param context the conversation context containing all history
    * @param callbacks optional loop callbacks for streaming/events
-   * @param trace     optional trace metadata to include in API requests
+   * @param trace optional trace metadata to include in API requests
    * @return the agent result
    */
-  @NonNull
-  AgentResult interactBlocking(
-          @NonNull AgenticContext context,
-          @Nullable LoopCallbacks callbacks,
-          @Nullable TraceMetadata trace) {
+  @NonNull AgentResult interactBlocking(
+      @NonNull AgenticContext context,
+      @Nullable LoopCallbacks callbacks,
+      @Nullable TraceMetadata trace) {
     Objects.requireNonNull(context, "context cannot be null");
 
     context.ensureTraceContext();
@@ -702,15 +692,13 @@ public final class Agent implements Serializable, Interactable {
     return loopResult;
   }
 
-  /**
-   * Unified agentic loop. Shared by interact, resume, and AgentStream.
-   */
+  /** Unified agentic loop. Shared by interact, resume, and AgentStream. */
   private AgentResult executeAgenticLoop(
-          AgenticContext context,
-          List<ToolExecution> initialExecutions,
-          @Nullable LoopCallbacks callbacks,
-          String fallbackHandoffText,
-          @Nullable TraceMetadata trace) {
+      AgenticContext context,
+      List<ToolExecution> initialExecutions,
+      @Nullable LoopCallbacks callbacks,
+      String fallbackHandoffText,
+      @Nullable TraceMetadata trace) {
 
     List<ToolExecution> allToolExecutions = new ArrayList<>(initialExecutions);
     Response lastResponse = null;
@@ -732,7 +720,7 @@ public final class Agent implements Serializable, Interactable {
         } catch (Exception e) {
           // Wrap LLM call failures in AgentExecutionException
           AgentExecutionException agentEx =
-                  AgentExecutionException.llmCallFailed(name, context.getTurnCount(), e);
+              AgentExecutionException.llmCallFailed(name, context.getTurnCount(), e);
           broadcastFailedEvent(agentEx, context);
           return AgentResult.error(agentEx, context, context.getTurnCount());
         }
@@ -775,7 +763,7 @@ public final class Agent implements Serializable, Interactable {
           Handoff handoff = handoffOpt.get();
           if (callbacks != null) callbacks.onHandoff(handoff);
           String handoffMessage =
-                  extractHandoffMessage(toolCalls, handoff.name()).orElse(fallbackHandoffText);
+              extractHandoffMessage(toolCalls, handoff.name()).orElse(fallbackHandoffText);
 
           // Close the tool exchange: add a synthetic output for the handoff tool call.
           // Without it the history contains an assistant tool_calls message with no corresponding
@@ -783,8 +771,8 @@ public final class Agent implements Serializable, Interactable {
           for (FunctionToolCall call : toolCalls) {
             if (handoff.name().equals(call.name())) {
               context.addToolResult(
-                      FunctionToolCallOutput.success(
-                              call.callId(), "Transferring to " + handoff.targetAgent().name() + "."));
+                  FunctionToolCallOutput.success(
+                      call.callId(), "Transferring to " + handoff.targetAgent().name() + "."));
               break;
             }
           }
@@ -809,8 +797,8 @@ public final class Agent implements Serializable, Interactable {
             return finalizeHandoffResult(handoff, innerResult, context);
           } catch (Exception e) {
             AgentExecutionException agentEx =
-                    AgentExecutionException.handoffFailed(
-                            name, handoff.targetAgent().name(), context.getTurnCount(), e);
+                AgentExecutionException.handoffFailed(
+                    name, handoff.targetAgent().name(), context.getTurnCount(), e);
             broadcastFailedEvent(agentEx, context);
             return AgentResult.error(agentEx, context, context.getTurnCount());
           }
@@ -833,8 +821,8 @@ public final class Agent implements Serializable, Interactable {
             FunctionTool<?> tool = toolStore.get(call.name());
             if (tool != null && tool.requiresConfirmation()) {
               AgentRunState pauseState =
-                      AgentRunState.pendingApproval(
-                              name, context, call, lastResponse, allToolExecutions, turn);
+                  AgentRunState.pendingApproval(
+                      name, context, call, lastResponse, allToolExecutions, turn);
               return AgentResult.paused(pauseState, context);
             }
           }
@@ -842,7 +830,7 @@ public final class Agent implements Serializable, Interactable {
           // Check for pause request (streaming)
           if (callbacks != null) {
             AgentRunState pauseState =
-                    callbacks.onPauseRequested(call, lastResponse, allToolExecutions, context);
+                callbacks.onPauseRequested(call, lastResponse, allToolExecutions, context);
             if (pauseState != null) {
               return AgentResult.paused(pauseState, context);
             }
@@ -861,7 +849,7 @@ public final class Agent implements Serializable, Interactable {
           } else {
             // Tool rejected
             FunctionToolCallOutput rejectedOutput =
-                    FunctionToolCallOutput.error(call.callId(), "Tool execution was rejected");
+                FunctionToolCallOutput.error(call.callId(), "Tool execution was rejected");
             context.addToolResult(rejectedOutput);
           }
         }
@@ -870,7 +858,7 @@ public final class Agent implements Serializable, Interactable {
       // Check if max turns exceeded
       if (context.getTurnCount() > maxTurns) {
         AgentExecutionException agentEx =
-                AgentExecutionException.maxTurnsExceeded(name, maxTurns, context.getTurnCount());
+            AgentExecutionException.maxTurnsExceeded(name, maxTurns, context.getTurnCount());
         broadcastFailedEvent(agentEx, context);
         return AgentResult.error(agentEx, context, context.getTurnCount());
       }
@@ -897,72 +885,67 @@ public final class Agent implements Serializable, Interactable {
         try {
           Object parsed = lastResponse.parse(structuredOutputDefinition, objectMapper);
           return AgentResult.successWithParsed(
-                  output,
-                  parsed,
-                  lastResponse,
-                  context,
-                  allToolExecutions,
-                  context.getTurnCount(),
-                  name);
+              output,
+              parsed,
+              lastResponse,
+              context,
+              allToolExecutions,
+              context.getTurnCount(),
+              name);
         } catch (JacksonException e) {
           AgentExecutionException agentEx =
-                  AgentExecutionException.parsingFailed(name, context.getTurnCount(), e);
+              AgentExecutionException.parsingFailed(name, context.getTurnCount(), e);
           broadcastFailedEvent(agentEx, context);
           return AgentResult.error(agentEx, context, context.getTurnCount());
         }
       }
 
       return AgentResult.success(
-              output, lastResponse, context, allToolExecutions, context.getTurnCount(), name);
+          output, lastResponse, context, allToolExecutions, context.getTurnCount(), name);
 
     } catch (Exception e) {
       // Wrap unexpected exceptions in AgentExecutionException
       AgentExecutionException agentEx =
-              new AgentExecutionException(
-                      name,
-                      AgentExecutionException.Phase.LLM_CALL,
-                      context.getTurnCount(),
-                      String.format("Agent '%s' failed unexpectedly: %s", name, e.getMessage()),
-                      e);
+          new AgentExecutionException(
+              name,
+              AgentExecutionException.Phase.LLM_CALL,
+              context.getTurnCount(),
+              String.format("Agent '%s' failed unexpectedly: %s", name, e.getMessage()),
+              e);
       broadcastFailedEvent(agentEx, context);
       return AgentResult.error(agentEx, context, context.getTurnCount());
     }
   }
 
-  /**
-   * Broadcasts a failed event for telemetry.
-   */
+  /** Broadcasts a failed event for telemetry. */
   private void broadcastFailedEvent(Exception exception, AgenticContext context) {
     if (telemetryProcessors != null) {
       String sessionId =
-              context.requestId().orElseGet(() -> java.util.UUID.randomUUID().toString());
+          context.requestId().orElseGet(() -> java.util.UUID.randomUUID().toString());
       AgentFailedEvent event =
-              AgentFailedEvent.from(
-                      name,
-                      context.getTurnCount(),
-                      exception,
-                      sessionId,
-                      context.parentTraceId().orElse(null),
-                      context.parentSpanId().orElse(null),
-                      null);
+          AgentFailedEvent.from(
+              name,
+              context.getTurnCount(),
+              exception,
+              sessionId,
+              context.parentTraceId().orElse(null),
+              context.parentSpanId().orElse(null),
+              null);
       telemetryProcessors.broadcast(event);
     }
   }
 
-  /**
-   * Continues the agentic loop from a saved state (used by resume).
-   */
+  /** Continues the agentic loop from a saved state (used by resume). */
   private AgentResult continueAgenticLoop(
-          AgenticContext context,
-          Response lastResponse,
-          List<ToolExecution> previousExecutions,
-          int startTurn) {
+      AgenticContext context,
+      Response lastResponse,
+      List<ToolExecution> previousExecutions,
+      int startTurn) {
     // Delegate to unified loop
     return executeAgenticLoop(context, previousExecutions, null, "", null);
   }
 
-  @NonNull
-  AgentResult finalizeHandoffResult(
+  @NonNull AgentResult finalizeHandoffResult(
       @NonNull Handoff handoff, @NonNull AgentResult innerResult, @NonNull AgenticContext context) {
     StructuredOutputDefinition<?> propagatedOutputDefinition = handoff.propagatedOutputDefinition();
     AgentResult normalizedInnerResult = innerResult;
@@ -1001,7 +984,8 @@ public final class Agent implements Serializable, Interactable {
       return Objects.requireNonNull(innerResult.parsed());
     }
 
-    return StructuredOutputSupport.parse(propagatedOutputDefinition, innerResult.output(), objectMapper);
+    return StructuredOutputSupport.parse(
+        propagatedOutputDefinition, innerResult.output(), objectMapper);
   }
 
   private CreateResponsePayload buildPayload(AgenticContext context) {
@@ -1010,16 +994,16 @@ public final class Agent implements Serializable, Interactable {
     // Apply context management if configured
     if (contextManagementConfig != null) {
       input =
-              contextManagementConfig
-                      .strategy()
-                      .manage(
-                              input,
-                              contextManagementConfig.maxTokens(),
-                              contextManagementConfig.tokenCounter());
+          contextManagementConfig
+              .strategy()
+              .manage(
+                  input,
+                  contextManagementConfig.maxTokens(),
+                  contextManagementConfig.tokenCounter());
     }
 
     CreateResponsePayload.Builder builder =
-            CreateResponsePayload.builder().model(model).instructions(instructions.text()).input(input);
+        CreateResponsePayload.builder().model(model).instructions(instructions.text()).input(input);
 
     // Add tools — use registry to dynamically select, or include all
     if (toolRegistry != null) {
@@ -1079,12 +1063,10 @@ public final class Agent implements Serializable, Interactable {
 
   // ===== Private Helper Methods =====
 
-  /**
-   * Builds a TelemetryContext from AgenticContext for trace correlation.
-   */
+  /** Builds a TelemetryContext from AgenticContext for trace correlation. */
   private TelemetryContext buildTelemetryContext(AgenticContext context) {
     TelemetryContext.Builder builder =
-            TelemetryContext.builder().traceName(name + ".turn-" + context.getTurnCount());
+        TelemetryContext.builder().traceName(name + ".turn-" + context.getTurnCount());
 
     context.parentTraceId().ifPresent(builder::parentTraceId);
     context.parentSpanId().ifPresent(builder::parentSpanId);
@@ -1125,12 +1107,12 @@ public final class Agent implements Serializable, Interactable {
   }
 
   private Optional<String> extractHandoffMessage(
-          List<FunctionToolCall> toolCalls, String handoffName) {
+      List<FunctionToolCall> toolCalls, String handoffName) {
     for (FunctionToolCall call : toolCalls) {
       if (handoffName.equals(call.name())) {
         try {
           Handoff.HandoffParams params =
-                  objectMapper.readValue(call.arguments(), Handoff.HandoffParams.class);
+              objectMapper.readValue(call.arguments(), Handoff.HandoffParams.class);
           return Optional.ofNullable(params.message());
         } catch (JacksonException e) {
           return Optional.empty();
@@ -1145,15 +1127,15 @@ public final class Agent implements Serializable, Interactable {
    * ToolExecutionException for better diagnostics.
    */
   private ToolExecution executeSingleToolWithErrorHandling(
-          FunctionToolCall call, AgenticContext context) {
+      FunctionToolCall call, AgenticContext context) {
     // Skip handoff tools (handled separately)
     for (Handoff handoff : handoffs) {
       if (handoff.name().equals(call.name())) {
         FunctionToolCallOutput output =
-                FunctionToolCallOutput.error(
-                        call.callId(), "Handoff tool should not be executed directly");
+            FunctionToolCallOutput.error(
+                call.callId(), "Handoff tool should not be executed directly");
         return new ToolExecution(
-                call.name(), call.callId(), call.arguments(), output, Duration.ZERO);
+            call.name(), call.callId(), call.arguments(), output, Duration.ZERO);
       }
     }
 
@@ -1161,14 +1143,14 @@ public final class Agent implements Serializable, Interactable {
     try {
       // Execute tool with context using virtual-thread-safe ScopedValue
       FunctionToolCallOutput output =
-              context.callAsCurrent(
-                      () -> {
-                        try {
-                          return toolStore.execute(call);
-                        } catch (JacksonException e) {
-                          throw new RuntimeException(e); // Will be handled in outer catch
-                        }
-                      });
+          context.callAsCurrent(
+              () -> {
+                try {
+                  return toolStore.execute(call);
+                } catch (JacksonException e) {
+                  throw new RuntimeException(e); // Will be handled in outer catch
+                }
+              });
 
       Duration duration = Duration.between(start, Instant.now());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), output, duration);
@@ -1178,44 +1160,44 @@ public final class Agent implements Serializable, Interactable {
       // Unwrap if it's our wrapped JacksonException
       if (e.getCause() instanceof JacksonException jpe) {
         ToolExecutionException toolEx =
-                new ToolExecutionException(
-                        call.name(),
-                        call.callId(),
-                        call.arguments(),
-                        "Failed to parse tool arguments: " + jpe.getMessage(),
-                        jpe);
+            new ToolExecutionException(
+                call.name(),
+                call.callId(),
+                call.arguments(),
+                "Failed to parse tool arguments: " + jpe.getMessage(),
+                jpe);
         broadcastFailedEvent(toolEx, context);
         FunctionToolCallOutput errorOutput =
-                FunctionToolCallOutput.error(
-                        call.callId(), "Tool execution failed: " + jpe.getMessage());
+            FunctionToolCallOutput.error(
+                call.callId(), "Tool execution failed: " + jpe.getMessage());
         return new ToolExecution(
-                call.name(), call.callId(), call.arguments(), errorOutput, duration);
+            call.name(), call.callId(), call.arguments(), errorOutput, duration);
       }
 
       // Other exceptions
       ToolExecutionException toolEx =
-              new ToolExecutionException(
-                      call.name(),
-                      call.callId(),
-                      call.arguments(),
-                      "Tool execution failed: " + e.getMessage(),
-                      e);
+          new ToolExecutionException(
+              call.name(),
+              call.callId(),
+              call.arguments(),
+              "Tool execution failed: " + e.getMessage(),
+              e);
       broadcastFailedEvent(toolEx, context);
       FunctionToolCallOutput errorOutput =
-              FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + e.getMessage());
+          FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + e.getMessage());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
     } catch (Exception e) {
       Duration duration = Duration.between(start, Instant.now());
       ToolExecutionException toolEx =
-              new ToolExecutionException(
-                      call.name(),
-                      call.callId(),
-                      call.arguments(),
-                      "Tool execution failed: " + e.getMessage(),
-                      e);
+          new ToolExecutionException(
+              call.name(),
+              call.callId(),
+              call.arguments(),
+              "Tool execution failed: " + e.getMessage(),
+              e);
       broadcastFailedEvent(toolEx, context);
       FunctionToolCallOutput errorOutput =
-              FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + e.getMessage());
+          FunctionToolCallOutput.error(call.callId(), "Tool execution failed: " + e.getMessage());
       return new ToolExecution(call.name(), call.callId(), call.arguments(), errorOutput, duration);
     }
   }
@@ -1231,64 +1213,41 @@ public final class Agent implements Serializable, Interactable {
     return sb.toString();
   }
 
-  /**
-   * Callbacks for agentic loop events. Package-private for AgentStream.
-   */
+  /** Callbacks for agentic loop events. Package-private for AgentStream. */
   interface LoopCallbacks {
-    /**
-     * Called at start of each turn.
-     */
-    default void onTurnStart(int turn) {
-    }
+    /** Called at start of each turn. */
+    default void onTurnStart(int turn) {}
 
-    /**
-     * Called after LLM response received.
-     */
-    default void onTurnComplete(Response response) {
-    }
+    /** Called after LLM response received. */
+    default void onTurnComplete(Response response) {}
 
-    /**
-     * Called when tool call is detected. Returns true to execute, false to skip.
-     */
+    /** Called when tool call is detected. Returns true to execute, false to skip. */
     default boolean onToolCall(FunctionToolCall call) {
       return true;
     }
 
-    /**
-     * Called after tool is executed.
-     */
-    default void onToolExecuted(ToolExecution execution) {
-    }
+    /** Called after tool is executed. */
+    default void onToolExecuted(ToolExecution execution) {}
 
-    /**
-     * Called when handoff is detected.
-     */
-    default void onHandoff(Handoff handoff) {
-    }
+    /** Called when handoff is detected. */
+    default void onHandoff(Handoff handoff) {}
 
-    /**
-     * Called when guardrail fails.
-     */
-    default void onGuardrailFailed(GuardrailResult.Failed failed) {
-    }
+    /** Called when guardrail fails. */
+    default void onGuardrailFailed(GuardrailResult.Failed failed) {}
 
-    /**
-     * Called to pause for approval. Return non-null to pause.
-     */
+    /** Called to pause for approval. Return non-null to pause. */
     default AgentRunState onPauseRequested(
-            FunctionToolCall call,
-            Response lastResponse,
-            List<ToolExecution> executions,
-            AgenticContext context) {
+        FunctionToolCall call,
+        Response lastResponse,
+        List<ToolExecution> executions,
+        AgenticContext context) {
       return null;
     }
   }
 
   // ===== Builder =====
 
-  /**
-   * Builder for creating Agent instances.
-   */
+  /** Builder for creating Agent instances. */
   public static final class Builder {
     private final List<FunctionTool<?>> tools = new ArrayList<>();
     private final List<Handoff> handoffs = new ArrayList<>();
@@ -1413,8 +1372,7 @@ public final class Agent implements Serializable, Interactable {
       return this;
     }
 
-    @NonNull
-    Builder outputType(@NonNull StructuredOutputDefinition<?> outputType) {
+    @NonNull Builder outputType(@NonNull StructuredOutputDefinition<?> outputType) {
       this.structuredOutputDefinition = Objects.requireNonNull(outputType);
       return this;
     }
@@ -1547,7 +1505,7 @@ public final class Agent implements Serializable, Interactable {
      *     .build();
      * }</pre>
      *
-     * @param subAgent    the agent to add as a callable tool
+     * @param subAgent the agent to add as a callable tool
      * @param description describes when to use this sub-agent
      * @return this builder
      * @see SubAgentTool
@@ -1573,7 +1531,7 @@ public final class Agent implements Serializable, Interactable {
      * }</pre>
      *
      * @param subAgent the agent to add as a callable tool
-     * @param config   configuration for context sharing and description
+     * @param config configuration for context sharing and description
      * @return this builder
      * @see SubAgentTool.Config
      */
@@ -1665,7 +1623,7 @@ public final class Agent implements Serializable, Interactable {
      * }</pre>
      *
      * @param provider the skill provider
-     * @param skillId  the skill identifier
+     * @param skillId the skill identifier
      * @return this builder
      * @see SkillProvider
      */
@@ -1922,7 +1880,7 @@ public final class Agent implements Serializable, Interactable {
      * Person person = result.output();  // Type-safe!
      * }</pre>
      *
-     * @param <T>        the output type
+     * @param <T> the output type
      * @param outputType the class of the structured output
      * @return a structured builder that builds Agent.Structured
      */
@@ -1980,8 +1938,8 @@ public final class Agent implements Serializable, Interactable {
     private final StructuredOutputDefinition<T> structuredOutputDefinition;
 
     private StructuredBuilder(
-            @NonNull Builder parentBuilder,
-            @NonNull StructuredOutputDefinition<T> structuredOutputDefinition) {
+        @NonNull Builder parentBuilder,
+        @NonNull StructuredOutputDefinition<T> structuredOutputDefinition) {
       this.parentBuilder = Objects.requireNonNull(parentBuilder);
       this.structuredOutputDefinition = Objects.requireNonNull(structuredOutputDefinition);
     }
@@ -2044,13 +2002,13 @@ public final class Agent implements Serializable, Interactable {
     }
 
     public @NonNull StructuredBuilder<T> addSubAgent(
-            @NonNull Agent subAgent, @NonNull String description) {
+        @NonNull Agent subAgent, @NonNull String description) {
       parentBuilder.addSubAgent(subAgent, description);
       return this;
     }
 
     public @NonNull StructuredBuilder<T> addSubAgent(
-            @NonNull Agent subAgent, SubAgentTool.Config config) {
+        @NonNull Agent subAgent, SubAgentTool.Config config) {
       parentBuilder.addSubAgent(subAgent, config);
       return this;
     }
@@ -2071,7 +2029,7 @@ public final class Agent implements Serializable, Interactable {
     }
 
     public @NonNull StructuredBuilder<T> addTelemetryProcessor(
-            @NonNull TelemetryProcessor processor) {
+        @NonNull TelemetryProcessor processor) {
       parentBuilder.addTelemetryProcessor(processor);
       return this;
     }
@@ -2087,7 +2045,7 @@ public final class Agent implements Serializable, Interactable {
     }
 
     public @NonNull StructuredBuilder<T> contextManagement(
-            @NonNull ContextManagementConfig config) {
+        @NonNull ContextManagementConfig config) {
       parentBuilder.contextManagement(config);
       return this;
     }
@@ -2098,7 +2056,7 @@ public final class Agent implements Serializable, Interactable {
     }
 
     public @NonNull StructuredBuilder<T> addSkillFrom(
-            @NonNull SkillProvider provider, @NonNull String skillId) {
+        @NonNull SkillProvider provider, @NonNull String skillId) {
       parentBuilder.addSkillFrom(provider, skillId);
       return this;
     }
@@ -2156,23 +2114,19 @@ public final class Agent implements Serializable, Interactable {
     }
 
     Structured(
-            @NonNull Agent agent, @NonNull StructuredOutputDefinition<T> structuredOutputDefinition) {
+        @NonNull Agent agent, @NonNull StructuredOutputDefinition<T> structuredOutputDefinition) {
       this.agent = Objects.requireNonNull(agent);
       this.structuredOutputDefinition = Objects.requireNonNull(structuredOutputDefinition);
       this.objectMapper = agent.objectMapper;
     }
 
-    /**
-     * Returns the wrapped agent's name.
-     */
+    /** Returns the wrapped agent's name. */
     @Override
     public @NonNull String name() {
       return agent.name();
     }
 
-    /**
-     * Returns the structured output type.
-     */
+    /** Returns the structured output type. */
     public @NonNull Class<T> outputType() {
       return structuredOutputDefinition.responseType();
     }
@@ -2191,12 +2145,12 @@ public final class Agent implements Serializable, Interactable {
     /**
      * Interacts with the agent with context and returns type-safe structured output.
      *
-     * @param input   the user's text input
+     * @param input the user's text input
      * @param context the conversation context
      * @return the typed result
      */
     public @NonNull StructuredAgentResult<T> interact(
-            @NonNull String input, @NonNull AgenticContext context) {
+        @NonNull String input, @NonNull AgenticContext context) {
       Objects.requireNonNull(input, "input cannot be null");
       context.addInput(Message.user(input));
       return interact(context, null);
@@ -2219,12 +2173,12 @@ public final class Agent implements Serializable, Interactable {
      * <p>This is the core method. All other interact overloads delegate here.
      *
      * @param context the conversation context containing all history
-     * @param trace   optional trace metadata
+     * @param trace optional trace metadata
      * @return the typed result
      */
     @Override
     public @NonNull StructuredAgentResult<T> interact(
-            @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
+        @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       AgentResult result = agent.interact(context, trace);
       return parseResult(result);
     }
@@ -2238,9 +2192,7 @@ public final class Agent implements Serializable, Interactable {
       return agent.asStreaming();
     }
 
-    /**
-     * Parses the AgentResult into a type-safe StructuredAgentResult.
-     */
+    /** Parses the AgentResult into a type-safe StructuredAgentResult. */
     private @NonNull StructuredAgentResult<T> parseResult(AgentResult result) {
       if (result.isError()) {
         return StructuredAgentResult.error(Objects.requireNonNull(result.error()), result);
@@ -2253,8 +2205,11 @@ public final class Agent implements Serializable, Interactable {
       }
 
       try {
-        T parsed = StructuredOutputSupport.parse(structuredOutputDefinition, result.output(), objectMapper);
-        return StructuredAgentResult.success(parsed, AgentResult.Builder.from(result).parsed(parsed).build());
+        T parsed =
+            StructuredOutputSupport.parse(
+                structuredOutputDefinition, result.output(), objectMapper);
+        return StructuredAgentResult.success(
+            parsed, AgentResult.Builder.from(result).parsed(parsed).build());
       } catch (JacksonException e) {
         return StructuredAgentResult.error(
             new IllegalStateException("Failed to parse structured output: " + e.getMessage(), e),

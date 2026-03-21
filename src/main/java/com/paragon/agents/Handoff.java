@@ -1,7 +1,7 @@
 package com.paragon.agents;
 
-import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.responses.annotations.FunctionMetadata;
+import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.responses.spec.FunctionTool;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import java.util.Map;
@@ -107,14 +107,14 @@ public final class Handoff {
     return propagatedOutputDefinition != null ? propagatedOutputDefinition.responseType() : null;
   }
 
-  @Nullable
-  StructuredOutputDefinition<?> propagatedOutputDefinition() {
+  @Nullable StructuredOutputDefinition<?> propagatedOutputDefinition() {
     return propagatedOutputDefinition;
   }
 
-  @Nullable
-  JavaType propagatedOutputJavaType() {
-    return propagatedOutputDefinition != null ? propagatedOutputDefinition.responseJavaType() : null;
+  @Nullable JavaType propagatedOutputJavaType() {
+    return propagatedOutputDefinition != null
+        ? propagatedOutputDefinition.responseJavaType()
+        : null;
   }
 
   /**
@@ -261,8 +261,8 @@ public final class Handoff {
     /**
      * Declares the structured output this handoff may propagate to the caller.
      *
-     * <p>This contract is not exposed to the parent agent's LLM. It is used only for validating
-     * and typing the delegated terminal result.
+     * <p>This contract is not exposed to the parent agent's LLM. It is used only for validating and
+     * typing the delegated terminal result.
      *
      * @param outputType the propagated output type
      * @return this builder

@@ -141,10 +141,7 @@ public class AgentResult {
    * @return a minimal success result
    */
   public static @NonNull AgentResult success(@NonNull String output) {
-    return new Builder()
-        .output(output)
-        .outputOrigin(OutputOrigin.LOCAL)
-        .build();
+    return new Builder().output(output).outputOrigin(OutputOrigin.LOCAL).build();
   }
 
   /**
@@ -840,8 +837,10 @@ public class AgentResult {
     }
 
     try {
-      T parsedValue = StructuredOutputSupport.parse(structuredOutputDefinition, output, objectMapper);
-      return StructuredAgentResult.success(parsedValue, Builder.from(this).parsed(parsedValue).build());
+      T parsedValue =
+          StructuredOutputSupport.parse(structuredOutputDefinition, output, objectMapper);
+      return StructuredAgentResult.success(
+          parsedValue, Builder.from(this).parsed(parsedValue).build());
     } catch (JacksonException e) {
       return StructuredAgentResult.error(
           new RuntimeException("Failed to parse structured output: " + e.getMessage(), e), this);
