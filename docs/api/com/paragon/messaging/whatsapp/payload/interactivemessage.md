@@ -1,5 +1,7 @@
 # :material-code-braces: InteractiveMessage
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.whatsapp.payload.InteractiveMessage` &nbsp;·&nbsp; **Class**
 
 Extends `AbstractInboundMessage`

@@ -18,6 +18,7 @@
 
 
 
+
 Agents are high-level abstractions that wrap a Responder with tools, guardrails, memory, and multi-agent orchestration. They handle the complete agentic loop automatically.
 
 !!! tip "Need the behavior diagrams?"

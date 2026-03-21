@@ -1,5 +1,7 @@
 # :material-database: FunctionToolDefinition
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.FunctionToolDefinition` &nbsp;·&nbsp; **Record**
 
 ---

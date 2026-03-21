@@ -1,5 +1,7 @@
 # :material-code-braces: ParagonJavaTimeModule
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.json.ParagonJavaTimeModule` &nbsp;·&nbsp; **Class**
 
 Extends `SimpleModule`

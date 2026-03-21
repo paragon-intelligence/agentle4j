@@ -1,5 +1,7 @@
 # :material-database: MemoryEntry
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.MemoryEntry` &nbsp;·&nbsp; **Record**
 
 ---

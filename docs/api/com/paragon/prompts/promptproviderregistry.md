@@ -1,5 +1,7 @@
 # :material-code-braces: PromptProviderRegistry
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.prompts.PromptProviderRegistry` &nbsp;·&nbsp; **Class**
 
 ---

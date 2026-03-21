@@ -1,5 +1,7 @@
 # :material-at: FunctionMetadata
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.annotations.FunctionMetadata` &nbsp;·&nbsp; **Annotation**
 
 ---

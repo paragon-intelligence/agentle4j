@@ -1,5 +1,7 @@
 # :material-database: FileSearchToolCallResult
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.FileSearchToolCallResult` &nbsp;·&nbsp; **Record**
 
 ---

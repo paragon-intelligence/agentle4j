@@ -1,5 +1,7 @@
 # :material-code-braces: ArtifactStoreTool
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.harness.tools.ArtifactStoreTool` &nbsp;·&nbsp; **Class**
 
 ---

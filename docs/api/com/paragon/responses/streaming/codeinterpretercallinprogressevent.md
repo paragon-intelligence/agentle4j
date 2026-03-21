@@ -1,5 +1,7 @@
 # :material-database: CodeInterpreterCallInProgressEvent
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.streaming.CodeInterpreterCallInProgressEvent` &nbsp;·&nbsp; **Record**
 
 ---

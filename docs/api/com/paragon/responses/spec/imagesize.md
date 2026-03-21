@@ -1,5 +1,7 @@
 # :material-format-list-bulleted-type: ImageSize
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.ImageSize` &nbsp;·&nbsp; **Enum**
 
 ---

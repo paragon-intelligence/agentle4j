@@ -1,5 +1,7 @@
 # :material-code-braces: WhatsAppMediaUploader
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.whatsapp.WhatsAppMediaUploader` &nbsp;·&nbsp; **Class**
 
 ---

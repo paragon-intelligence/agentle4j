@@ -1,5 +1,7 @@
 # :material-database: RefusalDoneEvent
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.streaming.RefusalDoneEvent` &nbsp;·&nbsp; **Record**
 
 ---

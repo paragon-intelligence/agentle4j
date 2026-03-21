@@ -1,5 +1,7 @@
 # Package `com.paragon.messaging.whatsapp.messages`
 
+> This docs was updated at: 2026-03-21
+
 ---
 
 ## :material-approximately-equal: Interfaces

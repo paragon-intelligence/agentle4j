@@ -1,5 +1,7 @@
 # :material-code-braces: SkillProviderException
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.skills.SkillProviderException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`

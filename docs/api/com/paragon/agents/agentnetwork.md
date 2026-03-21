@@ -1,5 +1,7 @@
 # :material-code-braces: AgentNetwork
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.AgentNetwork` &nbsp;·&nbsp; **Class**
 
 Implements `Interactable`

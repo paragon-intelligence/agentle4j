@@ -1,5 +1,7 @@
 # :material-format-list-bulleted-type: ProxyMode
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.web.ProxyMode` &nbsp;·&nbsp; **Enum**
 
 ---

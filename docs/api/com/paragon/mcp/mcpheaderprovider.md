@@ -1,5 +1,7 @@
 # :material-approximately-equal: McpHeaderProvider
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.mcp.McpHeaderProvider` &nbsp;·&nbsp; **Interface**
 
 ---

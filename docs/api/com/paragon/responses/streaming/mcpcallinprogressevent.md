@@ -1,5 +1,7 @@
 # :material-database: McpCallInProgressEvent
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.streaming.McpCallInProgressEvent` &nbsp;·&nbsp; **Record**
 
 ---

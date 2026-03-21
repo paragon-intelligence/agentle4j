@@ -1,5 +1,7 @@
 # :material-database: McpListToolsCompletedEvent
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.streaming.McpListToolsCompletedEvent` &nbsp;·&nbsp; **Record**
 
 ---

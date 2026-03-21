@@ -1,5 +1,7 @@
 # :material-code-braces: AIAgentProcessor
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.processor.AIAgentProcessor` &nbsp;·&nbsp; **Class**
 
 Implements `MessageProcessor`

@@ -1,5 +1,7 @@
 # :material-code-braces: ParallelAgents
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.ParallelAgents` &nbsp;·&nbsp; **Class**
 
 Implements `Interactable`

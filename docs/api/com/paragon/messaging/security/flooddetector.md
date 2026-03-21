@@ -1,5 +1,7 @@
 # :material-code-braces: FloodDetector
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.security.FloodDetector` &nbsp;·&nbsp; **Class**
 
 ---

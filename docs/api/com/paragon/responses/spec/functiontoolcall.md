@@ -1,5 +1,7 @@
 # :material-code-braces: FunctionToolCall
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.FunctionToolCall` &nbsp;·&nbsp; **Class**
 
 Extends `ToolCall` &nbsp;·&nbsp; Implements `Item`, `ResponseOutput`

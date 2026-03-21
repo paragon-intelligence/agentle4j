@@ -1,5 +1,7 @@
 # :material-code-braces: ToolRegistry
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.toolsearch.ToolRegistry` &nbsp;·&nbsp; **Class**
 
 ---

@@ -1,5 +1,7 @@
 # :material-database: FunctionCallArgumentsDeltaEvent
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.streaming.FunctionCallArgumentsDeltaEvent` &nbsp;·&nbsp; **Record**
 
 ---

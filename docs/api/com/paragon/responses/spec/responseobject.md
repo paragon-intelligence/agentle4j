@@ -1,5 +1,7 @@
 # :material-format-list-bulleted-type: ResponseObject
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.ResponseObject` &nbsp;·&nbsp; **Enum**
 
 ---

@@ -1,5 +1,7 @@
 # :material-approximately-equal: ReasoningContent
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.ReasoningContent` &nbsp;·&nbsp; **Interface**
 
 ---

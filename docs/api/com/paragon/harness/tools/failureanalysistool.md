@@ -1,5 +1,7 @@
 # :material-code-braces: FailureAnalysisTool
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.harness.tools.FailureAnalysisTool` &nbsp;·&nbsp; **Class**
 
 Extends `FunctionTool<FailureAnalysisTool.AnalysisRequest>`

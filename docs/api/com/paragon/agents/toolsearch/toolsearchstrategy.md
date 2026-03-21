@@ -1,5 +1,7 @@
 # :material-approximately-equal: ToolSearchStrategy
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.toolsearch.ToolSearchStrategy` &nbsp;·&nbsp; **Interface**
 
 ---

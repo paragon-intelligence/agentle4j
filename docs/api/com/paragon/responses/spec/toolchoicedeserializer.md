@@ -1,5 +1,7 @@
 # :material-code-braces: ToolChoiceDeserializer
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.ToolChoiceDeserializer` &nbsp;·&nbsp; **Class**
 
 Extends `ValueDeserializer<ToolChoice>`

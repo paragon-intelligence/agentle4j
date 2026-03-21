@@ -1,5 +1,7 @@
 # :material-approximately-equal: ReactionMessageInterface
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.core.ReactionMessageInterface` &nbsp;·&nbsp; **Interface**
 
 Extends `OutboundMessage`

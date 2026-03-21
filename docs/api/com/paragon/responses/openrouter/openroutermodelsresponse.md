@@ -1,5 +1,7 @@
 # :material-database: OpenRouterModelsResponse
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.openrouter.OpenRouterModelsResponse` &nbsp;·&nbsp; **Record**
 
 ---

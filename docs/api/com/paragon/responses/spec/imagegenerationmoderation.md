@@ -1,5 +1,7 @@
 # :material-format-list-bulleted-type: ImageGenerationModeration
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.ImageGenerationModeration` &nbsp;·&nbsp; **Enum**
 
 ---

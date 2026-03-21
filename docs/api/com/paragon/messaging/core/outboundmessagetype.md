@@ -1,5 +1,7 @@
 # :material-format-list-bulleted-type: OutboundMessageType
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.core.OutboundMessageType` &nbsp;·&nbsp; **Enum**
 
 ---

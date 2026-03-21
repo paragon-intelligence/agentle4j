@@ -1,5 +1,7 @@
 # :material-code-braces: RouterAgent
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.RouterAgent` &nbsp;·&nbsp; **Class**
 
 Implements `Interactable`

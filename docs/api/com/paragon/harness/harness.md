@@ -1,5 +1,7 @@
 # :material-code-braces: Harness
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.harness.Harness` &nbsp;·&nbsp; **Class**
 
 ---

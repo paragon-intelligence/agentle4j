@@ -1,5 +1,7 @@
 # :material-code-braces: NetworkStream
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.NetworkStream` &nbsp;·&nbsp; **Class**
 
 ---

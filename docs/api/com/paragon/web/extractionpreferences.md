@@ -1,5 +1,7 @@
 # :material-code-braces: ExtractionPreferences
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.web.ExtractionPreferences` &nbsp;·&nbsp; **Class**
 
 ---

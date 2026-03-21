@@ -16,7 +16,8 @@ hide:
 
 # Agentle4j
 
-> This docs was updated at: 2026-03-20
+> This docs was updated at: 2026-03-21
+
 
 
 
@@ -98,7 +99,7 @@ hide:
 - Agentle4j requires **Java 25+ with preview features enabled**.
 - Core APIs are **synchronous-first** and designed to be used directly or dispatched onto virtual threads.
 - Streaming is exposed through **`ResponseStream`** and **`AgentStream`** callbacks.
-- The published artifact version documented here is **`0.10.0`**.
+- The published artifact version documented here is **`0.10.1`**.
 
 ---
 
@@ -137,14 +138,14 @@ System.out.println(response.outputText());
     <dependency>
         <groupId>io.github.paragon-intelligence</groupId>
         <artifactId>agentle4j</artifactId>
-        <version>0.10.0</version>
+        <version>0.10.1</version>
     </dependency>
     ```
 
 === "Gradle"
 
     ```groovy
-    implementation 'io.github.paragon-intelligence:agentle4j:0.10.0'
+    implementation 'io.github.paragon-intelligence:agentle4j:0.10.1'
     ```
 
 Requires Java 25+ with preview features enabled.

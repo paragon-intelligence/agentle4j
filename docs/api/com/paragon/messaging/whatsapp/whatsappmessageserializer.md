@@ -1,5 +1,7 @@
 # :material-code-braces: WhatsAppMessageSerializer
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.whatsapp.WhatsAppMessageSerializer` &nbsp;·&nbsp; **Class**
 
 ---

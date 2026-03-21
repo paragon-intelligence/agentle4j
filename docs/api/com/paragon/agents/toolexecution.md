@@ -1,5 +1,7 @@
 # :material-database: ToolExecution
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.ToolExecution` &nbsp;·&nbsp; **Record**
 
 ---

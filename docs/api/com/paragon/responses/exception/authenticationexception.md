@@ -1,5 +1,7 @@
 # :material-code-braces: AuthenticationException
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.exception.AuthenticationException` &nbsp;·&nbsp; **Class**
 
 Extends `ApiException`

@@ -1,5 +1,7 @@
 # :material-database: ResponseFailedEvent
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.telemetry.events.ResponseFailedEvent` &nbsp;·&nbsp; **Record**
 
 ---

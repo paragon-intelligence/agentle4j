@@ -1,5 +1,7 @@
 # :material-code-braces: ToolExecutionException
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.exception.ToolExecutionException` &nbsp;·&nbsp; **Class**
 
 Extends `AgentleException`

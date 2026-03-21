@@ -1,5 +1,7 @@
 # :material-database: ReasoningSummaryTextDoneEvent
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.streaming.ReasoningSummaryTextDoneEvent` &nbsp;·&nbsp; **Record**
 
 ---

@@ -1,5 +1,7 @@
 # :material-code-braces: ToolPlanException
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.toolplan.ToolPlanException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`

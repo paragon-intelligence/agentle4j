@@ -1,5 +1,7 @@
 # :material-database: OtelScopeMetric
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.telemetry.otel.OtelScopeMetric` &nbsp;·&nbsp; **Record**
 
 ---

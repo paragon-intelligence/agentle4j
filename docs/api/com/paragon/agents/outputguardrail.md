@@ -1,5 +1,7 @@
 # :material-approximately-equal: OutputGuardrail
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.OutputGuardrail` &nbsp;·&nbsp; **Interface**
 
 ---

@@ -1,5 +1,7 @@
 # :material-code-braces: PlanReferenceResolver
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.toolplan.PlanReferenceResolver` &nbsp;·&nbsp; **Class**
 
 ---

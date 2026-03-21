@@ -1,5 +1,7 @@
 # :material-database: McpListToolsFailedEvent
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.streaming.McpListToolsFailedEvent` &nbsp;·&nbsp; **Record**
 
 ---

@@ -1,5 +1,7 @@
 # :material-code-braces: ScrollActionDeserializer
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.json.ScrollActionDeserializer` &nbsp;·&nbsp; **Class**
 
 Extends `ValueDeserializer<ScrollAction>`

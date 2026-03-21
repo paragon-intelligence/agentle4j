@@ -1,5 +1,7 @@
 # :material-database: JsonRpcRequest
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.mcp.dto.JsonRpcRequest` &nbsp;·&nbsp; **Record**
 
 ---

@@ -1,5 +1,7 @@
 # :material-database: Coordinate
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.Coordinate` &nbsp;·&nbsp; **Record**
 
 ---

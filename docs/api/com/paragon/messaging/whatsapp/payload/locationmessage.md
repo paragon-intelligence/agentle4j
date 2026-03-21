@@ -1,5 +1,7 @@
 # :material-code-braces: LocationMessage
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.whatsapp.payload.LocationMessage` &nbsp;·&nbsp; **Class**
 
 Extends `AbstractInboundMessage`

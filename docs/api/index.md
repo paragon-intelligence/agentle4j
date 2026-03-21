@@ -1,5 +1,7 @@
 # API Reference
 
+> This docs was updated at: 2026-03-21
+
 Auto-generated from Javadoc source comments. Run `make docs-gen` to regenerate.
 
 ---

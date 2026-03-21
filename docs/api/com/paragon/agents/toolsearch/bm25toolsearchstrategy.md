@@ -1,5 +1,7 @@
 # :material-code-braces: BM25ToolSearchStrategy
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.toolsearch.BM25ToolSearchStrategy` &nbsp;·&nbsp; **Class**
 
 Implements `ToolSearchStrategy`

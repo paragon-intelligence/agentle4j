@@ -1,5 +1,7 @@
 # :material-database: RefusalDeltaEvent
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.streaming.RefusalDeltaEvent` &nbsp;·&nbsp; **Record**
 
 ---

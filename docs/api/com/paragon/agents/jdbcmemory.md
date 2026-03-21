@@ -1,5 +1,7 @@
 # :material-code-braces: JdbcMemory
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.JdbcMemory` &nbsp;·&nbsp; **Class**
 
 Implements `Memory`

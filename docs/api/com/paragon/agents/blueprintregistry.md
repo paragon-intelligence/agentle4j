@@ -1,5 +1,7 @@
 # :material-code-braces: BlueprintRegistry
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.BlueprintRegistry` &nbsp;·&nbsp; **Class**
 
 ---

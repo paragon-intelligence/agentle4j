@@ -1,5 +1,7 @@
 # :material-code-braces: ParsedResponse
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.ParsedResponse` &nbsp;·&nbsp; **Class**
 
 Extends `Response`

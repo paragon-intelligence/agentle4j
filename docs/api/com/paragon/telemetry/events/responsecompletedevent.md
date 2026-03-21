@@ -1,5 +1,7 @@
 # :material-database: ResponseCompletedEvent
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.telemetry.events.ResponseCompletedEvent` &nbsp;·&nbsp; **Record**
 
 ---

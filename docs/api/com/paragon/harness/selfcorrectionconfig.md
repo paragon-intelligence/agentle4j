@@ -1,5 +1,7 @@
 # :material-code-braces: SelfCorrectionConfig
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.harness.SelfCorrectionConfig` &nbsp;·&nbsp; **Class**
 
 ---

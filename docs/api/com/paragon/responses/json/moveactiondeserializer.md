@@ -1,5 +1,7 @@
 # :material-code-braces: MoveActionDeserializer
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.json.MoveActionDeserializer` &nbsp;·&nbsp; **Class**
 
 Extends `ValueDeserializer<MoveAction>`

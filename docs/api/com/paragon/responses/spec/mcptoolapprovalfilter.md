@@ -1,5 +1,7 @@
 # :material-database: McpToolApprovalFilter
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.McpToolApprovalFilter` &nbsp;·&nbsp; **Record**
 
 ---

@@ -1,5 +1,7 @@
 # :material-code-braces: ServerException
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.exception.ServerException` &nbsp;·&nbsp; **Class**
 
 Extends `ApiException`

@@ -1,5 +1,7 @@
 # :material-code-braces: SkillMarkdownParser
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.skills.SkillMarkdownParser` &nbsp;·&nbsp; **Class**
 
 ---

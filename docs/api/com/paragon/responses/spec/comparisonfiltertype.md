@@ -1,5 +1,7 @@
 # :material-format-list-bulleted-type: ComparisonFilterType
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.ComparisonFilterType` &nbsp;·&nbsp; **Enum**
 
 ---

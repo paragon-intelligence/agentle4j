@@ -1,5 +1,7 @@
 # :material-code-braces: GrafanaProcessor
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.telemetry.grafana.GrafanaProcessor` &nbsp;·&nbsp; **Class**
 
 Extends `TelemetryProcessor`

@@ -1,5 +1,7 @@
 # :material-database: TextMessage
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.whatsapp.messages.TextMessage` &nbsp;·&nbsp; **Record**
 
 ---

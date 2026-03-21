@@ -1,5 +1,7 @@
 # :material-code-braces: InMemoryMessageStore
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.store.InMemoryMessageStore` &nbsp;·&nbsp; **Class**
 
 Implements `MessageStore`

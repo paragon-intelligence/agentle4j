@@ -1,5 +1,7 @@
 # :material-code-braces: VideoMessage
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.whatsapp.payload.VideoMessage` &nbsp;·&nbsp; **Class**
 
 Extends `AbstractInboundMessage`

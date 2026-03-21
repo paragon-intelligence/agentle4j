@@ -1,5 +1,7 @@
 # :material-code-braces: AgentService
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.AgentService` &nbsp;·&nbsp; **Class**
 
 ---

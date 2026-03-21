@@ -2,6 +2,7 @@
 
 > This docs was updated at: 2026-03-21
 
+
 This guide is the behavior-first companion to the [Agents Guide](agents.md). It focuses on how Agentle's public agentic building blocks actually run: who keeps control, how context moves, when results are delegated, and what comes back to your application.
 
 Examples in this guide assume a `Responder` is already available:

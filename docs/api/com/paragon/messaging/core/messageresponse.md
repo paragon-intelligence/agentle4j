@@ -1,5 +1,7 @@
 # :material-database: MessageResponse
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.core.MessageResponse` &nbsp;·&nbsp; **Record**
 
 ---

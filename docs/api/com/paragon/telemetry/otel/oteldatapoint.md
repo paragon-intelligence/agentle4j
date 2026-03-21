@@ -1,5 +1,7 @@
 # :material-database: OtelDataPoint
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.telemetry.otel.OtelDataPoint` &nbsp;·&nbsp; **Record**
 
 ---

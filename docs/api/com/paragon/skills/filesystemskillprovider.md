@@ -1,5 +1,7 @@
 # :material-code-braces: FilesystemSkillProvider
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.skills.FilesystemSkillProvider` &nbsp;·&nbsp; **Class**
 
 Implements `SkillProvider`

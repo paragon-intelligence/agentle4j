@@ -1,5 +1,7 @@
 # :material-code-braces: RedisConversationHistoryStore
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.store.history.RedisConversationHistoryStore` &nbsp;·&nbsp; **Class**
 
 Implements `ConversationHistoryStore`

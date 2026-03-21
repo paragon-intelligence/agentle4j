@@ -1,5 +1,7 @@
 # :material-database: ShellTool
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.ShellTool` &nbsp;·&nbsp; **Record**
 
 ---

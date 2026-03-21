@@ -1,5 +1,7 @@
 # :material-code-braces: DefaultMessageConverter
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.conversion.DefaultMessageConverter` &nbsp;·&nbsp; **Class**
 
 Implements `MessageConverter`

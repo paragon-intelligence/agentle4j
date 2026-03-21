@@ -1,5 +1,7 @@
 # Package `com.paragon.json`
 
+> This docs was updated at: 2026-03-21
+
 ---
 
 ## :material-code-braces: Classs

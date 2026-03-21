@@ -1,5 +1,7 @@
 # :material-database: MenuResponse
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.whatsapp.response.MenuResponse` &nbsp;·&nbsp; **Record**
 
 ---

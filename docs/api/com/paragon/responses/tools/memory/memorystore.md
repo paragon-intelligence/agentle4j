@@ -1,5 +1,7 @@
 # :material-approximately-equal: MemoryStore
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.tools.memory.MemoryStore` &nbsp;·&nbsp; **Interface**
 
 ---

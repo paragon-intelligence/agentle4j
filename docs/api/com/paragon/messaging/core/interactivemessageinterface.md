@@ -1,5 +1,7 @@
 # :material-approximately-equal: InteractiveMessageInterface
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.core.InteractiveMessageInterface` &nbsp;·&nbsp; **Interface**
 
 Extends `OutboundMessage`

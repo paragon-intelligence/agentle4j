@@ -1,5 +1,7 @@
 # :material-code-braces: SlidingWindowStrategy
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.context.SlidingWindowStrategy` &nbsp;·&nbsp; **Class**
 
 Implements `ContextWindowStrategy`

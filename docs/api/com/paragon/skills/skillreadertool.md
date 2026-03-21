@@ -1,5 +1,7 @@
 # :material-code-braces: SkillReaderTool
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.skills.SkillReaderTool` &nbsp;·&nbsp; **Class**
 
 Extends `FunctionTool<SkillReaderTool.Params>`

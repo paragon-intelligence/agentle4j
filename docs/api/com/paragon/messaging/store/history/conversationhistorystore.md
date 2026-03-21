@@ -1,5 +1,7 @@
 # :material-approximately-equal: ConversationHistoryStore
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.store.history.ConversationHistoryStore` &nbsp;·&nbsp; **Interface**
 
 ---

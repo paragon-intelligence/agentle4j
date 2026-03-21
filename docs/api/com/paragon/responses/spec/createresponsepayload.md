@@ -1,5 +1,7 @@
 # :material-code-braces: CreateResponsePayload
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.CreateResponsePayload` &nbsp;·&nbsp; **Class**
 
 ---

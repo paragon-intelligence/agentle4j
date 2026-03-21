@@ -1,5 +1,7 @@
 # :material-approximately-equal: Source
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.Source` &nbsp;·&nbsp; **Interface**
 
 ---

@@ -1,5 +1,7 @@
 # :material-database: TextResponse
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.whatsapp.response.TextResponse` &nbsp;·&nbsp; **Record**
 
 ---

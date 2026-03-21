@@ -1,5 +1,7 @@
 # :material-code-braces: CustomToolCall
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.CustomToolCall` &nbsp;·&nbsp; **Class**
 
 Extends `ToolCall` &nbsp;·&nbsp; Implements `Item`, `ResponseOutput`

@@ -1,5 +1,7 @@
 # :material-database: SecurityConfig
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.security.SecurityConfig` &nbsp;·&nbsp; **Record**
 
 ---

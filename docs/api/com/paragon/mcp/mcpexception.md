@@ -1,5 +1,7 @@
 # :material-code-braces: McpException
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.mcp.McpException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`

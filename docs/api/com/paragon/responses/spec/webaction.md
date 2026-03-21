@@ -1,5 +1,7 @@
 # :material-approximately-equal: WebAction
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.WebAction` &nbsp;·&nbsp; **Interface**
 
 ---

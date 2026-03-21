@@ -18,6 +18,7 @@
 
 
 
+
 Agentle4j provides real-time streaming with callback-based APIs that work well with virtual
 threads. This guide covers the streaming patterns exposed by `ResponseStream` and `AgentStream`.
 

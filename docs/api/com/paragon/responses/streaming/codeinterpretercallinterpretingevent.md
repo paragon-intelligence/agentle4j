@@ -1,5 +1,7 @@
 # :material-database: CodeInterpreterCallInterpretingEvent
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.streaming.CodeInterpreterCallInterpretingEvent` &nbsp;·&nbsp; **Record**
 
 ---

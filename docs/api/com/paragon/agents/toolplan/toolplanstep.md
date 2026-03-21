@@ -1,5 +1,7 @@
 # :material-database: ToolPlanStep
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.toolplan.ToolPlanStep` &nbsp;·&nbsp; **Record**
 
 ---

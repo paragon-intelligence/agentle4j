@@ -1,5 +1,7 @@
 # :material-database: Screenshot
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.web.Screenshot` &nbsp;·&nbsp; **Record**
 
 ---

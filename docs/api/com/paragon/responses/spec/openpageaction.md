@@ -1,5 +1,7 @@
 # :material-database: OpenPageAction
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.OpenPageAction` &nbsp;·&nbsp; **Record**
 
 ---

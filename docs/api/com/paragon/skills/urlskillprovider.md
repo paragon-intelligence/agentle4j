@@ -1,5 +1,7 @@
 # :material-code-braces: UrlSkillProvider
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.skills.UrlSkillProvider` &nbsp;·&nbsp; **Class**
 
 Implements `SkillProvider`

@@ -1,5 +1,7 @@
 # :material-database: ToolPlanResult
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.toolplan.ToolPlanResult` &nbsp;·&nbsp; **Record**
 
 ---

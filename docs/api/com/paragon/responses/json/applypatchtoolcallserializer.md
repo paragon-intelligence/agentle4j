@@ -1,5 +1,7 @@
 # :material-code-braces: ApplyPatchToolCallSerializer
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.json.ApplyPatchToolCallSerializer` &nbsp;·&nbsp; **Class**
 
 Extends `StdSerializer<ApplyPatchToolCall>`

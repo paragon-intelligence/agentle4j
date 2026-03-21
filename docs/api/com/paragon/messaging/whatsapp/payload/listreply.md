@@ -1,5 +1,7 @@
 # :material-code-braces: ListReply
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.messaging.whatsapp.payload.ListReply` &nbsp;·&nbsp; **Class**
 
 Implements `InteractiveMessage.InteractiveContent`

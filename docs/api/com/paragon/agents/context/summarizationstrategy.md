@@ -1,5 +1,7 @@
 # :material-code-braces: SummarizationStrategy
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.context.SummarizationStrategy` &nbsp;·&nbsp; **Class**
 
 Implements `ContextWindowStrategy`

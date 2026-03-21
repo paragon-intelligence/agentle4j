@@ -1,5 +1,7 @@
 # :material-database: ComparisonFilter
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.ComparisonFilter` &nbsp;·&nbsp; **Record**
 
 ---

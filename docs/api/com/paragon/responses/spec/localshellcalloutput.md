@@ -1,5 +1,7 @@
 # :material-database: LocalShellCallOutput
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.LocalShellCallOutput` &nbsp;·&nbsp; **Record**
 
 ---

@@ -18,6 +18,7 @@
 
 
 
+
 A Java agent framework built on OpenAI's Responses API.
 
 ![Coverage](https://img.shields.io/badge/coverage-88%25-brightgreen)
@@ -37,13 +38,13 @@ Maven:
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.10.0</version>
+    <version>0.10.1</version>
 </dependency>
 ```
 
 Gradle:
 ```groovy
-implementation 'io.github.paragon-intelligence:agentle4j:0.10.0'
+implementation 'io.github.paragon-intelligence:agentle4j:0.10.1'
 ```
 
 Requires Java 25+ with preview features enabled. The Maven build compiles, tests, and generates Javadocs with `--enable-preview`.
@@ -494,7 +495,7 @@ Responder.builder()
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.10.0</version>
+    <version>0.10.1</version>
 </dependency>
 ```
 

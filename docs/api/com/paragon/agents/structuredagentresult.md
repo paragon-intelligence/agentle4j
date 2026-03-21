@@ -1,5 +1,7 @@
 # :material-code-braces: StructuredAgentResult
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.agents.StructuredAgentResult` &nbsp;·&nbsp; **Class**
 
 Extends `AgentResult`

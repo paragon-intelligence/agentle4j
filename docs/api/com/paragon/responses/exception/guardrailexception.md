@@ -1,5 +1,7 @@
 # :material-code-braces: GuardrailException
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.exception.GuardrailException` &nbsp;·&nbsp; **Class**
 
 Extends `AgentleException`

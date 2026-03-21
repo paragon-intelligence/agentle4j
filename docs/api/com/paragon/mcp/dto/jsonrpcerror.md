@@ -1,5 +1,7 @@
 # :material-database: JsonRpcError
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.mcp.dto.JsonRpcError` &nbsp;·&nbsp; **Record**
 
 ---

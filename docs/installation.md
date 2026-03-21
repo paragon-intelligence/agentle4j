@@ -1,6 +1,7 @@
 # Installation
 
-> This docs was updated at: 2026-03-20
+> This docs was updated at: 2026-03-21
+
 
 
 
@@ -33,7 +34,7 @@ Add the following dependency to your `pom.xml`:
 <dependency>
     <groupId>io.github.paragon-intelligence</groupId>
     <artifactId>agentle4j</artifactId>
-    <version>0.10.0</version>
+    <version>0.10.1</version>
 </dependency>
 ```
 
@@ -42,13 +43,13 @@ Add the following dependency to your `pom.xml`:
 === "Groovy DSL"
 
     ```groovy
-    implementation 'io.github.paragon-intelligence:agentle4j:0.10.0'
+    implementation 'io.github.paragon-intelligence:agentle4j:0.10.1'
     ```
 
 === "Kotlin DSL"
 
     ```kotlin
-    implementation("io.github.paragon-intelligence:agentle4j:0.10.0")
+    implementation("io.github.paragon-intelligence:agentle4j:0.10.1")
 
 ## Enable Preview Features
 

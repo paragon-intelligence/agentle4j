@@ -1,5 +1,7 @@
 # :material-code-braces: McpClient
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.mcp.McpClient` &nbsp;·&nbsp; **Class**
 
 Implements `AutoCloseable`

@@ -1,5 +1,7 @@
 # :material-code-braces: ImageGenerationCall
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.responses.spec.ImageGenerationCall` &nbsp;·&nbsp; **Class**
 
 Extends `ToolCall` &nbsp;·&nbsp; Implements `Item`, `ResponseOutput`

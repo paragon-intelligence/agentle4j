@@ -1,5 +1,7 @@
 # :material-code-braces: HttpException
 
+> This docs was updated at: 2026-03-21
+
 `com.paragon.http.HttpException` &nbsp;·&nbsp; **Class**
 
 Extends `RuntimeException`
