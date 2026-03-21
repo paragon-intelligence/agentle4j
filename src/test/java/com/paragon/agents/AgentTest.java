@@ -687,6 +687,20 @@ class AgentTest {
       AgentResult result = future;
       assertNotNull(result);
     }
+
+    @Test
+    @DisplayName("interact(List<Message>) creates fresh context")
+    void interact_MessageList_createsFreshContext() throws Exception {
+      Agent agent = createTestAgent("Test");
+      enqueueSuccessResponse("Message list response");
+
+      List<Message> messages = List.of(Message.user("First"), Message.user("Second"));
+      AgentResult future = agent.interact(messages);
+
+      assertNotNull(future);
+      AgentResult result = future;
+      assertNotNull(result);
+    }
   }
 
   // Helper methods

@@ -1161,6 +1161,17 @@ class AgentExtendedTest {
     }
 
     @Test
+    @DisplayName("interactStream with List<Message>")
+    void interactStreamWithMessageList() {
+      Agent agent = createTestAgent();
+      List<Message> messages = List.of(Message.user("Hello"), Message.user("Follow-up"));
+
+      AgentStream stream = agent.asStreaming().interact(messages);
+
+      assertNotNull(stream);
+    }
+
+    @Test
     @DisplayName("interactStream with empty context adds input")
     void interactStreamWithEmptyContext() {
       Agent agent = createTestAgent();

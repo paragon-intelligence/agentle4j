@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.paragon.responses.Responder;
 import com.paragon.responses.spec.Message;
+import java.util.List;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
@@ -242,6 +243,19 @@ class AgentStructuredTest {
       StructuredAgentResult<TestPerson> result = agent.interact(context);
 
       assertNotNull(result);
+    }
+
+    @Test
+    @DisplayName("interact(List<Message>) returns StructuredAgentResult directly")
+    void interactMessageListReturnsStructuredAgentResult() {
+      Agent.Structured<TestPerson> agent = createTestStructuredAgent();
+      List<Message> messages = List.of(Message.user("Extract Bob"), Message.user("Age 40"));
+      enqueueStructuredResponse("{\"name\":\"Bob\",\"age\":40}");
+
+      StructuredAgentResult<TestPerson> result = agent.interact(messages);
+
+      assertNotNull(result);
+      assertInstanceOf(StructuredAgentResult.class, result);
     }
 
     @Test

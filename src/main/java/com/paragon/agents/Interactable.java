@@ -320,6 +320,37 @@ public interface Interactable {
   }
 
   /**
+   * Interacts with the agent using multiple {@link Message} items. Creates a fresh context.
+   *
+   * <p>This overload accepts {@code List<Message>} call sites without conflicting with the
+   * existing {@code List<ResponseInputItem>} overload.
+   *
+   * @param messages the message items
+   * @return the agent's result
+   */
+  @NonNull
+  default AgentResult interact(java.lang.@NonNull Iterable<? extends Message> messages) {
+    return interact(messages, null);
+  }
+
+  /**
+   * Interacts with the agent using multiple {@link Message} items with optional trace metadata.
+   *
+   * <p>Default implementation creates a fresh context and adds all messages.
+   *
+   * @param messages the message items
+   * @param trace optional trace metadata (overrides agent-level configuration)
+   * @return the agent's result
+   */
+  @NonNull
+  default AgentResult interact(
+      java.lang.@NonNull Iterable<? extends Message> messages, @Nullable TraceMetadata trace) {
+    AgenticContext context = AgenticContext.create();
+    context.addMessages(messages);
+    return interact(context, trace);
+  }
+
+  /**
    * Interacts with the agent using multiple inputs. Creates a fresh context.
    *
    * <p>Default implementation creates a fresh context and adds all input items.
@@ -563,6 +594,35 @@ public interface Interactable {
     }
 
     /**
+     * Interacts with the agent using multiple {@link Message} items and returns a structured
+     * result.
+     *
+     * @param messages the message items
+     * @return the structured result with parsed output
+     */
+    @NonNull
+    default StructuredAgentResult<T> interact(java.lang.@NonNull Iterable<? extends Message> messages) {
+      return interact(messages, null);
+    }
+
+    /**
+     * Interacts with the agent using multiple {@link Message} items and returns a structured
+     * result with trace metadata.
+     *
+     * @param messages the message items
+     * @param trace optional trace metadata (overrides agent-level configuration)
+     * @return the structured result with parsed output
+     */
+    @NonNull
+    default StructuredAgentResult<T> interact(
+        java.lang.@NonNull Iterable<? extends Message> messages,
+        @Nullable TraceMetadata trace) {
+      AgenticContext context = AgenticContext.create();
+      context.addMessages(messages);
+      return interact(context, trace);
+    }
+
+    /**
      * Interacts with the agent with an existing context and returns a structured result.
      *
      * @param context the conversation context
@@ -656,6 +716,33 @@ public interface Interactable {
     @NonNull
     default AgentStream interact(@NonNull Prompt prompt, @Nullable TraceMetadata trace) {
       return interact(prompt.text(), trace);
+    }
+
+    /**
+     * Interacts with the agent with streaming using multiple {@link Message} items.
+     *
+     * @param messages the message items
+     * @return an AgentStream for processing streaming events
+     */
+    @NonNull
+    default AgentStream interact(java.lang.@NonNull Iterable<? extends Message> messages) {
+      return interact(messages, null);
+    }
+
+    /**
+     * Interacts with the agent with streaming using multiple {@link Message} items and trace
+     * metadata.
+     *
+     * @param messages the message items
+     * @param trace optional trace metadata (overrides agent-level configuration)
+     * @return an AgentStream for processing streaming events
+     */
+    @NonNull
+    default AgentStream interact(
+        java.lang.@NonNull Iterable<? extends Message> messages, @Nullable TraceMetadata trace) {
+      AgenticContext context = AgenticContext.create();
+      context.addMessages(messages);
+      return interact(context, trace);
     }
 
     /**
