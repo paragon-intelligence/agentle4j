@@ -3,6 +3,7 @@ package com.paragon.agents;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
+import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.responses.spec.*;
 import com.paragon.responses.streaming.ReasoningTextDeltaEvent;
 import com.paragon.responses.streaming.ResponseStream;
@@ -562,13 +563,14 @@ public final class AgentStream {
 
     if (onPartialJson != null) {
       // True structured streaming path — requires outputType to be configured on the agent
-      Class<?> outputTypeClass = agent.outputType();
-      if (outputTypeClass == null) {
+      StructuredOutputDefinition<?> outputDefinition = agent.structuredOutputDefinition();
+      if (outputDefinition == null) {
         throw new IllegalStateException(
             "onPartialJson requires the agent to have outputType() configured");
       }
       CreateResponsePayload.StructuredStreaming<Object> structured =
-          new CreateResponsePayload.StructuredStreaming<>(payload, (Class<Object>) outputTypeClass);
+          new CreateResponsePayload.StructuredStreaming<>(
+              payload, (StructuredOutputDefinition<Object>) outputDefinition);
       ResponseStream<Object> stream = responder.respond(structured);
       if (onTextDelta != null) {
         stream.onTextDelta(onTextDelta);

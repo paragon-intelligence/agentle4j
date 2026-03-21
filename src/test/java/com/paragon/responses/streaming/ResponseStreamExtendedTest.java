@@ -264,6 +264,45 @@ class ResponseStreamExtendedTest {
           IllegalStateException.class,
           () -> stream.onPartialParsed(TestPartialPerson.class, p -> {}));
     }
+
+    @Test
+    @DisplayName("onPartialParsed unwraps root polymorphic structured output")
+    void onPartialParsedUnwrapsRootPolymorphicStructuredOutput() throws Exception {
+      String wrappedJson =
+          "{\"value\":{\"type\":\"reasoning\",\"id\":\"reasoning_123\",\"summary\":[],\"status\":\"completed\"}}";
+      String escapedJson = wrappedJson.replace("\"", "\\\"");
+      String sseResponse =
+          """
+          data: {"type":"response.output_text.delta","item_id":"msg-1","output_index":0,"content_index":0,"delta":"%s","sequence_number":1}
+
+          data: {"type":"response.completed","response":{"id":"resp-1","object":"response","created_at":1234567890,"status":"completed","status_details":null,"output":[{"type":"message","id":"msg-1","status":"completed","role":"assistant","content":[{"type":"output_text","text":"%s","annotations":[]}]}],"error":null,"metadata":null,"usage":null,"incomplete_details":null,"model":"gpt-4o","output_text":"%s"},"sequence_number":2}
+
+          data: [DONE]
+          """
+              .formatted(escapedJson, escapedJson, escapedJson);
+
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setBody(sseResponse)
+              .addHeader("Content-Type", "text/event-stream")
+              .setResponseCode(200));
+
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Test")
+              .withStructuredOutput(ResponseOutput.class)
+              .streaming()
+              .build();
+
+      java.util.concurrent.atomic.AtomicReference<Reasoning> partialRef =
+          new java.util.concurrent.atomic.AtomicReference<>();
+
+      responder.respond(payload).onPartialParsed(Reasoning.class, partialRef::set).get();
+
+      assertNotNull(partialRef.get());
+      assertEquals("reasoning_123", partialRef.get().id());
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -287,6 +326,46 @@ class ResponseStreamExtendedTest {
       ResponseStream<Void> stream = responder.respond(payload);
 
       assertThrows(IllegalStateException.class, () -> stream.onPartialJson(map -> {}));
+    }
+
+    @Test
+    @DisplayName("onPartialJson unwraps root polymorphic structured output")
+    void onPartialJsonUnwrapsRootPolymorphicStructuredOutput() throws Exception {
+      String wrappedJson =
+          "{\"value\":{\"type\":\"reasoning\",\"id\":\"reasoning_123\",\"summary\":[],\"status\":\"completed\"}}";
+      String escapedJson = wrappedJson.replace("\"", "\\\"");
+      String sseResponse =
+          """
+          data: {"type":"response.output_text.delta","item_id":"msg-1","output_index":0,"content_index":0,"delta":"%s","sequence_number":1}
+
+          data: {"type":"response.completed","response":{"id":"resp-1","object":"response","created_at":1234567890,"status":"completed","status_details":null,"output":[{"type":"message","id":"msg-1","status":"completed","role":"assistant","content":[{"type":"output_text","text":"%s","annotations":[]}]}],"error":null,"metadata":null,"usage":null,"incomplete_details":null,"model":"gpt-4o","output_text":"%s"},"sequence_number":2}
+
+          data: [DONE]
+          """
+              .formatted(escapedJson, escapedJson, escapedJson);
+
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setBody(sseResponse)
+              .addHeader("Content-Type", "text/event-stream")
+              .setResponseCode(200));
+
+      var payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Test")
+              .withStructuredOutput(ResponseOutput.class)
+              .streaming()
+              .build();
+
+      java.util.concurrent.atomic.AtomicReference<java.util.Map<String, Object>> partialRef =
+          new java.util.concurrent.atomic.AtomicReference<>();
+
+      responder.respond(payload).onPartialJson(partialRef::set).get();
+
+      assertNotNull(partialRef.get());
+      assertEquals("reasoning", partialRef.get().get("type"));
+      assertFalse(partialRef.get().containsKey("value"));
     }
   }
 

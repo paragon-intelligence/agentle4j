@@ -5,7 +5,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.paragon.responses.json.StructuredOutputDefinition;
 import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
 import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
@@ -316,6 +319,22 @@ public class Response {
 
   public <T> @NonNull ParsedResponse<T> parse(
       @NonNull Class<T> textFormat, ObjectMapper objectMapper) throws JacksonException {
+    return parse(StructuredOutputDefinition.create(textFormat), objectMapper);
+  }
+
+  public <T> @NonNull ParsedResponse<T> parse(
+      @NonNull TypeReference<T> textFormat, ObjectMapper objectMapper) throws JacksonException {
+    return parse(StructuredOutputDefinition.create(textFormat), objectMapper);
+  }
+
+  public <T> @NonNull ParsedResponse<T> parse(
+      @NonNull JavaType textFormat, ObjectMapper objectMapper) throws JacksonException {
+    return parse(StructuredOutputDefinition.create(textFormat), objectMapper);
+  }
+
+  public <T> @NonNull ParsedResponse<T> parse(
+      @NonNull StructuredOutputDefinition<T> structuredOutputDefinition, ObjectMapper objectMapper)
+      throws JacksonException {
     for (ResponseOutput responseOutput : Objects.requireNonNull(output)) {
       if (responseOutput instanceof Message) {
         String outputText = ((Message) responseOutput).outputText();
@@ -349,7 +368,7 @@ public class Response {
             topLogprobs,
             topP,
             truncation,
-            objectMapper.readValue(outputText, textFormat));
+            structuredOutputDefinition.parse(outputText, objectMapper));
       }
     }
 

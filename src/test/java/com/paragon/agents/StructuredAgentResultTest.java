@@ -78,6 +78,16 @@ class StructuredAgentResultTest {
           StructuredAgentResult.success(data, "{}", null, List.of(), List.of(), 1);
       assertEquals(data, objResult.parsed());
     }
+
+    @Test
+    @DisplayName("parsedOptional and parsedOr expose typed convenience access")
+    void parsedOptionalAndParsedOrExposeTypedConvenienceAccess() {
+      StructuredAgentResult<String> result =
+          StructuredAgentResult.success("typed", "\"typed\"", null, List.of(), List.of(), 1);
+
+      assertEquals("typed", result.parsedOptional().orElseThrow());
+      assertEquals("typed", result.parsedOr("fallback"));
+    }
   }
 
   @Nested
@@ -148,6 +158,17 @@ class StructuredAgentResultTest {
               new RuntimeException("err"), rawOutput, null, List.of(), List.of(), 1);
 
       assertEquals(rawOutput, result.output());
+    }
+
+    @Test
+    @DisplayName("parsedOptional and parsedOr return empty or fallback for errors")
+    void parsedOptionalAndParsedOrHandleErrors() {
+      StructuredAgentResult<String> result =
+          StructuredAgentResult.error(
+              new RuntimeException("err"), null, null, List.of(), List.of(), 1);
+
+      assertTrue(result.parsedOptional().isEmpty());
+      assertEquals("fallback", result.parsedOr("fallback"));
     }
   }
 

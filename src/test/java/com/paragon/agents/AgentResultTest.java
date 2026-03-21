@@ -3,6 +3,7 @@ package com.paragon.agents;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.paragon.responses.spec.*;
+import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -55,6 +56,18 @@ class AgentResultTest {
   // ═══════════════════════════════════════════════════════════════════════════
 
   public record TestPerson(String name, int age) {}
+
+  private FunctionToolCall createToolCall(String callId, String toolName) {
+    return new FunctionToolCall("{}", callId, toolName, null, null);
+  }
+
+  private ToolExecution createToolExecution(String toolName, String callId, boolean success) {
+    FunctionToolCallOutput output =
+        success
+            ? FunctionToolCallOutput.success(callId, toolName + " ok")
+            : FunctionToolCallOutput.error(callId, toolName + " failed");
+    return new ToolExecution(toolName, callId, "{}", output, Duration.ofMillis(100));
+  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ACCESSORS
@@ -392,6 +405,112 @@ class AgentResultTest {
       AgentResult errorResult = AgentResult.error(new RuntimeException(), context, 1);
 
       assertNull(errorResult.output());
+    }
+
+    @Test
+    @DisplayName("history helpers filter by type and role in original order")
+    void historyHelpers_filterByTypeAndRole() {
+      FunctionToolCall call = createToolCall("call-1", "lookup");
+      FunctionToolCallOutput output = FunctionToolCallOutput.success("call-1", "done");
+      AgenticContext context =
+          AgenticContext.ofInputs(
+              Message.user("First"),
+              call,
+              output,
+              Message.assistant("Reply"),
+              Message.developer("Instruction"),
+              Message.user("Second"));
+      AgentResult result =
+          AgentResult.success("final", createMinimalResponse(), context, List.of(), 1);
+
+      assertEquals(
+          List.of("First", "Reply", "Instruction", "Second"),
+          result.messages().stream().map(Message::outputText).toList());
+      assertEquals(
+          List.of("First", "Second"),
+          result.userMessages().stream().map(Message::outputText).toList());
+      assertEquals(List.of(call), result.toolCalls());
+      assertEquals(List.of(output), result.toolOutputs());
+      assertEquals("Second", result.lastMessage().orElseThrow().outputText());
+      assertEquals("Second", result.lastUserMessage().orElseThrow().outputText());
+      assertEquals("Reply", result.lastAssistantMessage().orElseThrow().outputText());
+      assertEquals("Instruction", result.lastDeveloperMessage().orElseThrow().outputText());
+      assertEquals("Second", result.lastUserMessageText().orElseThrow());
+      assertThrows(
+          UnsupportedOperationException.class, () -> result.messages().add(Message.user("x")));
+    }
+
+    @Test
+    @DisplayName("last message helpers return empty when history has no messages")
+    void lastMessageHelpers_returnEmptyWhenNoMessages() {
+      FunctionToolCall call = createToolCall("call-1", "lookup");
+      AgentResult result =
+          AgentResult.success(
+              "output", createMinimalResponse(), AgenticContext.ofInputs(call), List.of(), 1);
+
+      assertTrue(result.lastMessage().isEmpty());
+      assertTrue(result.lastUserMessage().isEmpty());
+      assertEquals("[none]", result.lastUserMessageText("[none]"));
+    }
+
+    @Test
+    @DisplayName("output helpers expose safe fallbacks and presence checks")
+    void outputHelpers_exposeSafeFallbacksAndPresenceChecks() {
+      AgentResult success =
+          AgentResult.success(
+              "Hello world", createMinimalResponse(), AgenticContext.create(), List.of(), 1);
+      AgentResult error =
+          AgentResult.error(new RuntimeException("boom"), AgenticContext.create(), 1);
+
+      assertTrue(success.hasOutput());
+      assertEquals("Hello world", success.outputOrEmpty());
+      assertEquals("Hello world", success.outputOr("fallback"));
+      assertTrue(success.hasFinalResponse());
+
+      assertFalse(error.hasOutput());
+      assertEquals("", error.outputOrEmpty());
+      assertEquals("fallback", error.outputOr("fallback"));
+      assertFalse(error.hasFinalResponse());
+      assertEquals("boom", error.errorMessage());
+    }
+
+    @Test
+    @DisplayName("tool execution helpers filter by tool name and success")
+    void toolExecutionHelpers_filterByToolNameAndSuccess() {
+      ToolExecution searchSuccess = createToolExecution("search", "call-1", true);
+      ToolExecution searchFailure = createToolExecution("search", "call-2", false);
+      ToolExecution weatherSuccess = createToolExecution("weather", "call-3", true);
+
+      AgentResult result =
+          AgentResult.success(
+              "output",
+              createMinimalResponse(),
+              AgenticContext.create(),
+              List.of(searchSuccess, searchFailure, weatherSuccess),
+              1);
+
+      assertTrue(result.hasToolExecutions());
+      assertEquals(List.of(searchSuccess, searchFailure), result.toolExecutions("search"));
+      assertEquals(weatherSuccess, result.lastToolExecution().orElseThrow());
+      assertEquals(List.of(searchSuccess, weatherSuccess), result.successfulToolExecutions());
+      assertEquals(List.of(searchFailure), result.failedToolExecutions());
+    }
+
+    @Test
+    @DisplayName("parsedOptional helpers expose typed parsed access")
+    void parsedOptionalHelpers_exposeTypedParsedAccess() {
+      TestPerson person = new TestPerson("Jane", 25);
+      AgentResult result =
+          AgentResult.successWithParsed(
+              "{}", person, createMinimalResponse(), AgenticContext.create(), List.of(), 1);
+      AgentResult error =
+          AgentResult.error(new RuntimeException("boom"), AgenticContext.create(), 1);
+
+      assertEquals(person, result.parsedOptional().orElseThrow());
+      assertEquals(person, result.parsedOptional(TestPerson.class).orElseThrow());
+      assertTrue(result.parsedOptional(String.class).isEmpty());
+      assertTrue(error.parsedOptional().isEmpty());
+      assertTrue(error.parsedOptional(TestPerson.class).isEmpty());
     }
   }
 }

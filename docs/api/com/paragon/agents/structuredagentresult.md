@@ -9,7 +9,8 @@ Extends `AgentResult`
 The result of a structured agent interaction, containing the typed output.
 
 This is the type-safe counterpart to `AgentResult` for agents with structured output.
-The output is automatically deserialized to the specified type.
+The output is automatically deserialized to the specified type. Use `.parsedOptional()` or
+`.parsedOr(Object)` when you want typed convenience access without throwing.
 
 *Since: 1.0*
 
@@ -49,17 +50,37 @@ true if no error occurred and no handoff was triggered
 
 ---
 
-### `errorMessage`
+### `parsedOptional`
 
 ```java
-public @Nullable String errorMessage()
+public @NonNull Optional<T> parsedOptional()
 ```
 
-Returns the error message if one occurred.
+Returns the parsed typed output, if available.
 
 **Returns**
 
-the error message or null
+an Optional containing the parsed output
+
+---
+
+### `parsedOr`
+
+```java
+public @Nullable T parsedOr(@Nullable T fallback)
+```
+
+Returns the parsed output when available, or the provided fallback value.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `fallback` | the fallback value to use when parsed output is unavailable |
+
+**Returns**
+
+the parsed output or the fallback
 
 ---
 

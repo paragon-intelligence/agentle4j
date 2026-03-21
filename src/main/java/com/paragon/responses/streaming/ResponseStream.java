@@ -2,6 +2,7 @@ package com.paragon.responses.streaming;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
+import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.FunctionToolStore;
 import com.paragon.responses.spec.ParsedResponse;
@@ -59,6 +60,7 @@ public final class ResponseStream<T> {
   private final @NonNull Request request;
   private final @NonNull ObjectMapper objectMapper;
   private final @Nullable Class<T> responseType;
+  private final @Nullable StructuredOutputDefinition<T> structuredOutputDefinition;
 
   // Callbacks
   private @Nullable Consumer<String> onTextDeltaHandler;
@@ -95,10 +97,25 @@ public final class ResponseStream<T> {
       @NonNull Request request,
       @NonNull ObjectMapper objectMapper,
       @Nullable Class<T> responseType) {
+    this(
+        httpClient,
+        request,
+        objectMapper,
+        responseType,
+        responseType != null ? StructuredOutputDefinition.create(responseType) : null);
+  }
+
+  public ResponseStream(
+      @NonNull OkHttpClient httpClient,
+      @NonNull Request request,
+      @NonNull ObjectMapper objectMapper,
+      @Nullable Class<T> responseType,
+      @Nullable StructuredOutputDefinition<T> structuredOutputDefinition) {
     this.httpClient = Objects.requireNonNull(httpClient);
     this.request = Objects.requireNonNull(request);
     this.objectMapper = Objects.requireNonNull(objectMapper);
     this.responseType = responseType;
+    this.structuredOutputDefinition = structuredOutputDefinition;
   }
 
   /**
@@ -212,7 +229,22 @@ public final class ResponseStream<T> {
           "onPartialParsed is only available for structured output streams");
     }
     // Create parser for the partial type
-    PartialJsonParser<P> parser = new PartialJsonParser<>(objectMapper, partialType);
+    PartialJsonParser<P> parser;
+    if (structuredOutputDefinition != null && structuredOutputDefinition.wrapsRoot()) {
+      parser =
+          new PartialJsonParser<>(
+              objectMapper,
+              (mapper, json) -> {
+                var root = mapper.readTree(json);
+                var value = root.get(StructuredOutputDefinition.ROOT_WRAPPER_PROPERTY);
+                if (value == null || value.isNull()) {
+                  throw new IllegalStateException("Wrapped structured output is incomplete");
+                }
+                return mapper.treeToValue(value, partialType);
+              });
+    } else {
+      parser = new PartialJsonParser<>(objectMapper, partialType);
+    }
 
     // Store as T consumer (type erasure allows this)
     this.partialParser = (PartialJsonParser<T>) parser;
@@ -455,6 +487,9 @@ public final class ResponseStream<T> {
 
     Response response = get();
     try {
+      if (structuredOutputDefinition != null) {
+        return response.parse(structuredOutputDefinition, objectMapper);
+      }
       return response.parse(responseType, objectMapper);
     } catch (JacksonException e) {
       throw new RuntimeException("Failed to parse structured output", e);
@@ -575,6 +610,9 @@ public final class ResponseStream<T> {
                       @SuppressWarnings("unchecked")
                       Map<String, Object> partialMap =
                           PartialJsonParser.parseAsMap(objectMapper, accumulatedText.toString());
+                      if (structuredOutputDefinition != null) {
+                        partialMap = structuredOutputDefinition.unwrapPartialMap(partialMap);
+                      }
                       if (partialMap != null && !partialMap.isEmpty()) {
                         onPartialJsonHandler.accept(partialMap);
                       }
@@ -648,7 +686,10 @@ public final class ResponseStream<T> {
         // Call typed onParsedComplete handler for structured output
         if (onParsedCompleteHandler != null && responseType != null) {
           try {
-            ParsedResponse<T> parsed = finalResponse.parse(responseType, objectMapper);
+            ParsedResponse<T> parsed =
+                structuredOutputDefinition != null
+                    ? finalResponse.parse(structuredOutputDefinition, objectMapper)
+                    : finalResponse.parse(responseType, objectMapper);
             onParsedCompleteHandler.accept(parsed);
           } catch (JacksonException e) {
             if (onErrorHandler != null) {

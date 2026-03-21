@@ -1,6 +1,8 @@
 package com.paragon.agents;
 
 import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
 import tools.jackson.databind.ObjectMapper;
 import com.paragon.agents.context.ContextManagementConfig;
 import com.paragon.agents.toolplan.ToolPlanTool;
@@ -10,6 +12,7 @@ import com.paragon.prompts.Prompt;
 import com.paragon.responses.OpenRouterCustomPayload;
 import com.paragon.responses.Responder;
 import com.paragon.responses.TraceMetadata;
+import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.responses.exception.AgentExecutionException;
 import com.paragon.responses.exception.GuardrailException;
 import com.paragon.responses.exception.ToolExecutionException;
@@ -130,6 +133,7 @@ public final class Agent implements Serializable, Interactable {
   private final @NonNull List<OutputGuardrail> outputGuardrails;
   private final int maxTurns;
   private final @Nullable Class<?> outputType;
+  private final @Nullable StructuredOutputDefinition<?> structuredOutputDefinition;
   private final @Nullable Double temperature;
   private final @NonNull TelemetryContext telemetryContext;
   private final @Nullable TraceMetadata traceMetadata;
@@ -156,7 +160,9 @@ public final class Agent implements Serializable, Interactable {
     this.model = Objects.requireNonNull(builder.model, "model is required");
     this.responder = Objects.requireNonNull(builder.responder, "responder is required");
     this.maxTurns = builder.maxTurns > 0 ? builder.maxTurns : 10;
-    this.outputType = builder.outputType;
+    this.structuredOutputDefinition = builder.structuredOutputDefinition;
+    this.outputType =
+        structuredOutputDefinition != null ? structuredOutputDefinition.responseType() : null;
     this.temperature = builder.temperature;
     this.telemetryContext =
             builder.telemetryContext != null ? builder.telemetryContext : TelemetryContext.empty();
@@ -460,6 +466,11 @@ public final class Agent implements Serializable, Interactable {
    */
   public @Nullable Class<?> outputType() {
     return outputType;
+  }
+
+  @Nullable
+  StructuredOutputDefinition<?> structuredOutputDefinition() {
+    return structuredOutputDefinition;
   }
 
   /**
@@ -881,9 +892,9 @@ public final class Agent implements Serializable, Interactable {
       }
 
       // Parse structured output if applicable
-      if (outputType != null && lastResponse != null) {
+      if (structuredOutputDefinition != null && lastResponse != null) {
         try {
-          Object parsed = lastResponse.parse(outputType, objectMapper);
+          Object parsed = lastResponse.parse(structuredOutputDefinition, objectMapper);
           return AgentResult.successWithParsed(
                   output, parsed, lastResponse, context, allToolExecutions, context.getTurnCount());
         } catch (JacksonException e) {
@@ -994,8 +1005,8 @@ public final class Agent implements Serializable, Interactable {
 
     // When an output type is configured, always request native structured output
     // from the Responses API instead of relying solely em instruções de prompt.
-    if (outputType != null) {
-      builder.withStructuredOutput(outputType, null);
+    if (structuredOutputDefinition != null) {
+      builder.withStructuredOutput(structuredOutputDefinition.responseJavaType(), null);
     }
 
     return builder.build();
@@ -1241,7 +1252,7 @@ public final class Agent implements Serializable, Interactable {
     private @Nullable String model;
     private @Nullable Responder responder;
     private @Nullable ObjectMapper objectMapper;
-    private @Nullable Class<?> outputType;
+    private @Nullable StructuredOutputDefinition<?> structuredOutputDefinition;
     private @Nullable Double temperature;
     private @Nullable Integer maxOutputTokens;
     private @Nullable Map<String, String> metadata;
@@ -1338,7 +1349,22 @@ public final class Agent implements Serializable, Interactable {
      * @return this builder
      */
     public @NonNull Builder outputType(@NonNull Class<?> outputType) {
-      this.outputType = Objects.requireNonNull(outputType);
+      this.structuredOutputDefinition = StructuredOutputDefinition.create(outputType);
+      return this;
+    }
+
+    public @NonNull Builder outputType(@NonNull TypeReference<?> outputType) {
+      this.structuredOutputDefinition = StructuredOutputDefinition.create(outputType);
+      return this;
+    }
+
+    public @NonNull Builder outputType(@NonNull JavaType outputType) {
+      this.structuredOutputDefinition = StructuredOutputDefinition.create(outputType);
+      return this;
+    }
+
+    @NonNull Builder outputType(@NonNull StructuredOutputDefinition<?> outputType) {
+      this.structuredOutputDefinition = Objects.requireNonNull(outputType);
       return this;
     }
 
@@ -1850,7 +1876,15 @@ public final class Agent implements Serializable, Interactable {
      * @return a structured builder that builds Agent.Structured
      */
     public <T> @NonNull StructuredBuilder<T> structured(@NonNull Class<T> outputType) {
-      return new StructuredBuilder<>(this, outputType);
+      return new StructuredBuilder<>(this, StructuredOutputDefinition.create(outputType));
+    }
+
+    public <T> @NonNull StructuredBuilder<T> structured(@NonNull TypeReference<T> outputType) {
+      return new StructuredBuilder<>(this, StructuredOutputDefinition.create(outputType));
+    }
+
+    public <T> @NonNull StructuredBuilder<T> structured(@NonNull JavaType outputType) {
+      return new StructuredBuilder<>(this, StructuredOutputDefinition.create(outputType));
     }
 
     /**
@@ -1891,11 +1925,13 @@ public final class Agent implements Serializable, Interactable {
    */
   public static final class StructuredBuilder<T> {
     private final Builder parentBuilder;
-    private final Class<T> outputType;
+    private final StructuredOutputDefinition<T> structuredOutputDefinition;
 
-    private StructuredBuilder(@NonNull Builder parentBuilder, @NonNull Class<T> outputType) {
+    private StructuredBuilder(
+        @NonNull Builder parentBuilder,
+        @NonNull StructuredOutputDefinition<T> structuredOutputDefinition) {
       this.parentBuilder = Objects.requireNonNull(parentBuilder);
-      this.outputType = Objects.requireNonNull(outputType);
+      this.structuredOutputDefinition = Objects.requireNonNull(structuredOutputDefinition);
     }
 
     // Forward all builder methods to parent
@@ -2032,9 +2068,9 @@ public final class Agent implements Serializable, Interactable {
      * @throws NullPointerException if required fields are missing
      */
     public @NonNull Structured<T> build() {
-      parentBuilder.outputType(outputType);
+      parentBuilder.outputType(structuredOutputDefinition);
       Agent agent = parentBuilder.build();
-      return new Structured<T>(agent, outputType);
+      return new Structured<>(agent, structuredOutputDefinition);
     }
   }
 
@@ -2060,12 +2096,17 @@ public final class Agent implements Serializable, Interactable {
    */
   public static final class Structured<T> implements Interactable.Structured<T> {
     private final Agent agent;
-    private final Class<T> outputType;
+    private final StructuredOutputDefinition<T> structuredOutputDefinition;
     private final ObjectMapper objectMapper;
 
     Structured(@NonNull Agent agent, @NonNull Class<T> outputType) {
+      this(agent, StructuredOutputDefinition.create(outputType));
+    }
+
+    Structured(
+        @NonNull Agent agent, @NonNull StructuredOutputDefinition<T> structuredOutputDefinition) {
       this.agent = Objects.requireNonNull(agent);
-      this.outputType = Objects.requireNonNull(outputType);
+      this.structuredOutputDefinition = Objects.requireNonNull(structuredOutputDefinition);
       this.objectMapper = agent.objectMapper;
     }
 
@@ -2096,7 +2137,7 @@ public final class Agent implements Serializable, Interactable {
      * Returns the structured output type.
      */
     public @NonNull Class<T> outputType() {
-      return outputType;
+      return structuredOutputDefinition.responseType();
     }
 
     /**
@@ -2174,8 +2215,24 @@ public final class Agent implements Serializable, Interactable {
                 result.turnsUsed());
       }
 
+      if (result.hasParsed()) {
+        Object parsed = result.parsed();
+        if (parsed != null && structuredOutputDefinition.responseType().isInstance(parsed)) {
+          @SuppressWarnings("unchecked")
+          T cast = (T) parsed;
+          return StructuredAgentResult.success(
+                  cast,
+                  result.output(),
+                  result.finalResponse(),
+                  result.history(),
+                  result.toolExecutions(),
+                  result.turnsUsed());
+        }
+      }
+
       try {
-        T parsed = objectMapper.readValue(stripMarkdownFences(result.output()), outputType);
+        T parsed =
+            structuredOutputDefinition.parse(stripMarkdownFences(result.output()), objectMapper);
         return StructuredAgentResult.success(
                 parsed,
                 result.output(),

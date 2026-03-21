@@ -2,6 +2,9 @@ package com.paragon.responses.spec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.Messages;
 import com.paragon.responses.OpenRouterCustomPayload;
 import java.util.List;
@@ -499,6 +502,47 @@ class CreateResponsePayloadBuilderTest {
               .build();
 
       assertNotNull(payload.text());
+    }
+
+    @Test
+    @DisplayName("withStructuredOutput(TypeReference) wraps list root schema")
+    void withStructuredOutput_TypeReference_wrapsListRootSchema() {
+      CreateResponsePayload.Structured<List<TestOutput>> payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Extract")
+              .withStructuredOutput(new TypeReference<List<TestOutput>>() {})
+              .build();
+
+      assertEquals(List.class, payload.responseType());
+      assertTrue(payload.hasJsonSchemaTextFormat());
+
+      TextConfigurationOptionsJsonSchemaFormat format =
+          (TextConfigurationOptionsJsonSchemaFormat) payload.text().format();
+      @SuppressWarnings("unchecked")
+      Map<String, Object> properties = (Map<String, Object>) format.schema().get("properties");
+      @SuppressWarnings("unchecked")
+      Map<String, Object> wrapped =
+          (Map<String, Object>) properties.get("value");
+
+      assertEquals("array", wrapped.get("type"));
+    }
+
+    @Test
+    @DisplayName("withStructuredOutput(JavaType) configures structured payload")
+    void withStructuredOutput_JavaType_configuresStructuredPayload() {
+      JavaType listType =
+          new ObjectMapper().constructType(new TypeReference<List<TestOutput>>() {}.getType());
+
+      CreateResponsePayload.Structured<List<TestOutput>> payload =
+          CreateResponsePayload.builder()
+              .model("gpt-4o")
+              .addUserMessage("Extract")
+              .<List<TestOutput>>withStructuredOutput(listType)
+              .build();
+
+      assertEquals(List.class, payload.responseType());
+      assertTrue(payload.hasJsonSchemaTextFormat());
     }
   }
 

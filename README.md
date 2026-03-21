@@ -63,6 +63,8 @@ Agent agent = Agent.builder()
 
 AgentResult result = agent.interact("What's the weather in Tokyo?");
 System.out.println(result.output());
+System.out.println("Transcript size: " + result.messages().size());
+System.out.println("Last user message: " + result.lastUserMessageText("[none]"));
 
 // Agents never throw. Errors live in the result.
 if (result.isError()) {

@@ -1,13 +1,22 @@
 package com.paragon.agents;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
+import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.responses.spec.FunctionToolCall;
+import com.paragon.responses.spec.FunctionToolCallOutput;
+import com.paragon.responses.spec.Message;
+import com.paragon.responses.spec.MessageRole;
 import com.paragon.responses.spec.Response;
 import com.paragon.responses.spec.ResponseInputItem;
+import com.paragon.responses.spec.Text;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * The result of an agent interaction, containing the final output and execution metadata.
@@ -32,6 +41,7 @@ import org.jspecify.annotations.Nullable;
  *
  * if (result.isSuccess()) {
  *     System.out.println(result.output());
+ *     System.out.println("Messages returned: " + result.messages().size());
  * } else if (result.isHandoff()) {
  *     // Handoff was auto-executed, result contains final output
  *     System.out.println("Handled by: " + result.handoffAgent().name());
@@ -283,12 +293,49 @@ public class AgentResult {
   }
 
   /**
+   * Returns whether this result has output text available.
+   *
+   * @return true if output text is present
+   */
+  public boolean hasOutput() {
+    return output != null;
+  }
+
+  /**
+   * Returns the output text, or an empty string when unavailable.
+   *
+   * @return the output text, or an empty string
+   */
+  public @NonNull String outputOrEmpty() {
+    return outputOr("");
+  }
+
+  /**
+   * Returns the output text, or the provided fallback when unavailable.
+   *
+   * @param fallback the fallback text to use when no output is available
+   * @return the output text, or the fallback
+   */
+  public @NonNull String outputOr(@NonNull String fallback) {
+    return output != null ? output : Objects.requireNonNull(fallback, "fallback cannot be null");
+  }
+
+  /**
    * Returns the final API response.
    *
    * @return the last Response from the LLM, or null if not available
    */
   public @Nullable Response finalResponse() {
     return finalResponse;
+  }
+
+  /**
+   * Returns whether a final API response is available.
+   *
+   * @return true if a final response is present
+   */
+  public boolean hasFinalResponse() {
+    return finalResponse != null;
   }
 
   /**
@@ -301,12 +348,206 @@ public class AgentResult {
   }
 
   /**
+   * Returns all history items assignable to the requested type.
+   *
+   * @param type the desired item type
+   * @param <T> the desired item type
+   * @return an immutable list of matching items in original order
+   */
+  public <T> @NonNull List<T> historyItems(@NonNull Class<T> type) {
+    Objects.requireNonNull(type, "type cannot be null");
+    return history.stream().filter(type::isInstance).map(type::cast).toList();
+  }
+
+  /**
+   * Returns all messages present in the result history.
+   *
+   * @return an immutable list of messages in original order
+   */
+  public @NonNull List<Message> messages() {
+    return historyItems(Message.class);
+  }
+
+  /**
+   * Returns all messages with the requested role.
+   *
+   * @param role the role to filter by
+   * @return an immutable list of matching messages in original order
+   */
+  public @NonNull List<Message> messages(@NonNull MessageRole role) {
+    Objects.requireNonNull(role, "role cannot be null");
+    return messages().stream().filter(message -> message.role() == role).toList();
+  }
+
+  /**
+   * Returns all user messages present in the result history.
+   *
+   * @return an immutable list of user messages
+   */
+  public @NonNull List<Message> userMessages() {
+    return messages(MessageRole.USER);
+  }
+
+  /**
+   * Returns all assistant messages present in the result history.
+   *
+   * @return an immutable list of assistant messages
+   */
+  public @NonNull List<Message> assistantMessages() {
+    return messages(MessageRole.ASSISTANT);
+  }
+
+  /**
+   * Returns all developer messages present in the result history.
+   *
+   * @return an immutable list of developer messages
+   */
+  public @NonNull List<Message> developerMessages() {
+    return messages(MessageRole.DEVELOPER);
+  }
+
+  /**
+   * Returns all function tool calls present in the result history.
+   *
+   * @return an immutable list of function tool calls
+   */
+  public @NonNull List<FunctionToolCall> toolCalls() {
+    return historyItems(FunctionToolCall.class);
+  }
+
+  /**
+   * Returns all function tool outputs present in the result history.
+   *
+   * @return an immutable list of function tool outputs
+   */
+  public @NonNull List<FunctionToolCallOutput> toolOutputs() {
+    return historyItems(FunctionToolCallOutput.class);
+  }
+
+  /**
+   * Returns the most recent message from the result history.
+   *
+   * @return an Optional containing the last message, or empty if none exist
+   */
+  public @NonNull Optional<Message> lastMessage() {
+    return lastMessageMatching(null);
+  }
+
+  /**
+   * Returns the most recent message with the requested role.
+   *
+   * @param role the role to filter by
+   * @return an Optional containing the last matching message, or empty if none exist
+   */
+  public @NonNull Optional<Message> lastMessage(@NonNull MessageRole role) {
+    Objects.requireNonNull(role, "role cannot be null");
+    return lastMessageMatching(role);
+  }
+
+  /**
+   * Returns the most recent user message from the result history.
+   *
+   * @return an Optional containing the last user message, or empty if none exist
+   */
+  public @NonNull Optional<Message> lastUserMessage() {
+    return lastMessage(MessageRole.USER);
+  }
+
+  /**
+   * Returns the most recent assistant message from the result history.
+   *
+   * @return an Optional containing the last assistant message, or empty if none exist
+   */
+  public @NonNull Optional<Message> lastAssistantMessage() {
+    return lastMessage(MessageRole.ASSISTANT);
+  }
+
+  /**
+   * Returns the most recent developer message from the result history.
+   *
+   * @return an Optional containing the last developer message, or empty if none exist
+   */
+  public @NonNull Optional<Message> lastDeveloperMessage() {
+    return lastMessage(MessageRole.DEVELOPER);
+  }
+
+  /**
+   * Returns the first text segment from the most recent user message in the result history.
+   *
+   * @return an Optional containing the last user text, or empty if none found
+   */
+  public @NonNull Optional<String> lastUserMessageText() {
+    return lastUserMessage().flatMap(AgentResult::firstTextContent);
+  }
+
+  /**
+   * Returns the first text segment from the most recent user message, or a fallback value.
+   *
+   * @param fallback the fallback value when no user message text is found
+   * @return the last user message text, or the fallback
+   */
+  public @NonNull String lastUserMessageText(@NonNull String fallback) {
+    return lastUserMessageText()
+        .orElse(Objects.requireNonNull(fallback, "fallback cannot be null"));
+  }
+
+  /**
    * Returns all tool executions that occurred during the run.
    *
    * @return an unmodifiable list of tool executions
    */
   public @NonNull List<ToolExecution> toolExecutions() {
     return toolExecutions;
+  }
+
+  /**
+   * Returns whether any tool executions occurred during the run.
+   *
+   * @return true if tool executions are present
+   */
+  public boolean hasToolExecutions() {
+    return !toolExecutions.isEmpty();
+  }
+
+  /**
+   * Returns all tool executions for the requested tool name.
+   *
+   * @param toolName the tool name to filter by
+   * @return an immutable list of matching tool executions
+   */
+  public @NonNull List<ToolExecution> toolExecutions(@NonNull String toolName) {
+    Objects.requireNonNull(toolName, "toolName cannot be null");
+    return toolExecutions.stream().filter(exec -> exec.toolName().equals(toolName)).toList();
+  }
+
+  /**
+   * Returns the most recent tool execution, if any.
+   *
+   * @return an Optional containing the last tool execution, or empty if none occurred
+   */
+  public @NonNull Optional<ToolExecution> lastToolExecution() {
+    if (toolExecutions.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(toolExecutions.get(toolExecutions.size() - 1));
+  }
+
+  /**
+   * Returns the successful tool executions from this run.
+   *
+   * @return an immutable list of successful tool executions
+   */
+  public @NonNull List<ToolExecution> successfulToolExecutions() {
+    return toolExecutions.stream().filter(ToolExecution::isSuccess).toList();
+  }
+
+  /**
+   * Returns the failed or incomplete tool executions from this run.
+   *
+   * @return an immutable list of failed tool executions
+   */
+  public @NonNull List<ToolExecution> failedToolExecutions() {
+    return toolExecutions.stream().filter(exec -> !exec.isSuccess()).toList();
   }
 
   /**
@@ -337,6 +578,15 @@ public class AgentResult {
   }
 
   /**
+   * Returns the error message if one occurred.
+   *
+   * @return the error message, or null if no error is present
+   */
+  public @Nullable String errorMessage() {
+    return error != null ? error.getMessage() : null;
+  }
+
+  /**
    * Returns the parsed structured output if applicable.
    *
    * @param <T> the expected type
@@ -345,6 +595,27 @@ public class AgentResult {
   @SuppressWarnings("unchecked")
   public <T> @Nullable T parsed() {
     return (T) parsed;
+  }
+
+  /**
+   * Returns the parsed structured output, if available.
+   *
+   * @return an Optional containing the parsed output
+   */
+  public @NonNull Optional<?> parsedOptional() {
+    return Optional.ofNullable(parsed);
+  }
+
+  /**
+   * Returns the parsed structured output when it matches the requested type.
+   *
+   * @param type the requested parsed output type
+   * @param <T> the requested parsed output type
+   * @return an Optional containing the typed parsed output, or empty if unavailable/incompatible
+   */
+  public <T> @NonNull Optional<T> parsedOptional(@NonNull Class<T> type) {
+    Objects.requireNonNull(type, "type cannot be null");
+    return type.isInstance(parsed) ? Optional.of(type.cast(parsed)) : Optional.empty();
   }
 
   // ===== Status Checks =====
@@ -457,13 +728,29 @@ public class AgentResult {
    */
   public <T> @NonNull StructuredAgentResult<T> toStructured(
       @NonNull Class<T> outputType, @NonNull ObjectMapper objectMapper) {
+    return toStructured(StructuredOutputDefinition.create(outputType), objectMapper);
+  }
+
+  public <T> @NonNull StructuredAgentResult<T> toStructured(
+      @NonNull TypeReference<T> outputType, @NonNull ObjectMapper objectMapper) {
+    return toStructured(StructuredOutputDefinition.create(outputType), objectMapper);
+  }
+
+  public <T> @NonNull StructuredAgentResult<T> toStructured(
+      @NonNull JavaType outputType, @NonNull ObjectMapper objectMapper) {
+    return toStructured(StructuredOutputDefinition.create(outputType), objectMapper);
+  }
+
+  public <T> @NonNull StructuredAgentResult<T> toStructured(
+      @NonNull StructuredOutputDefinition<T> structuredOutputDefinition,
+      @NonNull ObjectMapper objectMapper) {
     if (isError()) {
       return StructuredAgentResult.error(
           error, output, finalResponse, history, toolExecutions, turnsUsed);
     }
     try {
       String cleanOutput = output != null ? output : "";
-      
+
       // Some LLMs return markdown wrapper for json even when configured with schema
       if (cleanOutput.startsWith("```json")) {
         cleanOutput = cleanOutput.substring(7);
@@ -474,8 +761,8 @@ public class AgentResult {
         cleanOutput = cleanOutput.substring(0, cleanOutput.length() - 3);
       }
       cleanOutput = cleanOutput.trim();
-      
-      T parsed = objectMapper.readValue(cleanOutput, outputType);
+
+      T parsed = structuredOutputDefinition.parse(cleanOutput, objectMapper);
       return StructuredAgentResult.success(
           parsed, cleanOutput, finalResponse, history, toolExecutions, turnsUsed);
     } catch (JacksonException e) {
@@ -487,6 +774,25 @@ public class AgentResult {
           toolExecutions,
           turnsUsed);
     }
+  }
+
+  private @NonNull Optional<Message> lastMessageMatching(@Nullable MessageRole role) {
+    for (int i = history.size() - 1; i >= 0; i--) {
+      ResponseInputItem item = history.get(i);
+      if (item instanceof Message message && (role == null || message.role() == role)) {
+        return Optional.of(message);
+      }
+    }
+    return Optional.empty();
+  }
+
+  private static @NonNull Optional<String> firstTextContent(@NonNull Message message) {
+    for (var content : message.content()) {
+      if (content instanceof Text text) {
+        return Optional.of(text.text());
+      }
+    }
+    return Optional.empty();
   }
 
   // ===== Builder =====

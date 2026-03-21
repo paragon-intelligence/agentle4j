@@ -24,6 +24,7 @@ AgentResult captures everything that happened during an agent run:
 AgentResult result = agent.interact("What's the status of order #12345?");
 if (result.isSuccess()) {
     System.out.println(result.output());
+    System.out.println("Messages returned: " + result.messages().size());
 } else if (result.isHandoff()) {
     // Handoff was auto-executed, result contains final output
     System.out.println("Handled by: " + result.handoffAgent().name());
@@ -301,6 +302,54 @@ the output text, or null if the run failed before producing output
 
 ---
 
+### `hasOutput`
+
+```java
+public boolean hasOutput()
+```
+
+Returns whether this result has output text available.
+
+**Returns**
+
+true if output text is present
+
+---
+
+### `outputOrEmpty`
+
+```java
+public @NonNull String outputOrEmpty()
+```
+
+Returns the output text, or an empty string when unavailable.
+
+**Returns**
+
+the output text, or an empty string
+
+---
+
+### `outputOr`
+
+```java
+public @NonNull String outputOr(@NonNull String fallback)
+```
+
+Returns the output text, or the provided fallback when unavailable.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `fallback` | the fallback text to use when no output is available |
+
+**Returns**
+
+the output text, or the fallback
+
+---
+
 ### `finalResponse`
 
 ```java
@@ -312,6 +361,20 @@ Returns the final API response.
 **Returns**
 
 the last Response from the LLM, or null if not available
+
+---
+
+### `hasFinalResponse`
+
+```java
+public boolean hasFinalResponse()
+```
+
+Returns whether a final API response is available.
+
+**Returns**
+
+true if a final response is present
 
 ---
 
@@ -329,6 +392,241 @@ an unmodifiable list of all messages
 
 ---
 
+### `historyItems`
+
+```java
+public <T> @NonNull List<T> historyItems(@NonNull Class<T> type)
+```
+
+Returns all history items assignable to the requested type.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `type` | the desired item type |
+| `<T>` | the desired item type |
+
+**Returns**
+
+an immutable list of matching items in original order
+
+---
+
+### `messages`
+
+```java
+public @NonNull List<Message> messages()
+```
+
+Returns all messages present in the result history.
+
+**Returns**
+
+an immutable list of messages in original order
+
+---
+
+### `messages`
+
+```java
+public @NonNull List<Message> messages(@NonNull MessageRole role)
+```
+
+Returns all messages with the requested role.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `role` | the role to filter by |
+
+**Returns**
+
+an immutable list of matching messages in original order
+
+---
+
+### `userMessages`
+
+```java
+public @NonNull List<Message> userMessages()
+```
+
+Returns all user messages present in the result history.
+
+**Returns**
+
+an immutable list of user messages
+
+---
+
+### `assistantMessages`
+
+```java
+public @NonNull List<Message> assistantMessages()
+```
+
+Returns all assistant messages present in the result history.
+
+**Returns**
+
+an immutable list of assistant messages
+
+---
+
+### `developerMessages`
+
+```java
+public @NonNull List<Message> developerMessages()
+```
+
+Returns all developer messages present in the result history.
+
+**Returns**
+
+an immutable list of developer messages
+
+---
+
+### `toolCalls`
+
+```java
+public @NonNull List<FunctionToolCall> toolCalls()
+```
+
+Returns all function tool calls present in the result history.
+
+**Returns**
+
+an immutable list of function tool calls
+
+---
+
+### `toolOutputs`
+
+```java
+public @NonNull List<FunctionToolCallOutput> toolOutputs()
+```
+
+Returns all function tool outputs present in the result history.
+
+**Returns**
+
+an immutable list of function tool outputs
+
+---
+
+### `lastMessage`
+
+```java
+public @NonNull Optional<Message> lastMessage()
+```
+
+Returns the most recent message from the result history.
+
+**Returns**
+
+an Optional containing the last message, or empty if none exist
+
+---
+
+### `lastMessage`
+
+```java
+public @NonNull Optional<Message> lastMessage(@NonNull MessageRole role)
+```
+
+Returns the most recent message with the requested role.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `role` | the role to filter by |
+
+**Returns**
+
+an Optional containing the last matching message, or empty if none exist
+
+---
+
+### `lastUserMessage`
+
+```java
+public @NonNull Optional<Message> lastUserMessage()
+```
+
+Returns the most recent user message from the result history.
+
+**Returns**
+
+an Optional containing the last user message, or empty if none exist
+
+---
+
+### `lastAssistantMessage`
+
+```java
+public @NonNull Optional<Message> lastAssistantMessage()
+```
+
+Returns the most recent assistant message from the result history.
+
+**Returns**
+
+an Optional containing the last assistant message, or empty if none exist
+
+---
+
+### `lastDeveloperMessage`
+
+```java
+public @NonNull Optional<Message> lastDeveloperMessage()
+```
+
+Returns the most recent developer message from the result history.
+
+**Returns**
+
+an Optional containing the last developer message, or empty if none exist
+
+---
+
+### `lastUserMessageText`
+
+```java
+public @NonNull Optional<String> lastUserMessageText()
+```
+
+Returns the first text segment from the most recent user message in the result history.
+
+**Returns**
+
+an Optional containing the last user text, or empty if none found
+
+---
+
+### `lastUserMessageText`
+
+```java
+public @NonNull String lastUserMessageText(@NonNull String fallback)
+```
+
+Returns the first text segment from the most recent user message, or a fallback value.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `fallback` | the fallback value when no user message text is found |
+
+**Returns**
+
+the last user message text, or the fallback
+
+---
+
 ### `toolExecutions`
 
 ```java
@@ -340,6 +638,82 @@ Returns all tool executions that occurred during the run.
 **Returns**
 
 an unmodifiable list of tool executions
+
+---
+
+### `hasToolExecutions`
+
+```java
+public boolean hasToolExecutions()
+```
+
+Returns whether any tool executions occurred during the run.
+
+**Returns**
+
+true if tool executions are present
+
+---
+
+### `toolExecutions`
+
+```java
+public @NonNull List<ToolExecution> toolExecutions(@NonNull String toolName)
+```
+
+Returns all tool executions for the requested tool name.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `toolName` | the tool name to filter by |
+
+**Returns**
+
+an immutable list of matching tool executions
+
+---
+
+### `lastToolExecution`
+
+```java
+public @NonNull Optional<ToolExecution> lastToolExecution()
+```
+
+Returns the most recent tool execution, if any.
+
+**Returns**
+
+an Optional containing the last tool execution, or empty if none occurred
+
+---
+
+### `successfulToolExecutions`
+
+```java
+public @NonNull List<ToolExecution> successfulToolExecutions()
+```
+
+Returns the successful tool executions from this run.
+
+**Returns**
+
+an immutable list of successful tool executions
+
+---
+
+### `failedToolExecutions`
+
+```java
+public @NonNull List<ToolExecution> failedToolExecutions()
+```
+
+Returns the failed or incomplete tool executions from this run.
+
+**Returns**
+
+an immutable list of failed tool executions
 
 ---
 
@@ -385,6 +759,20 @@ the error, or null if successful
 
 ---
 
+### `errorMessage`
+
+```java
+public @Nullable String errorMessage()
+```
+
+Returns the error message if one occurred.
+
+**Returns**
+
+the error message, or null if no error is present
+
+---
+
 ### `parsed`
 
 ```java
@@ -402,6 +790,41 @@ Returns the parsed structured output if applicable.
 **Returns**
 
 the parsed object, or null if not a structured output run
+
+---
+
+### `parsedOptional`
+
+```java
+public @NonNull Optional<?> parsedOptional()
+```
+
+Returns the parsed structured output, if available.
+
+**Returns**
+
+an Optional containing the parsed output
+
+---
+
+### `parsedOptional`
+
+```java
+public <T> @NonNull Optional<T> parsedOptional(@NonNull Class<T> type)
+```
+
+Returns the parsed structured output when it matches the requested type.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `type` | the requested parsed output type |
+| `<T>` | the requested parsed output type |
+
+**Returns**
+
+an Optional containing the typed parsed output, or empty if unavailable/incompatible
 
 ---
 

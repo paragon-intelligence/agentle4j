@@ -1,9 +1,12 @@
 package com.paragon.agents;
 
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
 import tools.jackson.databind.ObjectMapper;
 import com.paragon.prompts.Prompt;
 import com.paragon.responses.Responder;
 import com.paragon.responses.TraceMetadata;
+import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.responses.spec.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -393,7 +396,15 @@ public final class RouterAgent implements Interactable {
      * @return a structured builder
      */
     public <T> @NonNull StructuredBuilder<T> structured(@NonNull Class<T> outputType) {
-      return new StructuredBuilder<>(this, outputType);
+      return new StructuredBuilder<>(this, StructuredOutputDefinition.create(outputType));
+    }
+
+    public <T> @NonNull StructuredBuilder<T> structured(@NonNull TypeReference<T> outputType) {
+      return new StructuredBuilder<>(this, StructuredOutputDefinition.create(outputType));
+    }
+
+    public <T> @NonNull StructuredBuilder<T> structured(@NonNull JavaType outputType) {
+      return new StructuredBuilder<>(this, StructuredOutputDefinition.create(outputType));
     }
 
     /**
@@ -415,12 +426,14 @@ public final class RouterAgent implements Interactable {
    */
   public static final class StructuredBuilder<T> {
     private final Builder parentBuilder;
-    private final Class<T> outputType;
+    private final StructuredOutputDefinition<T> structuredOutputDefinition;
     private @Nullable ObjectMapper objectMapper;
 
-    private StructuredBuilder(@NonNull Builder parentBuilder, @NonNull Class<T> outputType) {
+    private StructuredBuilder(
+        @NonNull Builder parentBuilder,
+        @NonNull StructuredOutputDefinition<T> structuredOutputDefinition) {
       this.parentBuilder = Objects.requireNonNull(parentBuilder);
-      this.outputType = Objects.requireNonNull(outputType);
+      this.structuredOutputDefinition = Objects.requireNonNull(structuredOutputDefinition);
     }
 
     public @NonNull StructuredBuilder<T> name(@NonNull String name) {
@@ -467,7 +480,7 @@ public final class RouterAgent implements Interactable {
     public RouterAgent.Structured<T> build() {
       RouterAgent router = parentBuilder.build();
       ObjectMapper mapper = objectMapper != null ? objectMapper : new ObjectMapper();
-      return new RouterAgent.Structured<>(router, outputType, mapper);
+      return new RouterAgent.Structured<>(router, structuredOutputDefinition, mapper);
     }
   }
 
@@ -481,15 +494,15 @@ public final class RouterAgent implements Interactable {
    */
   public static final class Structured<T> implements Interactable.Structured<T> {
     private final RouterAgent router;
-    private final Class<T> outputType;
+    private final StructuredOutputDefinition<T> structuredOutputDefinition;
     private final ObjectMapper objectMapper;
 
     private Structured(
         @NonNull RouterAgent router,
-        @NonNull Class<T> outputType,
+        @NonNull StructuredOutputDefinition<T> structuredOutputDefinition,
         @NonNull ObjectMapper objectMapper) {
       this.router = Objects.requireNonNull(router);
-      this.outputType = Objects.requireNonNull(outputType);
+      this.structuredOutputDefinition = Objects.requireNonNull(structuredOutputDefinition);
       this.objectMapper = Objects.requireNonNull(objectMapper);
     }
 
@@ -509,7 +522,15 @@ public final class RouterAgent implements Interactable {
         @NonNull RouterAgent router,
         @NonNull Class<T> outputType,
         @NonNull ObjectMapper objectMapper) {
-      return new RouterAgent.Structured<>(router, outputType, objectMapper);
+      return new RouterAgent.Structured<>(
+          router, StructuredOutputDefinition.create(outputType), objectMapper);
+    }
+
+    public static <T> RouterAgent.Structured<T> of(
+        @NonNull RouterAgent router,
+        @NonNull StructuredOutputDefinition<T> structuredOutputDefinition,
+        @NonNull ObjectMapper objectMapper) {
+      return new RouterAgent.Structured<>(router, structuredOutputDefinition, objectMapper);
     }
 
     @Override
@@ -526,7 +547,7 @@ public final class RouterAgent implements Interactable {
       // reparsing JSON strings and to respect agents that used structured output.
       if (result.hasParsed()) {
         Object parsed = result.parsed();
-        if (parsed != null && outputType.isInstance(parsed)) {
+        if (parsed != null && structuredOutputDefinition.responseType().isInstance(parsed)) {
           @SuppressWarnings("unchecked")
           T cast = (T) parsed;
           return StructuredAgentResult.success(
@@ -539,7 +560,7 @@ public final class RouterAgent implements Interactable {
         }
       }
 
-      return result.toStructured(outputType, objectMapper);
+      return result.toStructured(structuredOutputDefinition, objectMapper);
     }
 
     /**
@@ -553,7 +574,7 @@ public final class RouterAgent implements Interactable {
 
     /** Returns the structured output type. */
     public @NonNull Class<T> outputType() {
-      return outputType;
+      return structuredOutputDefinition.responseType();
     }
 
     /**

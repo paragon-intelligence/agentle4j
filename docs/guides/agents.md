@@ -146,14 +146,15 @@ AgenticContext context = AgenticContext.create();
 
 // Pre-populated context for resuming conversations
 List<ResponseInputItem> previousMessages = loadFromDatabase();
-AgenticContext resumed = AgenticContext.withHistory(previousMessages);
+AgenticContext resumed = AgenticContext.ofHistory(previousMessages)
+    .addUserMessage("I still need help");
 ```
 
 ### Adding Input
 
 ```java
 // Add text messages
-context.addInput(Message.user("Hello!"));
+context.addUserMessage("Hello!");
 
 // Add messages with images
 context.addInput(Message.user(Image.fromUrl("https://...")));
@@ -182,7 +183,7 @@ if (context.hasState("userId")) {
 }
 
 // Get all state
-Map<String, Object> allState = context.getAllState();
+Map<String, Object> allState = context.state();
 ```
 
 ### Multi-Turn Conversations
@@ -193,16 +194,17 @@ The key to multi-turn conversations is **reusing the same context**:
 AgenticContext context = AgenticContext.create();
 
 // Turn 1
-context.addInput(Message.user("My name is Alice"));
+context.addUserMessage("My name is Alice");
 agent.interact(context);
 
 // Turn 2 - agent remembers the context
-context.addInput(Message.user("What's my name?"));
+context.addUserMessage("What's my name?");
 AgentResult result = agent.interact(context);
 // -> "Your name is Alice"
 
 // Check turn count
 System.out.println("Turns used: " + context.getTurnCount());
+System.out.println("Messages so far: " + result.messages().size());
 ```
 
 ### Copy and Fork
@@ -246,13 +248,21 @@ if (context.hasTraceContext()) {
 
 ```java
 // Get immutable view
-List<ResponseInputItem> history = context.getHistory();
+List<ResponseInputItem> history = context.history();
+
+// Get only messages or tool-related items
+List<Message> messages = context.messages();
+List<FunctionToolCall> toolCalls = context.toolCalls();
+List<FunctionToolCallOutput> toolOutputs = context.toolOutputs();
 
 // Get mutable copy (for building payloads)
-List<ResponseInputItem> mutableHistory = context.getHistoryMutable();
+List<ResponseInputItem> mutableHistory = context.historyMutable();
 
 // Check size
 int size = context.historySize();
+
+// Read the latest user turn directly
+String lastUserText = context.lastUserMessageText("[No query]");
 ```
 
 ### Resetting Context
@@ -267,10 +277,13 @@ context.clear();
 | Method | Description |
 |--------|-------------|
 | `create()` | Create empty context |
-| `withHistory(list)` | Create with pre-populated messages |
+| `ofHistory(history)` | Create from optional persisted history |
 | `addInput(item)` | Add message/input to history |
+| `addUserMessage(text)` | Append a user text message |
 | `addToolResult(output)` | Add tool execution result |
-| `getHistory()` | Get immutable history view |
+| `history()` | Get immutable history view |
+| `messages()` | Get only message items |
+| `toolCalls()` | Get tool calls from history |
 | `setState(key, value)` | Store custom state |
 | `getState(key, type)` | Retrieve typed state (returns `Optional<T>`) |
 | `hasState(key)` | Check if state exists |

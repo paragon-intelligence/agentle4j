@@ -433,7 +433,7 @@ public class Responder {
         respond(((CreateResponsePayload) payload), sessionId, TelemetryContext.empty(), trace);
 
     try {
-      return response.parse(payload.responseType(), objectMapper);
+      return response.parse(payload.structuredOutputDefinition(), objectMapper);
     } catch (JacksonException e) {
       throw new RuntimeException("Failed to parse structured response", e);
     }
@@ -601,7 +601,12 @@ public class Responder {
     }
 
     Request request = payload.toRequest(responsesApiObjectMapper, JSON, baseUrl, headers);
-    return new ResponseStream<>(httpClient, request, objectMapper, payload.responseType());
+    return new ResponseStream<>(
+        httpClient,
+        request,
+        objectMapper,
+        payload.responseType(),
+        payload.structuredOutputDefinition());
   }
 
   @Override

@@ -26,8 +26,13 @@ import org.jspecify.annotations.Nullable;
  */
 public class PartialJsonParser<T> {
 
+  @FunctionalInterface
+  public interface JsonParserFunction<T> {
+    T parse(ObjectMapper objectMapper, String json) throws Exception;
+  }
+
   private final ObjectMapper objectMapper;
-  private final Class<T> targetType;
+  private final JsonParserFunction<T> parser;
 
   /**
    * Creates a new PartialJsonParser for the given type.
@@ -36,16 +41,21 @@ public class PartialJsonParser<T> {
    * @param targetType the class to parse into
    */
   public PartialJsonParser(@NonNull ObjectMapper objectMapper, @NonNull Class<T> targetType) {
+    this(objectMapper, (mapper, json) -> mapper.readValue(json, targetType));
+  }
+
+  public PartialJsonParser(
+      @NonNull ObjectMapper objectMapper, @NonNull JsonParserFunction<T> parser) {
     // Create a copy configured for lenient parsing
     this.objectMapper =
         objectMapper
             .rebuild()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false)
-            .configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, false)
-            .configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
-            .build();
-    this.targetType = targetType;
+              .configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, false)
+              .configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
+              .build();
+    this.parser = parser;
   }
 
   /**
@@ -65,7 +75,7 @@ public class PartialJsonParser<T> {
     }
 
     try {
-      return objectMapper.readValue(completedJson, targetType);
+      return parser.parse(objectMapper, completedJson);
     } catch (Exception e) {
       // Not parseable yet - return null
       return null;

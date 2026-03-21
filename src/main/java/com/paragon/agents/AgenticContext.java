@@ -3,6 +3,7 @@ package com.paragon.agents;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.paragon.responses.spec.FunctionToolCall;
 import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.Message;
 import com.paragon.responses.spec.MessageRole;
@@ -32,6 +33,10 @@ import org.jspecify.annotations.Nullable;
  * <pre>{@code
  * // Create a fresh context for a new conversation
  * AgenticContext context = AgenticContext.create();
+ *
+ * // Resume safely from optional history and append a new user turn
+ * AgenticContext resumed = AgenticContext.ofHistory(loadHistory())
+ *     .addUserMessage("I still need help");
  *
  * // First interaction
  * agent.interact("Hi, I need help with my order", context);
@@ -91,18 +96,85 @@ public final class AgenticContext {
     return new AgenticContext(new ArrayList<>(), new HashMap<>(), 0);
   }
 
-  public static @NonNull AgenticContext create(@NonNull List<ResponseInputItem> history) {
+  /**
+   * Creates a context with pre-populated history.
+   *
+   * @param history the initial history items
+   * @return a new context with the provided history
+   */
+  public static @NonNull AgenticContext create(@NonNull List<? extends ResponseInputItem> history) {
+    Objects.requireNonNull(history, "history cannot be null");
     return new AgenticContext(new ArrayList<>(history), new HashMap<>(), 0);
   }
 
+  /**
+   * Creates a context with pre-populated history and state.
+   *
+   * @param history the initial history items
+   * @param state the initial state map
+   * @return a new context with the provided history and state
+   */
   public static @NonNull AgenticContext create(
-      @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state) {
+      @NonNull List<? extends ResponseInputItem> history, @NonNull Map<String, Object> state) {
+    Objects.requireNonNull(history, "history cannot be null");
+    Objects.requireNonNull(state, "state cannot be null");
     return new AgenticContext(new ArrayList<>(history), state, 0);
   }
 
+  /**
+   * Creates a context with pre-populated history, state, and turn count.
+   *
+   * @param history the initial history items
+   * @param state the initial state map
+   * @param turnCount the current turn count
+   * @return a new context with the provided history, state, and turn count
+   */
   public static @NonNull AgenticContext create(
-      @NonNull List<ResponseInputItem> history, @NonNull Map<String, Object> state, int turnCount) {
+      @NonNull List<? extends ResponseInputItem> history,
+      @NonNull Map<String, Object> state,
+      int turnCount) {
+    Objects.requireNonNull(history, "history cannot be null");
+    Objects.requireNonNull(state, "state cannot be null");
     return new AgenticContext(new ArrayList<>(history), state, turnCount);
+  }
+
+  /**
+   * Creates a context from a possibly-null history collection.
+   *
+   * <p>This is the null-safe convenience factory for callers that may or may not have persisted
+   * history available yet.
+   *
+   * @param history the history collection, or null
+   * @return a fresh empty context when history is null/empty, otherwise a context with that history
+   */
+  public static @NonNull AgenticContext ofHistory(
+      @Nullable Collection<? extends ResponseInputItem> history) {
+    if (history == null || history.isEmpty()) {
+      return create();
+    }
+    return new AgenticContext(new ArrayList<>(history), new HashMap<>(), 0);
+  }
+
+  /**
+   * Creates a context from the provided input items.
+   *
+   * @param items the input items to add
+   * @return a context populated with the given inputs
+   */
+  public static @NonNull AgenticContext ofInputs(@NonNull ResponseInputItem... items) {
+    Objects.requireNonNull(items, "items cannot be null");
+    return create().addInputs(List.of(items));
+  }
+
+  /**
+   * Creates a context from the provided messages.
+   *
+   * @param messages the messages to add
+   * @return a context populated with the given messages
+   */
+  public static @NonNull AgenticContext ofMessages(@NonNull Message... messages) {
+    Objects.requireNonNull(messages, "messages cannot be null");
+    return create().addMessages(List.of(messages));
   }
 
   /**
@@ -141,7 +213,7 @@ public final class AgenticContext {
    * @return a context with the given history
    */
   public static @NonNull AgenticContext withHistory(
-      @NonNull List<ResponseInputItem> initialHistory) {
+      @NonNull List<? extends ResponseInputItem> initialHistory) {
     Objects.requireNonNull(initialHistory, "initialHistory cannot be null");
     return AgenticContext.create(initialHistory);
   }
@@ -159,6 +231,20 @@ public final class AgenticContext {
   }
 
   /**
+   * Adds multiple messages to the conversation history.
+   *
+   * @param messages the messages to add
+   * @return this context for method chaining
+   */
+  public @NonNull AgenticContext addMessages(@NonNull Iterable<? extends Message> messages) {
+    Objects.requireNonNull(messages, "messages cannot be null");
+    for (Message message : messages) {
+      addMessage(Objects.requireNonNull(message, "message cannot be null"));
+    }
+    return this;
+  }
+
+  /**
    * Adds a response input item to the conversation history.
    *
    * @param item the input item to add
@@ -167,6 +253,20 @@ public final class AgenticContext {
   public @NonNull AgenticContext addInput(@NonNull ResponseInputItem item) {
     Objects.requireNonNull(item, "item cannot be null");
     this.history.add(item);
+    return this;
+  }
+
+  /**
+   * Adds multiple response input items to the conversation history.
+   *
+   * @param items the input items to add
+   * @return this context for method chaining
+   */
+  public @NonNull AgenticContext addInputs(@NonNull Iterable<? extends ResponseInputItem> items) {
+    Objects.requireNonNull(items, "items cannot be null");
+    for (ResponseInputItem item : items) {
+      addInput(Objects.requireNonNull(item, "item cannot be null"));
+    }
     return this;
   }
 
@@ -186,6 +286,36 @@ public final class AgenticContext {
   }
 
   /**
+   * Adds a user text message to the conversation history.
+   *
+   * @param text the user text to add
+   * @return this context for method chaining
+   */
+  public @NonNull AgenticContext addUserMessage(@NonNull String text) {
+    return addMessage(Message.user(Objects.requireNonNull(text, "text cannot be null")));
+  }
+
+  /**
+   * Adds an assistant text message to the conversation history.
+   *
+   * @param text the assistant text to add
+   * @return this context for method chaining
+   */
+  public @NonNull AgenticContext addAssistantMessage(@NonNull String text) {
+    return addMessage(Message.assistant(Objects.requireNonNull(text, "text cannot be null")));
+  }
+
+  /**
+   * Adds a developer text message to the conversation history.
+   *
+   * @param text the developer text to add
+   * @return this context for method chaining
+   */
+  public @NonNull AgenticContext addDeveloperMessage(@NonNull String text) {
+    return addMessage(Message.developer(Objects.requireNonNull(text, "text cannot be null")));
+  }
+
+  /**
    * Returns an unmodifiable view of the conversation history.
    *
    * @return the conversation history
@@ -195,12 +325,30 @@ public final class AgenticContext {
   }
 
   /**
+   * Returns an unmodifiable view of the conversation history.
+   *
+   * @return the conversation history
+   */
+  public @NonNull List<ResponseInputItem> history() {
+    return getHistory();
+  }
+
+  /**
    * Returns a mutable copy of the conversation history for building payloads.
    *
    * @return a mutable copy of the history
    */
   public @NonNull List<ResponseInputItem> getHistoryMutable() {
     return new ArrayList<>(history);
+  }
+
+  /**
+   * Returns a mutable copy of the conversation history for ad-hoc manipulation.
+   *
+   * @return a mutable copy of the history
+   */
+  public @NonNull List<ResponseInputItem> historyMutable() {
+    return getHistoryMutable();
   }
 
   /**
@@ -229,6 +377,18 @@ public final class AgenticContext {
   public Optional<Object> getState(@NonNull String key) {
     Objects.requireNonNull(key, "key cannot be null");
     return Optional.ofNullable(state.get(key));
+  }
+
+  /**
+   * Removes a value from the context's state.
+   *
+   * @param key the key to remove
+   * @return this context for method chaining
+   */
+  public @NonNull AgenticContext removeState(@NonNull String key) {
+    Objects.requireNonNull(key, "key cannot be null");
+    state.remove(key);
+    return this;
   }
 
   /**
@@ -270,6 +430,15 @@ public final class AgenticContext {
    */
   public @NonNull Map<String, Object> getAllState() {
     return Collections.unmodifiableMap(state);
+  }
+
+  /**
+   * Returns an unmodifiable view of the state map.
+   *
+   * @return the state map
+   */
+  public @NonNull Map<String, Object> state() {
+    return getAllState();
   }
 
   /**
@@ -330,7 +499,163 @@ public final class AgenticContext {
     return history.size();
   }
 
+  /**
+   * Returns whether this context currently contains any history items.
+   *
+   * @return true when history is not empty
+   */
+  public boolean hasHistory() {
+    return !history.isEmpty();
+  }
+
+  /**
+   * Returns all history items assignable to the requested type.
+   *
+   * @param type the desired item type
+   * @param <T> the desired item type
+   * @return an immutable list of matching items in original order
+   */
+  public <T> @NonNull List<T> historyItems(@NonNull Class<T> type) {
+    Objects.requireNonNull(type, "type cannot be null");
+    return history.stream().filter(type::isInstance).map(type::cast).toList();
+  }
+
+  /**
+   * Returns all messages in the conversation history.
+   *
+   * @return an immutable list of messages in original order
+   */
+  public @NonNull List<Message> messages() {
+    return historyItems(Message.class);
+  }
+
+  /**
+   * Returns all messages with the requested role.
+   *
+   * @param role the role to filter by
+   * @return an immutable list of matching messages in original order
+   */
+  public @NonNull List<Message> messages(@NonNull MessageRole role) {
+    Objects.requireNonNull(role, "role cannot be null");
+    return messages().stream().filter(message -> message.role() == role).toList();
+  }
+
+  /**
+   * Returns all user messages in the conversation history.
+   *
+   * @return an immutable list of user messages
+   */
+  public @NonNull List<Message> userMessages() {
+    return messages(MessageRole.USER);
+  }
+
+  /**
+   * Returns all assistant messages in the conversation history.
+   *
+   * @return an immutable list of assistant messages
+   */
+  public @NonNull List<Message> assistantMessages() {
+    return messages(MessageRole.ASSISTANT);
+  }
+
+  /**
+   * Returns all developer messages in the conversation history.
+   *
+   * @return an immutable list of developer messages
+   */
+  public @NonNull List<Message> developerMessages() {
+    return messages(MessageRole.DEVELOPER);
+  }
+
+  /**
+   * Returns all function tool calls in the conversation history.
+   *
+   * @return an immutable list of function tool calls
+   */
+  public @NonNull List<FunctionToolCall> toolCalls() {
+    return historyItems(FunctionToolCall.class);
+  }
+
+  /**
+   * Returns all function tool outputs in the conversation history.
+   *
+   * @return an immutable list of function tool outputs
+   */
+  public @NonNull List<FunctionToolCallOutput> toolOutputs() {
+    return historyItems(FunctionToolCallOutput.class);
+  }
+
   // ===== Utility Methods =====
+
+  /**
+   * Returns the most recent message in the conversation history.
+   *
+   * @return an Optional containing the last message, or empty if none exist
+   */
+  public @NonNull Optional<Message> lastMessage() {
+    return lastMessageMatching(null);
+  }
+
+  /**
+   * Returns the most recent message with the requested role.
+   *
+   * @param role the role to filter by
+   * @return an Optional containing the last matching message, or empty if none exist
+   */
+  public @NonNull Optional<Message> lastMessage(@NonNull MessageRole role) {
+    Objects.requireNonNull(role, "role cannot be null");
+    return lastMessageMatching(role);
+  }
+
+  /**
+   * Returns the most recent user message.
+   *
+   * @return an Optional containing the last user message, or empty if none exist
+   */
+  public @NonNull Optional<Message> lastUserMessage() {
+    return lastMessage(MessageRole.USER);
+  }
+
+  /**
+   * Returns the most recent assistant message.
+   *
+   * @return an Optional containing the last assistant message, or empty if none exist
+   */
+  public @NonNull Optional<Message> lastAssistantMessage() {
+    return lastMessage(MessageRole.ASSISTANT);
+  }
+
+  /**
+   * Returns the most recent developer message.
+   *
+   * @return an Optional containing the last developer message, or empty if none exist
+   */
+  public @NonNull Optional<Message> lastDeveloperMessage() {
+    return lastMessage(MessageRole.DEVELOPER);
+  }
+
+  /**
+   * Returns the first text segment from the most recent user message.
+   *
+   * <p>This is an alias for {@link #extractLastUserMessageText()}.
+   *
+   * @return an Optional containing the last user text, or empty if none found
+   */
+  public @NonNull Optional<String> lastUserMessageText() {
+    return extractLastUserMessageText();
+  }
+
+  /**
+   * Returns the first text segment from the most recent user message, or a fallback value.
+   *
+   * <p>This is an alias for {@link #extractLastUserMessageText(String)}.
+   *
+   * @param fallback the fallback value if no user message text is found
+   * @return the last user message text, or the fallback
+   */
+  public @NonNull String lastUserMessageText(@NonNull String fallback) {
+    return extractLastUserMessageText(fallback);
+  }
 
   /**
    * Extracts the text of the last user message from the conversation history.
@@ -540,5 +865,15 @@ public final class AgenticContext {
     forked.parentSpanId = Objects.requireNonNull(newParentSpanId, "newParentSpanId cannot be null");
     forked.turnCount = 0; // Reset turn count for child agent
     return forked;
+  }
+
+  private @NonNull Optional<Message> lastMessageMatching(@Nullable MessageRole role) {
+    for (int i = history.size() - 1; i >= 0; i--) {
+      ResponseInputItem item = history.get(i);
+      if (item instanceof Message message && (role == null || message.role() == role)) {
+        return Optional.of(message);
+      }
+    }
+    return Optional.empty();
   }
 }

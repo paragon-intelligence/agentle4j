@@ -1,13 +1,20 @@
 package com.paragon.responses.json;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
 import tools.jackson.databind.ObjectMapper;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.RecordComponent;
 import tools.jackson.module.jsonSchema.JsonSchema;
 import tools.jackson.module.jsonSchema.JsonSchemaGenerator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,12 +38,27 @@ public record JacksonJsonSchemaProducer(@NonNull ObjectMapper mapper)
     implements JsonSchemaProducer {
 
   @Override
-  public Map<String, Object> produce(Class<?> clazz) {
+  public Map<String, Object> produce(JavaType javaType) {
+    JavaType rootType = unwrapReferenceType(javaType);
+    Class<?> rawClass = rootType.getRawClass();
+    Map<String, Object> schema;
+    if (rawClass != null && PolymorphicTypeMetadata.resolve(rawClass).isPresent()) {
+      schema = buildRootWrapperSchema(rawClass);
+    } else {
+      schema = generateResolvedSchema(rootType);
+      transformSchemaForType(rootType, schema, new HashSet<>());
+    }
+
+    finalizeStrictSchema(schema);
+    return schema;
+  }
+
+  private Map<String, Object> generateResolvedSchema(JavaType javaType) {
     var jsonSchemaGenerator = new JsonSchemaGenerator(mapper);
 
     JsonSchema jsonSchema;
     try {
-      jsonSchema = jsonSchemaGenerator.generateSchema(clazz);
+      jsonSchema = jsonSchemaGenerator.generateSchema(javaType);
     } catch (JacksonException e) {
       throw new RuntimeException(e);
     }
@@ -44,26 +66,254 @@ public record JacksonJsonSchemaProducer(@NonNull ObjectMapper mapper)
     Map<String, Object> schema =
         mapper.convertValue(jsonSchema, new TypeReference<HashMap<String, Object>>() {});
 
-    // Pass 1: collect every sub-schema that carries an "id" URN
     Map<String, Map<String, Object>> idToSchema = new HashMap<>();
     collectIds(schema, idToSchema);
-
-    // Pass 2: replace $ref nodes with deep-copied inlined schemas, strip unsupported keywords
     resolveRefs(schema, idToSchema, new HashSet<>());
+    return schema;
+  }
 
-    // Add 'required' array with all property names for OpenAI strict mode
-    addRequiredProperties(schema);
+  private JavaType unwrapReferenceType(JavaType javaType) {
+    if (javaType.isReferenceType() && javaType.getReferencedType() != null) {
+      return unwrapReferenceType(javaType.getReferencedType());
+    }
+    return javaType;
+  }
 
-    // Add 'additionalProperties: false' for strict mode
-    schema.put("additionalProperties", false);
+  private Map<String, Object> buildRootWrapperSchema(Class<?> clazz) {
+    PolymorphicTypeMetadata metadata =
+        PolymorphicTypeMetadata.resolve(clazz)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Polymorphic structured output metadata not found for " + clazz.getName()));
 
-    // OpenAI strict mode requires 'properties' to be present on every object schema,
-    // even when there are no parameters (empty record). Ensure it always exists.
-    if ("object".equals(schema.get("type"))) {
-      schema.putIfAbsent("properties", new HashMap<>());
+    Map<String, Object> schema = new HashMap<>();
+    schema.put("type", "object");
+    Map<String, Object> properties = new HashMap<>();
+    properties.put(
+        StructuredOutputDefinition.ROOT_WRAPPER_PROPERTY,
+        buildPolymorphicUnionSchema(metadata, new HashSet<>()));
+    schema.put("properties", properties);
+    return schema;
+  }
+
+  @SuppressWarnings("unchecked")
+  private void transformSchemaForType(
+      JavaType javaType, Map<String, Object> schema, Set<Class<?>> resolvingTypes) {
+    if (javaType == null || schema == null) {
+      return;
     }
 
+    if (javaType.isReferenceType() && javaType.getReferencedType() != null) {
+      transformSchemaForType(javaType.getReferencedType(), schema, resolvingTypes);
+      return;
+    }
+
+    if (javaType.isContainerType()) {
+      Object itemsObj = schema.get("items");
+      if (itemsObj instanceof Map<?, ?> rawItems && javaType.getContentType() != null) {
+        Map<String, Object> items = (Map<String, Object>) rawItems;
+        schema.put("items", transformNestedSchema(javaType.getContentType(), items, resolvingTypes));
+      }
+      return;
+    }
+
+    Class<?> rawClass = javaType.getRawClass();
+    if (rawClass == null || !shouldTraverseObjectProperties(rawClass) || !isObjectSchema(schema)) {
+      return;
+    }
+
+    if (!resolvingTypes.add(rawClass)) {
+      return;
+    }
+
+    try {
+      Object propertiesObj = schema.get("properties");
+      if (!(propertiesObj instanceof Map<?, ?> rawProperties)) {
+        return;
+      }
+
+      Map<String, Object> properties = (Map<String, Object>) rawProperties;
+      for (Map.Entry<String, JavaType> property : resolvePropertyTypes(javaType).entrySet()) {
+        Object existingSchema = properties.get(property.getKey());
+        if (!(existingSchema instanceof Map<?, ?> rawPropertySchema)) {
+          continue;
+        }
+
+        Map<String, Object> propertySchema = (Map<String, Object>) rawPropertySchema;
+        properties.put(
+            property.getKey(),
+            transformNestedSchema(property.getValue(), propertySchema, resolvingTypes));
+      }
+    } finally {
+      resolvingTypes.remove(rawClass);
+    }
+  }
+
+  private Map<String, Object> transformNestedSchema(
+      JavaType javaType, Map<String, Object> existingSchema, Set<Class<?>> resolvingTypes) {
+    if (javaType == null) {
+      return existingSchema;
+    }
+
+    if (javaType.isReferenceType() && javaType.getReferencedType() != null) {
+      return transformNestedSchema(javaType.getReferencedType(), existingSchema, resolvingTypes);
+    }
+
+    Class<?> rawClass = javaType.getRawClass();
+    if (rawClass == null) {
+      return existingSchema;
+    }
+
+    if (PolymorphicTypeMetadata.resolve(rawClass).isPresent()) {
+      return buildPolymorphicUnionSchema(
+          PolymorphicTypeMetadata.resolve(rawClass).orElseThrow(), new HashSet<>(resolvingTypes));
+    }
+
+    if (javaType.isContainerType()) {
+      transformSchemaForType(javaType, existingSchema, resolvingTypes);
+      return existingSchema;
+    }
+
+    if (!shouldTraverseObjectProperties(rawClass) || !isObjectSchema(existingSchema)) {
+      return existingSchema;
+    }
+
+    transformSchemaForType(javaType, existingSchema, resolvingTypes);
+    return existingSchema;
+  }
+
+  private Map<String, Object> buildPolymorphicUnionSchema(
+      PolymorphicTypeMetadata metadata, Set<Class<?>> resolvingTypes) {
+    Map<String, Object> unionSchema = new HashMap<>();
+    List<Map<String, Object>> branches = new ArrayList<>();
+
+    for (PolymorphicTypeMetadata.Branch branch : metadata.branches()) {
+      Map<String, Object> branchSchema = generateResolvedSchema(mapper.constructType(branch.subtypeClass()));
+      transformSchemaForType(
+          mapper.constructType(branch.subtypeClass()), branchSchema, new HashSet<>(resolvingTypes));
+
+      if (!isObjectSchema(branchSchema)) {
+        throw new IllegalArgumentException(
+            "Polymorphic structured output only supports object subtypes, but "
+                + branch.subtypeClass().getName()
+                + " produced "
+                + branchSchema.get("type"));
+      }
+
+      @SuppressWarnings("unchecked")
+      Map<String, Object> properties =
+          (Map<String, Object>) branchSchema.computeIfAbsent("properties", ignored -> new HashMap<>());
+      properties.put(metadata.propertyName(), discriminatorSchema(branch.typeId()));
+      branches.add(branchSchema);
+    }
+
+    unionSchema.put("anyOf", branches);
+    return unionSchema;
+  }
+
+  private Map<String, Object> discriminatorSchema(String typeId) {
+    Map<String, Object> schema = new HashMap<>();
+    schema.put("type", "string");
+    schema.put("enum", List.of(typeId));
     return schema;
+  }
+
+  private boolean shouldTraverseObjectProperties(Class<?> rawClass) {
+    return !rawClass.isPrimitive()
+        && !rawClass.isEnum()
+        && rawClass != Object.class
+        && rawClass != String.class
+        && !Number.class.isAssignableFrom(rawClass)
+        && rawClass != Boolean.class
+        && rawClass != Character.class
+        && !Map.class.isAssignableFrom(rawClass);
+  }
+
+  private boolean isObjectSchema(Map<String, Object> schema) {
+    return "object".equals(schema.get("type")) || schema.containsKey("properties");
+  }
+
+  private Map<String, JavaType> resolvePropertyTypes(JavaType javaType) {
+    Map<String, JavaType> propertyTypes = new LinkedHashMap<>();
+    Class<?> rawClass = javaType.getRawClass();
+    if (rawClass == null) {
+      return propertyTypes;
+    }
+
+    if (rawClass.isRecord()) {
+      RecordComponent[] components = rawClass.getRecordComponents();
+      if (components != null) {
+        for (RecordComponent component : components) {
+          propertyTypes.putIfAbsent(
+              resolvePropertyName(component.getName(), component.getAnnotation(JsonProperty.class)),
+              mapper.constructType(component.getGenericType()));
+        }
+      }
+    }
+
+    for (Class<?> current = rawClass; current != null && current != Object.class; current = current.getSuperclass()) {
+      for (Field field : current.getDeclaredFields()) {
+        if (Modifier.isStatic(field.getModifiers()) || field.isSynthetic()) {
+          continue;
+        }
+        propertyTypes.putIfAbsent(
+            resolvePropertyName(field.getName(), field.getAnnotation(JsonProperty.class)),
+            mapper.constructType(field.getGenericType()));
+      }
+    }
+
+    for (Method method : rawClass.getMethods()) {
+      if (Modifier.isStatic(method.getModifiers())
+          || method.isSynthetic()
+          || method.getParameterCount() != 0
+          || method.getReturnType() == Void.TYPE
+          || method.getDeclaringClass() == Object.class) {
+        continue;
+      }
+
+      String propertyName = resolveGetterPropertyName(method);
+      if (propertyName == null || propertyName.equals("class")) {
+        continue;
+      }
+
+      propertyTypes.putIfAbsent(propertyName, mapper.constructType(method.getGenericReturnType()));
+    }
+
+    return propertyTypes;
+  }
+
+  private String resolveGetterPropertyName(Method method) {
+    JsonProperty jsonProperty = method.getAnnotation(JsonProperty.class);
+    if (jsonProperty != null && jsonProperty.value() != null && !jsonProperty.value().isBlank()) {
+      return jsonProperty.value();
+    }
+
+    String name = method.getName();
+    if (name.startsWith("get") && name.length() > 3) {
+      return decapitalize(name.substring(3));
+    }
+    if (name.startsWith("is") && name.length() > 2) {
+      return decapitalize(name.substring(2));
+    }
+    return null;
+  }
+
+  private String resolvePropertyName(String fallback, JsonProperty jsonProperty) {
+    if (jsonProperty != null && jsonProperty.value() != null && !jsonProperty.value().isBlank()) {
+      return jsonProperty.value();
+    }
+    return fallback;
+  }
+
+  private String decapitalize(String value) {
+    if (value.isEmpty()) {
+      return value;
+    }
+    if (value.length() > 1 && Character.isUpperCase(value.charAt(1))) {
+      return value;
+    }
+    return Character.toLowerCase(value.charAt(0)) + value.substring(1);
   }
 
   /**
@@ -172,35 +422,25 @@ public record JacksonJsonSchemaProducer(@NonNull ObjectMapper mapper)
    * {@code required} array.
    */
   @SuppressWarnings("unchecked")
-  private void addRequiredProperties(Map<String, Object> schema) {
-    Object propertiesObj = schema.get("properties");
-    if (propertiesObj instanceof Map) {
-      Map<String, Object> properties = (Map<String, Object>) propertiesObj;
+  private void finalizeStrictSchema(Object node) {
+    if (node instanceof Map<?, ?> rawMap) {
+      @SuppressWarnings("unchecked")
+      Map<String, Object> map = (Map<String, Object>) rawMap;
 
-      // Add all property names to 'required' array
-      if (!properties.isEmpty()) {
-        List<String> required = new ArrayList<>(properties.keySet());
-        schema.put("required", required);
+      if ("object".equals(map.get("type"))) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> properties =
+            (Map<String, Object>) map.computeIfAbsent("properties", ignored -> new HashMap<>());
+        map.put("required", new ArrayList<>(properties.keySet()));
+        map.put("additionalProperties", false);
       }
 
-      // Recursively process nested objects
-      for (Object propertyValue : properties.values()) {
-        if (propertyValue instanceof Map) {
-          Map<String, Object> nestedSchema = (Map<String, Object>) propertyValue;
-          if ("object".equals(nestedSchema.get("type"))) {
-            addRequiredProperties(nestedSchema);
-            nestedSchema.put("additionalProperties", false);
-          }
-          // Handle array items that are objects
-          Object itemsObj = nestedSchema.get("items");
-          if (itemsObj instanceof Map) {
-            Map<String, Object> itemsSchema = (Map<String, Object>) itemsObj;
-            if ("object".equals(itemsSchema.get("type"))) {
-              addRequiredProperties(itemsSchema);
-              itemsSchema.put("additionalProperties", false);
-            }
-          }
-        }
+      for (Object value : map.values()) {
+        finalizeStrictSchema(value);
+      }
+    } else if (node instanceof List<?> list) {
+      for (Object value : list) {
+        finalizeStrictSchema(value);
       }
     }
   }

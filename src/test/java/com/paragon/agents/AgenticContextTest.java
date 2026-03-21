@@ -2,7 +2,10 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.paragon.responses.spec.FunctionToolCall;
+import com.paragon.responses.spec.FunctionToolCallOutput;
 import com.paragon.responses.spec.Message;
+import com.paragon.responses.spec.MessageRole;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import java.util.List;
@@ -20,6 +23,10 @@ import org.junit.jupiter.api.Test;
  */
 @DisplayName("AgentContext")
 class AgenticContextTest {
+
+  private FunctionToolCall createToolCall(String callId, String toolName) {
+    return new FunctionToolCall("{}", callId, toolName, null, null);
+  }
 
   @Nested
   @DisplayName("Creation")
@@ -52,6 +59,52 @@ class AgenticContextTest {
     @DisplayName("withHistory() throws NullPointerException when null")
     void withHistory_throwsWhenNull() {
       assertThrows(NullPointerException.class, () -> AgenticContext.withHistory(null));
+    }
+
+    @Test
+    @DisplayName("create(history) accepts wildcard-friendly lists")
+    void create_acceptsWildcardFriendlyHistory() {
+      List<Message> history = List.of(Message.user("Hello"));
+
+      AgenticContext context = AgenticContext.create(history);
+
+      assertEquals(1, context.historySize());
+      assertEquals("Hello", context.lastUserMessageText().orElseThrow());
+    }
+
+    @Test
+    @DisplayName("ofHistory returns fresh context for null or empty history")
+    void ofHistory_handlesNullAndEmpty() {
+      AgenticContext nullHistory = AgenticContext.ofHistory(null);
+      AgenticContext emptyHistory = AgenticContext.ofHistory(List.of());
+
+      assertTrue(nullHistory.history().isEmpty());
+      assertTrue(emptyHistory.history().isEmpty());
+      assertEquals(0, nullHistory.getTurnCount());
+      assertEquals(0, emptyHistory.getTurnCount());
+    }
+
+    @Test
+    @DisplayName("ofInputs creates pre-populated context")
+    void ofInputs_createsPrePopulatedContext() {
+      FunctionToolCall call = createToolCall("call-1", "lookup");
+
+      AgenticContext context = AgenticContext.ofInputs(Message.user("Hi"), call);
+
+      assertEquals(2, context.historySize());
+      assertEquals(1, context.messages().size());
+      assertEquals(1, context.toolCalls().size());
+    }
+
+    @Test
+    @DisplayName("ofMessages creates pre-populated context")
+    void ofMessages_createsPrePopulatedContext() {
+      AgenticContext context =
+          AgenticContext.ofMessages(Message.user("Hi"), Message.assistant("Hello there"));
+
+      assertEquals(2, context.messages().size());
+      assertEquals(1, context.userMessages().size());
+      assertEquals(1, context.assistantMessages().size());
     }
   }
 
@@ -119,6 +172,102 @@ class AgenticContextTest {
 
       assertEquals(1, context.historySize()); // Original unchanged
       assertEquals(2, mutableHistory.size()); // Copy modified
+    }
+
+    @Test
+    @DisplayName("addInputs and addMessages support fluent chaining")
+    void addInputsAndAddMessages_supportFluentChaining() {
+      FunctionToolCall call = createToolCall("call-1", "lookup");
+      AgenticContext context = AgenticContext.create();
+
+      AgenticContext result =
+          context
+              .addMessages(List.of(Message.user("First"), Message.assistant("Second")))
+              .addInputs(List.of(call));
+
+      assertSame(context, result);
+      assertEquals(3, context.historySize());
+      assertEquals(2, context.messages().size());
+      assertEquals(1, context.toolCalls().size());
+    }
+
+    @Test
+    @DisplayName("role-specific add message helpers append correct message roles")
+    void roleSpecificAddHelpers_appendCorrectRoles() {
+      AgenticContext context =
+          AgenticContext.create()
+              .addUserMessage("User")
+              .addAssistantMessage("Assistant")
+              .addDeveloperMessage("Developer");
+
+      assertEquals(
+          List.of(MessageRole.USER), context.userMessages().stream().map(Message::role).toList());
+      assertEquals(
+          List.of(MessageRole.ASSISTANT),
+          context.assistantMessages().stream().map(Message::role).toList());
+      assertEquals(
+          List.of(MessageRole.DEVELOPER),
+          context.developerMessages().stream().map(Message::role).toList());
+    }
+
+    @Test
+    @DisplayName("history helpers filter by type and preserve original order")
+    void historyHelpers_filterByTypeAndPreserveOrder() {
+      FunctionToolCall call = createToolCall("call-1", "lookup");
+      FunctionToolCallOutput output = FunctionToolCallOutput.success("call-1", "done");
+      AgenticContext context =
+          AgenticContext.ofInputs(
+              Message.user("First"),
+              call,
+              output,
+              Message.assistant("Reply"),
+              Message.developer("Instruction"),
+              Message.user("Second"));
+
+      assertEquals(
+          List.of("First", "Reply", "Instruction", "Second"),
+          context.messages().stream().map(Message::outputText).toList());
+      assertEquals(
+          List.of("First", "Second"),
+          context.userMessages().stream().map(Message::outputText).toList());
+      assertEquals(List.of(call), context.toolCalls());
+      assertEquals(List.of(output), context.toolOutputs());
+      assertThrows(
+          UnsupportedOperationException.class, () -> context.messages().add(Message.user("Other")));
+    }
+
+    @Test
+    @DisplayName("last message helpers ignore non-message history entries")
+    void lastMessageHelpers_ignoreNonMessageEntries() {
+      FunctionToolCall call = createToolCall("call-1", "lookup");
+      AgenticContext context =
+          AgenticContext.ofInputs(call, FunctionToolCallOutput.success("call-1", "done"));
+
+      assertTrue(context.lastMessage().isEmpty());
+
+      context.addDeveloperMessage("Developer");
+      context.addAssistantMessage("Assistant");
+      context.addUserMessage("User");
+
+      assertEquals("User", context.lastMessage().orElseThrow().outputText());
+      assertEquals("User", context.lastUserMessage().orElseThrow().outputText());
+      assertEquals("Assistant", context.lastAssistantMessage().orElseThrow().outputText());
+      assertEquals("Developer", context.lastDeveloperMessage().orElseThrow().outputText());
+    }
+
+    @Test
+    @DisplayName("history aliases and hasHistory reflect current history")
+    void historyAliasesAndHasHistory_reflectCurrentHistory() {
+      AgenticContext context = AgenticContext.create();
+
+      assertFalse(context.hasHistory());
+      assertTrue(context.history().isEmpty());
+
+      context.addUserMessage("Hello");
+
+      assertTrue(context.hasHistory());
+      assertEquals(context.getHistory(), context.history());
+      assertEquals(context.getHistoryMutable(), context.historyMutable());
     }
   }
 
@@ -205,6 +354,18 @@ class AgenticContextTest {
       Map<String, Object> state = context.getAllState();
 
       assertThrows(UnsupportedOperationException.class, () -> state.put("new", "value"));
+    }
+
+    @Test
+    @DisplayName("removeState deletes key and state alias is immutable")
+    void removeState_deletesKeyAndStateAliasIsImmutable() {
+      AgenticContext context = AgenticContext.create().setState("key", "value");
+
+      AgenticContext result = context.removeState("key");
+
+      assertSame(context, result);
+      assertFalse(context.hasState("key"));
+      assertThrows(UnsupportedOperationException.class, () -> context.state().put("other", 1));
     }
   }
 
@@ -349,6 +510,17 @@ class AgenticContextTest {
       context.addInput(Message.user("Hello"));
 
       assertEquals("Hello", context.extractLastUserMessageText("[No query]"));
+    }
+
+    @Test
+    @DisplayName("lastUserMessageText aliases delegate to extract helpers")
+    void lastUserMessageText_aliasesDelegateToExtractHelpers() {
+      AgenticContext context = AgenticContext.create().addUserMessage("Hello");
+
+      assertEquals(context.extractLastUserMessageText(), context.lastUserMessageText());
+      assertEquals(
+          context.extractLastUserMessageText("[No query]"),
+          context.lastUserMessageText("[No query]"));
     }
 
     @Test

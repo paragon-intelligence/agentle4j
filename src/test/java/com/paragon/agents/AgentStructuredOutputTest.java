@@ -2,8 +2,15 @@ package com.paragon.agents;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
+import com.paragon.responses.ResponsesApiObjectMapper;
+import com.paragon.responses.spec.Reasoning;
+import com.paragon.responses.spec.ResponseOutput;
 import java.io.IOException;
+import java.util.List;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.jspecify.annotations.NonNull;
@@ -197,6 +204,81 @@ class AgentStructuredOutputTest {
       assertNotNull(result);
       assertFalse(result.isError());
       assertNotNull(result.parsed());
+    }
+
+    @Test
+    @DisplayName("interact unwraps root polymorphic structured output")
+    void interact_unwrapsRootPolymorphicStructuredOutput() {
+      Agent.Structured<ResponseOutput> structured =
+          Agent.builder()
+              .structured(ResponseOutput.class)
+              .name("PolymorphicExtractor")
+              .instructions("Return a structured response item.")
+              .model("test-model")
+              .responder(responder)
+              .objectMapper(ResponsesApiObjectMapper.create())
+              .build();
+
+      enqueueStructuredResponse(
+          """
+          {"value":{"type":"reasoning","id":"reasoning_123","summary":[],"status":"completed"}}
+          """);
+
+      StructuredAgentResult<ResponseOutput> result = structured.interact("Return a reasoning item");
+
+      assertInstanceOf(Reasoning.class, result.parsed());
+      assertTrue(result.output().contains("\"value\""));
+    }
+
+    @Test
+    @DisplayName("interact parses TypeReference list root")
+    void interact_parsesTypeReferenceListRoot() {
+      Agent.Structured<List<PersonInfo>> structured =
+          Agent.builder()
+              .structured(new TypeReference<List<PersonInfo>>() {})
+              .name("ListExtractor")
+              .instructions("Return a list of people.")
+              .model("test-model")
+              .responder(responder)
+              .build();
+
+      enqueueStructuredResponse(
+          """
+          {"value":[{"name":"John Doe","age":30},{"name":"Jane Doe","age":25}]}
+          """);
+
+      StructuredAgentResult<List<PersonInfo>> result = structured.interact("Return two people");
+
+      assertEquals(List.class, structured.outputType());
+      assertEquals(2, result.parsed().size());
+      assertEquals("John Doe", result.parsed().getFirst().name());
+      assertTrue(result.output().contains("\"value\""));
+    }
+
+    @Test
+    @DisplayName("interact parses JavaType list root")
+    void interact_parsesJavaTypeListRoot() {
+      JavaType listType =
+          new ObjectMapper().constructType(new TypeReference<List<PersonInfo>>() {}.getType());
+
+      Agent.Structured<List<PersonInfo>> structured =
+          Agent.builder()
+              .<List<PersonInfo>>structured(listType)
+              .name("ListExtractor")
+              .instructions("Return a list of people.")
+              .model("test-model")
+              .responder(responder)
+              .build();
+
+      enqueueStructuredResponse(
+          """
+          {"value":[{"name":"Alice","age":28}]}
+          """);
+
+      StructuredAgentResult<List<PersonInfo>> result = structured.interact("Return one person");
+
+      assertEquals(1, result.parsed().size());
+      assertEquals("Alice", result.parsed().getFirst().name());
     }
   }
 

@@ -2,6 +2,8 @@ package com.paragon.responses.json;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import tools.jackson.databind.ObjectMapper;
 import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,6 +63,17 @@ class OpenAiStrictModeSchemaContractTest {
                 ContactInfo contact, List<Address> previousAddresses) {}
 
   record Wrapper(String label, List<Person> people, Map<String, String> metadata) {}
+
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "kind")
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = Cat.class, name = "cat"),
+    @JsonSubTypes.Type(value = Dog.class, name = "dog")
+  })
+  sealed interface Animal permits Cat, Dog {}
+
+  record Cat(String name, int lives) implements Animal {}
+
+  record Dog(String name, boolean good) implements Animal {}
 
   // ===== Helpers =====
 
@@ -403,6 +416,15 @@ class OpenAiStrictModeSchemaContractTest {
     var violations = collectViolations(schema);
     assertTrue(violations.isEmpty(),
         "Wrapper schema (List<Person>) has strict mode violations:\n"
+            + String.join("\n", violations));
+  }
+
+  @Test
+  void fullContractCompliance_rootPolymorphicWrapper() {
+    var schema = producer.produce(Animal.class);
+    var violations = collectViolations(schema);
+    assertTrue(violations.isEmpty(),
+        "Root polymorphic schema has strict mode violations:\n"
             + String.join("\n", violations));
   }
 }

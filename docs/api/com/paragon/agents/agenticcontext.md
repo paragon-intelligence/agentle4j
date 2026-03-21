@@ -21,6 +21,9 @@ reusable across multiple conversations.
 ```java
 // Create a fresh context for a new conversation
 AgenticContext context = AgenticContext.create();
+// Resume safely from optional history and append a new user turn
+AgenticContext resumed = AgenticContext.ofHistory(loadHistory())
+    .addUserMessage("I still need help");
 // First interaction
 agent.interact("Hi, I need help with my order", context);
 // Second interaction (remembers first)
@@ -52,6 +55,137 @@ a fresh context with no history or state
 
 ---
 
+### `create`
+
+```java
+public static @NonNull AgenticContext create(@NonNull List<? extends ResponseInputItem> history)
+```
+
+Creates a context with pre-populated history.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `history` | the initial history items |
+
+**Returns**
+
+a new context with the provided history
+
+---
+
+### `create`
+
+```java
+public static @NonNull AgenticContext create(
+      @NonNull List<? extends ResponseInputItem> history, @NonNull Map<String, Object> state)
+```
+
+Creates a context with pre-populated history and state.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `history` | the initial history items |
+| `state` | the initial state map |
+
+**Returns**
+
+a new context with the provided history and state
+
+---
+
+### `create`
+
+```java
+public static @NonNull AgenticContext create(
+      @NonNull List<? extends ResponseInputItem> history,
+      @NonNull Map<String, Object> state,
+      int turnCount)
+```
+
+Creates a context with pre-populated history, state, and turn count.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `history` | the initial history items |
+| `state` | the initial state map |
+| `turnCount` | the current turn count |
+
+**Returns**
+
+a new context with the provided history, state, and turn count
+
+---
+
+### `ofHistory`
+
+```java
+public static @NonNull AgenticContext ofHistory(
+      @Nullable Collection<? extends ResponseInputItem> history)
+```
+
+Creates a context from a possibly-null history collection.
+
+This is the null-safe convenience factory for callers that may or may not have persisted
+history available yet.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `history` | the history collection, or null |
+
+**Returns**
+
+a fresh empty context when history is null/empty, otherwise a context with that history
+
+---
+
+### `ofInputs`
+
+```java
+public static @NonNull AgenticContext ofInputs(@NonNull ResponseInputItem... items)
+```
+
+Creates a context from the provided input items.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `items` | the input items to add |
+
+**Returns**
+
+a context populated with the given inputs
+
+---
+
+### `ofMessages`
+
+```java
+public static @NonNull AgenticContext ofMessages(@NonNull Message... messages)
+```
+
+Creates a context from the provided messages.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `messages` | the messages to add |
+
+**Returns**
+
+a context populated with the given messages
+
+---
+
 ### `fromJson`
 
 ```java
@@ -75,7 +209,7 @@ their Java equivalents. For full type fidelity with custom objects, use `mapper.
 
 ```java
 public static @NonNull AgenticContext withHistory(
-      @NonNull List<ResponseInputItem> initialHistory)
+      @NonNull List<? extends ResponseInputItem> initialHistory)
 ```
 
 Creates an AgenticContext pre-populated with conversation history.
@@ -114,6 +248,26 @@ this context for method chaining
 
 ---
 
+### `addMessages`
+
+```java
+public @NonNull AgenticContext addMessages(@NonNull Iterable<? extends Message> messages)
+```
+
+Adds multiple messages to the conversation history.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `messages` | the messages to add |
+
+**Returns**
+
+this context for method chaining
+
+---
+
 ### `addInput`
 
 ```java
@@ -127,6 +281,26 @@ Adds a response input item to the conversation history.
 | Name | Description |
 |------|-------------|
 | `item` | the input item to add |
+
+**Returns**
+
+this context for method chaining
+
+---
+
+### `addInputs`
+
+```java
+public @NonNull AgenticContext addInputs(@NonNull Iterable<? extends ResponseInputItem> items)
+```
+
+Adds multiple response input items to the conversation history.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `items` | the input items to add |
 
 **Returns**
 
@@ -156,10 +330,84 @@ this context for method chaining
 
 ---
 
+### `addUserMessage`
+
+```java
+public @NonNull AgenticContext addUserMessage(@NonNull String text)
+```
+
+Adds a user text message to the conversation history.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `text` | the user text to add |
+
+**Returns**
+
+this context for method chaining
+
+---
+
+### `addAssistantMessage`
+
+```java
+public @NonNull AgenticContext addAssistantMessage(@NonNull String text)
+```
+
+Adds an assistant text message to the conversation history.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `text` | the assistant text to add |
+
+**Returns**
+
+this context for method chaining
+
+---
+
+### `addDeveloperMessage`
+
+```java
+public @NonNull AgenticContext addDeveloperMessage(@NonNull String text)
+```
+
+Adds a developer text message to the conversation history.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `text` | the developer text to add |
+
+**Returns**
+
+this context for method chaining
+
+---
+
 ### `getHistory`
 
 ```java
 public @NonNull List<ResponseInputItem> getHistory()
+```
+
+Returns an unmodifiable view of the conversation history.
+
+**Returns**
+
+the conversation history
+
+---
+
+### `history`
+
+```java
+public @NonNull List<ResponseInputItem> history()
 ```
 
 Returns an unmodifiable view of the conversation history.
@@ -177,6 +425,20 @@ public @NonNull List<ResponseInputItem> getHistoryMutable()
 ```
 
 Returns a mutable copy of the conversation history for building payloads.
+
+**Returns**
+
+a mutable copy of the history
+
+---
+
+### `historyMutable`
+
+```java
+public @NonNull List<ResponseInputItem> historyMutable()
+```
+
+Returns a mutable copy of the conversation history for ad-hoc manipulation.
 
 **Returns**
 
@@ -222,6 +484,26 @@ Retrieves a value from the context's state.
 **Returns**
 
 an Optional containing the stored value, or empty if not found
+
+---
+
+### `removeState`
+
+```java
+public @NonNull AgenticContext removeState(@NonNull String key)
+```
+
+Removes a value from the context's state.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `key` | the key to remove |
+
+**Returns**
+
+this context for method chaining
 
 ---
 
@@ -280,6 +562,20 @@ public @NonNull Map<String, Object> getAllState()
 ```
 
 Returns an unmodifiable view of all state entries.
+
+**Returns**
+
+the state map
+
+---
+
+### `state`
+
+```java
+public @NonNull Map<String, Object> state()
+```
+
+Returns an unmodifiable view of the state map.
 
 **Returns**
 
@@ -358,6 +654,259 @@ Returns the size of the conversation history.
 **Returns**
 
 the number of items in history
+
+---
+
+### `hasHistory`
+
+```java
+public boolean hasHistory()
+```
+
+Returns whether this context currently contains any history items.
+
+**Returns**
+
+true when history is not empty
+
+---
+
+### `historyItems`
+
+```java
+public <T> @NonNull List<T> historyItems(@NonNull Class<T> type)
+```
+
+Returns all history items assignable to the requested type.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `type` | the desired item type |
+| `<T>` | the desired item type |
+
+**Returns**
+
+an immutable list of matching items in original order
+
+---
+
+### `messages`
+
+```java
+public @NonNull List<Message> messages()
+```
+
+Returns all messages in the conversation history.
+
+**Returns**
+
+an immutable list of messages in original order
+
+---
+
+### `messages`
+
+```java
+public @NonNull List<Message> messages(@NonNull MessageRole role)
+```
+
+Returns all messages with the requested role.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `role` | the role to filter by |
+
+**Returns**
+
+an immutable list of matching messages in original order
+
+---
+
+### `userMessages`
+
+```java
+public @NonNull List<Message> userMessages()
+```
+
+Returns all user messages in the conversation history.
+
+**Returns**
+
+an immutable list of user messages
+
+---
+
+### `assistantMessages`
+
+```java
+public @NonNull List<Message> assistantMessages()
+```
+
+Returns all assistant messages in the conversation history.
+
+**Returns**
+
+an immutable list of assistant messages
+
+---
+
+### `developerMessages`
+
+```java
+public @NonNull List<Message> developerMessages()
+```
+
+Returns all developer messages in the conversation history.
+
+**Returns**
+
+an immutable list of developer messages
+
+---
+
+### `toolCalls`
+
+```java
+public @NonNull List<FunctionToolCall> toolCalls()
+```
+
+Returns all function tool calls in the conversation history.
+
+**Returns**
+
+an immutable list of function tool calls
+
+---
+
+### `toolOutputs`
+
+```java
+public @NonNull List<FunctionToolCallOutput> toolOutputs()
+```
+
+Returns all function tool outputs in the conversation history.
+
+**Returns**
+
+an immutable list of function tool outputs
+
+---
+
+### `lastMessage`
+
+```java
+public @NonNull Optional<Message> lastMessage()
+```
+
+Returns the most recent message in the conversation history.
+
+**Returns**
+
+an Optional containing the last message, or empty if none exist
+
+---
+
+### `lastMessage`
+
+```java
+public @NonNull Optional<Message> lastMessage(@NonNull MessageRole role)
+```
+
+Returns the most recent message with the requested role.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `role` | the role to filter by |
+
+**Returns**
+
+an Optional containing the last matching message, or empty if none exist
+
+---
+
+### `lastUserMessage`
+
+```java
+public @NonNull Optional<Message> lastUserMessage()
+```
+
+Returns the most recent user message.
+
+**Returns**
+
+an Optional containing the last user message, or empty if none exist
+
+---
+
+### `lastAssistantMessage`
+
+```java
+public @NonNull Optional<Message> lastAssistantMessage()
+```
+
+Returns the most recent assistant message.
+
+**Returns**
+
+an Optional containing the last assistant message, or empty if none exist
+
+---
+
+### `lastDeveloperMessage`
+
+```java
+public @NonNull Optional<Message> lastDeveloperMessage()
+```
+
+Returns the most recent developer message.
+
+**Returns**
+
+an Optional containing the last developer message, or empty if none exist
+
+---
+
+### `lastUserMessageText`
+
+```java
+public @NonNull Optional<String> lastUserMessageText()
+```
+
+Returns the first text segment from the most recent user message.
+
+This is an alias for `.extractLastUserMessageText()`.
+
+**Returns**
+
+an Optional containing the last user text, or empty if none found
+
+---
+
+### `lastUserMessageText`
+
+```java
+public @NonNull String lastUserMessageText(@NonNull String fallback)
+```
+
+Returns the first text segment from the most recent user message, or a fallback value.
+
+This is an alias for `.extractLastUserMessageText(String)`.
+
+**Parameters**
+
+| Name | Description |
+|------|-------------|
+| `fallback` | the fallback value if no user message text is found |
+
+**Returns**
+
+the last user message text, or the fallback
 
 ---
 

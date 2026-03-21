@@ -1,6 +1,9 @@
 package com.paragon.agents;
 
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
 import tools.jackson.databind.ObjectMapper;
+import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.responses.TraceMetadata;
 import java.util.*;
 import org.jspecify.annotations.NonNull;
@@ -60,7 +63,7 @@ public final class HierarchicalAgents implements Interactable {
   private final int maxTurns;
   private final @NonNull SupervisorAgent rootSupervisor;
   private final @Nullable TraceMetadata traceMetadata;
-  private final @Nullable Class<?> outputType;
+  private final @Nullable StructuredOutputDefinition<?> structuredOutputDefinition;
 
   private HierarchicalAgents(Builder builder) {
     this.executive = Objects.requireNonNull(builder.executive, "executive cannot be null");
@@ -68,7 +71,7 @@ public final class HierarchicalAgents implements Interactable {
     this.maxTurns = builder.maxTurns;
     this.departmentSupervisors = new HashMap<>();
     this.traceMetadata = builder.traceMetadata;
-    this.outputType = builder.outputType;
+    this.structuredOutputDefinition = builder.structuredOutputDefinition;
 
     if (departments.isEmpty()) {
       throw new IllegalArgumentException("At least one department is required");
@@ -218,8 +221,8 @@ public final class HierarchicalAgents implements Interactable {
           deptName + " department - " + entry.getValue().manager().instructions().text());
     }
 
-    if (outputType != null) {
-      rootBuilder.outputType(outputType);
+    if (structuredOutputDefinition != null) {
+      rootBuilder.outputType(structuredOutputDefinition);
     }
 
     return rootBuilder.build();
@@ -280,12 +283,27 @@ public final class HierarchicalAgents implements Interactable {
     private @Nullable Agent executive;
     private int maxTurns = 10;
     private @Nullable TraceMetadata traceMetadata;
-    @Nullable Class<?> outputType;
+    @Nullable StructuredOutputDefinition<?> structuredOutputDefinition;
 
     private Builder() {}
 
     @NonNull Builder outputType(@NonNull Class<?> outputType) {
-      this.outputType = Objects.requireNonNull(outputType);
+      this.structuredOutputDefinition = StructuredOutputDefinition.create(outputType);
+      return this;
+    }
+
+    @NonNull Builder outputType(@NonNull TypeReference<?> outputType) {
+      this.structuredOutputDefinition = StructuredOutputDefinition.create(outputType);
+      return this;
+    }
+
+    @NonNull Builder outputType(@NonNull JavaType outputType) {
+      this.structuredOutputDefinition = StructuredOutputDefinition.create(outputType);
+      return this;
+    }
+
+    @NonNull Builder outputType(@NonNull StructuredOutputDefinition<?> outputType) {
+      this.structuredOutputDefinition = Objects.requireNonNull(outputType);
       return this;
     }
 
@@ -403,7 +421,15 @@ public final class HierarchicalAgents implements Interactable {
      * @return a structured builder
      */
     public <T> @NonNull StructuredBuilder<T> structured(@NonNull Class<T> outputType) {
-      return new StructuredBuilder<>(this, outputType);
+      return new StructuredBuilder<>(this, StructuredOutputDefinition.create(outputType));
+    }
+
+    public <T> @NonNull StructuredBuilder<T> structured(@NonNull TypeReference<T> outputType) {
+      return new StructuredBuilder<>(this, StructuredOutputDefinition.create(outputType));
+    }
+
+    public <T> @NonNull StructuredBuilder<T> structured(@NonNull JavaType outputType) {
+      return new StructuredBuilder<>(this, StructuredOutputDefinition.create(outputType));
     }
 
     /**
@@ -425,12 +451,14 @@ public final class HierarchicalAgents implements Interactable {
    */
   public static final class StructuredBuilder<T> {
     private final Builder parentBuilder;
-    private final Class<T> outputType;
+    private final StructuredOutputDefinition<T> structuredOutputDefinition;
     private @Nullable ObjectMapper objectMapper;
 
-    private StructuredBuilder(@NonNull Builder parentBuilder, @NonNull Class<T> outputType) {
+    private StructuredBuilder(
+        @NonNull Builder parentBuilder,
+        @NonNull StructuredOutputDefinition<T> structuredOutputDefinition) {
       this.parentBuilder = Objects.requireNonNull(parentBuilder);
-      this.outputType = Objects.requireNonNull(outputType);
+      this.structuredOutputDefinition = Objects.requireNonNull(structuredOutputDefinition);
     }
 
     public @NonNull StructuredBuilder<T> executive(@NonNull Agent executive) {
@@ -471,10 +499,10 @@ public final class HierarchicalAgents implements Interactable {
      * @return the configured Structured hierarchy
      */
     public HierarchicalAgents.Structured<T> build() {
-      parentBuilder.outputType(outputType);
+      parentBuilder.outputType(structuredOutputDefinition);
       HierarchicalAgents hierarchy = parentBuilder.build();
       ObjectMapper mapper = objectMapper != null ? objectMapper : new ObjectMapper();
-      return new HierarchicalAgents.Structured<>(hierarchy, outputType, mapper);
+      return new HierarchicalAgents.Structured<>(hierarchy, structuredOutputDefinition, mapper);
     }
   }
 
@@ -488,15 +516,22 @@ public final class HierarchicalAgents implements Interactable {
    */
   public static final class Structured<T> implements Interactable.Structured<T> {
     private final HierarchicalAgents hierarchy;
-    private final Class<T> outputType;
+    private final StructuredOutputDefinition<T> structuredOutputDefinition;
     private final ObjectMapper objectMapper;
 
     private Structured(
         @NonNull HierarchicalAgents hierarchy,
         @NonNull Class<T> outputType,
         @NonNull ObjectMapper objectMapper) {
+      this(hierarchy, StructuredOutputDefinition.create(outputType), objectMapper);
+    }
+
+    private Structured(
+        @NonNull HierarchicalAgents hierarchy,
+        @NonNull StructuredOutputDefinition<T> structuredOutputDefinition,
+        @NonNull ObjectMapper objectMapper) {
       this.hierarchy = Objects.requireNonNull(hierarchy);
-      this.outputType = Objects.requireNonNull(outputType);
+      this.structuredOutputDefinition = Objects.requireNonNull(structuredOutputDefinition);
       this.objectMapper = Objects.requireNonNull(objectMapper);
     }
 
@@ -509,7 +544,7 @@ public final class HierarchicalAgents implements Interactable {
     public @NonNull StructuredAgentResult<T> interact(
         @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       AgentResult result = hierarchy.interact(context, trace);
-      return result.toStructured(outputType, objectMapper);
+      return result.toStructured(structuredOutputDefinition, objectMapper);
     }
 
     /**
@@ -523,7 +558,7 @@ public final class HierarchicalAgents implements Interactable {
 
     /** Returns the structured output type. */
     public @NonNull Class<T> outputType() {
-      return outputType;
+      return structuredOutputDefinition.responseType();
     }
 
     /** Returns the executive agent at the top of the hierarchy. */

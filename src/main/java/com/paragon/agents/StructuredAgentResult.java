@@ -4,6 +4,7 @@ import com.paragon.responses.spec.Response;
 import com.paragon.responses.spec.ResponseInputItem;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -11,7 +12,8 @@ import org.jspecify.annotations.Nullable;
  * The result of a structured agent interaction, containing the typed output.
  *
  * <p>This is the type-safe counterpart to {@link AgentResult} for agents with structured output.
- * The output is automatically deserialized to the specified type.
+ * The output is automatically deserialized to the specified type. Use {@link #parsedOptional()} or
+ * {@link #parsedOr(Object)} when you want typed convenience access without throwing.
  *
  * @param <T> the type of the structured output
  * @since 1.0
@@ -29,7 +31,8 @@ public class StructuredAgentResult<T> extends AgentResult {
    * Returns the parsed typed output from the agent.
    *
    * @return the parsed output (never null on success)
-   * @throws IllegalStateException if the result is an error or the parsed value is unexpectedly null
+   * @throws IllegalStateException if the result is an error or the parsed value is unexpectedly
+   *     null
    */
   @Override
   public @NonNull T parsed() {
@@ -54,12 +57,23 @@ public class StructuredAgentResult<T> extends AgentResult {
   }
 
   /**
-   * Returns the error message if one occurred.
+   * Returns the parsed typed output, if available.
    *
-   * @return the error message or null
+   * @return an Optional containing the parsed output
    */
-  public @Nullable String errorMessage() {
-    return error() != null ? error().getMessage() : null;
+  @Override
+  public @NonNull Optional<T> parsedOptional() {
+    return Optional.ofNullable(parsed);
+  }
+
+  /**
+   * Returns the parsed output when available, or the provided fallback value.
+   *
+   * @param fallback the fallback value to use when parsed output is unavailable
+   * @return the parsed output or the fallback
+   */
+  public @Nullable T parsedOr(@Nullable T fallback) {
+    return parsed != null ? parsed : fallback;
   }
 
   // ===== Factory Methods =====

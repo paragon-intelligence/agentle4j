@@ -68,10 +68,21 @@ your own data as input for the model's response.
 
 ---
 
+### `withStructuredOutput`
+
+```java
+private <T> StructuredTextFormatBuilder<T> withStructuredOutput(
+        @NonNull StructuredOutputDefinition<T> definition)
+```
+
+Ensures the JSON schema name matches ^[a-zA-Z0-9_-]+$ as required by the API.
+
+---
+
 ### `sanitizeSchemaName`
 
 ```java
-private static String sanitizeSchemaName(@NonNull Class<?> structuredOutput)
+private static String sanitizeSchemaName(@NonNull JavaType structuredOutput)
 ```
 
 Ensures the JSON schema name matches ^[a-zA-Z0-9_-]+$ as required by the API.

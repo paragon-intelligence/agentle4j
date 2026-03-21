@@ -2,6 +2,7 @@ package com.paragon.responses.streaming;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.ResponsesApiObjectMapper;
@@ -380,13 +381,85 @@ class ResponseStreamTest {
 
     AtomicReference<ParsedResponse<TestPerson>> parsedRef = new AtomicReference<>();
 
-    responder.respond(payload).onParsedComplete(parsedRef::set).start();
-
-    Thread.sleep(500);
+    responder.respond(payload).onParsedComplete(parsedRef::set).startBlocking();
     ParsedResponse<TestPerson> parsed = parsedRef.get();
     assertNotNull(parsed);
     assertEquals("Bob", parsed.outputParsed().name());
     assertEquals(30, parsed.outputParsed().age());
+  }
+
+  @Test
+  void onParsedComplete_unwrapsRootPolymorphicStructuredResponse() throws Exception {
+    String wrappedJson =
+        "{\"value\":{\"type\":\"reasoning\",\"id\":\"reasoning_123\",\"summary\":[],\"status\":\"completed\"}}";
+    String escapedJson = wrappedJson.replace("\"", "\\\"");
+    String sseResponse =
+        """
+        data: {"type":"response.output_text.delta","item_id":"msg-1","output_index":0,"content_index":0,"delta":"%s","sequence_number":1}
+
+        data: {"type":"response.completed","response":{"id":"resp-1","object":"response","created_at":1234567890,"status":"completed","status_details":null,"output":[{"type":"message","id":"msg-1","status":"completed","role":"assistant","content":[{"type":"output_text","text":"%s","annotations":[]}]}],"error":null,"metadata":null,"usage":null,"incomplete_details":null,"model":"gpt-4o","output_text":"%s"},"sequence_number":2}
+
+        data: [DONE]
+        """
+            .formatted(escapedJson, escapedJson, escapedJson);
+
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setBody(sseResponse)
+            .addHeader("Content-Type", "text/event-stream")
+            .setResponseCode(200));
+
+    var payload =
+        CreateResponsePayload.builder()
+            .model("gpt-4o")
+            .addUserMessage("Test")
+            .withStructuredOutput(ResponseOutput.class)
+            .streaming()
+            .build();
+
+    AtomicReference<ParsedResponse<ResponseOutput>> parsedRef = new AtomicReference<>();
+
+    responder.respond(payload).onParsedComplete(parsedRef::set).startBlocking();
+    ParsedResponse<ResponseOutput> parsed = parsedRef.get();
+    assertNotNull(parsed);
+    assertInstanceOf(Reasoning.class, parsed.outputParsed());
+  }
+
+  @Test
+  void onParsedComplete_unwrapsTypeReferenceListRoot() throws Exception {
+    String wrappedJson = "{\"value\":[{\"name\":\"Bob\",\"age\":30},{\"name\":\"Alice\",\"age\":28}]}";
+    String escapedJson = wrappedJson.replace("\"", "\\\"");
+    String sseResponse =
+        """
+        data: {"type":"response.output_text.delta","item_id":"msg-1","output_index":0,"content_index":0,"delta":"%s","sequence_number":1}
+
+        data: {"type":"response.completed","response":{"id":"resp-1","object":"response","created_at":1234567890,"status":"completed","status_details":null,"output":[{"type":"message","id":"msg-1","status":"completed","role":"assistant","content":[{"type":"output_text","text":"%s","annotations":[]}]}],"error":null,"metadata":null,"usage":null,"incomplete_details":null,"model":"gpt-4o","output_text":"%s"},"sequence_number":2}
+
+        data: [DONE]
+        """
+            .formatted(escapedJson, escapedJson, escapedJson);
+
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setBody(sseResponse)
+            .addHeader("Content-Type", "text/event-stream")
+            .setResponseCode(200));
+
+    CreateResponsePayload.StructuredStreaming<List<TestPerson>> payload =
+        CreateResponsePayload.builder()
+            .model("gpt-4o")
+            .addUserMessage("Test")
+            .withStructuredOutput(new TypeReference<List<TestPerson>>() {})
+            .streaming()
+            .build();
+
+    AtomicReference<ParsedResponse<List<TestPerson>>> parsedRef = new AtomicReference<>();
+
+    responder.respond(payload).onParsedComplete(parsedRef::set).startBlocking();
+    ParsedResponse<List<TestPerson>> parsed = parsedRef.get();
+    assertNotNull(parsed);
+    assertEquals(2, parsed.outputParsed().size());
+    assertEquals("Bob", parsed.outputParsed().getFirst().name());
   }
 
   // ===== Test helper classes =====

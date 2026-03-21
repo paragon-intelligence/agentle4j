@@ -1,8 +1,11 @@
 package com.paragon.agents;
 
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
 import tools.jackson.databind.ObjectMapper;
 import com.paragon.responses.Responder;
 import com.paragon.responses.TraceMetadata;
+import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.skills.Skill;
 import com.paragon.skills.SkillProvider;
 import com.paragon.skills.SkillStore;
@@ -111,8 +114,8 @@ public final class SupervisorAgent implements Interactable {
       agentBuilder.addSkill(skill);
     }
 
-    if (builder.outputType != null) {
-      agentBuilder.outputType(builder.outputType);
+    if (builder.structuredOutputDefinition != null) {
+      agentBuilder.outputType(builder.structuredOutputDefinition);
     }
 
     this.supervisorAgent = agentBuilder.build();
@@ -307,12 +310,27 @@ public final class SupervisorAgent implements Interactable {
     private @Nullable Responder responder;
     private int maxTurns = 10;
     private @Nullable TraceMetadata traceMetadata;
-    @Nullable Class<?> outputType;
+    @Nullable StructuredOutputDefinition<?> structuredOutputDefinition;
 
     private Builder() {}
 
     @NonNull Builder outputType(@NonNull Class<?> outputType) {
-      this.outputType = Objects.requireNonNull(outputType);
+      this.structuredOutputDefinition = StructuredOutputDefinition.create(outputType);
+      return this;
+    }
+
+    @NonNull Builder outputType(@NonNull TypeReference<?> outputType) {
+      this.structuredOutputDefinition = StructuredOutputDefinition.create(outputType);
+      return this;
+    }
+
+    @NonNull Builder outputType(@NonNull JavaType outputType) {
+      this.structuredOutputDefinition = StructuredOutputDefinition.create(outputType);
+      return this;
+    }
+
+    @NonNull Builder outputType(@NonNull StructuredOutputDefinition<?> outputType) {
+      this.structuredOutputDefinition = Objects.requireNonNull(outputType);
       return this;
     }
 
@@ -467,7 +485,15 @@ public final class SupervisorAgent implements Interactable {
      * @return a structured builder
      */
     public <T> @NonNull StructuredBuilder<T> structured(@NonNull Class<T> outputType) {
-      return new StructuredBuilder<>(this, outputType);
+      return new StructuredBuilder<>(this, StructuredOutputDefinition.create(outputType));
+    }
+
+    public <T> @NonNull StructuredBuilder<T> structured(@NonNull TypeReference<T> outputType) {
+      return new StructuredBuilder<>(this, StructuredOutputDefinition.create(outputType));
+    }
+
+    public <T> @NonNull StructuredBuilder<T> structured(@NonNull JavaType outputType) {
+      return new StructuredBuilder<>(this, StructuredOutputDefinition.create(outputType));
     }
 
     /**
@@ -492,12 +518,14 @@ public final class SupervisorAgent implements Interactable {
    */
   public static final class StructuredBuilder<T> {
     private final Builder parentBuilder;
-    private final Class<T> outputType;
+    private final StructuredOutputDefinition<T> structuredOutputDefinition;
     private @Nullable ObjectMapper objectMapper;
 
-    private StructuredBuilder(@NonNull Builder parentBuilder, @NonNull Class<T> outputType) {
+    private StructuredBuilder(
+        @NonNull Builder parentBuilder,
+        @NonNull StructuredOutputDefinition<T> structuredOutputDefinition) {
       this.parentBuilder = Objects.requireNonNull(parentBuilder);
-      this.outputType = Objects.requireNonNull(outputType);
+      this.structuredOutputDefinition = Objects.requireNonNull(structuredOutputDefinition);
     }
 
     public @NonNull StructuredBuilder<T> name(@NonNull String name) {
@@ -552,10 +580,10 @@ public final class SupervisorAgent implements Interactable {
      * @return the configured Structured supervisor
      */
     public SupervisorAgent.Structured<T> build() {
-      parentBuilder.outputType(outputType);
+      parentBuilder.outputType(structuredOutputDefinition);
       SupervisorAgent supervisor = parentBuilder.build();
       ObjectMapper mapper = objectMapper != null ? objectMapper : new ObjectMapper();
-      return new SupervisorAgent.Structured<>(supervisor, outputType, mapper);
+      return new SupervisorAgent.Structured<>(supervisor, structuredOutputDefinition, mapper);
     }
   }
 
@@ -569,15 +597,22 @@ public final class SupervisorAgent implements Interactable {
    */
   public static final class Structured<T> implements Interactable.Structured<T> {
     private final SupervisorAgent supervisor;
-    private final Class<T> outputType;
+    private final StructuredOutputDefinition<T> structuredOutputDefinition;
     private final ObjectMapper objectMapper;
 
     Structured(
         @NonNull SupervisorAgent supervisor,
         @NonNull Class<T> outputType,
         @NonNull ObjectMapper objectMapper) {
+      this(supervisor, StructuredOutputDefinition.create(outputType), objectMapper);
+    }
+
+    Structured(
+        @NonNull SupervisorAgent supervisor,
+        @NonNull StructuredOutputDefinition<T> structuredOutputDefinition,
+        @NonNull ObjectMapper objectMapper) {
       this.supervisor = Objects.requireNonNull(supervisor);
-      this.outputType = Objects.requireNonNull(outputType);
+      this.structuredOutputDefinition = Objects.requireNonNull(structuredOutputDefinition);
       this.objectMapper = Objects.requireNonNull(objectMapper);
     }
 
@@ -590,7 +625,7 @@ public final class SupervisorAgent implements Interactable {
     public @NonNull StructuredAgentResult<T> interact(
         @NonNull AgenticContext context, @Nullable TraceMetadata trace) {
       AgentResult result = supervisor.interact(context, trace);
-      return result.toStructured(outputType, objectMapper);
+      return result.toStructured(structuredOutputDefinition, objectMapper);
     }
 
     /**
@@ -604,7 +639,7 @@ public final class SupervisorAgent implements Interactable {
 
     /** Returns the structured output type. */
     public @NonNull Class<T> outputType() {
-      return outputType;
+      return structuredOutputDefinition.responseType();
     }
   }
 }

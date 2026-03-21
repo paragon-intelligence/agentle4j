@@ -4,11 +4,14 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
 import tools.jackson.databind.ObjectMapper;
 import com.paragon.Messages;
 import com.paragon.responses.OpenRouterCustomPayload;
 import com.paragon.responses.json.JacksonJsonSchemaProducer;
 import com.paragon.responses.json.JsonSchemaProducer;
+import com.paragon.responses.json.StructuredOutputDefinition;
 import java.util.*;
 import okhttp3.*;
 import org.jspecify.annotations.NonNull;
@@ -697,34 +700,82 @@ public class CreateResponsePayload {
 
     public <T> StructuredTextFormatBuilder<T> withStructuredOutput(
         @NonNull Class<T> structuredOutput) {
-      String schemaName = sanitizeSchemaName(structuredOutput);
-      this.text =
-          new TextConfigurationOptions(
-              new TextConfigurationOptionsJsonSchemaFormat(
-                  schemaName, jsonSchemaProducer.produce(structuredOutput), true),
-              ModelVerbosityConfig.MEDIUM);
+      return withStructuredOutput(jsonSchemaProducer.structuredOutputDefinition(structuredOutput));
+    }
 
-      return new StructuredTextFormatBuilder<>(this, structuredOutput);
+    public <T> StructuredTextFormatBuilder<T> withStructuredOutput(
+        @NonNull TypeReference<T> structuredOutput) {
+      return withStructuredOutput(jsonSchemaProducer.structuredOutputDefinition(structuredOutput));
+    }
+
+    public <T> StructuredTextFormatBuilder<T> withStructuredOutput(
+        @NonNull JavaType structuredOutput) {
+      return withStructuredOutput(jsonSchemaProducer.structuredOutputDefinition(structuredOutput));
     }
 
     public Builder withStructuredOutput(
         @NonNull Class<?> structuredOutput, @Nullable ModelVerbosityConfig verbosityConfig) {
-      String schemaName = sanitizeSchemaName(structuredOutput);
-      this.text =
-          new TextConfigurationOptions(
-              new TextConfigurationOptionsJsonSchemaFormat(
-                  schemaName, jsonSchemaProducer.produce(structuredOutput), true),
-              verbosityConfig);
+      return withStructuredOutput(
+          jsonSchemaProducer.structuredOutputDefinition(structuredOutput), verbosityConfig);
+    }
 
-      return this;
+    public Builder withStructuredOutput(
+        @NonNull TypeReference<?> structuredOutput, @Nullable ModelVerbosityConfig verbosityConfig) {
+      return withStructuredOutput(
+          jsonSchemaProducer.structuredOutputDefinition(structuredOutput), verbosityConfig);
+    }
+
+    public Builder withStructuredOutput(
+        @NonNull JavaType structuredOutput, @Nullable ModelVerbosityConfig verbosityConfig) {
+      return withStructuredOutput(
+          jsonSchemaProducer.structuredOutputDefinition(structuredOutput), verbosityConfig);
     }
 
     /** Ensures the JSON schema name matches ^[a-zA-Z0-9_-]+$ as required by the API. */
-    private static String sanitizeSchemaName(@NonNull Class<?> structuredOutput) {
-      String simple = structuredOutput.getSimpleName();
+    private <T> StructuredTextFormatBuilder<T> withStructuredOutput(
+        @NonNull StructuredOutputDefinition<T> definition) {
+      applyStructuredOutput(definition, ModelVerbosityConfig.MEDIUM);
+      return new StructuredTextFormatBuilder<>(this, definition);
+    }
+
+    private Builder withStructuredOutput(
+        @NonNull StructuredOutputDefinition<?> definition,
+        @Nullable ModelVerbosityConfig verbosityConfig) {
+      applyStructuredOutput(definition, verbosityConfig);
+      return this;
+    }
+
+    private void applyStructuredOutput(
+        @NonNull StructuredOutputDefinition<?> definition,
+        @Nullable ModelVerbosityConfig verbosityConfig) {
+      String schemaName = sanitizeSchemaName(definition.responseJavaType());
+      this.text =
+          new TextConfigurationOptions(
+              new TextConfigurationOptionsJsonSchemaFormat(
+                  schemaName, definition.schema(), true),
+              verbosityConfig);
+    }
+
+    /** Ensures the JSON schema name matches ^[a-zA-Z0-9_-]+$ as required by the API. */
+    private static String sanitizeSchemaName(@NonNull JavaType structuredOutput) {
+      String simple = describeSchemaType(structuredOutput);
       // Replace any disallowed characters just in case (defensive)
       String sanitized = simple.replaceAll("[^A-Za-z0-9_-]", "_");
       return sanitized.isEmpty() ? "Schema" : sanitized;
+    }
+
+    private static String describeSchemaType(@NonNull JavaType javaType) {
+      Class<?> rawClass = javaType.getRawClass();
+      String baseName =
+          rawClass != null && !rawClass.getSimpleName().isBlank()
+              ? rawClass.getSimpleName()
+              : "Schema";
+
+      if (javaType.isContainerType() && javaType.getContentType() != null) {
+        return baseName + "Of" + describeSchemaType(javaType.getContentType());
+      }
+
+      return baseName;
     }
 
     public Builder addDeveloperMessage(
@@ -965,10 +1016,11 @@ public class CreateResponsePayload {
 
   public static class StructuredTextFormatBuilder<T> extends Builder {
 
-    protected final Class<T> structuredOutput;
+    protected final StructuredOutputDefinition<T> structuredOutputDefinition;
 
     // Constructor that copies state from parent Builder
-    public StructuredTextFormatBuilder(Builder builder, Class<T> structuredOutput) {
+    public StructuredTextFormatBuilder(
+        Builder builder, StructuredOutputDefinition<T> structuredOutputDefinition) {
       super(builder.jsonSchemaProducer);
 
       // Copy all fields from the parent builder
@@ -999,13 +1051,13 @@ public class CreateResponsePayload {
       this.truncation = builder.truncation;
       this.openRouterCustomPayload = builder.openRouterCustomPayload;
       this.promptCacheRetention = builder.promptCacheRetention;
-      this.structuredOutput = structuredOutput;
+      this.structuredOutputDefinition = structuredOutputDefinition;
     }
 
     @Override
     public CreateResponsePayload.Structured<T> build() {
       var basePayload = super.build();
-      return new Structured<>(basePayload, this.structuredOutput);
+      return new Structured<>(basePayload, this.structuredOutputDefinition);
     }
 
     /**
@@ -1032,7 +1084,7 @@ public class CreateResponsePayload {
     @Override
     public StructuredStreamingBuilder<T> streaming() {
       this.stream = true;
-      return new StructuredStreamingBuilder<>(this, structuredOutput);
+      return new StructuredStreamingBuilder<>(this, structuredOutputDefinition);
     }
   }
 
@@ -1044,11 +1096,12 @@ public class CreateResponsePayload {
    */
   public static class StructuredStreamingBuilder<T> extends StreamingBuilder {
 
-    private final Class<T> structuredOutput;
+    private final StructuredOutputDefinition<T> structuredOutputDefinition;
 
-    public StructuredStreamingBuilder(Builder builder, Class<T> structuredOutput) {
+    public StructuredStreamingBuilder(
+        Builder builder, StructuredOutputDefinition<T> structuredOutputDefinition) {
       super(builder);
-      this.structuredOutput = structuredOutput;
+      this.structuredOutputDefinition = structuredOutputDefinition;
     }
 
     @Override
@@ -1082,7 +1135,7 @@ public class CreateResponsePayload {
               topP,
               truncation,
               openRouterCustomPayload);
-      return new StructuredStreaming<>(basePayload, structuredOutput);
+      return new StructuredStreaming<>(basePayload, structuredOutputDefinition);
     }
   }
 
@@ -1196,6 +1249,7 @@ public class CreateResponsePayload {
   @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
   public static class Structured<T> extends CreateResponsePayload {
     private final Class<T> responseType;
+    private final StructuredOutputDefinition<T> structuredOutputDefinition;
 
     /** Creates a Structured response payload with all individual parameters. */
     public Structured(
@@ -1226,6 +1280,64 @@ public class CreateResponsePayload {
         @Nullable Number topP,
         @Nullable Truncation truncation,
         @NonNull Class<T> responseType) {
+      this(
+          background,
+          conversation,
+          include,
+          input,
+          instructions,
+          maxOutputTokens,
+          maxToolCalls,
+          metadata,
+          model,
+          parallelToolCalls,
+          prompt,
+          promptCacheKey,
+          promptCacheRetention,
+          reasoning,
+          safetyIdentifier,
+          serviceTier,
+          store,
+          stream,
+          streamOptions,
+          temperature,
+          text,
+          toolChoice,
+          tools,
+          topLogprobs,
+          topP,
+          truncation,
+          StructuredOutputDefinition.create(responseType));
+    }
+
+    public Structured(
+        @Nullable Boolean background,
+        @Nullable String conversation,
+        @Nullable List<OutputDataInclude> include,
+        @Nullable List<ResponseInputItem> input,
+        @Nullable String instructions,
+        @Nullable Integer maxOutputTokens,
+        @Nullable Integer maxToolCalls,
+        @Nullable Map<String, String> metadata,
+        @Nullable String model,
+        @Nullable Boolean parallelToolCalls,
+        @Nullable PromptTemplate prompt,
+        @Nullable String promptCacheKey,
+        @Nullable String promptCacheRetention,
+        @Nullable ReasoningConfig reasoning,
+        @Nullable String safetyIdentifier,
+        @Nullable ServiceTierType serviceTier,
+        @Nullable Boolean store,
+        @Nullable Boolean stream,
+        @Nullable StreamOptions streamOptions,
+        @Nullable Double temperature,
+        @Nullable TextConfigurationOptions text,
+        @Nullable ToolChoice toolChoice,
+        @Nullable List<Tool> tools,
+        @Nullable Integer topLogprobs,
+        @Nullable Number topP,
+        @Nullable Truncation truncation,
+        @NonNull StructuredOutputDefinition<T> structuredOutputDefinition) {
       super(
           background,
           conversation,
@@ -1254,7 +1366,8 @@ public class CreateResponsePayload {
           topP,
           truncation,
           null); // openRouterCustomPayload not in this constructor
-      this.responseType = responseType;
+      this.structuredOutputDefinition = structuredOutputDefinition;
+      this.responseType = structuredOutputDefinition.responseType();
     }
 
     /**
@@ -1265,6 +1378,12 @@ public class CreateResponsePayload {
      * @param responseType the Class representing the structured response type
      */
     public Structured(@NonNull CreateResponsePayload payload, @NonNull Class<T> responseType) {
+      this(payload, StructuredOutputDefinition.create(responseType));
+    }
+
+    public Structured(
+        @NonNull CreateResponsePayload payload,
+        @NonNull StructuredOutputDefinition<T> structuredOutputDefinition) {
       super(
           payload.background(),
           payload.conversation(),
@@ -1293,11 +1412,16 @@ public class CreateResponsePayload {
           payload.topP(),
           payload.truncation(),
           payload.openRouterCustomPayload());
-      this.responseType = responseType;
+      this.structuredOutputDefinition = structuredOutputDefinition;
+      this.responseType = structuredOutputDefinition.responseType();
     }
 
     public Class<T> responseType() {
       return responseType;
+    }
+
+    public StructuredOutputDefinition<T> structuredOutputDefinition() {
+      return structuredOutputDefinition;
     }
   }
 
@@ -1312,16 +1436,28 @@ public class CreateResponsePayload {
   public static class StructuredStreaming<T> extends Streaming {
 
     private final @NonNull Class<T> responseType;
+    private final @NonNull StructuredOutputDefinition<T> structuredOutputDefinition;
 
     /** Creates a StructuredStreaming response payload by copying from a base payload. */
     public StructuredStreaming(
         @NonNull CreateResponsePayload payload, @NonNull Class<T> responseType) {
+      this(payload, StructuredOutputDefinition.create(responseType));
+    }
+
+    public StructuredStreaming(
+        @NonNull CreateResponsePayload payload,
+        @NonNull StructuredOutputDefinition<T> structuredOutputDefinition) {
       super(payload);
-      this.responseType = responseType;
+      this.structuredOutputDefinition = structuredOutputDefinition;
+      this.responseType = structuredOutputDefinition.responseType();
     }
 
     public Class<T> responseType() {
       return responseType;
+    }
+
+    public StructuredOutputDefinition<T> structuredOutputDefinition() {
+      return structuredOutputDefinition;
     }
   }
 }

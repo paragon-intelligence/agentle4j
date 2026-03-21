@@ -56,10 +56,10 @@ Shallow-enough deep copy: new HashMap at every level, preserving leaf values.
 
 ---
 
-### `addRequiredProperties`
+### `finalizeStrictSchema`
 
 ```java
-private void addRequiredProperties(Map<String, Object> schema)
+private void finalizeStrictSchema(Object node)
 ```
 
 Recursively adds `required` arrays to object schemas and sets `additionalProperties: false`. OpenAI strict mode requires all properties to be listed in the
