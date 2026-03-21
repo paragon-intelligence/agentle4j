@@ -226,6 +226,11 @@ public final class RouterAgent implements Interactable {
     return responder;
   }
 
+  @NonNull
+  AgentResult wrapDelegatedResult(@NonNull Interactable selected, @NonNull AgentResult result) {
+    return AgentResult.delegated(name, selected.name(), result);
+  }
+
   // ===== Interactable Interface Implementation =====
 
   @Override
@@ -250,7 +255,8 @@ public final class RouterAgent implements Interactable {
           new IllegalStateException("No suitable route found for input"), context, 0);
     }
 
-    return selectedOpt.get().interact(context, trace);
+    Interactable selected = selectedOpt.get();
+    return wrapDelegatedResult(selected, selected.interact(context, trace));
   }
 
   /**
@@ -551,13 +557,7 @@ public final class RouterAgent implements Interactable {
         if (parsed != null && structuredOutputDefinition.responseType().isInstance(parsed)) {
           @SuppressWarnings("unchecked")
           T cast = (T) parsed;
-          return StructuredAgentResult.success(
-              cast,
-              result.output() != null ? result.output() : "",
-              result.finalResponse(),
-              result.history(),
-              result.toolExecutions(),
-              result.turnsUsed());
+          return StructuredAgentResult.success(cast, result);
         }
       }
 

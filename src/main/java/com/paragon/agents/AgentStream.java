@@ -444,8 +444,7 @@ public final class AgentStream {
               childStream.onReasoningDelta(onReasoningDeltaHandler);
             // onComplete / onError are intentionally NOT forwarded — the parent fires those
             AgentResult innerResult = childStream.startBlocking();
-            AgentResult handoffResult =
-                AgentResult.handoff(handoff.targetAgent(), innerResult, context);
+            AgentResult handoffResult = agent.finalizeHandoffResult(handoff, innerResult, context);
             agent.hookRegistry().fireAfterRun(handoffResult, context);
             emit(onComplete, handoffResult);
             return handoffResult;
@@ -542,7 +541,12 @@ public final class AgentStream {
       // 5. Success
       AgentResult successResult =
           AgentResult.success(
-              output, lastResponse, context, allToolExecutions, context.getTurnCount());
+              output,
+              lastResponse,
+              context,
+              allToolExecutions,
+              context.getTurnCount(),
+              agent.name());
       agent.hookRegistry().fireAfterRun(successResult, context);
       emit(onComplete, successResult);
       return successResult;

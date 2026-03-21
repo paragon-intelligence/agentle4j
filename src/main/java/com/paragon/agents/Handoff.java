@@ -1,5 +1,6 @@
 package com.paragon.agents;
 
+import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.responses.annotations.FunctionMetadata;
 import com.paragon.responses.spec.FunctionTool;
 import com.paragon.responses.spec.FunctionToolCallOutput;
@@ -7,6 +8,8 @@ import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
 
 /**
  * A handoff defines when and to which agent control should be transferred.
@@ -42,6 +45,7 @@ public final class Handoff {
   private final @NonNull String name;
   private final @NonNull String description;
   private final @NonNull Agent targetAgent;
+  private final @Nullable StructuredOutputDefinition<?> propagatedOutputDefinition;
 
   /** null = use default message; empty string = disabled */
   private final @Nullable String awarenessMessage;
@@ -50,6 +54,7 @@ public final class Handoff {
     this.name = Objects.requireNonNull(builder.name, "name cannot be null");
     this.description = Objects.requireNonNull(builder.description, "description cannot be null");
     this.targetAgent = Objects.requireNonNull(builder.targetAgent, "targetAgent cannot be null");
+    this.propagatedOutputDefinition = builder.propagatedOutputDefinition;
     this.awarenessMessage = builder.awarenessMessage;
   }
 
@@ -91,6 +96,25 @@ public final class Handoff {
    */
   public @NonNull Agent targetAgent() {
     return targetAgent;
+  }
+
+  /**
+   * Returns the propagated output type declared for this handoff, when configured.
+   *
+   * @return the propagated output raw type, or null if not declared
+   */
+  public @Nullable Class<?> propagatedOutputType() {
+    return propagatedOutputDefinition != null ? propagatedOutputDefinition.responseType() : null;
+  }
+
+  @Nullable
+  StructuredOutputDefinition<?> propagatedOutputDefinition() {
+    return propagatedOutputDefinition;
+  }
+
+  @Nullable
+  JavaType propagatedOutputJavaType() {
+    return propagatedOutputDefinition != null ? propagatedOutputDefinition.responseJavaType() : null;
   }
 
   /**
@@ -178,6 +202,7 @@ public final class Handoff {
     private final @NonNull Agent targetAgent;
     private @Nullable String name;
     private @Nullable String description;
+    private @Nullable StructuredOutputDefinition<?> propagatedOutputDefinition;
 
     /** null = default; empty = disabled */
     private @Nullable String awarenessMessage = null;
@@ -230,6 +255,30 @@ public final class Handoff {
      */
     public @NonNull Builder withoutAwarenessMessage() {
       this.awarenessMessage = "";
+      return this;
+    }
+
+    /**
+     * Declares the structured output this handoff may propagate to the caller.
+     *
+     * <p>This contract is not exposed to the parent agent's LLM. It is used only for validating
+     * and typing the delegated terminal result.
+     *
+     * @param outputType the propagated output type
+     * @return this builder
+     */
+    public @NonNull Builder propagatedOutput(@NonNull Class<?> outputType) {
+      this.propagatedOutputDefinition = StructuredOutputDefinition.create(outputType);
+      return this;
+    }
+
+    public @NonNull Builder propagatedOutput(@NonNull TypeReference<?> outputType) {
+      this.propagatedOutputDefinition = StructuredOutputDefinition.create(outputType);
+      return this;
+    }
+
+    public @NonNull Builder propagatedOutput(@NonNull JavaType outputType) {
+      this.propagatedOutputDefinition = StructuredOutputDefinition.create(outputType);
       return this;
     }
 

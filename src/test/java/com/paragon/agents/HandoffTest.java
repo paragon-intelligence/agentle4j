@@ -3,11 +3,14 @@ package com.paragon.agents;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.paragon.responses.Responder;
+import java.util.List;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Comprehensive tests for Handoff.
@@ -76,6 +79,34 @@ class HandoffTest {
       Handoff handoff = Handoff.to(target).withName("custom_transfer").build();
 
       assertEquals("custom_transfer", handoff.name());
+    }
+
+    @Test
+    @DisplayName("propagatedOutput(TypeReference) keeps canonical type information")
+    void propagatedOutput_typeReferenceKeepsCanonicalTypeInformation() {
+      Agent target = createTestAgent("Target");
+
+      Handoff handoff =
+          Handoff.to(target).propagatedOutput(new TypeReference<List<String>>() {}).build();
+
+      assertEquals(List.class, handoff.propagatedOutputType());
+      assertNotNull(handoff.propagatedOutputJavaType());
+      assertEquals(
+          "java.util.List<java.lang.String>", handoff.propagatedOutputJavaType().toCanonical());
+    }
+
+    @Test
+    @DisplayName("propagatedOutput(JavaType) keeps canonical type information")
+    void propagatedOutput_javaTypeKeepsCanonicalTypeInformation() {
+      Agent target = createTestAgent("Target");
+      var listType = new ObjectMapper().getTypeFactory().constructCollectionType(List.class, String.class);
+
+      Handoff handoff = Handoff.to(target).propagatedOutput(listType).build();
+
+      assertEquals(List.class, handoff.propagatedOutputType());
+      assertNotNull(handoff.propagatedOutputJavaType());
+      assertEquals(
+          "java.util.List<java.lang.String>", handoff.propagatedOutputJavaType().toCanonical());
     }
 
     @Test

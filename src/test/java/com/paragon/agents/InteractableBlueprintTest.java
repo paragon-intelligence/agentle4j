@@ -674,7 +674,7 @@ class InteractableBlueprintTest {
             null,
             null);
 
-    var handoff = new HandoffDescriptor("escalate", "Escalate to specialist", targetAgent);
+    var handoff = new HandoffDescriptor("escalate", "Escalate to specialist", null, targetAgent);
 
     String json = mapper.writeValueAsString(handoff);
     HandoffDescriptor restored = mapper.readValue(json, HandoffDescriptor.class);
@@ -683,6 +683,33 @@ class InteractableBlueprintTest {
     assertEquals("Escalate to specialist", restored.description());
     assertInstanceOf(AgentBlueprint.class, restored.target());
     assertEquals("EscalationAgent", restored.target().name());
+  }
+
+  @Test
+  void handoffDescriptorFromUsesCanonicalPropagatedOutputType() {
+    var responder =
+        com.paragon.responses.Responder.builder()
+            .baseUrl(okhttp3.HttpUrl.parse("http://localhost/v1/responses"))
+            .apiKey("test-key")
+            .build();
+    Agent target =
+        Agent.builder()
+            .name("Target")
+            .model("gpt-4o")
+            .instructions("Target agent")
+            .responder(responder)
+            .build();
+
+    Handoff handoff =
+        Handoff.to(target)
+            .withName("handoff_to_target")
+            .withDescription("Transfer to target agent")
+            .propagatedOutput(new tools.jackson.core.type.TypeReference<List<String>>() {})
+            .build();
+
+    HandoffDescriptor descriptor = HandoffDescriptor.from(handoff);
+
+    assertEquals("java.util.List<java.lang.String>", descriptor.propagatedOutputType());
   }
 
   @Test
@@ -716,7 +743,9 @@ class InteractableBlueprintTest {
             null,
             responder,
             List.of(),
-            List.of(new HandoffDescriptor("handoff_to_target", "Transfer to target agent", target)),
+            List.of(
+                new HandoffDescriptor(
+                    "handoff_to_target", "Transfer to target agent", null, target)),
             List.of(),
             List.of(),
             null,

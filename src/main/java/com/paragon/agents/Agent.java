@@ -472,6 +472,11 @@ public final class Agent implements Serializable, Interactable {
     return structuredOutputDefinition;
   }
 
+  @NonNull
+  ObjectMapper objectMapper() {
+    return objectMapper;
+  }
+
   /**
    * Returns the reasoning configuration, or {@code null} if not set.
    *
@@ -801,7 +806,7 @@ public final class Agent implements Serializable, Interactable {
 
           try {
             AgentResult innerResult = handoff.targetAgent().interact(childContext);
-            return AgentResult.handoff(handoff.targetAgent(), innerResult, context);
+            return finalizeHandoffResult(handoff, innerResult, context);
           } catch (Exception e) {
             AgentExecutionException agentEx =
                     AgentExecutionException.handoffFailed(
@@ -892,7 +897,13 @@ public final class Agent implements Serializable, Interactable {
         try {
           Object parsed = lastResponse.parse(structuredOutputDefinition, objectMapper);
           return AgentResult.successWithParsed(
-                  output, parsed, lastResponse, context, allToolExecutions, context.getTurnCount());
+                  output,
+                  parsed,
+                  lastResponse,
+                  context,
+                  allToolExecutions,
+                  context.getTurnCount(),
+                  name);
         } catch (JacksonException e) {
           AgentExecutionException agentEx =
                   AgentExecutionException.parsingFailed(name, context.getTurnCount(), e);
@@ -902,7 +913,7 @@ public final class Agent implements Serializable, Interactable {
       }
 
       return AgentResult.success(
-              output, lastResponse, context, allToolExecutions, context.getTurnCount());
+              output, lastResponse, context, allToolExecutions, context.getTurnCount(), name);
 
     } catch (Exception e) {
       // Wrap unexpected exceptions in AgentExecutionException
@@ -948,6 +959,49 @@ public final class Agent implements Serializable, Interactable {
           int startTurn) {
     // Delegate to unified loop
     return executeAgenticLoop(context, previousExecutions, null, "", null);
+  }
+
+  @NonNull
+  AgentResult finalizeHandoffResult(
+      @NonNull Handoff handoff, @NonNull AgentResult innerResult, @NonNull AgenticContext context) {
+    StructuredOutputDefinition<?> propagatedOutputDefinition = handoff.propagatedOutputDefinition();
+    AgentResult normalizedInnerResult = innerResult;
+
+    if (!innerResult.isError() && propagatedOutputDefinition != null) {
+      try {
+        Object parsed =
+            resolvePropagatedParsedOutput(
+                propagatedOutputDefinition, innerResult, handoff.targetAgent().objectMapper());
+        normalizedInnerResult = AgentResult.Builder.from(innerResult).parsed(parsed).build();
+      } catch (Exception e) {
+        AgentExecutionException agentEx =
+            new AgentExecutionException(
+                name,
+                AgentExecutionException.Phase.HANDOFF,
+                context.getTurnCount(),
+                String.format(
+                    "Agent '%s' received delegated output from '%s' that did not satisfy the"
+                        + " propagated output contract: %s",
+                    name, handoff.targetAgent().name(), e.getMessage()),
+                e);
+        broadcastFailedEvent(agentEx, context);
+        return AgentResult.error(agentEx, context, context.getTurnCount());
+      }
+    }
+
+    return AgentResult.handoff(name, handoff, normalizedInnerResult, context);
+  }
+
+  private Object resolvePropagatedParsedOutput(
+      @NonNull StructuredOutputDefinition<?> propagatedOutputDefinition,
+      @NonNull AgentResult innerResult,
+      @NonNull ObjectMapper objectMapper)
+      throws JacksonException {
+    if (StructuredOutputSupport.isCompatible(propagatedOutputDefinition, innerResult.parsed())) {
+      return Objects.requireNonNull(innerResult.parsed());
+    }
+
+    return StructuredOutputSupport.parse(propagatedOutputDefinition, innerResult.output(), objectMapper);
   }
 
   private CreateResponsePayload buildPayload(AgenticContext context) {
@@ -2109,21 +2163,6 @@ public final class Agent implements Serializable, Interactable {
     }
 
     /**
-     * Strips markdown code fences (e.g. ```json ... ```) from model output. Some OpenRouter-proxied
-     * models ignore strict mode and wrap JSON in a code block.
-     */
-    private static String stripMarkdownFences(String text) {
-      if (text == null) return text;
-      String trimmed = text.strip();
-      if (!trimmed.startsWith("```")) return text;
-      int firstNewline = trimmed.indexOf('\n');
-      if (firstNewline == -1) return text;
-      int lastFence = trimmed.lastIndexOf("```");
-      if (lastFence <= firstNewline) return text;
-      return trimmed.substring(firstNewline + 1, lastFence).strip();
-    }
-
-    /**
      * Returns the wrapped agent's name.
      */
     @Override
@@ -2204,48 +2243,22 @@ public final class Agent implements Serializable, Interactable {
      */
     private @NonNull StructuredAgentResult<T> parseResult(AgentResult result) {
       if (result.isError()) {
-        return StructuredAgentResult.error(
-                result.error(),
-                result.output(),
-                result.finalResponse(),
-                result.history(),
-                result.toolExecutions(),
-                result.turnsUsed());
+        return StructuredAgentResult.error(Objects.requireNonNull(result.error()), result);
       }
 
-      if (result.hasParsed()) {
-        Object parsed = result.parsed();
-        if (parsed != null && structuredOutputDefinition.responseType().isInstance(parsed)) {
-          @SuppressWarnings("unchecked")
-          T cast = (T) parsed;
-          return StructuredAgentResult.success(
-                  cast,
-                  result.output(),
-                  result.finalResponse(),
-                  result.history(),
-                  result.toolExecutions(),
-                  result.turnsUsed());
-        }
+      if (StructuredOutputSupport.isCompatible(structuredOutputDefinition, result.parsed())) {
+        @SuppressWarnings("unchecked")
+        T cast = (T) result.parsed();
+        return StructuredAgentResult.success(cast, result);
       }
 
       try {
-        T parsed =
-                structuredOutputDefinition.parse(stripMarkdownFences(result.output()), objectMapper);
-        return StructuredAgentResult.success(
-                parsed,
-                result.output(),
-                result.finalResponse(),
-                result.history(),
-                result.toolExecutions(),
-                result.turnsUsed());
+        T parsed = StructuredOutputSupport.parse(structuredOutputDefinition, result.output(), objectMapper);
+        return StructuredAgentResult.success(parsed, AgentResult.Builder.from(result).parsed(parsed).build());
       } catch (JacksonException e) {
         return StructuredAgentResult.error(
-                new IllegalStateException("Failed to parse structured output: " + e.getMessage(), e),
-                result.output(),
-                result.finalResponse(),
-                result.history(),
-                result.toolExecutions(),
-                result.turnsUsed());
+            new IllegalStateException("Failed to parse structured output: " + e.getMessage(), e),
+            result);
       }
     }
   }

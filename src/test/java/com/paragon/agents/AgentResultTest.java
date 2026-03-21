@@ -92,6 +92,9 @@ class AgentResultTest {
       assertEquals("Output text", result.output());
       assertEquals(response, result.finalResponse());
       assertEquals(2, result.turnsUsed());
+      assertEquals(OutputOrigin.LOCAL, result.outputOrigin());
+      assertNull(result.outputProducerName());
+      assertTrue(result.delegationPath().isEmpty());
     }
 
     @Test
@@ -110,6 +113,24 @@ class AgentResultTest {
       assertEquals("{\"name\":\"John\",\"age\":30}", result.output());
       assertNotNull(result.parsed());
       assertEquals("John", ((TestPerson) result.parsed()).name());
+      assertEquals(OutputOrigin.LOCAL, result.outputOrigin());
+    }
+
+    @Test
+    @DisplayName("success with producer metadata records local provenance")
+    void successWithProducerMetadataRecordsLocalProvenance() {
+      AgentResult result =
+          AgentResult.success(
+              "Output text",
+              createMinimalResponse(),
+              AgenticContext.create(),
+              List.of(),
+              1,
+              "MainAgent");
+
+      assertEquals(OutputOrigin.LOCAL, result.outputOrigin());
+      assertEquals("MainAgent", result.outputProducerName());
+      assertEquals(List.of("MainAgent"), result.delegationPath());
     }
 
     @Test
@@ -155,6 +176,26 @@ class AgentResultTest {
       assertFalse(result.isError());
       assertNotNull(result.pausedState());
       assertEquals(state, result.pausedState());
+      assertEquals(OutputOrigin.LOCAL, result.outputOrigin());
+    }
+
+    @Test
+    @DisplayName("delegated preserves producer and prepends delegation path")
+    void delegatedPreservesProducerAndPrependsDelegationPath() {
+      AgentResult child =
+          AgentResult.success(
+              "child",
+              createMinimalResponse(),
+              AgenticContext.create(),
+              List.of(),
+              1,
+              "ActivitiesAgent");
+
+      AgentResult delegated = AgentResult.delegated("MainRouter", "FallbackAgent", child);
+
+      assertEquals(OutputOrigin.DELEGATED, delegated.outputOrigin());
+      assertEquals("ActivitiesAgent", delegated.outputProducerName());
+      assertEquals(List.of("MainRouter", "ActivitiesAgent"), delegated.delegationPath());
     }
   }
 

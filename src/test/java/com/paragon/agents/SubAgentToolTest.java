@@ -284,6 +284,21 @@ class SubAgentToolTest {
       // Should return error output, not throw
       assertEquals(FunctionToolCallOutputStatus.INCOMPLETE, result.status());
     }
+
+    @Test
+    @DisplayName("call remains text-only even when sub-agent returns JSON text")
+    void call_remainsTextOnlyEvenWhenSubAgentReturnsJsonText() {
+      Agent subAgent = createTestAgent("StructuredAnalyzer");
+      SubAgentTool tool = new SubAgentTool(subAgent, "For analysis");
+
+      enqueueSuccessResponse("{\"ratId\":\"rat_123\"}");
+
+      FunctionToolCallOutput result = tool.call(new SubAgentTool.SubAgentParams("Analyze this"));
+
+      assertEquals(FunctionToolCallOutputStatus.COMPLETED, result.status());
+      assertTrue(result.output().toString().contains("rat_123"));
+      assertFalse(result.output().toString().contains("outputOrigin"));
+    }
   }
 
   @Nested
@@ -413,7 +428,7 @@ class SubAgentToolTest {
           }
         }
         """
-            .formatted(text);
+            .formatted(text.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", ""));
 
     mockWebServer.enqueue(
         new MockResponse()

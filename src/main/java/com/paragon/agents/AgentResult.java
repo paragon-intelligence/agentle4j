@@ -8,6 +8,7 @@ import com.paragon.responses.spec.MessageRole;
 import com.paragon.responses.spec.Response;
 import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -67,6 +68,9 @@ public class AgentResult {
   private final @Nullable AgentRunState pausedState;
   private final @NonNull List<AgentResult> relatedResults;
   private final @Nullable FunctionToolCall clientSideToolCall;
+  private final @NonNull OutputOrigin outputOrigin;
+  private final @Nullable String outputProducerName;
+  private final @NonNull List<String> delegationPath;
 
   protected AgentResult(Builder builder) {
     this.output = builder.output;
@@ -82,6 +86,10 @@ public class AgentResult {
     this.relatedResults =
         builder.relatedResults != null ? List.copyOf(builder.relatedResults) : List.of();
     this.clientSideToolCall = builder.clientSideToolCall;
+    this.outputOrigin = builder.outputOrigin != null ? builder.outputOrigin : OutputOrigin.LOCAL;
+    this.outputProducerName = builder.outputProducerName;
+    this.delegationPath =
+        builder.delegationPath != null ? List.copyOf(builder.delegationPath) : List.of();
   }
 
   // ===== Factory Methods =====
@@ -98,17 +106,32 @@ public class AgentResult {
    */
   public static @NonNull AgentResult success(
       @NonNull String output,
-      @NonNull Response response,
+      @Nullable Response response,
       @NonNull AgenticContext context,
       @NonNull List<ToolExecution> toolExecutions,
       int turnsUsed) {
-    return new Builder()
-        .output(output)
-        .finalResponse(response)
-        .history(context.getHistory())
-        .toolExecutions(toolExecutions)
-        .turnsUsed(turnsUsed)
-        .build();
+    return success(output, response, context, toolExecutions, turnsUsed, null);
+  }
+
+  public static @NonNull AgentResult success(
+      @NonNull String output,
+      @Nullable Response response,
+      @NonNull AgenticContext context,
+      @NonNull List<ToolExecution> toolExecutions,
+      int turnsUsed,
+      @Nullable String outputProducerName) {
+    Builder builder =
+        new Builder()
+            .output(output)
+            .finalResponse(response)
+            .history(context.getHistory())
+            .toolExecutions(toolExecutions)
+            .turnsUsed(turnsUsed)
+            .outputOrigin(OutputOrigin.LOCAL);
+    if (outputProducerName != null) {
+      builder.outputProducerName(outputProducerName).delegationPath(List.of(outputProducerName));
+    }
+    return builder.build();
   }
 
   /**
@@ -118,7 +141,10 @@ public class AgentResult {
    * @return a minimal success result
    */
   public static @NonNull AgentResult success(@NonNull String output) {
-    return new Builder().output(output).build();
+    return new Builder()
+        .output(output)
+        .outputOrigin(OutputOrigin.LOCAL)
+        .build();
   }
 
   /**
@@ -140,14 +166,30 @@ public class AgentResult {
       @NonNull AgenticContext context,
       @NonNull List<ToolExecution> toolExecutions,
       int turnsUsed) {
-    return new Builder()
-        .output(output)
-        .parsed(parsed)
-        .finalResponse(response)
-        .history(context.getHistory())
-        .toolExecutions(toolExecutions)
-        .turnsUsed(turnsUsed)
-        .build();
+    return successWithParsed(output, parsed, response, context, toolExecutions, turnsUsed, null);
+  }
+
+  public static <T> @NonNull AgentResult successWithParsed(
+      @NonNull String output,
+      @NonNull T parsed,
+      @NonNull Response response,
+      @NonNull AgenticContext context,
+      @NonNull List<ToolExecution> toolExecutions,
+      int turnsUsed,
+      @Nullable String outputProducerName) {
+    Builder builder =
+        new Builder()
+            .output(output)
+            .parsed(parsed)
+            .finalResponse(response)
+            .history(context.getHistory())
+            .toolExecutions(toolExecutions)
+            .turnsUsed(turnsUsed)
+            .outputOrigin(OutputOrigin.LOCAL);
+    if (outputProducerName != null) {
+      builder.outputProducerName(outputProducerName).delegationPath(List.of(outputProducerName));
+    }
+    return builder.build();
   }
 
   /**
@@ -159,22 +201,41 @@ public class AgentResult {
    * @return a handoff result
    */
   public static @NonNull AgentResult handoff(
-      @NonNull Agent handoffAgent,
+      @NonNull String delegatorName,
+      @NonNull Handoff handoff,
       @NonNull AgentResult innerResult,
       @NonNull AgenticContext context) {
     Builder builder =
-        new Builder()
-            .output(innerResult.output)
-            .finalResponse(innerResult.finalResponse)
+        Builder.from(innerResult)
             .history(context.getHistory())
-            .toolExecutions(innerResult.toolExecutions)
-            .turnsUsed(innerResult.turnsUsed)
-            .handoffAgent(handoffAgent)
-            .parsed(innerResult.parsed);
-    // Propagate errors from the inner (child) result so callers can detect failures.
-    if (innerResult.error != null) {
-      builder.error(innerResult.error);
+            .handoffAgent(handoff.targetAgent())
+            .outputOrigin(OutputOrigin.DELEGATED)
+            .delegationPath(prependDelegationPath(delegatorName, innerResult.delegationPath()));
+
+    String producerName = innerResult.outputProducerName();
+    if (producerName == null || producerName.isBlank()) {
+      producerName = handoff.targetAgent().name();
     }
+    builder.outputProducerName(producerName);
+
+    return builder.build();
+  }
+
+  public static @NonNull AgentResult delegated(
+      @NonNull String delegatorName,
+      @NonNull String fallbackProducerName,
+      @NonNull AgentResult innerResult) {
+    Builder builder =
+        Builder.from(innerResult)
+            .outputOrigin(OutputOrigin.DELEGATED)
+            .delegationPath(prependDelegationPath(delegatorName, innerResult.delegationPath()));
+
+    String producerName = innerResult.outputProducerName();
+    if (producerName == null || producerName.isBlank()) {
+      producerName = fallbackProducerName;
+    }
+    builder.outputProducerName(producerName);
+
     return builder.build();
   }
 
@@ -188,7 +249,12 @@ public class AgentResult {
    */
   public static @NonNull AgentResult error(
       @NonNull Throwable error, @NonNull AgenticContext context, int turnsUsed) {
-    return new Builder().error(error).history(context.getHistory()).turnsUsed(turnsUsed).build();
+    return new Builder()
+        .error(error)
+        .history(context.getHistory())
+        .turnsUsed(turnsUsed)
+        .outputOrigin(OutputOrigin.LOCAL)
+        .build();
   }
 
   /**
@@ -198,7 +264,7 @@ public class AgentResult {
    * @return a minimal error result
    */
   public static @NonNull AgentResult error(@NonNull Throwable error) {
-    return new Builder().error(error).build();
+    return new Builder().error(error).outputOrigin(OutputOrigin.LOCAL).build();
   }
 
   /**
@@ -214,6 +280,7 @@ public class AgentResult {
         .error(new GuardrailException(reason))
         .history(context.getHistory())
         .turnsUsed(0)
+        .outputOrigin(OutputOrigin.LOCAL)
         .build();
   }
 
@@ -232,6 +299,7 @@ public class AgentResult {
         .pausedState(state)
         .history(context.getHistory())
         .turnsUsed(context.getTurnCount())
+        .outputOrigin(OutputOrigin.LOCAL)
         .build();
   }
 
@@ -252,6 +320,7 @@ public class AgentResult {
         .clientSideToolCall(call)
         .history(context.getHistory())
         .turnsUsed(turnsUsed)
+        .outputOrigin(OutputOrigin.LOCAL)
         .build();
   }
 
@@ -267,18 +336,7 @@ public class AgentResult {
    */
   public static @NonNull AgentResult composite(
       @NonNull AgentResult primary, @NonNull List<AgentResult> related) {
-    return new Builder()
-        .output(primary.output)
-        .finalResponse(primary.finalResponse)
-        .history(primary.history)
-        .toolExecutions(primary.toolExecutions)
-        .turnsUsed(primary.turnsUsed)
-        .handoffAgent(primary.handoffAgent)
-        .error(primary.error)
-        .parsed(primary.parsed)
-        .pausedState(primary.pausedState)
-        .relatedResults(related)
-        .build();
+    return Builder.from(primary).relatedResults(related).build();
   }
 
   // ===== Accessors =====
@@ -693,6 +751,33 @@ public class AgentResult {
   }
 
   /**
+   * Returns whether the output was produced locally or via delegation.
+   *
+   * @return the output origin
+   */
+  public @NonNull OutputOrigin outputOrigin() {
+    return outputOrigin;
+  }
+
+  /**
+   * Returns the name of the interactable that produced the final output, when known.
+   *
+   * @return the producer name, or null if unavailable
+   */
+  public @Nullable String outputProducerName() {
+    return outputProducerName;
+  }
+
+  /**
+   * Returns the delegation chain that led to the final output.
+   *
+   * @return an immutable delegation path
+   */
+  public @NonNull List<String> delegationPath() {
+    return delegationPath;
+  }
+
+  /**
    * Returns related results from parallel or composite execution.
    *
    * <p>When using patterns like parallel execution, this contains the results from other agents
@@ -745,35 +830,33 @@ public class AgentResult {
       @NonNull StructuredOutputDefinition<T> structuredOutputDefinition,
       @NonNull ObjectMapper objectMapper) {
     if (isError()) {
-      return StructuredAgentResult.error(
-          error, output, finalResponse, history, toolExecutions, turnsUsed);
+      return StructuredAgentResult.error(this.error, this);
     }
+
+    if (StructuredOutputSupport.isCompatible(structuredOutputDefinition, parsed)) {
+      @SuppressWarnings("unchecked")
+      T cast = (T) parsed;
+      return StructuredAgentResult.success(cast, this);
+    }
+
     try {
-      String cleanOutput = output != null ? output : "";
-
-      // Some LLMs return markdown wrapper for json even when configured with schema
-      if (cleanOutput.startsWith("```json")) {
-        cleanOutput = cleanOutput.substring(7);
-      } else if (cleanOutput.startsWith("```")) {
-        cleanOutput = cleanOutput.substring(3);
-      }
-      if (cleanOutput.endsWith("```")) {
-        cleanOutput = cleanOutput.substring(0, cleanOutput.length() - 3);
-      }
-      cleanOutput = cleanOutput.trim();
-
-      T parsed = structuredOutputDefinition.parse(cleanOutput, objectMapper);
-      return StructuredAgentResult.success(
-          parsed, cleanOutput, finalResponse, history, toolExecutions, turnsUsed);
+      T parsedValue = StructuredOutputSupport.parse(structuredOutputDefinition, output, objectMapper);
+      return StructuredAgentResult.success(parsedValue, Builder.from(this).parsed(parsedValue).build());
     } catch (JacksonException e) {
       return StructuredAgentResult.error(
-          new RuntimeException("Failed to parse structured output: " + e.getMessage(), e),
-          output,
-          finalResponse,
-          history,
-          toolExecutions,
-          turnsUsed);
+          new RuntimeException("Failed to parse structured output: " + e.getMessage(), e), this);
     }
+  }
+
+  private static @NonNull List<String> prependDelegationPath(
+      @NonNull String delegatorName, @NonNull List<String> existingPath) {
+    List<String> path = new ArrayList<>(existingPath.size() + 1);
+    path.add(delegatorName);
+    if (existingPath.isEmpty()) {
+      return path;
+    }
+    path.addAll(existingPath);
+    return path;
   }
 
   private @NonNull Optional<Message> lastMessageMatching(@Nullable MessageRole role) {
@@ -809,6 +892,27 @@ public class AgentResult {
     private @Nullable AgentRunState pausedState;
     private @Nullable List<AgentResult> relatedResults;
     private @Nullable FunctionToolCall clientSideToolCall;
+    private @Nullable OutputOrigin outputOrigin;
+    private @Nullable String outputProducerName;
+    private @Nullable List<String> delegationPath;
+
+    static @NonNull Builder from(@NonNull AgentResult result) {
+      return new Builder()
+          .output(result.output)
+          .finalResponse(result.finalResponse)
+          .history(result.history)
+          .toolExecutions(result.toolExecutions)
+          .turnsUsed(result.turnsUsed)
+          .handoffAgent(result.handoffAgent)
+          .error(result.error)
+          .parsed(result.parsed)
+          .pausedState(result.pausedState)
+          .relatedResults(result.relatedResults)
+          .clientSideToolCall(result.clientSideToolCall)
+          .outputOrigin(result.outputOrigin)
+          .outputProducerName(result.outputProducerName)
+          .delegationPath(result.delegationPath);
+    }
 
     Builder output(String output) {
       this.output = output;
@@ -862,6 +966,21 @@ public class AgentResult {
 
     Builder clientSideToolCall(FunctionToolCall call) {
       this.clientSideToolCall = call;
+      return this;
+    }
+
+    Builder outputOrigin(OutputOrigin outputOrigin) {
+      this.outputOrigin = outputOrigin;
+      return this;
+    }
+
+    Builder outputProducerName(String outputProducerName) {
+      this.outputProducerName = outputProducerName;
+      return this;
+    }
+
+    Builder delegationPath(List<String> delegationPath) {
+      this.delegationPath = delegationPath;
       return this;
     }
 

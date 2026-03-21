@@ -1,6 +1,6 @@
 # Streaming Guide
 
-> This docs was updated at: 2026-03-20
+> This docs was updated at: 2026-03-21
 
 
 
@@ -389,7 +389,7 @@ agent.asStreaming().interact("Help me pick a color")
 
 ### `onPartialJson` — Structured Output Streaming
 
-When `agent.outputType(MyRecord.class)` is configured, partial JSON fields arrive incrementally:
+When `agent.outputType(MyRecord.class)` or `Agent.builder().structured(MyRecord.class)` is configured on the interactable that actually calls the model, partial JSON fields arrive incrementally:
 
 ```java
 agent.asStreaming().interact(ctx)
@@ -403,6 +403,8 @@ agent.asStreaming().interact(ctx)
     })
     .startBlocking();
 ```
+
+`returns(...)` does **not** enable `onPartialJson`. It is a boundary parser for the final result only, so it does not change the source agent's streaming payload or request schema.
 
 ### TraceMetadata in Streaming
 

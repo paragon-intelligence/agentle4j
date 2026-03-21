@@ -1,6 +1,6 @@
 # Agentle
 
-> This docs was updated at: 2026-03-20
+> This docs was updated at: 2026-03-21
 
 
 
@@ -98,6 +98,65 @@ responder.respond(payload)
     .start();
 ```
 
+### Structured contracts for delegating agents
+
+When an agent can produce some structured outputs locally and only propagate others through terminal handoffs, model those contracts separately:
+
+- `outputType(...)` or `.structured(...)` defines what the current agent itself may produce. This schema is sent to that agent's LLM.
+- `returns(...)` defines the final contract exposed to your backend. It parses the final result without changing the request schemas sent by the source interactable.
+- `Handoff.propagatedOutput(...)` declares which structured outputs may flow back through a terminal handoff.
+- `SubAgentTool` remains text-only. Use handoffs, not sub-agent tools, for terminal structured propagation.
+
+```java
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "kind")
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = DirectAnswer.class, name = "direct_answer"),
+    @JsonSubTypes.Type(value = Escalation.class, name = "escalation")
+})
+sealed interface MainDirectOutput permits DirectAnswer, Escalation {}
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "kind")
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = DirectAnswer.class, name = "direct_answer"),
+    @JsonSubTypes.Type(value = Escalation.class, name = "escalation"),
+    @JsonSubTypes.Type(value = ActivityResult.class, name = "activity_result")
+})
+sealed interface MainFinalOutput permits DirectAnswer, Escalation, ActivityResult {}
+
+record DirectAnswer(String kind, String message) implements MainDirectOutput, MainFinalOutput {}
+record Escalation(String kind, String team) implements MainDirectOutput, MainFinalOutput {}
+record ActivityResult(String kind, String activityId) implements MainFinalOutput {}
+
+var activities = Agent.builder()
+    .name("Activities")
+    .model("openai/gpt-4o")
+    .instructions("Return the final activity result as JSON.")
+    .responder(responder)
+    .structured(ActivityResult.class)
+    .build();
+
+Agent main = Agent.builder()
+    .name("Main")
+    .model("openai/gpt-4o")
+    .instructions("Answer directly when possible, otherwise hand off.")
+    .responder(responder)
+    .outputType(MainDirectOutput.class)  // local produces contract
+    .addHandoff(Handoff.to(activities)
+        .withDescription("Use for activity workflows")
+        .propagatedOutput(ActivityResult.class)
+        .build())
+    .build();
+
+StructuredAgentResult<MainFinalOutput> result =
+    main.returns(MainFinalOutput.class).interact("Open activity act_123");
+
+System.out.println(result.outputOrigin());       // LOCAL or DELEGATED
+System.out.println(result.outputProducerName()); // "Main" or "Activities"
+System.out.println(result.delegationPath());     // ["Main"] or ["Main", "Activities"]
+```
+
+For discriminated unions, keep the discriminator field (`kind` above) in the serialized payload so the final branch can be parsed correctly.
+
 ### Tool planning with parallel execution
 
 One line enables tool planning. The LLM batches tool calls into a dependency graph, the framework topologically sorts and executes them in parallel waves, and `$ref` references resolve between steps. One LLM round-trip instead of five.
@@ -173,6 +232,8 @@ new AgentService(parallelTeam);
 ```
 
 All patterns support streaming. See the [Agents Guide](docs/guides/agents.md) for full documentation.
+
+For structured terminal delegation, `returns(...)` works with any `Interactable`, including `Agent`, `RouterAgent`, `SupervisorAgent`, and `HierarchicalAgents`.
 
 ## Dynamic tool selection
 

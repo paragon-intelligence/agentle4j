@@ -399,12 +399,18 @@ public sealed interface InteractableBlueprint
   record HandoffDescriptor(
       @JsonProperty("name") @NonNull String name,
       @JsonProperty("description") @NonNull String description,
+      @JsonProperty("propagatedOutputType") @Nullable String propagatedOutputType,
       @JsonProperty("target") @JsonDeserialize(using = BlueprintDeserializer.class)
           @NonNull InteractableBlueprint target) {
 
     public static HandoffDescriptor from(@NonNull Handoff handoff) {
       return new HandoffDescriptor(
-          handoff.name(), handoff.description(), handoff.targetAgent().toBlueprint());
+          handoff.name(),
+          handoff.description(),
+          handoff.propagatedOutputJavaType() != null
+              ? handoff.propagatedOutputJavaType().toCanonical()
+              : null,
+          handoff.targetAgent().toBlueprint());
     }
   }
 
@@ -528,11 +534,20 @@ public sealed interface InteractableBlueprint
       for (HandoffDescriptor hd : handoffs) {
         Interactable target = hd.target().toInteractable();
         if (target instanceof Agent targetAgent) {
-          builder.addHandoff(
-              Handoff.to(targetAgent)
-                  .withName(hd.name())
-                  .withDescription(hd.description())
-                  .build());
+          Handoff.Builder handoffBuilder =
+              Handoff.to(targetAgent).withName(hd.name()).withDescription(hd.description());
+          if (hd.propagatedOutputType() != null) {
+            try {
+              handoffBuilder.propagatedOutput(
+                  new ObjectMapper().getTypeFactory().constructFromCanonical(hd.propagatedOutputType()));
+            } catch (IllegalArgumentException e) {
+              log.warn(
+                  "Could not load propagated handoff output type: {}",
+                  hd.propagatedOutputType(),
+                  e);
+            }
+          }
+          builder.addHandoff(handoffBuilder.build());
         }
       }
 

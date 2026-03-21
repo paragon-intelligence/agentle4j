@@ -463,7 +463,7 @@ public final class AgentNetwork implements Interactable {
       output = last != null ? last.output() : "";
     }
     AgenticContext ctx = AgenticContext.create();
-    return AgentResult.success(output, null, ctx, List.of(), 0);
+    return AgentResult.success(output, null, ctx, List.of(), 0, name);
   }
 
   private String buildSynthesisPrompt(NetworkResult result) {

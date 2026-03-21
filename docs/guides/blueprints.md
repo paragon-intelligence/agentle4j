@@ -1,6 +1,6 @@
 # Blueprints — Serializable Agent Snapshots
 
-> This docs was updated at: 2026-03-20
+> This docs was updated at: 2026-03-21
 
 
 
@@ -531,6 +531,7 @@ This is the most common blueprint. It maps to `Agent.builder()`.
     {
       "name": "escalate_to_billing",
       "description": "Transfer to billing specialist for payment issues, refunds, and invoice disputes",
+      "propagatedOutputType": "com.acme.billing.BillingResolution",
       "target": {
         "type": "agent",
         "name": "BillingSpecialist",
@@ -562,6 +563,19 @@ This is the most common blueprint. It maps to `Agent.builder()`.
   }
 }
 ```
+
+#### Handoff descriptor fields
+
+Each entry inside `handoffs` has the following structure:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | ✅ | Tool name exposed to the parent model |
+| `description` | string | ✅ | When the handoff should be used |
+| `target` | object | ✅ | Nested blueprint for the target interactable |
+| `propagatedOutputType` | string | ❌ | Canonical Java type that this handoff may propagate terminally, such as `com.acme.ActivityResult` or `java.util.List<com.acme.ActivityResult>` |
+
+`propagatedOutputType` is for terminal structured delegation only. It does not change the schema sent to the parent agent's LLM.
 
 ---
 
@@ -1615,7 +1629,7 @@ PromptProviderRegistry.register("langfuse",
 
 ## Structured Output
 
-Blueprints support structured output via the `outputType` field — a fully qualified Java class name:
+Blueprints support local structured output via the `outputType` field — a fully qualified Java class name:
 
 ```yaml
 type: agent
@@ -1634,7 +1648,50 @@ inputGuardrails: []
 outputGuardrails: []
 ```
 
-When `toInteractable()` is called, the `outputType` is resolved via `Class.forName()` and the resulting agent returns `Interactable.Structured<T>` responses.
+When `toInteractable()` is called, the `outputType` is resolved as the interactable's **local producer contract**. In other words, it describes what that interactable itself may synthesize.
 
-> **Note:** The class must be on the classpath and have fields matching the LLM's response structure.
+`returns(...)` is not serialized in blueprints because it is a runtime boundary wrapper, not part of the interactable's own LLM request contract.
 
+If you want a typed interaction API after deserializing, either:
+
+- call `blueprint.toStructured(MyType.class)` when the local contract already matches what you want to parse, or
+- call `blueprint.toInteractable().returns(MyType.class)` when you want a wider external boundary contract.
+
+For terminal structured delegation, serialize the propagated branch on the specific handoff edge:
+
+```yaml
+type: agent
+name: MainAgent
+model: gpt-4o
+instructions: Route to the specialist when needed.
+outputType: com.acme.contracts.MainDirectOutput
+maxTurns: 3
+responder:
+  provider: OPEN_ROUTER
+  apiKeyEnvVar: OPENROUTER_API_KEY
+toolClassNames: []
+handoffs:
+  - name: transfer_to_activities
+    description: Use for activity workflows.
+    propagatedOutputType: com.acme.contracts.ActivityResult
+    target:
+      type: agent
+      name: Activities
+      model: gpt-4o
+      instructions: Return the final activity result.
+      outputType: com.acme.contracts.ActivityResult
+      maxTurns: 3
+      responder:
+        provider: OPEN_ROUTER
+        apiKeyEnvVar: OPENROUTER_API_KEY
+      toolClassNames: []
+      handoffs: []
+      inputGuardrails: []
+      outputGuardrails: []
+inputGuardrails: []
+outputGuardrails: []
+```
+
+`propagatedOutputType` accepts canonical Java type strings, so generic forms such as `java.util.List<com.acme.contracts.ActivityResult>` also round-trip correctly.
+
+> **Note:** The referenced classes must be on the classpath and have fields matching the LLM's response structure.

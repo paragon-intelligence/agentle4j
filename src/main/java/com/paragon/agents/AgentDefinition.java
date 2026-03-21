@@ -384,6 +384,7 @@ public record AgentDefinition(
             new HandoffDescriptor(
                 hd.name(),
                 hd.description(),
+                null,
                 hd.target().toBlueprint(responderBlueprint, model, availableTools)));
       }
     }

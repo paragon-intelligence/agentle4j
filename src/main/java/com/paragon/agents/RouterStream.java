@@ -287,11 +287,12 @@ public final class RouterStream {
 
     // Execute and wrap result
     AgentResult innerResult = agentStream.startBlocking();
+    AgentResult routedResult = router.wrapDelegatedResult(selected, innerResult);
 
     if (onComplete != null) {
-      onComplete.accept(innerResult);
+      onComplete.accept(routedResult);
     }
 
-    return innerResult;
+    return routedResult;
   }
 }

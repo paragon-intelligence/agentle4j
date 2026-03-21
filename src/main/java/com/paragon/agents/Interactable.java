@@ -1,7 +1,9 @@
 package com.paragon.agents;
 
 import com.paragon.prompts.Prompt;
+import com.paragon.responses.ResponsesApiObjectMapper;
 import com.paragon.responses.TraceMetadata;
+import com.paragon.responses.json.StructuredOutputDefinition;
 import com.paragon.responses.spec.File;
 import com.paragon.responses.spec.Image;
 import com.paragon.responses.spec.Message;
@@ -9,6 +11,8 @@ import com.paragon.responses.spec.ResponseInputItem;
 import com.paragon.responses.spec.Text;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
 
 /**
  * Common interface for all agent patterns that can process input and produce output.
@@ -368,6 +372,33 @@ public interface Interactable {
    * @return the agent's result
    */
   @NonNull AgentResult interact(@NonNull AgenticContext context, @Nullable TraceMetadata trace);
+
+  /**
+   * Wraps this interactable with an external structured-output contract.
+   *
+   * <p>Unlike builder-level structured output, this wrapper does not affect the schemas sent to the
+   * source interactable's own LLM calls. It only parses and validates the final result returned to
+   * the caller.
+   *
+   * @param outputType the externally exposed output type
+   * @param <T> the structured output type
+   * @return a structured wrapper around this interactable
+   */
+  default <T> @NonNull ReturnContract<T> returns(@NonNull Class<T> outputType) {
+    return returns(StructuredOutputDefinition.create(outputType));
+  }
+
+  default <T> @NonNull ReturnContract<T> returns(@NonNull TypeReference<T> outputType) {
+    return returns(StructuredOutputDefinition.create(outputType));
+  }
+
+  default <T> @NonNull ReturnContract<T> returns(@NonNull JavaType outputType) {
+    return returns(StructuredOutputDefinition.create(outputType));
+  }
+
+  private <T> @NonNull ReturnContract<T> returns(@NonNull StructuredOutputDefinition<T> definition) {
+    return new ReturnContract<>(this, definition, ResponsesApiObjectMapper.create());
+  }
 
   /**
    * Returns a streaming view of this interactable.

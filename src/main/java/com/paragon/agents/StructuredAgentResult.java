@@ -104,7 +104,8 @@ public class StructuredAgentResult<T> extends AgentResult {
             .history(history)
             .toolExecutions(toolExecutions)
             .turnsUsed(turnsUsed)
-            .parsed(output);
+            .parsed(output)
+            .outputOrigin(OutputOrigin.LOCAL);
     return new StructuredAgentResult<>(base, output);
   }
 
@@ -118,7 +119,17 @@ public class StructuredAgentResult<T> extends AgentResult {
    */
   public static <T> @NonNull StructuredAgentResult<T> success(
       @NonNull T output, @NonNull String rawOutput) {
-    AgentResult.Builder base = new AgentResult.Builder().output(rawOutput).parsed(output);
+    AgentResult.Builder base =
+        new AgentResult.Builder()
+            .output(rawOutput)
+            .parsed(output)
+            .outputOrigin(OutputOrigin.LOCAL);
+    return new StructuredAgentResult<>(base, output);
+  }
+
+  static <T> @NonNull StructuredAgentResult<T> success(
+      @NonNull T output, @NonNull AgentResult baseResult) {
+    AgentResult.Builder base = AgentResult.Builder.from(baseResult).parsed(output);
     return new StructuredAgentResult<>(base, output);
   }
 
@@ -149,8 +160,15 @@ public class StructuredAgentResult<T> extends AgentResult {
             .history(history)
             .toolExecutions(toolExecutions)
             .turnsUsed(turnsUsed)
-            .error(error);
+            .error(error)
+            .outputOrigin(OutputOrigin.LOCAL);
     return new StructuredAgentResult<>(base, (T) null);
+  }
+
+  static <T> @NonNull StructuredAgentResult<T> error(
+      @NonNull Throwable error, @NonNull AgentResult baseResult) {
+    AgentResult.Builder base = AgentResult.Builder.from(baseResult).error(error);
+    return new StructuredAgentResult<>(base, null);
   }
 
   /**
@@ -162,7 +180,7 @@ public class StructuredAgentResult<T> extends AgentResult {
    */
   @SuppressWarnings("unchecked")
   public static <T> @NonNull StructuredAgentResult<T> structuredError(@NonNull Throwable error) {
-    AgentResult.Builder base = new AgentResult.Builder().error(error);
+    AgentResult.Builder base = new AgentResult.Builder().error(error).outputOrigin(OutputOrigin.LOCAL);
     return new StructuredAgentResult<>(base, (T) null);
   }
 
@@ -179,7 +197,10 @@ public class StructuredAgentResult<T> extends AgentResult {
         && Objects.equals(history(), other.history())
         && Objects.equals(toolExecutions(), other.toolExecutions())
         && Objects.equals(handoffAgent(), other.handoffAgent())
-        && Objects.equals(error(), other.error());
+        && Objects.equals(error(), other.error())
+        && outputOrigin() == other.outputOrigin()
+        && Objects.equals(outputProducerName(), other.outputProducerName())
+        && Objects.equals(delegationPath(), other.delegationPath());
   }
 
   @Override
@@ -192,6 +213,9 @@ public class StructuredAgentResult<T> extends AgentResult {
         toolExecutions(),
         turnsUsed(),
         handoffAgent(),
-        error());
+        error(),
+        outputOrigin(),
+        outputProducerName(),
+        delegationPath());
   }
 }

@@ -1,6 +1,6 @@
 # Agents Guide
 
-> This docs was updated at: 2026-03-20
+> This docs was updated at: 2026-03-21
 
 
 
@@ -432,6 +432,66 @@ if (result.isHandoff()) {
     System.out.println(result.output());
 }
 ```
+
+### Structured terminal handoffs
+
+Use a handoff when the parent should stop and expose the child result as the final output. When that final output is structured, separate the contracts:
+
+- `outputType(...)` or `.structured(...)` on the parent defines what the parent itself may produce.
+- `propagatedOutput(...)` on a `Handoff` defines what that specific edge may propagate back.
+- `returns(...)` on the outer interactable defines the final contract exposed to your backend.
+
+```java
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "kind")
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = DirectAnswer.class, name = "direct_answer"),
+    @JsonSubTypes.Type(value = Escalation.class, name = "escalation")
+})
+sealed interface MainDirectOutput permits DirectAnswer, Escalation {}
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "kind")
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = DirectAnswer.class, name = "direct_answer"),
+    @JsonSubTypes.Type(value = Escalation.class, name = "escalation"),
+    @JsonSubTypes.Type(value = ActivityResult.class, name = "activity_result")
+})
+sealed interface MainFinalOutput permits DirectAnswer, Escalation, ActivityResult {}
+
+record DirectAnswer(String kind, String message) implements MainDirectOutput, MainFinalOutput {}
+record Escalation(String kind, String queue) implements MainDirectOutput, MainFinalOutput {}
+record ActivityResult(String kind, String activityId) implements MainFinalOutput {}
+
+var activities = Agent.builder()
+    .name("Activities")
+    .model("openai/gpt-4o")
+    .instructions("Return the activity result as structured JSON.")
+    .responder(responder)
+    .structured(ActivityResult.class)
+    .build();
+
+Agent main = Agent.builder()
+    .name("Main")
+    .model("openai/gpt-4o")
+    .instructions("Resolve directly when possible, otherwise delegate.")
+    .responder(responder)
+    .outputType(MainDirectOutput.class)  // local produces contract only
+    .addHandoff(Handoff.to(activities)
+        .withDescription("Use for activity workflows")
+        .propagatedOutput(ActivityResult.class)
+        .build())
+    .build();
+
+StructuredAgentResult<MainFinalOutput> result =
+    main.returns(MainFinalOutput.class).interact("Open activity act_123");
+
+System.out.println(result.outputOrigin());       // DELEGATED
+System.out.println(result.outputProducerName()); // Activities
+System.out.println(result.delegationPath());     // [Main, Activities]
+```
+
+For discriminated unions, keep the discriminator field (`kind` above) in the serialized payload so the final branch can be parsed correctly.
+
+`returns(...)` is available on any `Interactable`, so the same pattern works with `RouterAgent`, `SupervisorAgent`, and `HierarchicalAgents`.
 
 ---
 
@@ -1153,6 +1213,8 @@ Agent orchestrator = Agent.builder()
     .build();
 ```
 
+> **Important:** `SubAgentTool` and `InteractableSubAgentTool` remain text-only. Even if the child interactable uses structured output internally, the parent receives normal tool text. For terminal structured propagation back to your backend, use `Handoff` with `propagatedOutput(...)` instead.
+
 ---
 
 ## 🗺️ Tool Planning (Batching Tool Calls)
@@ -1275,6 +1337,49 @@ for (String point : analysis.keyPoints()) {
     System.out.println("• " + point);
 }
 ```
+
+### Local contract vs external return contract
+
+Builder-level structured output config is the **local producer contract**:
+
+- `Agent.builder().outputType(...)`
+- `Agent.builder().structured(...)`
+- `RouterAgent.builder().structured(...)`
+- `SupervisorAgent.builder().structured(...)`
+- `HierarchicalAgents.builder().structured(...)`
+
+That local contract is visible to the LLM call made by that interactable.
+
+`returns(...)` is different: it is a **boundary contract** for your application. It parses and validates the final result without changing the schemas sent to the source interactable's own LLM calls.
+
+```java
+Agent extractor = Agent.builder()
+    .name("Extractor")
+    .model("openai/gpt-4o")
+    .instructions("Extract only a direct answer or an escalation.")
+    .responder(responder)
+    .outputType(MainDirectOutput.class)  // visible to the LLM
+    .build();
+
+StructuredAgentResult<MainFinalOutput> finalResult =
+    extractor.returns(MainFinalOutput.class).interact("Handle this request");
+```
+
+Use this when the final output exposed to your backend is wider than the set of outputs the current interactable should synthesize by itself.
+
+### Result provenance
+
+Every final `AgentResult` and `StructuredAgentResult<T>` now carries output provenance:
+
+```java
+AgentResult result = agent.interact("Handle this request");
+
+System.out.println(result.outputOrigin());       // LOCAL or DELEGATED
+System.out.println(result.outputProducerName()); // agent that produced the final payload
+System.out.println(result.delegationPath());     // full chain of delegation
+```
+
+This is especially useful for routers and terminal handoffs, where the orchestrator may return a payload it did not originate itself.
 
 ---
 
