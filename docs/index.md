@@ -157,6 +157,7 @@ Requires Java 25+ with preview features enabled.
 |---------|-------------|
 | [Installation](installation.md) | Detailed setup instructions |
 | [Getting Started](getting-started.md) | Quick start guide |
+| [Agentic Patterns](guides/agentic-patterns.md) | Visual control-flow guide for agents, delegation, and orchestration |
 | [Guides](guides/responder.md) | In-depth feature guides |
 | [API Reference](api.md) | Auto-generated Javadoc |
 | [Examples](examples/code-samples.md) | Code samples |

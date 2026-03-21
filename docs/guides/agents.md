@@ -20,6 +20,9 @@
 
 Agents are high-level abstractions that wrap a Responder with tools, guardrails, memory, and multi-agent orchestration. They handle the complete agentic loop automatically.
 
+!!! tip "Need the behavior diagrams?"
+    See the [Agentic Patterns Visual Guide](agentic-patterns.md) for Mermaid diagrams, context propagation rules, and compile-aligned examples for handoffs, sub-agents, router/supervisor patterns, parallel teams, networks, hierarchies, return contracts, self-correction, and harness wrappers.
+
 ---
 
 ## What is an Agent?
@@ -461,12 +464,12 @@ record DirectAnswer(String kind, String message) implements MainDirectOutput, Ma
 record Escalation(String kind, String queue) implements MainDirectOutput, MainFinalOutput {}
 record ActivityResult(String kind, String activityId) implements MainFinalOutput {}
 
-var activities = Agent.builder()
+Agent activities = Agent.builder()
     .name("Activities")
     .model("openai/gpt-4o")
     .instructions("Return the activity result as structured JSON.")
     .responder(responder)
-    .structured(ActivityResult.class)
+    .outputType(ActivityResult.class)
     .build();
 
 Agent main = Agent.builder()
@@ -1032,7 +1035,7 @@ ParallelAgents team = ParallelAgents.of(researcher, analyst);
 
 ```java
 // All agents process the same input concurrently
-List<AgentResult> results = team.run("Analyze market trends in AI");
+List<AgentResult> results = team.runAll("Analyze market trends in AI");
 
 for (AgentResult result : results) {
     System.out.println(result.output());
@@ -1041,7 +1044,7 @@ for (AgentResult result : results) {
 // With existing context
 AgenticContext context = AgenticContext.create();
 context.addInput(Message.user("Analyze trends"));
-List<AgentResult> contextResults = team.run(context);
+List<AgentResult> contextResults = team.runAll(context);
 ```
 
 ### Race - First Result Wins
@@ -1069,7 +1072,7 @@ System.out.println(combined.output());
 
 ```java
 // Stream all agents in parallel
-team.runStream("Analyze market trends")
+team.runAllStream("Analyze market trends")
     .onAgentTextDelta((agent, delta) -> System.out.print("[" + agent.name() + "] " + delta))
     .onAgentComplete((agent, result) -> System.out.println("\n" + agent.name() + " done!"))
     .onComplete(results -> System.out.println("All agents completed!"))
@@ -1547,13 +1550,13 @@ SupervisorAgent supervisor = SupervisorAgent.builder()
     .build();
 
 // Supervisor orchestrates workers
-AgentResult result = supervisor.orchestrate("Write a report on AI trends");
+AgentResult result = supervisor.interact("Write a report on AI trends");
 ```
 
 ### Streaming Support
 
 ```java
-supervisor.orchestrateStream("Complex task")
+supervisor.asStreaming().interact("Complex task")
     .onTextDelta(System.out::print)
     .onToolExecuted(exec -> System.out.println("Worker: " + exec.toolName()))
     .onComplete(result -> System.out.println("Done!"))
@@ -1585,11 +1588,11 @@ AgentNetwork network = AgentNetwork.builder()
     .build();
 
 // Agents discuss in rounds
-NetworkResult result = network.discuss("Should AI be regulated?");
+AgentNetwork.NetworkResult result = network.discuss("Should AI be regulated?");
 
 // Access contributions
 result.contributions().forEach(c -> 
-    System.out.println(c.agent().name() + " (Round " + c.round() + "): " + c.output()));
+    System.out.println(c.peer().name() + " (Round " + c.round() + "): " + c.output()));
 
 // If synthesizer was set
 System.out.println("Summary: " + result.synthesis());
@@ -1653,7 +1656,7 @@ HierarchicalAgents hierarchy = HierarchicalAgents.builder()
     .build();
 
 // Task flows through hierarchy
-AgentResult result = hierarchy.execute("Launch new product");
+AgentResult result = hierarchy.interact("Launch new product");
 
 // Or send directly to a department
 hierarchy.sendToDepartment("Engineering", "Fix critical bug");
@@ -1662,7 +1665,7 @@ hierarchy.sendToDepartment("Engineering", "Fix critical bug");
 ### Streaming
 
 ```java
-hierarchy.executeStream("Company initiative")
+hierarchy.asStreaming().interact("Company initiative")
     .onTextDelta(System.out::print)
     .onComplete(result -> System.out.println("Done!"))
     .start();

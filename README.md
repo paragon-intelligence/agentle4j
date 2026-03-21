@@ -127,12 +127,12 @@ record DirectAnswer(String kind, String message) implements MainDirectOutput, Ma
 record Escalation(String kind, String team) implements MainDirectOutput, MainFinalOutput {}
 record ActivityResult(String kind, String activityId) implements MainFinalOutput {}
 
-var activities = Agent.builder()
+Agent activities = Agent.builder()
     .name("Activities")
     .model("openai/gpt-4o")
     .instructions("Return the final activity result as JSON.")
     .responder(responder)
-    .structured(ActivityResult.class)
+    .outputType(ActivityResult.class)
     .build();
 
 Agent main = Agent.builder()
@@ -215,6 +215,8 @@ Six patterns, all implementing `Interactable`. Swap any pattern without changing
 | **Hierarchical** | `HierarchicalAgents.builder().executive(ceo).addDepartment(...)` | Org-chart workflows |
 | **Sub-agent** | `.addSubAgent(analyst, "for deep analysis")` | Delegate, get result, continue |
 
+For runtime flow diagrams, context propagation notes, and compile-aligned examples, see the [Agentic Patterns Visual Guide](docs/guides/agentic-patterns.md).
+
 ```java
 // Your service works with any pattern — same interface
 public class AgentService {
@@ -232,6 +234,7 @@ new AgentService(parallelTeam);
 ```
 
 All patterns support streaming. See the [Agents Guide](docs/guides/agents.md) for full documentation.
+For the behavior-first walkthrough, see the [Agentic Patterns Visual Guide](docs/guides/agentic-patterns.md).
 
 For structured terminal delegation, `returns(...)` works with any `Interactable`, including `Agent`, `RouterAgent`, `SupervisorAgent`, and `HierarchicalAgents`.
 
